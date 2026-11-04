@@ -1,4 +1,3 @@
-
 import { auth, db } from "./firebase-config.js";
 
 import {
@@ -11,14 +10,14 @@ import {
   getDoc,
   getDocs,
   query,
-  where
+  where,
+  updateDoc,
+  serverTimestamp,
+  Timestamp,
+  deleteField
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
 const DOMAIN = "paterostechnologicalcollege.edu.ph";
-
-const API_URL =
-  document.querySelector('meta[name="equallearn-verification-api"]')
-    ?.content?.trim() || "";
 
 const tableContainer = document.getElementById("tableContainer");
 const notice = document.getElementById("pageNotice");
@@ -207,7 +206,7 @@ function render() {
             <tr>
               <td>
                 ${
-                  pending && allowed
+                  pending
                     ? `
                       <input
                         type="checkbox"
@@ -262,7 +261,7 @@ function render() {
 
                 ${
                   !allowed
-                    ? '<div class="muted">Domain not allowed</div>'
+                    ? '<div class="muted">Manual verification required</div>'
                     : ""
                 }
               </td>
@@ -276,7 +275,6 @@ function render() {
                           class="btn success"
                           data-action="approve"
                           data-uid="${esc(student.id)}"
-                          ${allowed ? "" : "disabled"}
                         >
                           Verify
                         </button>
@@ -341,46 +339,100 @@ function render() {
 }
 
 async function callWorker(action, uids, reason = "") {
-  if (!API_URL) {
-    throw new Error(
-      "Worker URL is not configured. Set the equallearn-verification-api meta tag in admin/students.html after deploying the Worker."
-    );
-  }
-
   const user = auth.currentUser;
 
   if (!user) {
     throw new Error("Your session expired. Please sign in again.");
   }
 
-  const idToken = await user.getIdToken(true);
-
-  const response = await fetch(
-    `${API_URL.replace(/\/$/, "")}/api/verification`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${idToken}`
-      },
-      body: JSON.stringify({
-        action,
-        uids,
-        reason
-      })
-    }
-  );
-
-  const result = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    throw new Error(
-      result.error ||
-      `Verification request failed (${response.status}).`
-    );
+  if (!["approve", "reject", "restore"].includes(action)) {
+    throw new Error("Invalid verification action.");
   }
 
-  return result;
+  if (action === "reject" && !reason.trim()) {
+    throw new Error("A rejection reason is required.");
+  }
+
+  const results = [];
+
+  for (const uid of uids) {
+    try {
+      const student = students.find(s => s.id === uid);
+
+      if (!student) {
+        throw new Error("Student record not found.");
+      }
+
+      const studentRef = doc(db, "users", uid);
+
+      if (action === "approve") {
+        const institutional = emailDomainAllowed(student.email);
+
+        await updateDoc(studentRef, {
+          status: "active",
+          verificationStatus: "verified",
+          academicProfileVerified: true,
+          verifiedAt: serverTimestamp(),
+          verifiedBy: user.uid,
+          verificationMethod: institutional ? "institutional" : "manual",
+          deletionScheduledAt: deleteField(),
+          rejectionReason: deleteField(),
+          rejectedAt: deleteField(),
+          rejectedBy: deleteField(),
+          updatedAt: serverTimestamp()
+        });
+
+      } else if (action === "reject") {
+        const deletionDate = new Date(
+          Date.now() + 7 * 24 * 60 * 60 * 1000
+        );
+
+        await updateDoc(studentRef, {
+          status: "inactive",
+          verificationStatus: "rejected",
+          academicProfileVerified: false,
+          rejectionReason: reason.trim(),
+          rejectedAt: serverTimestamp(),
+          rejectedBy: user.uid,
+          deletionScheduledAt: Timestamp.fromDate(deletionDate),
+          updatedAt: serverTimestamp()
+        });
+
+      } else if (action === "restore") {
+        if (verificationOf(student) !== "rejected") {
+          throw new Error("Only rejected students can be restored.");
+        }
+
+        await updateDoc(studentRef, {
+          status: "active",
+          verificationStatus: "pending",
+          academicProfileVerified: false,
+          deletionScheduledAt: deleteField(),
+          rejectionReason: deleteField(),
+          rejectedAt: deleteField(),
+          rejectedBy: deleteField(),
+          updatedAt: serverTimestamp()
+        });
+      }
+
+      results.push({
+        uid,
+        success: true,
+        message: "Successfully processed."
+      });
+
+    } catch (error) {
+      console.error(`Verification failed for ${uid}:`, error);
+
+      results.push({
+        uid,
+        success: false,
+        message: error.message || "Unable to process student."
+      });
+    }
+  }
+
+  return { results };
 }
 
 async function handleSingle(action, uid) {
@@ -401,11 +453,8 @@ async function handleSingle(action, uid) {
   else if (action === "approve") {
     const student = students.find(s => s.id === uid);
 
-    if (!student || !emailDomainAllowed(student.email)) {
-      setNotice(
-        "Only PTC institutional email addresses can be verified.",
-        "error"
-      );
+    if (!student) {
+      setNotice("Student record not found.", "error");
       return;
     }
 
@@ -425,7 +474,7 @@ async function handleSingle(action, uid) {
 
 async function perform(action, uids, reason = "") {
   try {
-    setNotice("Submitting secure verification request…");
+    setNotice("Updating student verification record…");
 
     const result = await callWorker(action, uids, reason);
 
@@ -513,12 +562,10 @@ onAuthStateChanged(auth, async user => {
 
     await loadStudents();
 
-    if (!API_URL) {
-      setNotice(
-        "Student records loaded. Verification actions are disabled until the Cloudflare Worker URL is configured.",
-        "error"
-      );
-    }
+    setNotice(
+      "Student records loaded. Pending institutional and non-institutional accounts can be reviewed manually.",
+      "success"
+    );
 
   } catch (error) {
     console.error("Student verification page error:", error);
