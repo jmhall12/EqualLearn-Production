@@ -1,3 +1,4 @@
+
 import { auth, db } from "./firebase-config.js";
 
 import {
@@ -10,7 +11,6 @@ import {
   updateDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
-
 
 const form = document.getElementById("studentProfileForm");
 const message = document.getElementById("profileMessage");
@@ -27,18 +27,18 @@ const fields = {
 };
 
 let currentUser = null;
-
+let profileLoaded = false;
 
 function showMessage(text, type = "") {
+  if (!message) return;
+
   message.textContent = text;
   message.className = `profile-message ${type}`.trim();
 }
 
-
 function fieldValue(field) {
   return String(field?.value || "").trim();
 }
-
 
 function setFormEnabled(enabled) {
   [
@@ -53,22 +53,30 @@ function setFormEnabled(enabled) {
   });
 }
 
+function setSaving(saving) {
+  if (!saveButton) return;
+
+  saveButton.disabled = saving;
+  saveButton.textContent = saving ? "Saving..." : "Save Profile";
+}
 
 // ==========================================
 // LOAD AUTHENTICATED STUDENT
 // ==========================================
 
 onAuthStateChanged(auth, async user => {
+  currentUser = user;
+  profileLoaded = false;
 
   if (!user) {
     window.location.replace("../login.html");
     return;
   }
 
-  currentUser = user;
+  setFormEnabled(false);
+  showMessage("Loading your academic profile...");
 
   try {
-
     const userRef = doc(db, "users", user.uid);
     const snapshot = await getDoc(userRef);
 
@@ -77,8 +85,6 @@ onAuthStateChanged(auth, async user => {
         "Student profile not found. Please contact your administrator.",
         "error"
       );
-
-      setFormEnabled(false);
       return;
     }
 
@@ -89,22 +95,20 @@ onAuthStateChanged(auth, async user => {
       return;
     }
 
-    // Authenticated identity
-    fields.name.value =
-      data.fullname || user.displayName || "";
+    // Authenticated identity: read-only
+    if (fields.name) {
+      fields.name.value = data.fullname || user.displayName || "";
+    }
 
-    fields.email.value =
-      data.email || user.email || "";
+    if (fields.email) {
+      fields.email.value = data.email || user.email || "";
+    }
 
     // Academic information
-    fields.studentNumber.value =
-      data.studentNumber || "";
+    fields.studentNumber.value = data.studentNumber || "";
+    fields.course.value = data.course || "";
 
-    fields.course.value =
-      data.course || "";
-
-    const year = String(data.yearLevel || "")
-      .replace(/\D/g, "");
+    const year = String(data.yearLevel || "").replace(/\D/g, "");
 
     fields.yearLevel.value =
       ["1", "2", "3", "4", "5"].includes(year) ? year : "";
@@ -127,16 +131,30 @@ onAuthStateChanged(auth, async user => {
       fields.yearLevel.value
     );
 
-    showMessage(
-      complete
-        ? "Your academic profile is saved. Verification may still be required."
-        : "Please complete your Student ID, Course, and Year Level."
-    );
+    const verificationStatus =
+      String(data.academicProfileStatus || "").toLowerCase();
 
+    if (verificationStatus === "verified" ||
+        data.academicProfileVerified === true) {
+      showMessage(
+        "Your academic profile is verified. Contact your administrator if you need to change your academic information."
+      );
+    } else if (verificationStatus === "pending_verification") {
+      showMessage(
+        "Your academic profile is awaiting administrator verification."
+      );
+    } else {
+      showMessage(
+        complete
+          ? "Your academic profile is saved. Verification may still be required."
+          : "Please complete your Student ID, Course, and Year Level."
+      );
+    }
+
+    profileLoaded = true;
     setFormEnabled(true);
 
   } catch (error) {
-
     console.error("Profile loading error:", error);
 
     showMessage(
@@ -146,21 +164,21 @@ onAuthStateChanged(auth, async user => {
 
     setFormEnabled(false);
   }
-
 });
-
 
 // ==========================================
 // SAVE STUDENT PROFILE
 // ==========================================
 
 form?.addEventListener("submit", async event => {
-
   event.preventDefault();
 
-  if (!currentUser) return;
+  if (!currentUser || !profileLoaded) {
+    showMessage("Your profile is not ready. Please refresh the page.", "error");
+    return;
+  }
 
-  const studentNumber = fieldValue(fields.studentNumber);
+  const studentNumber = fieldValue(fields.studentNumber).toUpperCase();
   const course = fieldValue(fields.course);
   const yearLevel = fieldValue(fields.yearLevel);
   const section = fieldValue(fields.section);
@@ -179,16 +197,13 @@ form?.addEventListener("submit", async event => {
     return;
   }
 
-  saveButton.disabled = true;
-  saveButton.textContent = "Saving...";
-
+  setSaving(true);
   showMessage("Saving your academic information...");
 
   try {
-
     const userRef = doc(db, "users", currentUser.uid);
 
-    // Re-check the current account before writing.
+    // Re-check the authenticated student's current profile.
     const snapshot = await getDoc(userRef);
 
     if (!snapshot.exists()) {
@@ -201,10 +216,20 @@ form?.addEventListener("submit", async event => {
       throw new Error("Only student accounts can update this profile.");
     }
 
+    if (existing.status !== "active") {
+      throw new Error("Your account is not active. Please contact the administrator.");
+    }
+
     const academicChanged =
       String(existing.studentNumber || "") !== studentNumber ||
       String(existing.course || "") !== course ||
       String(existing.yearLevel || "") !== yearLevel;
+
+    const sectionChanged =
+      String(existing.section || "") !== section;
+
+    const cohortChanged =
+      String(existing.cohort || "") !== cohort;
 
     const updates = {
       studentNumber,
@@ -212,34 +237,45 @@ form?.addEventListener("submit", async event => {
       yearLevel,
       section,
       cohort,
-
       profileCompleted: true,
       profileUpdatedAt: serverTimestamp()
     };
 
-    // Changes require verification again.
+    // Only the pending state can be requested by the student.
+    // The student cannot set their own profile to verified.
     if (academicChanged) {
       updates.academicProfileStatus = "pending_verification";
       updates.academicProfileVerified = false;
     }
 
-    // Does not change UID, role, or authenticated email.
     await updateDoc(userRef, updates);
 
-    showMessage(
-      academicChanged
-        ? "Profile saved! Your academic details are pending verification."
-        : "Your profile has been saved successfully.",
-      "success"
-    );
+    if (academicChanged) {
+      showMessage(
+        "Your academic information has been saved. Your changes are now pending administrator verification.",
+        "success"
+      );
+    } else if (sectionChanged || cohortChanged) {
+      showMessage(
+        "Your profile has been saved successfully.",
+        "success"
+      );
+    } else {
+      showMessage(
+        "Your profile has been saved successfully.",
+        "success"
+      );
+    }
 
   } catch (error) {
-
     console.error("Profile save error:", error);
 
-    if (error.code === "permission-denied") {
+    if (
+      error.code === "permission-denied" ||
+      error.code === "firestore/permission-denied"
+    ) {
       showMessage(
-        "Firestore denied this update. Your security rules must allow students to update only their own approved profile fields.",
+        "Firestore denied the update. Check that the published security rules match the student profile update policy.",
         "error"
       );
     } else {
@@ -250,10 +286,6 @@ form?.addEventListener("submit", async event => {
     }
 
   } finally {
-
-    saveButton.disabled = false;
-    saveButton.textContent = "Save Profile";
-
+    setSaving(false);
   }
-
 });
