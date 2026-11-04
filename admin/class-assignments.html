@@ -1,0 +1,471 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#635bff">
+
+    <title>Create Sections | EqualLearn</title>
+
+    <link rel="stylesheet" href="../assets/css/equallearn.css">
+    <link rel="manifest" href="../manifest.webmanifest">
+    <link rel="icon" href="../assets/icons/icon-192.png">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: #f4f6fa;
+            color: #182230;
+            font-family: Arial, sans-serif;
+        }
+
+        .page {
+            max-width: 1250px;
+            margin: auto;
+            padding: 28px 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+        }
+
+        h1 { font-size: 27px; margin: 0 0 7px; }
+        h2 { margin-top: 0; font-size: 20px; }
+
+        .muted {
+            color: #687588;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #e6eaf0;
+            border-radius: 16px;
+            padding: 22px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(20,35,60,.05);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid #e8ecf2;
+            border-radius: 14px;
+            padding: 20px;
+        }
+
+        .stat-card span {
+            color: #748094;
+            font-size: 13px;
+        }
+
+        .stat-card strong {
+            display: block;
+            font-size: 27px;
+            margin-top: 9px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 17px;
+        }
+
+        .field { min-width: 0; }
+        .full { grid-column: 1 / -1; }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        input, select {
+            width: 100%;
+            min-height: 45px;
+            padding: 11px 13px;
+            border: 1px solid #dce2eb;
+            border-radius: 9px;
+            background: white;
+            color: #182230;
+            font: inherit;
+        }
+
+        select[multiple] {
+            min-height: 190px;
+        }
+
+        input:focus, select:focus {
+            outline: 2px solid #d9d6ff;
+            border-color: #635bff;
+        }
+
+        .notice {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #758196;
+            line-height: 1.5;
+        }
+
+        .selection-summary {
+            margin-top: 10px;
+            padding: 11px 13px;
+            background: #f2f4ff;
+            color: #4652a5;
+            border-radius: 9px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .btn {
+            border: 0;
+            border-radius: 9px;
+            padding: 12px 17px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .btn:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+        .primary { background: #635bff; color: white; }
+        .secondary { background: #edf0f5; color: #344054; }
+        .danger { background: #fee8e8; color: #b42318; }
+        .edit { background: #e9efff; color: #315bc7; }
+
+        .table-wrap { overflow-x: auto; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 850px;
+        }
+
+        th, td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #edf0f4;
+            text-align: left;
+            font-size: 13px;
+            vertical-align: middle;
+        }
+
+        th {
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 20px;
+            background: #edf2ff;
+            color: #405dd0;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 30px;
+            color: #7b8798;
+        }
+
+        .message {
+            display: none;
+            padding: 12px 14px;
+            margin-top: 15px;
+            border-radius: 9px;
+            font-size: 13px;
+        }
+
+        .message.error {
+            display: block;
+            background: #fff0f0;
+            color: #b42318;
+        }
+
+        .message.success {
+            display: block;
+            background: #ecfdf3;
+            color: #027a48;
+        }
+
+        .section-divider {
+            border: 0;
+            border-top: 1px solid #e8ecf2;
+            margin: 30px 0;
+        }
+
+        @media(max-width: 650px) {
+            .page { padding: 18px 13px; }
+            h1 { font-size: 23px; }
+            .stats { grid-template-columns: 1fr; }
+            .form-grid { grid-template-columns: 1fr; }
+            .full { grid-column: auto; }
+            .card { padding: 16px; }
+        }
+    </style>
+</head>
+
+<body>
+
+<main class="page">
+
+    <header class="header">
+        <div>
+            <h1>Create Sections</h1>
+            <p class="muted">
+                Create class sections and assign one teacher with multiple students.
+            </p>
+        </div>
+
+        <button
+            class="btn secondary"
+            onclick="location.href='dashboard.html'">
+            ← Back to Dashboard
+        </button>
+    </header>
+
+
+    <!-- STATISTICS -->
+
+    <section class="stats">
+
+        <div class="stat-card">
+            <span>Total Sections</span>
+            <strong id="totalSections">0</strong>
+        </div>
+
+        <div class="stat-card">
+            <span>Total Teachers</span>
+            <strong id="totalTeachers">0</strong>
+        </div>
+
+        <div class="stat-card">
+            <span>Total Students</span>
+            <strong id="totalStudents">0</strong>
+        </div>
+
+    </section>
+
+
+    <!-- CREATE / EDIT SECTION -->
+
+    <section class="card">
+
+        <h2 id="formTitle">Create New Section</h2>
+
+        <p class="muted">
+            Select one teacher, then assign multiple students to that teacher in one submission.
+        </p>
+
+        <form id="sectionForm">
+
+            <div class="form-grid">
+
+                <div class="field">
+                    <label for="sectionName">Section Name</label>
+                    <input
+                        type="text"
+                        id="sectionName"
+                        placeholder="Example: BSIT 1-A"
+                        required>
+                </div>
+
+
+                <div class="field">
+                    <label for="course">Course / Program</label>
+                    <input
+                        type="text"
+                        id="course"
+                        placeholder="Example: BSIT"
+                        required>
+                </div>
+
+
+                <div class="field">
+                    <label for="sectionYearLevel">Year Level</label>
+
+                    <select id="sectionYearLevel" required>
+                        <option value="">Select Year Level</option>
+                        <option value="1">1st Year</option>
+                        <option value="2">2nd Year</option>
+                        <option value="3">3rd Year</option>
+                        <option value="4">4th Year</option>
+                        <option value="5">5th Year</option>
+                    </select>
+                </div>
+
+
+                <div class="field">
+                    <label for="academicYear">Academic Year</label>
+                    <input
+                        type="text"
+                        id="academicYear"
+                        placeholder="2026-2027"
+                        pattern="[0-9]{4}-[0-9]{4}"
+                        title="Use the format 2026-2027"
+                        required>
+                </div>
+
+
+                <!-- ONE TEACHER -->
+
+                <div class="field full">
+                    <label for="teacherId">Assign Teacher</label>
+
+                    <select id="teacherId" required>
+                        <option value="">Loading teachers...</option>
+                    </select>
+
+                    <div class="notice">
+                        One teacher will be assigned to this section.
+                    </div>
+                </div>
+
+
+                <!-- BATCH STUDENT ASSIGNMENT -->
+
+                <div class="field full">
+                    <label for="studentIds">
+                        Assign Students (Batch Assignment)
+                    </label>
+
+                    <select id="studentIds" multiple></select>
+
+                    <div class="selection-summary" id="selectionSummary">
+                        0 students selected
+                    </div>
+
+                    <div class="notice">
+                        Hold CTRL and click to select multiple students.
+                        All selected students will be assigned to the chosen teacher and section.
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div id="formMessage" class="message"></div>
+
+
+            <div class="actions">
+
+                <button
+                    type="submit"
+                    id="saveSection"
+                    class="btn primary">
+                    Create Section & Assign Students
+                </button>
+
+                <button
+                    type="button"
+                    id="cancelEdit"
+                    class="btn secondary"
+                    hidden>
+                    Cancel Edit
+                </button>
+
+            </div>
+
+        </form>
+
+    </section>
+
+
+    <!-- EXISTING SECTIONS -->
+
+    <section class="card">
+
+        <h2>Existing Sections</h2>
+
+        <p class="muted">
+            Manage sections, assigned teachers, and student counts.
+        </p>
+
+        <div class="table-wrap">
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Section</th>
+                        <th>Course</th>
+                        <th>Year</th>
+                        <th>Academic Year</th>
+                        <th>Teacher</th>
+                        <th>Students</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody id="sectionsTable">
+                    <tr>
+                        <td colspan="7" class="empty">
+                            Loading sections...
+                        </td>
+                    </tr>
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<!-- SECTION MANAGEMENT -->
+
+<script
+    type="module"
+    src="../assets/js/admin-sections.js">
+</script>
+
+<!-- EXISTING EQUALLEARN SCRIPTS -->
+
+<script
+    type="module"
+    src="../assets/js/ui-shell.js">
+</script>
+
+<script
+    type="module"
+    src="../assets/js/pwa.js">
+</script>
+
+<script
+    type="module"
+    src="../assets/js/theme.js">
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#635BFF">
+
+<title>EqualLearn | Module Management</title>
+
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/equallearn.css">
+<link rel="icon" href="../assets/icons/icon-192.png">
+
+<style>
+:root {
+  --primary: #635bff;
+  --primary-dark: #5147e8;
+  --bg: #f5f6fc;
+  --text: #20243a;
+  --muted: #7c8198;
+  --border: #e8e9f2;
+  --white: #ffffff;
+  --green: #16a36a;
+  --orange: #ed922e;
+  --red: #e05252;
+  --shadow: 0 8px 30px rgba(34, 38, 75, .06);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+}
+
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+
+.page {
+  min-height: 100vh;
+  padding: 28px 22px 60px;
+}
+
+.container {
+  max-width: 1250px;
+  margin: auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 26px;
+}
+
+.header-left h1 {
+  font-size: 30px;
+  margin: 0;
+  font-weight: 800;
+}
+
+.header-left p {
+  color: var(--muted);
+  margin: 7px 0 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  border: 0;
+  border-radius: 11px;
+  padding: 12px 17px;
+  font-weight: 700;
+  transition: .2s;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+.btn-light {
+  background: white;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: white;
+  padding: 20px;
+  border-radius: 17px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+
+.stat-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stat-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  background: #efedff;
+}
+
+.stat-number {
+  font-size: 28px;
+  font-weight: 800;
+  margin-top: 13px;
+}
+
+.stat-label {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.panel {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 21px;
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+
+.panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 17px;
+}
+
+.panel-heading h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.panel-heading p {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 5px 0 0;
+}
+
+.toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 180px 180px;
+  gap: 10px;
+  margin-bottom: 17px;
+}
+
+.toolbar input,
+.toolbar select {
+  min-height: 43px;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 13px;
+  background: white;
+  color: var(--text);
+}
+
+.module-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 21px;
+  margin-bottom: 15px;
+  transition: .2s;
+}
+
+.module-card:hover {
+  box-shadow: var(--shadow);
+  transform: translateY(-2px);
+}
+
+.module-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 15px;
+}
+
+.module-title {
+  font-size: 19px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.module-description {
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 10px 0;
+}
+
+.status {
+  padding: 6px 11px;
+  border-radius: 30px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.status.active {
+  background: #e7f8ef;
+  color: #168552;
+}
+
+.status.draft {
+  background: #fff3df;
+  color: #c77a16;
+}
+
+.status.archived {
+  background: #eeeeee;
+  color: #666;
+}
+
+.module-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 14px;
+}
+
+.meta-item {
+  background: #f5f6fb;
+  padding: 7px 11px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #62677f;
+}
+
+.module-actions {
+  display: flex;
+  gap: 9px;
+  margin-top: 16px;
+}
+
+.module-actions button {
+  flex: 1;
+  padding: 10px;
+  border: 0;
+  border-radius: 9px;
+  font-weight: 700;
+}
+
+.edit-btn {
+  background: #e9f2ff;
+  color: #2672c7;
+}
+
+.delete-btn {
+  background: #fff0f0;
+  color: #d44848;
+}
+
+.file-link {
+  display: block;
+  background: #f5f4ff;
+  border-radius: 11px;
+  padding: 13px;
+  margin-top: 13px;
+  color: var(--primary);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.empty, .loading {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  padding: 35px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(16, 20, 45, .6);
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+}
+
+.modal.show { display: flex; }
+
+.modal-content {
+  width: 100%;
+  max-width: 760px;
+  max-height: 94vh;
+  overflow-y: auto;
+  background: white;
+  border-radius: 20px;
+  padding: 25px;
+  box-shadow: 0 20px 70px rgba(0,0,0,.2);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 23px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 23px;
+}
+
+.close-btn {
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 50%;
+  background: #f0f0f5;
+  font-size: 22px;
+}
+
+.form-section {
+  padding: 18px 0;
+  border-top: 1px solid var(--border);
+}
+
+.form-section h3 {
+  font-size: 15px;
+  margin: 0 0 15px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.form-group { margin-bottom: 15px; }
+
+.form-group label {
+  display: block;
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 7px;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #dfe1eb;
+  border-radius: 10px;
+  background: white;
+  color: var(--text);
+  outline: none;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(99,91,255,.1);
+}
+
+.form-group textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.help {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+.assignment-box {
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  padding: 15px;
+  background: #fafaff;
+}
+
+.assignment-note {
+  background: #f0efff;
+  color: #5b53ce;
+  padding: 11px;
+  border-radius: 9px;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-bottom: 13px;
+}
+
+.class-selection {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.class-option {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  padding: 11px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  font-size: 13px;
+}
+
+.class-option input { accent-color: var(--primary); }
+
+.file-help {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 7px;
+}
+
+#selectedFile,
+#existingFile {
+  display: none;
+  padding: 12px;
+  margin-top: 10px;
+  background: #f5f4ff;
+  border-radius: 10px;
+  overflow-wrap: anywhere;
+}
+
+#existingFile a { color: var(--primary); }
+
+#uploadProgress {
+  display: none;
+  margin-top: 15px;
+}
+
+.progress-container {
+  background: #eee;
+  height: 9px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+#progressBar {
+  background: var(--primary);
+  width: 0%;
+  height: 100%;
+  transition: .2s;
+}
+
+#progressText {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+#message {
+  margin-top: 13px;
+  font-size: 13px;
+  padding: 11px;
+  border-radius: 9px;
+}
+
+.message.success {
+  background: #e8f8ef;
+  color: #168552;
+}
+
+.message.error {
+  background: #fff0f0;
+  color: #d44848;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.modal-footer button { flex: 1; }
+
+.save-btn {
+  background: var(--primary);
+  color: white;
+}
+
+.cancel-btn {
+  background: #ededf2;
+  color: #555;
+}
+
+button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+/* Classroom-style module metadata */
+.module-meta-chips {
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  margin:12px 0;
+}
+
+.module-meta-chips span {
+  display:inline-flex;
+  align-items:center;
+  padding:5px 9px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  background:#f8f8ff;
+  color:#5b5f78;
+  font-size:12px;
+  font-weight:650;
+}
+
+.module-deadline {
+  margin:8px 0;
+  color:#9a5a12;
+  font-size:13px;
+  font-weight:650;
+}
+
+/* Resource toolbar */
+.resource-toolbar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
+  gap: 10px;
+  margin: 14px 0 12px;
+}
+
+.resource-tile {
+  display: flex;
+  min-height: 88px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: #fff;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+  transition: .18s;
+}
+
+.resource-tile:hover {
+  border-color: var(--primary);
+  background: #f8f7ff;
+  transform: translateY(-2px);
+}
+
+.resource-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: #f0efff;
+  color: var(--primary);
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.resource-icon.youtube,
+.resource-icon.record {
+  background: #fff0f0;
+  color: #e53935;
+}
+
+.resource-icon.drive,
+.resource-icon.sheets {
+  background: #eaf7ef;
+  color: #159b62;
+}
+
+.resource-icon.forms {
+  background: #f3edff;
+  color: #7848c8;
+}
+
+.resource-icon.drawings {
+  background: #fff4e7;
+  color: #d98421;
+}
+
+.resource-icon.slides {
+  background: #fff3e8;
+  color: #d87927;
+}
+
+.resource-icon.docs {
+  background: #edf4ff;
+  color: #3576c8;
+}
+
+.resource-icon.pdf {
+  background: #fff0f0;
+  color: #d43d3d;
+  font-size: 11px;
+}
+
+.resource-icon.camera,
+.resource-icon.photo {
+  background: #f1f2f8;
+  color: #555b77;
+}
+
+.resource-links-list {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.resource-link-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #f7f7fc;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.resource-link-row button {
+  border: 0;
+  border-radius: 7px;
+  background: #ffecec;
+  color: #bd3434;
+  padding: 6px 9px;
+  font-weight: 700;
+}
+
+@media(max-width:760px) {
+  .toolbar { grid-template-columns:1fr; }
+  .stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+
+@media(max-width:750px) {
+  .header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .header-actions { width: 100%; }
+  .header-actions button { flex: 1; }
+  .form-grid { grid-template-columns: 1fr; }
+}
+
+@media(max-width:480px) {
+  .page { padding: 18px 12px 40px; }
+  .stats { gap: 9px; }
+  .stat-card { padding: 14px; }
+  .stat-number { font-size: 23px; }
+  .class-selection { grid-template-columns: 1fr; }
+  .module-actions { flex-direction: column; }
+  .modal-content { padding: 18px; }
+
+  .resource-toolbar {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .resource-tile { min-height: 78px; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="page">
+<div class="container">
+
+<header class="header">
+  <div class="header-left">
+    <h1>Learning Modules</h1>
+    <p>Manage learning content, class assignments and educational resources.</p>
+  </div>
+
+  <div class="header-actions">
+    <button class="btn btn-light"
+      type="button"
+      onclick="window.location.href='dashboard.html'">
+      ← Dashboard
+    </button>
+
+    <button class="btn btn-primary"
+      type="button"
+      id="openModal">
+      ＋ Create Module
+    </button>
+  </div>
+</header>
+
+<!-- STATISTICS -->
+<section class="stats">
+
+  <div class="stat-card">
+    <div class="stat-top">
+      <span>Total Modules</span>
+      <span class="stat-icon">📚</span>
+    </div>
+    <div class="stat-number" id="totalModules">—</div>
+    <div class="stat-label">Your learning modules</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-top">
+      <span>Published</span>
+      <span class="stat-icon">✓</span>
+    </div>
+    <div class="stat-number" id="activeModules">—</div>
+    <div class="stat-label">Active modules</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-top">
+      <span>Drafts</span>
+      <span class="stat-icon">✎</span>
+    </div>
+    <div class="stat-number" id="draftModules">—</div>
+    <div class="stat-label">Unpublished modules</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-top">
+      <span>Archived</span>
+      <span class="stat-icon">▣</span>
+    </div>
+    <div class="stat-number" id="archivedModules">—</div>
+    <div class="stat-label">Archived modules</div>
+  </div>
+
+</section>
+
+<!-- MODULE LIST -->
+<section class="panel">
+
+  <div class="panel-heading">
+    <div>
+      <h2>Your Classroom Modules</h2>
+      <p>Organize learning materials, outcomes, class sections and availability in one workspace.</p>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <input
+      type="search"
+      id="moduleSearch"
+      placeholder="Search title, description or program..."
+      aria-label="Search modules">
+
+    <select id="statusFilter">
+      <option value="all">All statuses</option>
+      <option value="active">Active</option>
+      <option value="draft">Draft</option>
+      <option value="archived">Archived</option>
+    </select>
+
+    <select id="sortFilter">
+      <option value="order">Display order</option>
+      <option value="newest">Newest first</option>
+      <option value="oldest">Oldest first</option>
+      <option value="title">Title A–Z</option>
+    </select>
+  </div>
+
+  <div id="moduleList">
+    <div class="loading">Loading modules...</div>
+  </div>
+
+</section>
+
+</div>
+</div>
+
+<!-- ADD / EDIT MODULE MODAL -->
+<div class="modal" id="moduleModal">
+
+<div class="modal-content">
+
+  <div class="modal-header">
+    <div>
+      <h2 id="modalTitle">Create Module</h2>
+      <p class="help">Configure your educational content.</p>
+    </div>
+
+    <button
+      type="button"
+      id="closeModal"
+      class="close-btn"
+      aria-label="Close">
+      ×
+    </button>
+  </div>
+
+  <!-- 01. BASIC INFORMATION -->
+  <section class="form-section">
+
+    <h3>01. Basic Information</h3>
+
+    <div class="form-group">
+      <label for="title">Module Title *</label>
+      <input
+        type="text"
+        id="title"
+        maxlength="150"
+        placeholder="Example: Introduction to Gender Equality">
+    </div>
+
+    <div class="form-group">
+      <label for="description">Module Description *</label>
+      <textarea
+        id="description"
+        maxlength="2000"
+        placeholder="Describe the learning module..."></textarea>
+    </div>
+
+    <div class="form-grid">
+
+      <div class="form-group">
+        <label for="moduleOrder">Display Order *</label>
+        <input
+          type="number"
+          id="moduleOrder"
+          min="1"
+          placeholder="1">
+      </div>
+
+      <div class="form-group">
+        <label for="moduleStatus">Publication Status</label>
+        <select id="moduleStatus">
+          <option value="draft">Draft</option>
+          <option value="active">Active / Published</option>
+          <option value="archived">Archived</option>
+        </select>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 02. LEARNING OBJECTIVES -->
+  <section class="form-section">
+
+    <h3>02. Learning Objectives</h3>
+
+    <div class="form-group">
+      <label for="learningObjectives">
+        Expected Learning Outcomes
+      </label>
+
+      <textarea
+        id="learningObjectives"
+        placeholder="Enter learning objectives, one per line..."></textarea>
+
+      <div class="help">
+        These describe what students should learn after completing the module.
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="estimatedDuration">Estimated Learning Duration</label>
+
+      <select id="estimatedDuration">
+        <option value="">Not specified</option>
+        <option value="15">15 minutes</option>
+        <option value="30">30 minutes</option>
+        <option value="45">45 minutes</option>
+        <option value="60">1 hour</option>
+        <option value="90">1.5 hours</option>
+        <option value="120">2 hours</option>
+        <option value="180">3 hours</option>
+      </select>
+    </div>
+
+  </section>
+
+  <!-- 03. CLASS ASSIGNMENT -->
+  <section class="form-section">
+
+    <h3>03. Class & Section Assignment</h3>
+
+    <div class="assignment-box">
+
+      <div class="assignment-note">
+        Assign this module to specific classes or sections.
+        Only authorized and enrolled students should receive access.
+      </div>
+
+      <div class="form-group">
+        <label for="academicYearSelect">Academic Year</label>
+        <select id="academicYearSelect">
+          <option value="">Select academic year</option>
+        </select>
+      </div>
+
+      <div class="form-grid">
+
+        <div class="form-group">
+          <label for="programSelect">Program / Course</label>
+          <select id="programSelect">
+            <option value="">Select program</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="yearLevelSelect">Year Level</label>
+          <select id="yearLevelSelect">
+            <option value="">Select year level</option>
+            <option value="1">First Year</option>
+            <option value="2">Second Year</option>
+            <option value="3">Third Year</option>
+            <option value="4">Fourth Year</option>
+            <option value="5">Fifth Year</option>
+          </select>
+        </div>
+
+      </div>
+
+      <div class="form-group">
+        <label for="sectionSelect">Available Sections</label>
+
+        <select id="sectionSelect" multiple size="5"></select>
+
+        <div class="help">
+          Hold Ctrl (Windows) or Command (Mac) to select multiple sections.
+          Class records will be connected to the approved MIS or manual records.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="classSource">Class Record Source</label>
+        <select id="classSource">
+          <option value="all">All available sources</option>
+          <option value="mis">School MIS / LSM</option>
+          <option value="manual">Manual records</option>
+        </select>
+      </div>
+
+      <div id="assignmentSummary" class="help">
+        No class assignment configured yet.
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 04. AVAILABILITY -->
+  <section class="form-section">
+
+    <h3>04. Availability & Due Dates</h3>
+
+    <div class="form-grid">
+
+      <div class="form-group">
+        <label for="availableAt">Available From</label>
+        <input type="datetime-local" id="availableAt">
+      </div>
+
+      <div class="form-group">
+        <label for="dueDate">Due Date</label>
+        <input type="datetime-local" id="dueDate">
+      </div>
+
+    </div>
+
+    <div class="help">
+      Leave availability or due date blank if no schedule is required.
+      Individual student extensions will be managed separately.
+    </div>
+
+  </section>
+
+  <!-- 05. LEARNING RESOURCES -->
+  <section class="form-section" id="learningResourcesSection">
+
+    <h3>05. Add Learning Resources</h3>
+    <p class="help">
+      Choose an app, paste a share link, or attach media from your device.
+    </p>
+
+    <!-- RESOURCE BUTTONS -->
+    <div class="resource-toolbar" id="resourceToolbar">
+
+      <button type="button" class="resource-tile" data-resource="drive">
+        <span class="resource-icon drive">▲</span>
+        <span>Google Drive</span>
+      </button>
+
+      <button type="button" class="resource-tile" data-resource="youtube">
+        <span class="resource-icon youtube">▶</span>
+        <span>YouTube</span>
+      </button>
+
+      <button type="button" class="resource-tile" data-resource="link">
+        <span class="resource-icon link">↗</span>
+        <span>Link</span>
+      </button>
+
+      <button type="button" class="resource-tile" data-resource="forms">
+        <span class="resource-icon forms">▤</span>
+        <span>Forms</span>
+      </button>
+
+      <button type="button" class="resource-tile" data-resource="drawings">
+        <span class="resource-icon drawings">✎</span>
+        <span>Drawings</span>
+      </button>
+
+      <button type="button" class="resource-tile" data-resource="sheets">
+        <span class="resource-icon sheets">▦</span>
+        <span>Sheets</span>
+      </button>
+
+      <button type="button" class="resource-tile" data-resource="slides">
+        <span class="resource-icon slides">▣</span>
+        <span>Slides</span>
+      </button>
+
+      <button type="button" class="resource-tile" data-resource="docs">
+        <span class="resource-icon docs">▤</span>
+        <span>Docs</span>
+      </button>
+
+      <button type="button" class="resource-tile" data-resource="pdf">
+        <span class="resource-icon pdf">PDF</span>
+        <span>PDF</span>
+      </button>
+
+      <button type="button" class="resource-tile" data-resource="record">
+        <span class="resource-icon record">●</span>
+        <span>Record Video</span>
+      </button>
+
+      <button type="button" class="resource-tile" data-resource="camera">
+        <span class="resource-icon camera">📷</span>
+        <span>Take Photo</span>
+      </button>
+
+      <button type="button" class="resource-tile" data-resource="photo">
+        <span class="resource-icon photo">▧</span>
+        <span>Pick Photo</span>
+      </button>
+
+      <button type="button" class="resource-tile" data-resource="upload">
+        <span class="resource-icon upload">↑</span>
+        <span>Upload File</span>
+      </button>
+
+    </div>
+
+    <!-- FILE INPUTS -->
+   <input
+  type="file"
+  id="moduleFile"
+  hidden
+  accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.png,.jpg,.jpeg,.webp,.mp4,.webm,.mov">
+
+   <input
+  type="file"
+  id="cameraPhotoInput"
+  hidden
+  accept="image/*"
+  capture="environment">
+
+<input
+  type="file"
+  id="pickPhotoInput"
+  hidden
+  accept="image/*">
+
+<input
+  type="file"
+  id="recordVideoInput"
+  accept="video/*"
+  capture="environment"
+  hidden
+>
+
+    <div class="file-help">
+      Maximum file size: 20 MB. Recording and camera capture availability
+      depends on your browser and device.
+    </div>
+
+    <div id="selectedFile"></div>
+    <div id="existingFile"></div>
+
+    <div class="form-group" style="margin-top:16px">
+      <label for="videoUrl">YouTube Video Link</label>
+      <input
+        type="url"
+        id="videoUrl"
+        placeholder="https://www.youtube.com/watch?v=...">
+    </div>
+
+    <div class="form-group">
+      <label for="resourceUrl">Additional External Link (optional)</label>
+      <input
+        type="url"
+        id="resourceUrl"
+        placeholder="https://...">
+    </div>
+
+    <div id="resourceLinksList" class="resource-links-list"></div>
+
+    <div class="help">
+      Google Drive, Docs, Forms, Drawings, Sheets, Slides and other web
+      resources are attached using their share links. Set the sharing
+      permission in Google so intended students can open them.
+    </div>
+
+    <div id="uploadProgress">
+      <div class="progress-container">
+        <div id="progressBar"></div>
+      </div>
+      <p id="progressText">Ready to upload</p>
+    </div>
+
+  </section>
+
+  <!-- ACTIONS -->
+  <div class="modal-footer">
+
+    <button
+      type="button"
+      id="cancelEdit"
+      class="btn cancel-btn">
+      Cancel
+    </button>
+
+    <button
+      type="button"
+      id="saveModule"
+      class="btn save-btn">
+      Save Module
+    </button>
+
+  </div>
+
+  <div id="message" class="message"></div>
+
+</div>
+</div>
+
+<!-- JAVASCRIPT -->
+<script type="module" src="../assets/js/teacher-modules.js"></script>
+<script type="module" src="../assets/js/ui-shell.js"></script>
+<script type="module" src="../assets/js/pwa.js"></script>
+<script type="module" src="../assets/js/theme.js"></script>
+
+</body>
+</html>

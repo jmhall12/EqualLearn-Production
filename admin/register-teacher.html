@@ -1,0 +1,685 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#635bff">
+
+<title>Create Teacher Account | EqualLearn</title>
+
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/equallearn.css">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="icon" href="../assets/icons/icon-192.png">
+
+<style>
+:root {
+    --primary: #635bff;
+    --primary-dark: #5146e5;
+    --text: #202039;
+    --muted: #77778e;
+    --border: #e8e8f1;
+    --background: #f6f6fc;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    padding: 35px 18px;
+    background:
+        radial-gradient(circle at 10% 5%, #e9e7ff, transparent 35%),
+        var(--background);
+    font-family: inherit;
+    color: var(--text);
+}
+
+.page {
+    width: 100%;
+    max-width: 1050px;
+    margin: auto;
+}
+
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    color: var(--text);
+    font-size: 20px;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.brand img {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    object-fit: cover;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.back-link:hover {
+    color: var(--primary);
+}
+
+.layout {
+    display: grid;
+    grid-template-columns: 0.8fr 1.2fr;
+    gap: 22px;
+    align-items: stretch;
+}
+
+.intro-panel {
+    position: relative;
+    overflow: hidden;
+    padding: 38px 30px;
+    border-radius: 22px;
+    color: white;
+    background:
+        radial-gradient(circle at 90% 10%, rgba(255,255,255,.2), transparent 35%),
+        linear-gradient(145deg, #5146e5, #766dff);
+}
+
+.intro-panel::after {
+    content: "";
+    position: absolute;
+    width: 230px;
+    height: 230px;
+    right: -110px;
+    bottom: -110px;
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 50%;
+    box-shadow: 0 0 0 30px rgba(255,255,255,.04),
+                0 0 0 60px rgba(255,255,255,.03);
+}
+
+.intro-icon {
+    width: 58px;
+    height: 58px;
+    display: grid;
+    place-items: center;
+    border-radius: 17px;
+    background: rgba(255,255,255,.17);
+    border: 1px solid rgba(255,255,255,.2);
+    font-size: 27px;
+}
+
+.intro-panel h1 {
+    margin: 27px 0 13px;
+    font-size: 32px;
+    line-height: 1.2;
+    letter-spacing: -.8px;
+}
+
+.intro-panel > p {
+    color: rgba(255,255,255,.8);
+    font-size: 14px;
+    line-height: 1.8;
+}
+
+.intro-points {
+    display: grid;
+    gap: 19px;
+    margin-top: 35px;
+}
+
+.intro-point {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.point-check {
+    flex-shrink: 0;
+    width: 25px;
+    height: 25px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: rgba(255,255,255,.2);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.intro-point strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 13px;
+}
+
+.intro-point span {
+    color: rgba(255,255,255,.72);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.form-card {
+    padding: 36px;
+    background: white;
+    border: 1px solid rgba(230,230,242,.9);
+    border-radius: 22px;
+    box-shadow: 0 15px 50px rgba(43,38,100,.07);
+}
+
+.form-heading {
+    margin-bottom: 27px;
+}
+
+.form-heading .eyebrow {
+    color: var(--primary);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+}
+
+.form-heading h2 {
+    margin: 9px 0 8px;
+    font-size: 27px;
+    letter-spacing: -.7px;
+}
+
+.form-heading p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.section-label {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 25px 0 17px;
+    color: #45455e;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+}
+
+.section-label::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 17px;
+}
+
+.input-group {
+    min-width: 0;
+    margin-bottom: 17px;
+}
+
+.input-group.full {
+    grid-column: 1 / -1;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #36364e;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.input-group input {
+    display: block;
+    width: 100%;
+    height: 48px;
+    padding: 0 13px;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    outline: none;
+    background: #fcfcff;
+    color: var(--text);
+    font: inherit;
+    font-size: 13px;
+    transition: .2s;
+}
+
+.input-group input:focus {
+    border-color: var(--primary);
+    background: white;
+    box-shadow: 0 0 0 4px rgba(99,91,255,.09);
+}
+
+.input-group input::placeholder {
+    color: #aaaabd;
+}
+
+.hint {
+    margin: 7px 0 0;
+    color: #9292a5;
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.password-note {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin: 4px 0 22px;
+    padding: 12px;
+    border: 1px solid #e9e7ff;
+    border-radius: 11px;
+    background: #f8f7ff;
+    color: #66618d;
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.password-note span:first-child {
+    font-size: 16px;
+}
+
+.btn {
+    width: 100%;
+    min-height: 51px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    border: 0;
+    border-radius: 12px;
+    background: linear-gradient(110deg, var(--primary), #776eff);
+    color: white;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 7px 18px rgba(99,91,255,.2);
+    transition: .2s;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 11px 22px rgba(99,91,255,.27);
+}
+
+.btn:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+#message {
+    display: none;
+    padding: 13px 15px;
+    margin-bottom: 19px;
+    border-radius: 11px;
+    overflow-wrap: anywhere;
+    white-space: pre-line;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+#message.success {
+    display: block;
+    color: #167345;
+    background: #eafaf1;
+    border: 1px solid #c7efd8;
+}
+
+#message.error {
+    display: block;
+    color: #b42318;
+    background: #fff0ef;
+    border: 1px solid #ffd7d3;
+}
+
+.form-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 22px;
+    padding-top: 19px;
+    border-top: 1px solid #eeeeF5;
+}
+
+.form-footer span {
+    color: #9999aa;
+    font-size: 11px;
+}
+
+.form-footer a {
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.form-footer a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 800px) {
+    .layout {
+        grid-template-columns: 1fr;
+    }
+
+    .intro-panel {
+        padding: 27px;
+    }
+
+    .intro-panel h1 {
+        font-size: 27px;
+    }
+
+    .intro-points {
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+    }
+}
+
+@media (max-width: 520px) {
+    body {
+        padding: 18px 12px;
+    }
+
+    .topbar {
+        align-items: flex-start;
+    }
+
+    .brand {
+        font-size: 17px;
+    }
+
+    .brand img {
+        width: 35px;
+        height: 35px;
+    }
+
+    .back-link {
+        font-size: 11px;
+    }
+
+    .intro-panel {
+        padding: 23px;
+        border-radius: 17px;
+    }
+
+    .intro-panel h1 {
+        font-size: 25px;
+    }
+
+    .intro-points {
+        grid-template-columns: 1fr;
+        margin-top: 23px;
+    }
+
+    .form-card {
+        padding: 24px 19px;
+        border-radius: 17px;
+    }
+
+    .form-heading h2 {
+        font-size: 24px;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .input-group.full {
+        grid-column: auto;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="page">
+
+    <header class="topbar">
+
+        <a href="../index.html" class="brand">
+            <img src="../assets/icons/icon-192.png" alt="EqualLearn">
+            <span>EqualLearn</span>
+        </a>
+
+        <a href="dashboard.html" class="back-link">
+            ← Admin Dashboard
+        </a>
+
+    </header>
+
+
+    <main class="layout">
+
+        <!-- INTRODUCTION -->
+        <aside class="intro-panel">
+
+            <div class="intro-icon">👩‍🏫</div>
+
+            <h1>Build your teaching community.</h1>
+
+            <p>
+                Create teacher accounts directly from the admin dashboard.
+                Each teacher receives an active EqualLearn account that
+                can be used to sign in.
+            </p>
+
+            <div class="intro-points">
+
+                <div class="intro-point">
+                    <div class="point-check">✓</div>
+                    <div>
+                        <strong>Direct registration</strong>
+                        <span>Creates a Firebase Authentication account.</span>
+                    </div>
+                </div>
+
+                <div class="intro-point">
+                    <div class="point-check">✓</div>
+                    <div>
+                        <strong>Automatic teacher profile</strong>
+                        <span>Stores the teacher's role and department in Firestore.</span>
+                    </div>
+                </div>
+
+                <div class="intro-point">
+                    <div class="point-check">✓</div>
+                    <div>
+                        <strong>Ready to sign in</strong>
+                        <span>No invitation acceptance process required.</span>
+                    </div>
+                </div>
+
+            </div>
+
+        </aside>
+
+
+        <!-- REGISTRATION FORM -->
+        <section class="form-card">
+
+            <div class="form-heading">
+
+                <span class="eyebrow">Admin · Account Management</span>
+
+                <h2>Create Teacher Account</h2>
+
+                <p>
+                    Enter the teacher's information below to register
+                    a new account.
+                </p>
+
+            </div>
+
+
+            <div
+                id="message"
+                role="status"
+                aria-live="polite"
+            ></div>
+
+
+            <form id="teacherForm">
+
+                <div class="section-label">
+                    Teacher Information
+                </div>
+
+                <div class="form-grid">
+
+                    <div class="input-group">
+                        <label for="surname">Surname *</label>
+                        <input
+                            type="text"
+                            id="surname"
+                            placeholder="e.g. Dela Cruz"
+                            autocomplete="family-name"
+                            maxlength="60"
+                            required
+                        >
+                    </div>
+
+                    <div class="input-group">
+                        <label for="firstName">First Name *</label>
+                        <input
+                            type="text"
+                            id="firstName"
+                            placeholder="e.g. Juan"
+                            autocomplete="given-name"
+                            maxlength="60"
+                            required
+                        >
+                    </div>
+
+                    <div class="input-group">
+                        <label for="middleInitial">Middle Initial</label>
+                        <input
+                            type="text"
+                            id="middleInitial"
+                            placeholder="Optional"
+                            maxlength="5"
+                        >
+                        <p class="hint">Optional middle initial or name.</p>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="department">Department *</label>
+                        <input
+                            type="text"
+                            id="department"
+                            placeholder="e.g. GAD"
+                            maxlength="100"
+                            required
+                        >
+                    </div>
+
+                </div>
+
+
+                <div class="section-label">
+                    Account Credentials
+                </div>
+
+                <div class="input-group">
+                    <label for="email">Email Address *</label>
+                    <input
+                        type="email"
+                        id="email"
+                        placeholder="teacher@example.com"
+                        autocomplete="email"
+                        maxlength="254"
+                        required
+                    >
+                    <p class="hint">
+                        Gmail and institutional email addresses are accepted.
+                    </p>
+                </div>
+
+                <div class="input-group">
+                    <label for="password">Temporary Password *</label>
+                    <input
+                        type="password"
+                        id="password"
+                        placeholder="Enter a temporary password"
+                        minlength="8"
+                        maxlength="128"
+                        autocomplete="new-password"
+                        required
+                    >
+                    <p class="hint">
+                        Minimum of 8 characters.
+                    </p>
+                </div>
+
+
+                <div class="password-note">
+                    <span>🔐</span>
+                    <span>
+                        Share the temporary password securely with the teacher.
+                        They can use the Forgot Password feature to reset it.
+                    </span>
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="btn"
+                    id="createButton"
+                >
+                    <span>Create Teacher Account</span>
+                    <span aria-hidden="true">→</span>
+                </button>
+
+            </form>
+
+
+            <footer class="form-footer">
+
+                <span>EqualLearn Account Management</span>
+
+                <a href="dashboard.html">
+                    Return to Dashboard
+                </a>
+
+            </footer>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<script type="module" src="../assets/js/register-teacher.js"></script>
+<script type="module" src="../assets/js/ui-shell.js"></script>
+<script type="module" src="../assets/js/pwa.js"></script>
+<script type="module" src="../assets/js/theme.js"></script>
+
+</body>
+</html>

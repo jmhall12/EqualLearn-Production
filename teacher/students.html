@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#635bff">
+
+  <title>Student Directory | EqualLearn</title>
+
+  <link rel="manifest" href="../manifest.webmanifest">
+  <link rel="icon" href="../assets/icons/icon-192.png">
+  <link rel="stylesheet" href="../assets/css/equallearn.css">
+
+  <style>
+    :root {
+      --directory-primary: #635bff;
+      --directory-border: #e8eaf2;
+      --directory-muted: #788198;
+    }
+
+    .students-page {
+      max-width: 1450px;
+      margin: auto;
+      padding-bottom: 40px;
+    }
+
+    .students-hero {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 25px;
+    }
+
+    .students-hero h1 {
+      font-size: clamp(26px, 4vw, 34px);
+      font-weight: 850;
+      letter-spacing: -1px;
+      margin: 5px 0;
+    }
+
+    .students-hero p {
+      color: var(--el-muted);
+      margin: 7px 0 0;
+    }
+
+    .directory-kicker {
+      color: var(--directory-primary);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    .directory-date {
+      padding: 11px 15px;
+      background: var(--el-surface);
+      border: 1px solid var(--directory-border);
+      border-radius: 13px;
+      color: var(--el-muted);
+      font-size: 12px;
+    }
+
+    .directory-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-bottom: 23px;
+    }
+
+    .directory-stat {
+      background: var(--el-surface);
+      border: 1px solid var(--directory-border);
+      border-radius: 18px;
+      padding: 19px;
+      box-shadow: 0 8px 28px rgba(30, 35, 65, .035);
+    }
+
+    .directory-stat-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .directory-stat-label {
+      color: var(--el-muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .directory-stat-icon {
+      width: 39px;
+      height: 39px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: #efedff;
+      color: var(--directory-primary);
+      font-size: 19px;
+    }
+
+    .directory-stat-number {
+      font-size: 29px;
+      font-weight: 850;
+      margin-top: 12px;
+      letter-spacing: -1px;
+    }
+
+    .directory-stat-note {
+      color: var(--el-muted);
+      font-size: 11px;
+      margin-top: 4px;
+    }
+
+    .directory-panel {
+      background: var(--el-surface);
+      border: 1px solid var(--directory-border);
+      border-radius: 20px;
+      padding: 21px;
+      box-shadow: 0 8px 28px rgba(30, 35, 65, .035);
+    }
+
+    .directory-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .directory-heading h2 {
+      font-size: 18px;
+      margin: 0;
+    }
+
+    .directory-heading p {
+      color: var(--el-muted);
+      font-size: 12px;
+      margin: 5px 0 0;
+    }
+
+    .directory-toolbar {
+      display: grid;
+      grid-template-columns: minmax(200px, 1fr) 180px;
+      gap: 11px;
+      margin-bottom: 20px;
+    }
+
+    .directory-search {
+      position: relative;
+    }
+
+    .directory-search input,
+    .directory-toolbar select {
+      width: 100%;
+      min-height: 45px;
+      padding: 11px 14px;
+      border: 1px solid var(--directory-border);
+      border-radius: 12px;
+      background: var(--el-surface);
+      color: var(--el-text);
+      outline: none;
+      font: inherit;
+      font-size: 13px;
+    }
+
+    .directory-search input:focus,
+    .directory-toolbar select:focus {
+      border-color: var(--directory-primary);
+      box-shadow: 0 0 0 3px rgba(99, 91, 255, .1);
+    }
+
+    #teacherStudentCards {
+      align-items: stretch;
+    }
+
+    #teacherStudentCards > .el-card {
+      position: relative;
+      overflow: hidden;
+      padding: 21px;
+      border-radius: 19px;
+      border: 1px solid var(--directory-border);
+      background: var(--el-surface);
+      transition: transform .2s, box-shadow .2s;
+    }
+
+    #teacherStudentCards > .el-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 35px rgba(30, 35, 65, .09);
+    }
+
+    .student-avatar {
+      width: 49px;
+      height: 49px;
+      display: grid;
+      place-items: center;
+      border-radius: 15px;
+      background: linear-gradient(135deg, #635bff, #938cff);
+      color: white;
+      font-size: 17px;
+      font-weight: 850;
+      margin-bottom: 15px;
+    }
+
+    .student-card-name {
+      font-size: 17px;
+      font-weight: 800;
+      margin: 0 0 6px;
+      overflow-wrap: anywhere;
+    }
+
+    .student-card-email {
+      color: var(--el-muted);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .student-card-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 13px;
+      padding-top: 17px;
+      margin-top: 16px;
+      border-top: 1px solid var(--directory-border);
+    }
+
+    .student-detail-label {
+      display: block;
+      color: var(--el-muted);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 5px;
+    }
+
+    .student-detail-value {
+      font-size: 12px;
+      font-weight: 750;
+      overflow-wrap: anywhere;
+    }
+
+    .student-verification {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 10px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .student-verification.verified {
+      color: #16834c;
+      background: #e9f9f0;
+    }
+
+    .student-verification.pending {
+      color: #a66a10;
+      background: #fff5df;
+    }
+
+    .student-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-top: 17px;
+      flex-wrap: wrap;
+    }
+
+    .student-profile-state {
+      color: var(--el-muted);
+      font-size: 11px;
+    }
+
+    .directory-empty {
+      grid-column: 1 / -1;
+      padding: 45px 20px;
+      text-align: center;
+      border: 1px dashed var(--directory-border);
+      border-radius: 16px;
+      color: var(--el-muted);
+    }
+
+    @media(max-width: 760px) {
+      .directory-stats {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .directory-toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .directory-panel {
+        padding: 15px;
+      }
+    }
+
+    @media(max-width: 420px) {
+      .directory-stats {
+        gap: 9px;
+      }
+
+      .directory-stat {
+        padding: 14px;
+      }
+
+      .directory-stat-number {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<main class="el-dashboard students-page">
+
+  <header class="students-hero">
+    <div>
+      <div class="directory-kicker">Teacher workspace / Directory</div>
+      <h1>Student Directory</h1>
+      <p>Manage and review your registered learners and academic profiles.</p>
+    </div>
+
+    <div class="directory-date" id="directoryDate">
+      Academic Student Records
+    </div>
+  </header>
+
+  <section class="directory-stats">
+
+    <article class="directory-stat">
+      <div class="directory-stat-top">
+        <span class="directory-stat-label">Total Students</span>
+        <span class="directory-stat-icon">♙</span>
+      </div>
+      <div class="directory-stat-number" id="totalStudents">—</div>
+      <div class="directory-stat-note">Registered student accounts</div>
+    </article>
+
+    <article class="directory-stat">
+      <div class="directory-stat-top">
+        <span class="directory-stat-label">Completed Profiles</span>
+        <span class="directory-stat-icon">✓</span>
+      </div>
+      <div class="directory-stat-number" id="completedProfiles">—</div>
+      <div class="directory-stat-note">Students with academic details</div>
+    </article>
+
+    <article class="directory-stat">
+      <div class="directory-stat-top">
+        <span class="directory-stat-label">Pending Verification</span>
+        <span class="directory-stat-icon">◷</span>
+      </div>
+      <div class="directory-stat-number" id="pendingProfiles">—</div>
+      <div class="directory-stat-note">Awaiting academic verification</div>
+    </article>
+
+  </section>
+
+  <section class="directory-panel">
+
+    <div class="directory-heading">
+      <div>
+        <h2>Registered Students</h2>
+        <p>Student identity, course, year level, and enrollment details.</p>
+      </div>
+    </div>
+
+    <div class="directory-toolbar">
+
+      <div class="directory-search">
+        <input
+          type="search"
+          id="studentSearch"
+          placeholder="Search name, email, student ID, or course..."
+          aria-label="Search students">
+      </div>
+
+      <select id="verificationFilter" aria-label="Filter profiles">
+        <option value="all">All profiles</option>
+        <option value="verified">Verified</option>
+        <option value="pending">Pending verification</option>
+        <option value="incomplete">Incomplete profiles</option>
+      </select>
+
+    </div>
+
+    <section class="el-grid el-grid-3" id="teacherStudentCards">
+      <div class="directory-empty">Loading student records...</div>
+    </section>
+
+  </section>
+
+</main>
+
+<script type="module" src="../assets/js/teacher-students.js"></script>
+<script type="module" src="../assets/js/ui-shell.js"></script>
+<script type="module" src="../assets/js/pwa.js"></script>
+<script type="module" src="../assets/js/theme.js"></script>
+
+<script>
+  const dateElement = document.getElementById("directoryDate");
+
+  if (dateElement) {
+    dateElement.textContent =
+      new Intl.DateTimeFormat("en-PH", {
+        month: "long",
+        year: "numeric"
+      }).format(new Date());
+  }
+</script>
+
+</body>
+</html>
