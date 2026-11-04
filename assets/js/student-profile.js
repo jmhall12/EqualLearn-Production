@@ -12,6 +12,10 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
+// ==========================================
+// DOM ELEMENTS
+// ==========================================
+
 const form = document.getElementById("studentProfileForm");
 const message = document.getElementById("profileMessage");
 const saveButton = document.getElementById("saveProfile");
@@ -28,6 +32,11 @@ const fields = {
 
 let currentUser = null;
 let profileLoaded = false;
+let originalProfile = null;
+
+// ==========================================
+// HELPERS
+// ==========================================
 
 function showMessage(text, type = "") {
   if (!message) return;
@@ -38,6 +47,14 @@ function showMessage(text, type = "") {
 
 function fieldValue(field) {
   return String(field?.value || "").trim();
+}
+
+function normalize(value) {
+  return String(value ?? "").trim();
+}
+
+function normalizeYear(value) {
+  return String(value ?? "").replace(/\D/g, "");
 }
 
 function setFormEnabled(enabled) {
@@ -60,6 +77,32 @@ function setSaving(saving) {
   saveButton.textContent = saving ? "Saving..." : "Save Profile";
 }
 
+function getSection(data) {
+  return normalize(
+    data.section ||
+    data.sectionName ||
+    data.className ||
+    ""
+  );
+}
+
+function getCohort(data) {
+  return normalize(
+    data.cohort ||
+    data.academicYear ||
+    data.cohortId ||
+    ""
+  );
+}
+
+function getVerificationStatus(data) {
+  if (data.academicProfileVerified === true) {
+    return "verified";
+  }
+
+  return normalize(data.verificationStatus).toLowerCase() || "pending";
+}
+
 // ==========================================
 // LOAD AUTHENTICATED STUDENT
 // ==========================================
@@ -67,6 +110,7 @@ function setSaving(saving) {
 onAuthStateChanged(auth, async user => {
   currentUser = user;
   profileLoaded = false;
+  originalProfile = null;
 
   if (!user) {
     window.location.replace("../login.html");
@@ -95,7 +139,7 @@ onAuthStateChanged(auth, async user => {
       return;
     }
 
-    // Authenticated identity: read-only
+    // Read-only identity information
     if (fields.name) {
       fields.name.value = data.fullname || user.displayName || "";
     }
@@ -105,41 +149,61 @@ onAuthStateChanged(auth, async user => {
     }
 
     // Academic information
-    fields.studentNumber.value = data.studentNumber || "";
-    fields.course.value = data.course || "";
+    if (fields.studentNumber) {
+      fields.studentNumber.value = data.studentNumber || "";
+    }
 
-    const year = String(data.yearLevel || "").replace(/\D/g, "");
+    if (fields.course) {
+      fields.course.value = data.course || "";
+    }
 
-    fields.yearLevel.value =
-      ["1", "2", "3", "4", "5"].includes(year) ? year : "";
+    const year = normalizeYear(data.yearLevel);
 
-    fields.section.value =
-      data.section ||
-      data.sectionName ||
-      data.className ||
-      "";
+    if (fields.yearLevel) {
+      fields.yearLevel.value =
+        ["1", "2", "3", "4", "5"].includes(year) ? year : "";
+    }
 
-    fields.cohort.value =
-      data.cohort ||
-      data.academicYear ||
-      data.cohortId ||
-      "";
+    if (fields.section) {
+      fields.section.value = getSection(data);
+    }
+
+    if (fields.cohort) {
+      fields.cohort.value = getCohort(data);
+    }
+
+    originalProfile = {
+      studentNumber: normalize(data.studentNumber).toUpperCase(),
+      course: normalize(data.course),
+      yearLevel: normalizeYear(data.yearLevel),
+      section: getSection(data),
+      cohort: getCohort(data)
+    };
 
     const complete = Boolean(
-      fields.studentNumber.value &&
-      fields.course.value &&
-      fields.yearLevel.value
+      originalProfile.studentNumber &&
+      originalProfile.course &&
+      originalProfile.yearLevel
     );
 
-    const verificationStatus =
-      String(data.academicProfileStatus || "").toLowerCase();
+    const verificationStatus = getVerificationStatus(data);
 
-    if (verificationStatus === "verified" ||
-        data.academicProfileVerified === true) {
+    if (data.status === "inactive" || verificationStatus === "rejected") {
       showMessage(
-        "Your academic profile is verified. Contact your administrator if you need to change your academic information."
+        data.rejectionReason
+          ? `Your academic profile was rejected: ${data.rejectionReason}`
+          : "Your account is currently inactive. Please contact your administrator.",
+        "error"
       );
-    } else if (verificationStatus === "pending_verification") {
+
+      return;
+    }
+
+    if (verificationStatus === "verified") {
+      showMessage(
+        "Your academic profile is verified. If you change your academic information, it will be submitted for verification again."
+      );
+    } else if (verificationStatus === "pending") {
       showMessage(
         "Your academic profile is awaiting administrator verification."
       );
@@ -173,8 +237,11 @@ onAuthStateChanged(auth, async user => {
 form?.addEventListener("submit", async event => {
   event.preventDefault();
 
-  if (!currentUser || !profileLoaded) {
-    showMessage("Your profile is not ready. Please refresh the page.", "error");
+  if (!currentUser || !profileLoaded || !originalProfile) {
+    showMessage(
+      "Your profile is not ready. Please refresh the page.",
+      "error"
+    );
     return;
   }
 
@@ -183,6 +250,10 @@ form?.addEventListener("submit", async event => {
   const yearLevel = fieldValue(fields.yearLevel);
   const section = fieldValue(fields.section);
   const cohort = fieldValue(fields.cohort);
+
+  // ========================================
+  // VALIDATION
+  // ========================================
 
   if (!studentNumber || !course || !yearLevel) {
     showMessage(
@@ -203,7 +274,7 @@ form?.addEventListener("submit", async event => {
   try {
     const userRef = doc(db, "users", currentUser.uid);
 
-    // Re-check the authenticated student's current profile.
+    // Re-check the latest Firestore profile.
     const snapshot = await getDoc(userRef);
 
     if (!snapshot.exists()) {
@@ -217,19 +288,25 @@ form?.addEventListener("submit", async event => {
     }
 
     if (existing.status !== "active") {
-      throw new Error("Your account is not active. Please contact the administrator.");
+      throw new Error(
+        "Your account is not active. Please contact the administrator."
+      );
     }
 
+    // ========================================
+    // DETECT ACADEMIC CHANGES
+    // ========================================
+
     const academicChanged =
-      String(existing.studentNumber || "") !== studentNumber ||
-      String(existing.course || "") !== course ||
-      String(existing.yearLevel || "") !== yearLevel;
+      normalize(existing.studentNumber).toUpperCase() !== studentNumber ||
+      normalize(existing.course) !== course ||
+      normalizeYear(existing.yearLevel) !== yearLevel ||
+      getSection(existing) !== section ||
+      getCohort(existing) !== cohort;
 
-    const sectionChanged =
-      String(existing.section || "") !== section;
-
-    const cohortChanged =
-      String(existing.cohort || "") !== cohort;
+    // ========================================
+    // PREPARE UPDATE
+    // ========================================
 
     const updates = {
       studentNumber,
@@ -241,23 +318,31 @@ form?.addEventListener("submit", async event => {
       profileUpdatedAt: serverTimestamp()
     };
 
-    // Only the pending state can be requested by the student.
-    // The student cannot set their own profile to verified.
+    // Any academic change requires administrator review.
+    // Students cannot mark their own profile as verified.
     if (academicChanged) {
-      updates.academicProfileStatus = "pending_verification";
+      updates.verificationStatus = "pending";
       updates.academicProfileVerified = false;
     }
 
     await updateDoc(userRef, updates);
 
+    // Update local baseline after successful save.
+    originalProfile = {
+      studentNumber,
+      course,
+      yearLevel,
+      section,
+      cohort
+    };
+
+    // ========================================
+    // SUCCESS MESSAGE
+    // ========================================
+
     if (academicChanged) {
       showMessage(
         "Your academic information has been saved. Your changes are now pending administrator verification.",
-        "success"
-      );
-    } else if (sectionChanged || cohortChanged) {
-      showMessage(
-        "Your profile has been saved successfully.",
         "success"
       );
     } else {
@@ -275,7 +360,7 @@ form?.addEventListener("submit", async event => {
       error.code === "firestore/permission-denied"
     ) {
       showMessage(
-        "Firestore denied the update. Check that the published security rules match the student profile update policy.",
+        "Firestore denied the update. Please check that the latest Firestore Rules have been published.",
         "error"
       );
     } else {
