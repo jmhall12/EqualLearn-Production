@@ -11,3 +11,5 @@ mobile/ios/
 
 # Expo generated export
 mobile/dist/
+
+/web/public/downloads/EqualLearn.apk
