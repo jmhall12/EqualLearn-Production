@@ -1,4 +1,3 @@
-
 import { auth, db } from "./firebase-config.js";
 
 import {
@@ -29,7 +28,7 @@ const TOKEN_URL =
     "https://equallearn-live-token.jommelhallig655.workers.dev/token";
 
 // ======================================================
-// DOM ELEMENTS
+// ELEMENTS
 // ======================================================
 
 const studentName = document.getElementById("studentName");
@@ -44,6 +43,15 @@ const liveSessionList = document.getElementById("liveSessionList");
 const liveSessionCount = document.getElementById("liveSessionCount");
 const refreshLiveBtn = document.getElementById("refreshLiveBtn");
 
+const studentSessionIdInput =
+    document.getElementById("studentSessionIdInput");
+
+const joinBySessionIdBtn =
+    document.getElementById("joinBySessionIdBtn");
+
+const sessionIdMessage =
+    document.getElementById("sessionIdMessage");
+
 const studentLiveRoom = document.getElementById("studentLiveRoom");
 const studentLiveTitle = document.getElementById("studentLiveTitle");
 const studentLiveStatus = document.getElementById("studentLiveStatus");
@@ -55,7 +63,7 @@ const studentCameraBtn = document.getElementById("studentCameraBtn");
 const studentLeaveBtn = document.getElementById("studentLeaveBtn");
 
 // ======================================================
-// APPLICATION STATE
+// STATE
 // ======================================================
 
 let currentStudent = null;
@@ -64,15 +72,14 @@ let currentStudentProfile = null;
 let currentRoom = null;
 let currentSession = null;
 
-let studentCanPublish = false;
 let studentMicEnabled = false;
 let studentCameraEnabled = false;
+let studentCanPublish = false;
 
 let isJoining = false;
-let isLeaving = false;
 
 // ======================================================
-// GENERAL HELPERS
+// HELPERS
 // ======================================================
 
 function display(element, value, fallback = "Not assigned") {
@@ -85,10 +92,10 @@ function normalize(value) {
     return String(value ?? "").trim().toLowerCase();
 }
 
-function showMessage(element, message, isError = false) {
+function showMessage(element, text, isError = false) {
     if (!element) return;
 
-    element.textContent = message;
+    element.textContent = text;
     element.style.color = isError ? "#dc2626" : "";
 }
 
@@ -112,42 +119,19 @@ function formatDate(timestamp) {
             hour: "numeric",
             minute: "2-digit"
         });
+
     } catch {
         return "Recently";
     }
 }
 
-function setLiveStatus(message) {
-    display(studentLiveStatus, message, "");
-}
+function setJoiningState(value) {
+    isJoining = value;
 
-function setMediaControls(enabled) {
-    if (studentMicBtn) {
-        studentMicBtn.disabled = !enabled;
-        studentMicBtn.textContent = studentMicEnabled
-            ? "Mute Microphone"
-            : "Unmute Microphone";
-    }
-
-    if (studentCameraBtn) {
-        studentCameraBtn.disabled = !enabled;
-        studentCameraBtn.textContent = studentCameraEnabled
-            ? "Turn Camera Off"
-            : "Turn Camera On";
-    }
-}
-
-function resetMediaState() {
-    studentMicEnabled = false;
-    studentCameraEnabled = false;
-    studentCanPublish = false;
-
-    setMediaControls(false);
-}
-
-function clearLiveVideo() {
-    if (studentLiveVideo) {
-        studentLiveVideo.replaceChildren();
+    if (joinBySessionIdBtn) {
+        joinBySessionIdBtn.disabled = value;
+        joinBySessionIdBtn.textContent =
+            value ? "Connecting..." : "Join Class";
     }
 }
 
@@ -156,6 +140,7 @@ function clearLiveVideo() {
 // ======================================================
 
 onAuthStateChanged(auth, async (user) => {
+
     if (!user) {
         window.location.href = "../login.html";
         return;
@@ -164,22 +149,17 @@ onAuthStateChanged(auth, async (user) => {
     currentStudent = user;
 
     try {
-        await loadStudent(user.uid);
 
-        await Promise.all([
-            loadNotifications(user.uid),
-            loadLiveSessions(user.uid)
-        ]);
+        await loadStudent(user.uid);
+        await loadNotifications(user.uid);
+        await loadLiveSessions(user.uid);
 
     } catch (error) {
+
         console.error("Student dashboard error:", error);
 
-        showMessage(
-            studentLiveMessage,
-            error.message || "Unable to load student dashboard.",
-            true
-        );
     }
+
 });
 
 // ======================================================
@@ -187,12 +167,14 @@ onAuthStateChanged(auth, async (user) => {
 // ======================================================
 
 async function loadStudent(uid) {
+
     display(studentName, "Student");
     display(studentSection, "Loading...");
     display(studentTeacher, "Loading...");
     display(studentCohort, "Loading...");
 
-    const userSnapshot = await getDoc(doc(db, "users", uid));
+    const userRef = doc(db, "users", uid);
+    const userSnapshot = await getDoc(userRef);
 
     if (!userSnapshot.exists()) {
         throw new Error("Student profile not found.");
@@ -201,10 +183,10 @@ async function loadStudent(uid) {
     const student = userSnapshot.data();
 
     if (
-        normalize(student.role) !== "student" ||
-        normalize(student.status) !== "active"
+        student.role !== "student" ||
+        student.status !== "active"
     ) {
-        throw new Error("Your student account is not active.");
+        throw new Error("Student account is not active.");
     }
 
     currentStudentProfile = student;
@@ -227,6 +209,7 @@ async function loadStudent(uid) {
 // ======================================================
 
 async function loadStudentSection(student) {
+
     display(studentSection, "Not assigned");
     display(studentTeacher, "Not yet assigned");
 
@@ -234,14 +217,13 @@ async function loadStudentSection(student) {
 
     if (!sectionId) {
         console.warn("Student has no sectionId.");
-
         return;
     }
 
     try {
-        const sectionSnapshot = await getDoc(
-            doc(db, "sections", sectionId)
-        );
+
+        const sectionRef = doc(db, "sections", sectionId);
+        const sectionSnapshot = await getDoc(sectionRef);
 
         if (!sectionSnapshot.exists()) {
             display(studentSection, "Section not found");
@@ -256,13 +238,11 @@ async function loadStudentSection(student) {
 
         const sectionMatches =
             !student.section ||
-            normalize(section.sectionName || section.section) ===
-                normalize(student.section);
+            normalize(section.sectionName) === normalize(student.section);
 
         const academicYearMatches =
             !student.academicYear ||
-            normalize(section.academicYear) ===
-                normalize(student.academicYear);
+            normalize(section.academicYear) === normalize(student.academicYear);
 
         if (
             !courseMatches ||
@@ -295,13 +275,13 @@ async function loadStudentSection(student) {
             (hasTeacher ? "Teacher assigned" : "Not yet assigned")
         );
 
-        console.log("Student section loaded:", sectionId);
-
     } catch (error) {
+
         console.error("Student section loading error:", error);
 
         display(studentSection, "Unable to load section");
         display(studentTeacher, "Not yet assigned");
+
     }
 }
 
@@ -310,9 +290,11 @@ async function loadStudentSection(student) {
 // ======================================================
 
 async function loadNotifications(uid) {
+
     if (!notificationList || !notificationCount) return;
 
     try {
+
         const notificationQuery = query(
             collection(db, "notifications"),
             where("userId", "==", uid),
@@ -325,6 +307,7 @@ async function loadNotifications(uid) {
         notificationList.replaceChildren();
 
         if (snapshot.empty) {
+
             const empty = document.createElement("p");
 
             empty.className = "empty-notification";
@@ -339,6 +322,7 @@ async function loadNotifications(uid) {
         let unreadCount = 0;
 
         snapshot.forEach((item) => {
+
             const data = item.data();
 
             if (data.read === false) {
@@ -367,11 +351,13 @@ async function loadNotifications(uid) {
             notification.append(title, message, time);
 
             notificationList.appendChild(notification);
+
         });
 
         notificationCount.textContent = String(unreadCount);
 
     } catch (error) {
+
         console.error("Notification loading error:", error);
 
         notificationList.replaceChildren();
@@ -382,6 +368,7 @@ async function loadNotifications(uid) {
         message.textContent = "Unable to load notifications.";
 
         notificationList.appendChild(message);
+
     }
 }
 
@@ -390,6 +377,7 @@ async function loadNotifications(uid) {
 // ======================================================
 
 async function loadLiveSessions(uid) {
+
     if (!liveSessionList) return;
 
     liveSessionList.replaceChildren();
@@ -402,6 +390,7 @@ async function loadLiveSessions(uid) {
     liveSessionList.appendChild(loading);
 
     try {
+
         const sessionsQuery = query(
             collection(db, "liveSessions"),
             where("participantUids", "array-contains", uid)
@@ -409,36 +398,42 @@ async function loadLiveSessions(uid) {
 
         const snapshot = await getDocs(sessionsQuery);
 
+        liveSessionList.replaceChildren();
+
         const sessions = snapshot.docs
+
             .map(item => ({
                 id: item.id,
                 ...item.data()
             }))
-            .filter(session =>
-                ["scheduled", "live"].includes(
-                    normalize(session.status)
-                )
-            )
-            .sort((a, b) => {
-                const aLive = normalize(a.status) === "live";
-                const bLive = normalize(b.status) === "live";
 
-                if (aLive && !bLive) return -1;
-                if (!aLive && bLive) return 1;
+            .filter(session =>
+                ["scheduled", "live"].includes(session.status)
+            )
+
+            .sort((a, b) => {
+
+                if (a.status === "live" && b.status !== "live") {
+                    return -1;
+                }
+
+                if (a.status !== "live" && b.status === "live") {
+                    return 1;
+                }
 
                 const aTime = a.createdAt?.toMillis?.() || 0;
                 const bTime = b.createdAt?.toMillis?.() || 0;
 
                 return bTime - aTime;
-            });
 
-        liveSessionList.replaceChildren();
+            });
 
         if (liveSessionCount) {
             liveSessionCount.textContent = String(sessions.length);
         }
 
         if (!sessions.length) {
+
             const empty = document.createElement("p");
 
             empty.className = "empty-notification";
@@ -446,16 +441,20 @@ async function loadLiveSessions(uid) {
                 "No scheduled or ongoing live classes for your account.";
 
             liveSessionList.appendChild(empty);
+
             return;
         }
 
         sessions.forEach(session => {
+
             liveSessionList.appendChild(
                 createLiveSessionCard(session, uid)
             );
+
         });
 
     } catch (error) {
+
         console.error("Load live sessions error:", error);
 
         liveSessionList.replaceChildren();
@@ -464,13 +463,14 @@ async function loadLiveSessions(uid) {
 
         errorMessage.className = "empty-notification";
         errorMessage.textContent =
-            "Unable to load live classes. " + error.message;
+            "Unable to load live classes: " + error.message;
 
         liveSessionList.appendChild(errorMessage);
 
         if (liveSessionCount) {
             liveSessionCount.textContent = "0";
         }
+
     }
 }
 
@@ -479,6 +479,7 @@ async function loadLiveSessions(uid) {
 // ======================================================
 
 function createLiveSessionCard(session, uid) {
+
     const card = document.createElement("article");
     card.className = "student-live-card";
 
@@ -490,30 +491,34 @@ function createLiveSessionCard(session, uid) {
 
     const status = document.createElement("span");
 
-    const isLive = normalize(session.status) === "live";
+    status.className =
+        session.status === "live"
+            ? "student-live-badge is-live"
+            : "student-live-badge is-scheduled";
 
-    status.className = isLive
-        ? "student-live-badge is-live"
-        : "student-live-badge is-scheduled";
-
-    status.textContent = isLive ? "LIVE NOW" : "SCHEDULED";
+    status.textContent =
+        session.status === "live"
+            ? "LIVE NOW"
+            : "SCHEDULED";
 
     header.append(title, status);
 
     const teacher = document.createElement("p");
+
     teacher.className = "student-live-meta";
     teacher.textContent =
         "Teacher: " + (session.teacherName || "Teacher");
 
     const mode = document.createElement("p");
-    mode.className = "student-live-meta";
 
+    mode.className = "student-live-meta";
     mode.textContent =
-        normalize(session.mode) === "meeting"
+        session.mode === "meeting"
             ? "Interactive Meeting"
             : "Livestream";
 
     const description = document.createElement("p");
+
     description.className = "student-live-description";
     description.textContent =
         session.description || "No description provided.";
@@ -523,24 +528,21 @@ function createLiveSessionCard(session, uid) {
     button.type = "button";
     button.className = "el-btn el-btn-primary student-join-btn";
 
-    if (isLive) {
+    if (session.status === "live") {
+
         button.textContent = "Join Live Class";
 
         button.addEventListener("click", async () => {
-            button.disabled = true;
-            button.textContent = "Connecting...";
 
             await joinLiveClass(session, uid);
 
-            if (!currentRoom) {
-                button.disabled = false;
-                button.textContent = "Join Live Class";
-            }
         });
 
     } else {
+
         button.textContent = "Waiting for Teacher";
         button.disabled = true;
+
     }
 
     card.append(
@@ -555,10 +557,182 @@ function createLiveSessionCard(session, uid) {
 }
 
 // ======================================================
-// REQUEST LIVEKIT ACCESS TOKEN
+// MANUAL SESSION ID JOIN
+// ======================================================
+
+async function joinUsingSessionId() {
+
+    if (isJoining) return;
+
+    if (!currentStudent) {
+
+        showMessage(
+            sessionIdMessage,
+            "Please sign in again.",
+            true
+        );
+
+        return;
+    }
+
+    if (currentRoom) {
+
+        showMessage(
+            sessionIdMessage,
+            "You are already connected to a live class.",
+            true
+        );
+
+        return;
+    }
+
+    const sessionId =
+        String(studentSessionIdInput?.value || "").trim();
+
+    if (!sessionId) {
+
+        showMessage(
+            sessionIdMessage,
+            "Please enter your Session ID.",
+            true
+        );
+
+        studentSessionIdInput?.focus();
+
+        return;
+    }
+
+    if (sessionId.length > 100) {
+
+        showMessage(
+            sessionIdMessage,
+            "Invalid Session ID.",
+            true
+        );
+
+        return;
+    }
+
+    setJoiningState(true);
+
+    showMessage(
+        sessionIdMessage,
+        "Checking your Session ID..."
+    );
+
+    try {
+
+        // Get only the specific session document.
+        const sessionRef = doc(
+            db,
+            "liveSessions",
+            sessionId
+        );
+
+        const sessionSnapshot = await getDoc(sessionRef);
+
+        if (!sessionSnapshot.exists()) {
+
+            throw new Error(
+                "Session not found. Check the ID provided by your teacher."
+            );
+
+        }
+
+        const session = {
+            id: sessionSnapshot.id,
+            ...sessionSnapshot.data()
+        };
+
+        // Must be an active student account.
+        if (
+            !currentStudentProfile ||
+            currentStudentProfile.role !== "student" ||
+            currentStudentProfile.status !== "active"
+        ) {
+
+            throw new Error(
+                "Your student account is not active."
+            );
+
+        }
+
+        // Only scheduled/live sessions are valid.
+        if (!["scheduled", "live"].includes(session.status)) {
+
+            throw new Error(
+                "This live class is already ended or unavailable."
+            );
+
+        }
+
+        // Manual joining is only allowed when the teacher has started.
+        if (session.status !== "live") {
+
+            throw new Error(
+                "The teacher has not started this class yet."
+            );
+
+        }
+
+        // Verify the signed-in student is an authorized participant.
+        if (
+            !Array.isArray(session.participantUids) ||
+            !session.participantUids.includes(currentStudent.uid)
+        ) {
+
+            throw new Error(
+                "You are not included in this live class. Contact your teacher."
+            );
+
+        }
+
+        showMessage(
+            sessionIdMessage,
+            "Session verified. Connecting..."
+        );
+
+        await joinLiveClass(
+            session,
+            currentStudent.uid
+        );
+
+        if (currentRoom) {
+
+            showMessage(
+                sessionIdMessage,
+                "Successfully connected to the live class."
+            );
+
+            if (studentSessionIdInput) {
+                studentSessionIdInput.value = "";
+            }
+
+        }
+
+    } catch (error) {
+
+        console.error("Manual Session ID join error:", error);
+
+        showMessage(
+            sessionIdMessage,
+            error.message || "Unable to join this session.",
+            true
+        );
+
+    } finally {
+
+        setJoiningState(false);
+
+    }
+}
+
+// ======================================================
+// REQUEST LIVEKIT TOKEN
 // ======================================================
 
 async function requestLiveKitToken(roomId) {
+
     const user = auth.currentUser;
 
     if (!user) {
@@ -568,6 +742,7 @@ async function requestLiveKitToken(roomId) {
     const idToken = await user.getIdToken();
 
     const response = await fetch(TOKEN_URL, {
+
         method: "POST",
 
         headers: {
@@ -578,97 +753,34 @@ async function requestLiveKitToken(roomId) {
         body: JSON.stringify({
             roomId
         })
+
     });
 
-    const data = await response.json().catch(() => ({}));
+    let data;
+
+    try {
+        data = await response.json();
+    } catch {
+        throw new Error("Invalid response from LiveKit Worker.");
+    }
 
     if (!response.ok || !data.success) {
+
         throw new Error(
             data.error || "Unable to obtain LiveKit access token."
         );
+
     }
 
     if (!data.serverUrl || !data.token) {
+
         throw new Error(
             "LiveKit Worker returned an incomplete response."
         );
+
     }
 
     return data;
-}
-
-// ======================================================
-// DISPLAY REMOTE TRACK
-// ======================================================
-
-function displayRemoteTrack(track, participant) {
-    if (!studentLiveVideo || !track) return;
-
-    // Prevent duplicate display of the same track.
-    const trackId = track.sid || track.mediaStreamTrack?.id;
-
-    if (
-        trackId &&
-        studentLiveVideo.querySelector(
-            `[data-live-track="${CSS.escape(trackId)}"]`
-        )
-    ) {
-        return;
-    }
-
-    const element = track.attach();
-
-    element.autoplay = true;
-    element.playsInline = true;
-
-    element.dataset.liveTrack = trackId || "";
-
-    element.style.maxWidth = "100%";
-
-    if (track.kind === "video") {
-        element.style.width = "100%";
-        element.style.maxHeight = "480px";
-        element.style.objectFit = "contain";
-        element.style.background = "#000";
-    }
-
-    if (track.kind === "audio") {
-        element.style.display = "none";
-    }
-
-    studentLiveVideo.appendChild(element);
-
-    console.log(
-        "Remote track displayed:",
-        participant?.identity || "Unknown participant",
-        track.kind
-    );
-
-    if (track.kind === "video") {
-        element.play?.().catch(error => {
-            console.warn("Video autoplay may require user interaction:", error);
-        });
-    }
-}
-
-// ======================================================
-// DISPLAY ALREADY SUBSCRIBED TRACKS
-// ======================================================
-
-function displayExistingRemoteTracks(room) {
-    room.remoteParticipants.forEach(participant => {
-        participant.trackPublications.forEach(publication => {
-            if (
-                publication.isSubscribed &&
-                publication.track
-            ) {
-                displayRemoteTrack(
-                    publication.track,
-                    participant
-                );
-            }
-        });
-    });
 }
 
 // ======================================================
@@ -676,229 +788,262 @@ function displayExistingRemoteTracks(room) {
 // ======================================================
 
 async function joinLiveClass(session, uid) {
-    if (isJoining || currentRoom) {
+
+    if (isJoining && !currentRoom) {
+        // Manual join already owns the joining state.
+        // Continue with this request.
+    }
+
+    if (currentRoom) {
+
         showMessage(
             studentLiveMessage,
-            "You are already connecting to or attending a live class.",
+            "You are already in a live class.",
             true
         );
 
         return;
+
     }
 
-    isJoining = true;
-
-    try {
-        if (normalize(session.status) !== "live") {
-            throw new Error("This class is not live yet.");
-        }
-
-        if (
-            !Array.isArray(session.participantUids) ||
-            !session.participantUids.includes(uid)
-        ) {
-            throw new Error(
-                "You are not authorized to join this class."
-            );
-        }
-
-        if (!currentStudentProfile?.sectionId) {
-            throw new Error(
-                "Your student account has no assigned section."
-            );
-        }
-
-        if (
-            String(session.sectionId || "") !==
-            String(currentStudentProfile.sectionId)
-        ) {
-            throw new Error(
-                "This live class does not belong to your assigned section."
-            );
-        }
-
-        if (!studentLiveRoom) {
-            throw new Error(
-                "The live classroom interface is missing."
-            );
-        }
-
-        studentLiveRoom.hidden = false;
-
-        display(
-            studentLiveTitle,
-            session.title,
-            "EqualLearn Live"
-        );
-
-        setLiveStatus("CONNECTING");
-
-        clearLiveVideo();
-        resetMediaState();
+    if (session.status !== "live") {
 
         showMessage(
             studentLiveMessage,
-            "Connecting to your classroom..."
+            "This class is not live yet.",
+            true
         );
 
-        // The Worker independently verifies the student's account,
-        // section membership, participant permission, and session status.
+        return;
+
+    }
+
+    if (
+        !Array.isArray(session.participantUids) ||
+        !session.participantUids.includes(uid)
+    ) {
+
+        showMessage(
+            studentLiveMessage,
+            "You are not authorized to join this class.",
+            true
+        );
+
+        return;
+
+    }
+
+    if (!studentLiveRoom) {
+
+        console.error("Student live room element is missing.");
+
+        return;
+
+    }
+
+    studentLiveRoom.hidden = false;
+
+    if (studentLiveTitle) {
+        studentLiveTitle.textContent =
+            session.title || "EqualLearn Live";
+    }
+
+    if (studentLiveStatus) {
+        studentLiveStatus.textContent = "Connecting...";
+    }
+
+    if (studentLiveVideo) {
+
+        studentLiveVideo.replaceChildren();
+
+        const connecting = document.createElement("p");
+
+        connecting.style.color = "white";
+        connecting.textContent = "Connecting to classroom...";
+
+        studentLiveVideo.appendChild(connecting);
+
+    }
+
+    showMessage(
+        studentLiveMessage,
+        "Connecting to your classroom..."
+    );
+
+    if (studentMicBtn) studentMicBtn.disabled = true;
+    if (studentCameraBtn) studentCameraBtn.disabled = true;
+
+    try {
+
+        // Request a participant token from the Cloudflare Worker.
         const access = await requestLiveKitToken(session.id);
 
-        if (
-            access.mode &&
-            normalize(access.mode) !== normalize(session.mode)
-        ) {
-            throw new Error(
-                "The live session mode does not match the server response."
-            );
-        }
-
         const room = new Room({
+
             adaptiveStream: true,
             dynacast: true
+
         });
 
         currentRoom = room;
         currentSession = session;
 
-        // ----------------------------------------------
-        // REMOTE TRACK EVENTS
-        // ----------------------------------------------
-
+        // REMOTE TRACK SUBSCRIBED
         room.on(
             RoomEvent.TrackSubscribed,
             (track, publication, participant) => {
-                displayRemoteTrack(track, participant);
+
+                console.log(
+                    "Student subscribed to track:",
+                    participant.identity,
+                    track.kind
+                );
+
+                if (!studentLiveVideo) return;
+
+                const element = track.attach();
+
+                element.autoplay = true;
+                element.playsInline = true;
+
+                element.style.maxWidth = "100%";
+
+                if (track.kind === "video") {
+
+                    element.style.width = "100%";
+                    element.style.maxHeight = "480px";
+                    element.style.objectFit = "contain";
+
+                }
+
+                studentLiveVideo.appendChild(element);
+
             }
         );
 
+        // REMOTE TRACK UNSUBSCRIBED
         room.on(
             RoomEvent.TrackUnsubscribed,
-            (track) => {
+            track => {
+
                 track.detach().forEach(element => {
                     element.remove();
                 });
+
             }
         );
 
-        room.on(
-            RoomEvent.ParticipantConnected,
-            participant => {
-                console.log(
-                    "Participant connected:",
-                    participant.identity
-                );
+        // DISCONNECTED
+        room.on(RoomEvent.Disconnected, () => {
+
+            console.log("Student disconnected from LiveKit.");
+
+            if (studentLiveStatus) {
+                studentLiveStatus.textContent = "DISCONNECTED";
             }
-        );
 
-        room.on(
-            RoomEvent.ParticipantDisconnected,
-            participant => {
-                console.log(
-                    "Participant disconnected:",
-                    participant.identity
-                );
-            }
-        );
+        });
 
-        room.on(
-            RoomEvent.Disconnected,
-            () => {
-                console.log("Student disconnected from LiveKit.");
-
-                if (!isLeaving) {
-                    currentRoom = null;
-                    currentSession = null;
-
-                    resetMediaState();
-                    clearLiveVideo();
-
-                    setLiveStatus("DISCONNECTED");
-
-                    showMessage(
-                        studentLiveMessage,
-                        "You have been disconnected from the live classroom."
-                    );
-                }
-            }
-        );
-
-        // ----------------------------------------------
-        // CONNECT TO LIVEKIT
-        // ----------------------------------------------
-
+        // CONNECT
         await room.connect(
             access.serverUrl,
             access.token
         );
 
-        // Display tracks that may have been subscribed during connection.
-        displayExistingRemoteTracks(room);
+        // Check publishing permission.
+        studentCanPublish =
+            Array.isArray(session.publishUids) &&
+            session.publishUids.includes(uid);
 
-        // ----------------------------------------------
-        // STUDENT PERMISSIONS
-        // ----------------------------------------------
+        // Students may publish only in meeting mode and if authorized.
+        if (
+            session.mode === "meeting" &&
+            studentCanPublish
+        ) {
 
-        const mode = normalize(session.mode);
+            await room.localParticipant.setMicrophoneEnabled(true);
+            await room.localParticipant.setCameraEnabled(true);
 
-        // Livestream: student is a viewer.
-        // Meeting: an authorized student can publish.
-        // This must match the permissions issued by the Worker.
-        studentCanPublish = mode === "meeting";
+            studentMicEnabled = true;
+            studentCameraEnabled = true;
 
-        // Privacy: do not automatically activate the student's
-        // microphone or camera upon entering the meeting.
-        studentMicEnabled = false;
-        studentCameraEnabled = false;
+            if (studentMicBtn) studentMicBtn.disabled = false;
+            if (studentCameraBtn) studentCameraBtn.disabled = false;
 
-        if (studentCanPublish) {
-            setMediaControls(true);
+        } else {
+
+            studentMicEnabled = false;
+            studentCameraEnabled = false;
+
+            if (studentMicBtn) studentMicBtn.disabled = true;
+            if (studentCameraBtn) studentCameraBtn.disabled = true;
+
+        }
+
+        if (studentLiveStatus) {
+            studentLiveStatus.textContent = "CONNECTED";
+        }
+
+        if (
+            session.mode === "meeting" &&
+            !studentCanPublish
+        ) {
 
             showMessage(
                 studentLiveMessage,
-                "Connected to the meeting. Your microphone and camera are off. Turn them on when you are ready."
+                "Connected. Your microphone and camera are disabled until the teacher allows participation."
             );
 
         } else {
-            setMediaControls(false);
 
             showMessage(
                 studentLiveMessage,
-                "Connected to the livestream. You can watch and listen to your teacher."
+                "You are connected to EqualLearn Live."
             );
+
         }
 
-        setLiveStatus("CONNECTED");
+        if (studentMicBtn) {
+            studentMicBtn.textContent = "Mute Microphone";
+        }
+
+        if (studentCameraBtn) {
+            studentCameraBtn.textContent = "Turn Camera Off";
+        }
 
         studentLiveRoom.scrollIntoView({
+
             behavior: "smooth",
             block: "start"
+
         });
 
-        console.log("Student successfully joined:", session.id);
-
     } catch (error) {
+
         console.error("JOIN LIVE CLASS ERROR:", error);
 
         if (currentRoom) {
+
             try {
                 await currentRoom.disconnect();
-            } catch (disconnectError) {
-                console.warn(
-                    "LiveKit disconnect cleanup error:",
-                    disconnectError
-                );
-            }
+            } catch (_) {}
+
         }
 
         currentRoom = null;
         currentSession = null;
 
-        resetMediaState();
-        clearLiveVideo();
+        studentCanPublish = false;
 
-        setLiveStatus("CONNECTION FAILED");
+        studentMicEnabled = false;
+        studentCameraEnabled = false;
+
+        if (studentLiveStatus) {
+            studentLiveStatus.textContent = "CONNECTION FAILED";
+        }
+
+        if (studentMicBtn) studentMicBtn.disabled = true;
+        if (studentCameraBtn) studentCameraBtn.disabled = true;
 
         showMessage(
             studentLiveMessage,
@@ -906,8 +1051,6 @@ async function joinLiveClass(session, uid) {
             true
         );
 
-    } finally {
-        isJoining = false;
     }
 }
 
@@ -916,11 +1059,11 @@ async function joinLiveClass(session, uid) {
 // ======================================================
 
 async function toggleStudentMicrophone() {
-    if (!currentRoom || !studentCanPublish) {
-        return;
-    }
+
+    if (!currentRoom || !studentCanPublish) return;
 
     try {
+
         const nextState = !studentMicEnabled;
 
         await currentRoom.localParticipant.setMicrophoneEnabled(
@@ -930,19 +1073,23 @@ async function toggleStudentMicrophone() {
         studentMicEnabled = nextState;
 
         if (studentMicBtn) {
+
             studentMicBtn.textContent = studentMicEnabled
                 ? "Mute Microphone"
                 : "Unmute Microphone";
+
         }
 
     } catch (error) {
+
         console.error("Student microphone error:", error);
 
         showMessage(
             studentLiveMessage,
-            error.message || "Unable to change microphone state.",
+            error.message,
             true
         );
+
     }
 }
 
@@ -951,11 +1098,11 @@ async function toggleStudentMicrophone() {
 // ======================================================
 
 async function toggleStudentCamera() {
-    if (!currentRoom || !studentCanPublish) {
-        return;
-    }
+
+    if (!currentRoom || !studentCanPublish) return;
 
     try {
+
         const nextState = !studentCameraEnabled;
 
         await currentRoom.localParticipant.setCameraEnabled(
@@ -965,19 +1112,23 @@ async function toggleStudentCamera() {
         studentCameraEnabled = nextState;
 
         if (studentCameraBtn) {
+
             studentCameraBtn.textContent = studentCameraEnabled
                 ? "Turn Camera Off"
                 : "Turn Camera On";
+
         }
 
     } catch (error) {
+
         console.error("Student camera error:", error);
 
         showMessage(
             studentLiveMessage,
-            error.message || "Unable to change camera state.",
+            error.message,
             true
         );
+
     }
 }
 
@@ -986,101 +1137,125 @@ async function toggleStudentCamera() {
 // ======================================================
 
 async function leaveLiveClass() {
-    if (isLeaving) return;
-
-    isLeaving = true;
 
     try {
-        const room = currentRoom;
 
-        // Clear state first to prevent duplicate leave actions.
+        if (currentRoom) {
+            await currentRoom.disconnect();
+        }
+
         currentRoom = null;
         currentSession = null;
 
-        resetMediaState();
-
-        if (room) {
-            await room.disconnect();
-        }
-
-        clearLiveVideo();
+        studentMicEnabled = false;
+        studentCameraEnabled = false;
+        studentCanPublish = false;
 
         if (studentLiveRoom) {
             studentLiveRoom.hidden = true;
         }
 
-        setLiveStatus("DISCONNECTED");
+        if (studentLiveVideo) {
+            studentLiveVideo.replaceChildren();
+        }
+
+        if (studentMicBtn) {
+            studentMicBtn.disabled = true;
+        }
+
+        if (studentCameraBtn) {
+            studentCameraBtn.disabled = true;
+        }
+
+        if (studentLiveStatus) {
+            studentLiveStatus.textContent = "Disconnected";
+        }
 
         showMessage(
             studentLiveMessage,
             "You left the live classroom."
         );
 
+        showMessage(
+            sessionIdMessage,
+            "You have left the classroom."
+        );
+
     } catch (error) {
+
         console.error("Leave live class error:", error);
 
         showMessage(
             studentLiveMessage,
-            error.message || "Unable to leave the live classroom.",
+            error.message,
             true
         );
 
-    } finally {
-        isLeaving = false;
     }
+
 }
 
 // ======================================================
-// REFRESH LIVE CLASSES
+// EVENT LISTENERS
 // ======================================================
 
-refreshLiveBtn?.addEventListener("click", async () => {
-    if (!currentStudent) return;
+// Refresh available live classes.
+refreshLiveBtn?.addEventListener("click", () => {
 
-    refreshLiveBtn.disabled = true;
-
-    try {
-        await loadLiveSessions(currentStudent.uid);
-    } finally {
-        refreshLiveBtn.disabled = false;
+    if (currentStudent) {
+        loadLiveSessions(currentStudent.uid);
     }
+
 });
 
-// ======================================================
-// BUTTON EVENTS
-// ======================================================
+// Join through Session ID button.
+joinBySessionIdBtn?.addEventListener(
+    "click",
+    joinUsingSessionId
+);
 
+// Press Enter to join.
+studentSessionIdInput?.addEventListener(
+    "keydown",
+    event => {
+
+        if (event.key === "Enter") {
+
+            event.preventDefault();
+
+            joinUsingSessionId();
+
+        }
+
+    }
+);
+
+// Microphone.
 studentMicBtn?.addEventListener(
     "click",
     toggleStudentMicrophone
 );
 
+// Camera.
 studentCameraBtn?.addEventListener(
     "click",
     toggleStudentCamera
 );
 
+// Leave.
 studentLeaveBtn?.addEventListener(
     "click",
     leaveLiveClass
 );
 
 // ======================================================
-// INITIAL CONTROL STATE
-// ======================================================
-
-resetMediaState();
-
-if (studentLiveRoom) {
-    studentLiveRoom.hidden = true;
-}
-
-// ======================================================
-// PAGE CLEANUP
+// CLEANUP
 // ======================================================
 
 window.addEventListener("beforeunload", () => {
+
     if (currentRoom) {
         currentRoom.disconnect();
     }
+
 });

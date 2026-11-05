@@ -288,45 +288,117 @@
 
     </section>
 
-    <!-- LIVE CLASSES -->
+   <!-- LIVE CLASSES -->
+<section class="el-card student-live-room">
 
-    <section class="el-card student-live-room">
+    <div class="el-card-title">
+        <div>
+            <h3>
+                EqualLearn Live
+                <span
+                    id="liveSessionCount"
+                    style="display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:99px;background:var(--el-primary-soft);color:var(--el-primary);font-size:10px">
+                    0
+                </span>
+            </h3>
+            <span>Scheduled and ongoing classes for your section</span>
+        </div>
 
-        <div class="el-card-title">
+        <button type="button" class="el-btn" id="refreshLiveBtn">
+            Refresh
+        </button>
+    </div>
 
-            <div>
-                <h3>
-                    EqualLearn Live
-                    <span
-                        id="liveSessionCount"
-                        style="display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:99px;background:var(--el-primary-soft);color:var(--el-primary);font-size:10px">
-                        0
-                    </span>
-                </h3>
+    <!-- JOIN USING SESSION ID -->
+    <div class="student-session-join"
+         style="margin:16px 0;padding:16px;border:1px solid var(--el-border);border-radius:14px">
 
-                <span>Scheduled and ongoing classes for your section</span>
-            </div>
+        <h4 style="margin:0 0 6px;font-size:14px">
+            Join using Session ID
+        </h4>
+
+        <p style="margin:0 0 12px;font-size:11px;color:var(--el-muted)">
+            Enter the Session ID provided by your teacher.
+        </p>
+
+        <div style="display:flex;gap:9px;flex-wrap:wrap">
+            <input
+                type="text"
+                id="studentSessionIdInput"
+                placeholder="Paste Session ID here"
+                autocomplete="off"
+                spellcheck="false"
+                maxlength="100"
+                style="flex:1;min-width:180px;padding:12px;border:1px solid var(--el-border);border-radius:10px;font:inherit">
 
             <button
                 type="button"
-                class="el-btn"
-                id="refreshLiveBtn">
-                Refresh
+                class="el-btn el-btn-primary"
+                id="joinBySessionIdBtn">
+                Join Class
             </button>
-
         </div>
 
-        <div
-            id="liveSessionList"
-            class="student-live-list">
+        <p
+            id="sessionIdMessage"
+            role="status"
+            aria-live="polite"
+            style="margin:10px 0 0;font-size:12px">
+        </p>
+    </div>
 
-            <p class="loading">
-                Loading live classes...
-            </p>
+    <!-- AVAILABLE SESSIONS -->
+    <div id="liveSessionList" class="student-live-list">
+        <p class="loading">Loading live classes...</p>
+    </div>
 
-        </div>
+</section>
 
-    </section>
+<!-- STUDENT LIVE ROOM -->
+<section
+    class="el-card student-live-room"
+    id="studentLiveRoom"
+    hidden>
+
+    <div class="el-card-title">
+        <h3 id="studentLiveTitle">EqualLearn Live</h3>
+        <span id="studentLiveStatus">Connecting...</span>
+    </div>
+
+    <div id="studentLiveVideo" class="student-live-video">
+        <p style="color:white">Connecting to classroom...</p>
+    </div>
+
+    <div class="student-live-controls">
+
+        <button
+            type="button"
+            class="el-btn"
+            id="studentMicBtn"
+            disabled>
+            Mute Microphone
+        </button>
+
+        <button
+            type="button"
+            class="el-btn"
+            id="studentCameraBtn"
+            disabled>
+            Turn Camera Off
+        </button>
+
+        <button
+            type="button"
+            class="el-btn el-btn-primary"
+            id="studentLeaveBtn">
+            Leave Classroom
+        </button>
+
+    </div>
+
+    <p id="studentLiveMessage" class="student-live-message"></p>
+
+</section>
 
     <!-- STUDENT LIVE ROOM -->
 
