@@ -1,0 +1,788 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#635bff">
+
+<title>Sign In | EqualLearn</title>
+
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/icons/icon-192.png">
+
+<link rel="stylesheet" href="assets/css/loading-screen.css">
+<link rel="stylesheet" href="assets/css/equallearn.css">
+
+<style>
+:root {
+    --primary: #635bff;
+    --primary-dark: #5146e5;
+    --text: #17172b;
+    --muted: #77778f;
+    --border: #e8e8f2;
+    --surface: #ffffff;
+    --background: #f7f7ff;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    background: var(--background);
+    color: var(--text);
+}
+
+.el-public {
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    min-height: 100vh;
+}
+
+/* LEFT PANEL */
+
+.el-hero {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: clamp(35px, 7vw, 100px);
+    color: white;
+    background:
+        radial-gradient(circle at 85% 15%, rgba(255,255,255,.20), transparent 30%),
+        radial-gradient(circle at 10% 90%, rgba(139,132,255,.5), transparent 35%),
+        linear-gradient(145deg, #5146e5, #7168ff 55%, #4035c8);
+}
+
+.el-hero::before,
+.el-hero::after {
+    content: "";
+    position: absolute;
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.el-hero::before {
+    width: 440px;
+    height: 440px;
+    right: -180px;
+    top: -170px;
+}
+
+.el-hero::after {
+    width: 340px;
+    height: 340px;
+    right: -110px;
+    top: -120px;
+}
+
+.el-wordmark {
+    position: absolute;
+    top: 38px;
+    left: clamp(35px, 7vw, 100px);
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    color: white;
+    text-decoration: none;
+    font-size: 23px;
+    font-weight: 800;
+    letter-spacing: -.7px;
+}
+
+.el-wordmark-mark {
+    width: 43px;
+    height: 43px;
+    display: grid;
+    place-items: center;
+    background: white;
+    border-radius: 13px;
+    overflow: hidden;
+}
+
+.el-wordmark-mark img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.el-hero-content {
+    position: relative;
+    z-index: 1;
+    max-width: 570px;
+    margin-top: 35px;
+}
+
+.el-hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 13px;
+    border: 1px solid rgba(255,255,255,.25);
+    background: rgba(255,255,255,.12);
+    border-radius: 30px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.el-hero h1 {
+    margin: 25px 0 17px;
+    max-width: 520px;
+    font-size: clamp(38px, 5vw, 61px);
+    line-height: 1.1;
+    letter-spacing: -2.2px;
+    font-weight: 800;
+}
+
+.el-hero-description {
+    max-width: 460px;
+    color: rgba(255,255,255,.82);
+    font-size: 16px;
+    line-height: 1.8;
+}
+
+.el-feature-list {
+    display: grid;
+    gap: 21px;
+    margin-top: 48px;
+}
+
+.el-feature {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.el-feature-icon {
+    flex-shrink: 0;
+    width: 43px;
+    height: 43px;
+    display: grid;
+    place-items: center;
+    background: rgba(255,255,255,.14);
+    border: 1px solid rgba(255,255,255,.17);
+    border-radius: 13px;
+}
+
+.el-feature-icon svg {
+    width: 21px;
+    height: 21px;
+}
+
+.el-feature strong {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.el-feature span {
+    color: rgba(255,255,255,.72);
+    font-size: 12px;
+}
+
+/* RIGHT PANEL */
+
+.el-auth-panel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 45px 30px;
+    background: var(--background);
+}
+
+.el-auth-card {
+    width: 100%;
+    max-width: 430px;
+    padding: clamp(25px, 4vw, 43px);
+    background: var(--surface);
+    border: 1px solid rgba(230,230,245,.85);
+    border-radius: 24px;
+    box-shadow: 0 20px 65px rgba(48, 42, 112, .07);
+}
+
+.el-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color .2s;
+}
+
+.el-back:hover {
+    color: var(--primary);
+}
+
+.el-auth-heading {
+    margin-top: 39px;
+    margin-bottom: 29px;
+}
+
+.el-auth-heading h2 {
+    margin: 0 0 10px;
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -1px;
+}
+
+.el-auth-heading p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* FORM */
+
+.el-field {
+    margin-bottom: 20px;
+}
+
+.el-field label {
+    display: block;
+    margin-bottom: 9px;
+    color: #33334c;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.el-input-wrap {
+    position: relative;
+}
+
+.el-field input {
+    width: 100%;
+    height: 53px;
+    padding: 0 15px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #fcfcff;
+    outline: none;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+    transition: border .2s, box-shadow .2s, background .2s;
+}
+
+.el-field input::placeholder {
+    color: #aaaabd;
+}
+
+.el-field input:focus {
+    border-color: var(--primary);
+    background: white;
+    box-shadow: 0 0 0 4px rgba(99,91,255,.10);
+}
+
+.el-forgot-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: -4px;
+    margin-bottom: 23px;
+}
+
+.el-forgot-link {
+    color: var(--primary);
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: color .2s;
+}
+
+.el-forgot-link:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+.el-forgot-link:focus-visible,
+.el-back:focus-visible,
+.el-auth-footer a:focus-visible {
+    outline: 3px solid rgba(99,91,255,.3);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+/* BUTTON */
+
+.el-login-btn {
+    position: relative;
+    width: 100%;
+    height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border: 0;
+    border-radius: 12px;
+    background: linear-gradient(110deg, #635bff, #766eff);
+    color: white;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(99,91,255,.22);
+    transition: transform .2s, box-shadow .2s, opacity .2s;
+}
+
+.el-login-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 25px rgba(99,91,255,.30);
+}
+
+.el-login-btn:active {
+    transform: translateY(0);
+}
+
+.el-login-btn:disabled {
+    opacity: .65;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* MESSAGE */
+
+#message:empty {
+    display: none;
+}
+
+#message {
+    overflow-wrap: anywhere;
+    white-space: pre-line;
+    margin-bottom: 18px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+#message.error {
+    display: block;
+    color: #b42318;
+    background: #fff0ef;
+    border: 1px solid #ffd7d3;
+}
+
+#message.success {
+    display: block;
+    color: #167345;
+    background: #eafaf1;
+    border: 1px solid #c7efd8;
+}
+
+/* FOOTER */
+
+.el-auth-footer {
+    margin-top: 30px;
+    padding-top: 22px;
+    border-top: 1px solid #eeeeF5;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.el-auth-footer a {
+    color: var(--primary);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.el-auth-footer a:hover {
+    text-decoration: underline;
+}
+
+.el-security-note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    margin-top: 25px;
+    color: #9999aa;
+    font-size: 11px;
+}
+
+.el-security-note svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 850px) {
+    .el-public {
+        grid-template-columns: 1fr;
+    }
+
+    .el-hero {
+        min-height: 300px;
+        padding: 95px 35px 45px;
+    }
+
+    .el-wordmark {
+        top: 25px;
+        left: 35px;
+    }
+
+    .el-hero-content {
+        margin-top: 10px;
+    }
+
+    .el-hero h1 {
+        font-size: 39px;
+    }
+
+    .el-hero-description {
+        font-size: 14px;
+    }
+
+    .el-feature-list {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-top: 28px;
+    }
+
+    .el-feature {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 9px;
+    }
+
+    .el-feature span {
+        line-height: 1.5;
+    }
+
+    .el-auth-panel {
+        padding: 35px 20px 50px;
+    }
+}
+
+@media (max-width: 480px) {
+    .el-hero {
+        min-height: 270px;
+        padding: 85px 24px 30px;
+    }
+
+    .el-wordmark {
+        left: 24px;
+    }
+
+    .el-hero h1 {
+        font-size: 33px;
+        letter-spacing: -1.3px;
+    }
+
+    .el-hero-description {
+        font-size: 13px;
+        line-height: 1.65;
+    }
+
+    .el-feature-list {
+        grid-template-columns: 1fr;
+        gap: 13px;
+        margin-top: 24px;
+    }
+
+    .el-feature {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .el-feature-icon {
+        width: 37px;
+        height: 37px;
+    }
+
+    .el-auth-panel {
+        padding: 25px 15px 40px;
+    }
+
+    .el-auth-card {
+        padding: 25px 21px;
+        border-radius: 19px;
+    }
+
+    .el-auth-heading {
+        margin-top: 30px;
+    }
+
+    .el-auth-heading h2 {
+        font-size: 28px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="el-public">
+
+    <!-- LEFT BRANDING PANEL -->
+    <section class="el-hero">
+
+        <a class="el-wordmark" href="index.html">
+
+            <span class="el-wordmark-mark">
+                <img src="assets/icons/icon-192.png" alt="EqualLearn logo">
+            </span>
+
+            <span>EqualLearn</span>
+
+        </a>
+
+        <div class="el-hero-content">
+
+            <div class="el-hero-tag">
+                <span>✦</span>
+                Learning without barriers
+            </div>
+
+            <h1>
+                Your journey to equal learning starts here.
+            </h1>
+
+            <p class="el-hero-description">
+                One platform for students, teachers, and administrators
+                to learn, collaborate, and grow together.
+            </p>
+
+            <div class="el-feature-list">
+
+                <div class="el-feature">
+
+                    <div class="el-feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z"/>
+                            <path d="m9 12 2 2 4-4"/>
+                        </svg>
+                    </div>
+
+                    <div>
+                        <strong>Secure accounts</strong>
+                        <span>Protected with Firebase Authentication.</span>
+                    </div>
+
+                </div>
+
+                <div class="el-feature">
+
+                    <div class="el-feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="10" cy="7" r="4"/>
+                            <path d="M20 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                    </div>
+
+                    <div>
+                        <strong>Connected community</strong>
+                        <span>One learning space for every role.</span>
+                    </div>
+
+                </div>
+
+                <div class="el-feature">
+
+                    <div class="el-feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="16" rx="3"/>
+                            <path d="M8 9h8M8 13h5"/>
+                        </svg>
+                    </div>
+
+                    <div>
+                        <strong>Learn anywhere</strong>
+                        <span>Designed for desktop and mobile.</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- RIGHT LOGIN PANEL -->
+    <section class="el-auth-panel">
+
+        <div class="el-auth-card">
+
+            <a href="index.html" class="el-back">
+                <span aria-hidden="true">←</span>
+                Back to home
+            </a>
+
+            <div class="el-auth-heading">
+
+                <h2>Welcome back!</h2>
+
+                <p>
+                    Sign in to continue to your EqualLearn workspace.
+                </p>
+
+            </div>
+
+            <div
+                id="message"
+                role="status"
+                aria-live="polite"
+            ></div>
+
+
+            <!-- LOGIN FORM -->
+            <form id="loginForm">
+
+                <div class="el-field">
+
+                    <label for="email">
+                        Email address
+                    </label>
+
+                    <input
+                        type="email"
+                        id="email"
+                        placeholder="you@example.com"
+                        autocomplete="username"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="el-field">
+
+                    <label for="password">
+                        Password
+                    </label>
+
+                    <div class="el-input-wrap">
+
+                        <input
+                            type="password"
+                            id="password"
+                            placeholder="Enter your password"
+                            autocomplete="current-password"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- FORGOT PASSWORD -->
+                <div class="el-forgot-row">
+
+                    <a
+                        href="#"
+                        id="forgotPasswordLink"
+                        class="el-forgot-link"
+                    >
+                        Forgot password?
+                    </a>
+
+                </div>
+
+
+                <!-- SIGN IN -->
+                <button
+                    class="el-login-btn"
+                    type="submit"
+                    id="loginButton"
+                >
+
+                    <span>Sign in to EqualLearn</span>
+
+                    <svg
+                        width="19"
+                        height="19"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
+                        <path d="M5 12h14"/>
+                        <path d="m12 5 7 7-7 7"/>
+                    </svg>
+
+                </button>
+
+            </form>
+
+
+            <div class="el-auth-footer">
+
+                New student?
+
+                <a href="register.html">
+                    Create an account
+                </a>
+
+            </div>
+
+
+            <div class="el-security-note">
+
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                >
+                    <rect x="3" y="11" width="18" height="11" rx="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+
+                Secure access to your learning account
+
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+<!-- JAVASCRIPT -->
+<script type="module" src="assets/js/login.js"></script>
+<script type="module" src="assets/js/password-toggle.js"></script>
+<script type="module" src="assets/js/pwa.js"></script>
+<script type="module" src="assets/js/theme.js"></script>
+
+</body>
+</html>

@@ -1,12 +1,13 @@
+
 {
-  "name": "equallearn-functions",
-  "description": "EqualLearn secure Firebase backend",
-  "main": "index.js",
-  "engines": {
-    "node": "20"
+  "name": "equallearn-production",
+  "version": "4.0.0",
+  "private": true,
+  "description": "EqualLearn Learning Management System",
+  "scripts": {
+    "mobile:build-web": "node scripts/build-mobile.mjs"
   },
-  "dependencies": {
-    "firebase-admin": "^13.0.0",
-    "firebase-functions": "^6.0.0"
+  "engines": {
+    "node": ">=20"
   }
 }

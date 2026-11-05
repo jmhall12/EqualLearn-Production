@@ -1,0 +1,96 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Classes | EqualLearn</title>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#f4f6fa;color:#182230;font-family:Arial,sans-serif}
+    .page{max-width:1200px;margin:auto;padding:28px 20px}
+    .header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+    h1{font-size:27px;margin:0 0 7px}
+    h2{font-size:20px;margin:0 0 8px}
+    .muted{color:#6b7789;font-size:14px}
+    .btn{border:0;border-radius:9px;padding:11px 15px;font-weight:700;cursor:pointer}
+    .primary{background:#245bdb;color:white}
+    .secondary{background:#e9eef8;color:#26364e}
+    .back{margin-bottom:18px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+    .section-card{background:white;border:1px solid #e4e9f1;border-radius:15px;padding:20px;cursor:pointer;transition:.2s;box-shadow:0 5px 18px #15223808}
+    .section-card:hover{transform:translateY(-3px);border-color:#9db8f5}
+    .section-card h2{margin:0 0 10px}
+    .count{font-size:28px;font-weight:800;color:#245bdb;margin:16px 0 4px}
+    .panel{background:white;border:1px solid #e4e9f1;border-radius:15px;padding:20px;margin-bottom:18px}
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+    input{flex:1;min-width:200px;padding:12px;border:1px solid #d9e0ea;border-radius:9px;font:inherit}
+    .table-wrap{overflow-x:auto}
+    table{width:100%;border-collapse:collapse;min-width:850px}
+    th,td{text-align:left;padding:14px 12px;border-bottom:1px solid #edf0f4;font-size:13px}
+    th{background:#f8fafc;color:#64748b}
+    .empty{background:white;border-radius:14px;padding:30px;text-align:center;color:#758196}
+    .pill{display:inline-block;padding:5px 9px;background:#edf3ff;color:#245bdb;border-radius:20px;font-size:12px;font-weight:700}
+    @media(max-width:650px){.page{padding:18px 13px}h1{font-size:23px}.panel{padding:14px}}
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="header">
+      <div>
+        <h1>My Classes</h1>
+        <div class="muted">Your assigned sections and student directories.</div>
+      </div>
+      <button class="btn secondary" onclick="location.href='dashboard.html'">Back to Dashboard</button>
+    </header>
+
+    <section id="classesView">
+      <div class="panel">
+        <h2>Assigned Sections</h2>
+        <p class="muted">Select a section to view its students.</p>
+      </div>
+      <div id="sectionsGrid" class="grid">
+        <div class="empty">Loading your sections...</div>
+      </div>
+    </section>
+
+    <section id="studentsView" hidden>
+      <button class="btn secondary back" id="backToClasses">← Back to My Classes</button>
+
+      <div class="panel">
+        <h2 id="selectedSectionName">Section</h2>
+        <div class="muted" id="selectedSectionInfo"></div>
+        <div class="count" id="sectionStudentCount">0</div>
+        <div class="muted">Students in this section</div>
+      </div>
+
+      <div class="panel">
+        <h2>Student Directory</h2>
+        <div class="toolbar">
+          <input id="studentSearch" type="search" placeholder="Search name, student ID, or email...">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Student ID</th>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Course</th>
+                <th>Year</th>
+                <th>Section</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="studentsTable">
+              <tr><td colspan="7" class="empty">Select a section.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="../assets/js/teacher-classes.js"></script>
+</body>
+</html>

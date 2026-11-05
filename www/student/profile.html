@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#635bff">
+  <title>Student Profile - EqualLearn</title>
+
+  <link rel="manifest" href="../manifest.webmanifest">
+  <link rel="icon" href="../assets/icons/icon-192.png">
+  <link rel="stylesheet" href="../assets/css/equallearn.css">
+
+  <style>
+    .profile-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(260px, .7fr);
+      gap: 20px;
+    }
+
+    .profile-panel {
+      background: var(--el-surface);
+      border: 1px solid var(--el-border);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: var(--el-shadow);
+    }
+
+    .profile-panel h2 {
+      margin-top: 0;
+    }
+
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .profile-field.full {
+      grid-column: 1 / -1;
+    }
+
+    .profile-field label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 7px;
+    }
+
+    .profile-field input,
+    .profile-field select {
+      width: 100%;
+      min-height: 46px;
+      padding: 11px 13px;
+      border: 1px solid var(--el-border);
+      border-radius: 12px;
+      background: white;
+      color: var(--el-text);
+    }
+
+    .profile-field input[readonly] {
+      background: #f3f4f8;
+      color: var(--el-muted);
+    }
+
+    .profile-help {
+      color: var(--el-muted);
+      font-size: 12px;
+      line-height: 1.6;
+      margin-top: 7px;
+    }
+
+    .profile-message {
+      padding: 13px;
+      border-radius: 12px;
+      background: var(--el-primary-soft);
+      color: var(--el-primary);
+      font-size: 13px;
+      margin-bottom: 18px;
+    }
+
+    .profile-message.success {
+      background: #ecfdf3;
+      color: #15803d;
+    }
+
+    .profile-message.error {
+      background: #fff1f2;
+      color: #be123c;
+    }
+
+    .profile-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    @media(max-width: 760px) {
+      .profile-layout,
+      .profile-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .profile-field.full {
+        grid-column: auto;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<main class="el-dashboard">
+
+  <header class="el-page-header">
+    <div>
+      <div class="el-page-kicker">Account settings</div>
+      <h1>My Student Profile</h1>
+      <p>Complete your academic information and keep your student record updated.</p>
+    </div>
+  </header>
+
+  <div class="profile-layout">
+
+    <section class="profile-panel">
+
+      <h2>Personal & Academic Information</h2>
+
+      <div id="profileMessage"
+           class="profile-message"
+           role="status">
+        Loading your profile...
+      </div>
+
+      <form id="studentProfileForm">
+
+        <div class="profile-grid">
+
+          <input
+  id="profileName"
+  type="text"
+  maxlength="120"
+  placeholder="Enter your full name"
+  autocomplete="name"
+  required>
+
+          <div class="profile-field full">
+            <label for="profileEmail">Institutional Email</label>
+            <input id="profileEmail" type="email" readonly>
+            <div class="profile-help">
+              Your email is provided by your authenticated account.
+            </div>
+          </div>
+
+          <div class="profile-field">
+            <label for="profileStudentNumber">Student ID Number *</label>
+            <input
+              id="profileStudentNumber"
+              type="text"
+              maxlength="40"
+              placeholder="Enter your student ID"
+              required>
+          </div>
+
+          <div class="profile-field">
+            <label for="profileCourse">Course / Program *</label>
+            <input
+              id="profileCourse"
+              type="text"
+              maxlength="120"
+              placeholder="e.g. BS Information Technology"
+              required>
+          </div>
+
+          <div class="profile-field">
+            <label for="profileYear">Year Level *</label>
+            <select id="profileYear" required>
+              <option value="">Select year level</option>
+              <option value="1">1st Year</option>
+              <option value="2">2nd Year</option>
+              <option value="3">3rd Year</option>
+              <option value="4">4th Year</option>
+              <option value="5">5th Year</option>
+            </select>
+          </div>
+
+          <div class="profile-field">
+            <label for="profileSection">Section</label>
+            <input
+              id="profileSection"
+              type="text"
+              maxlength="80"
+              placeholder="e.g. BSIT 4A">
+          </div>
+
+          <div class="profile-field full">
+            <label for="profileCohort">Academic Year</label>
+            <input
+              id="profileCohort"
+              type="text"
+              maxlength="80"
+              placeholder="e.g. 2026-2027">
+          </div>
+
+        </div>
+
+        <p class="profile-help">
+          Academic details are initially self-reported and must be
+          verified by an authorized administrator or official MIS/LSM record.
+        </p>
+
+        <div class="profile-actions">
+
+          <button
+            type="submit"
+            id="saveProfile"
+            class="el-btn el-btn-primary">
+            Save Profile
+          </button>
+
+          <a
+            href="dashboard.html"
+            class="el-btn el-btn-secondary">
+            Back to Dashboard
+          </a>
+
+        </div>
+
+      </form>
+
+    </section>
+
+    <aside class="profile-panel">
+
+      <h2>Profile Information</h2>
+
+      <p class="profile-help">
+        Completing your academic profile helps EqualLearn organize
+        your student records and classroom information.
+      </p>
+
+      <hr>
+
+      <p><strong>Course</strong><br>
+        Your enrolled academic program.
+      </p>
+
+      <p><strong>Year Level</strong><br>
+        Your current academic year.
+      </p>
+
+      <p><strong>Student ID</strong><br>
+        Your official institutional student number.
+      </p>
+
+      <p><strong>Verification</strong><br>
+        Your academic details may be reviewed by an administrator.
+      </p>
+
+    </aside>
+
+  </div>
+
+</main>
+
+<script type="module" src="../assets/js/student-profile.js"></script>
+<script type="module" src="../assets/js/ui-shell.js"></script>
+<script type="module" src="../assets/js/pwa.js"></script>
+<script type="module" src="../assets/js/theme.js"></script>
+
+</body>
+</html>

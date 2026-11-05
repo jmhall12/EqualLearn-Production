@@ -1,0 +1,325 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111827">
+  <title>EqualLearn Live - Teacher</title>
+
+  <link rel="manifest" href="../manifest.webmanifest">
+  <link rel="stylesheet" href="../assets/css/equallearn.css">
+  <link rel="icon" href="../assets/icons/icon-192.png">
+
+  <style>
+    .live-page { max-width:1100px; margin:auto; }
+    .live-field {
+      width:100%; box-sizing:border-box; padding:12px;
+      border:1px solid #dbe1ea; border-radius:10px;
+      margin-top:7px; background:var(--el-card,#fff);
+      color:inherit;
+    }
+    .live-form-grid {
+      display:grid; grid-template-columns:1fr 1fr; gap:16px;
+    }
+    .live-section { margin-top:16px; }
+    .live-help { font-size:12px; color:#64748b; margin-top:6px; }
+    .live-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+    .live-message { font-size:13px; margin-top:12px; }
+    .live-layout {
+      display:grid; grid-template-columns:1.4fr .8fr;
+      gap:18px; margin-top:20px;
+    }
+    .live-preview {
+      background:#111827; min-height:280px; border-radius:14px;
+      display:flex; align-items:center; justify-content:center;
+      color:white; text-align:center; overflow:hidden;
+    }
+    .live-status {
+      display:inline-flex; align-items:center; gap:7px;
+      padding:7px 12px; border-radius:30px;
+      background:#eef2ff; color:#4f46e5;
+      font-size:12px; font-weight:700;
+    }
+    .live-dot { width:8px; height:8px; border-radius:50%; background:currentColor; }
+    .live-info { display:grid; gap:15px; }
+    .live-info strong { display:block; overflow-wrap:anywhere; }
+    .live-hidden { display:none !important; }
+
+    /* Full-screen meeting */
+    #meetingScreen {
+      position:fixed; inset:0; z-index:99999;
+      background:#111827; color:white;
+      display:none; flex-direction:column;
+      font-family:Arial,sans-serif;
+    }
+    #meetingScreen.active { display:flex; }
+    .meeting-topbar {
+      min-height:58px; display:flex; align-items:center;
+      justify-content:space-between; gap:12px;
+      padding:10px 18px; background:#1f2937;
+      box-sizing:border-box;
+    }
+    .meeting-brand { font-weight:700; }
+    .meeting-top-meta { font-size:12px; color:#cbd5e1; }
+    .meeting-main {
+      display:flex; flex:1; min-height:0; overflow:hidden;
+    }
+    .meeting-stage {
+      flex:1; min-width:0; display:flex;
+      flex-direction:column; padding:14px; gap:12px;
+    }
+    #participantGrid {
+      flex:1; min-height:0; display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+      gap:12px; align-content:center; overflow:auto;
+    }
+    .participant-tile {
+      position:relative; min-height:170px;
+      aspect-ratio:16/9; background:#374151;
+      border-radius:14px; overflow:hidden;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .participant-tile video {
+      width:100%; height:100%; object-fit:cover;
+    }
+    .participant-tile audio { display:none; }
+    .participant-name {
+      position:absolute; bottom:9px; left:10px;
+      padding:5px 9px; background:#0009;
+      border-radius:7px; font-size:12px;
+    }
+    .participant-placeholder {
+      color:#d1d5db; font-size:14px; text-align:center;
+    }
+    .meeting-sidebar {
+      width:300px; max-width:40vw; background:#1f2937;
+      border-left:1px solid #374151; display:none;
+      flex-direction:column; min-height:0;
+    }
+    .meeting-sidebar.open { display:flex; }
+    .sidebar-header {
+      padding:15px; border-bottom:1px solid #374151;
+      display:flex; justify-content:space-between; align-items:center;
+    }
+    #meetingParticipants, #meetingChatMessages {
+      padding:12px; overflow:auto; flex:1;
+    }
+    .meeting-person {
+      padding:10px; border-bottom:1px solid #374151;
+      font-size:13px;
+    }
+    .meeting-chat-form {
+      display:flex; gap:7px; padding:10px;
+      border-top:1px solid #374151;
+    }
+    .meeting-chat-form input {
+      flex:1; min-width:0; padding:10px;
+      border-radius:8px; border:1px solid #4b5563;
+      background:#111827; color:white;
+    }
+    .chat-message {
+      padding:9px; margin-bottom:8px;
+      background:#374151; border-radius:9px;
+      overflow-wrap:anywhere; font-size:13px;
+    }
+    .chat-message strong { display:block; margin-bottom:4px; }
+    .meeting-controls {
+      display:flex; justify-content:center; align-items:center;
+      flex-wrap:wrap; gap:10px; padding:13px;
+      background:#1f2937; border-top:1px solid #374151;
+    }
+    .meeting-controls button, .meeting-topbar button,
+    .meeting-sidebar button {
+      border:0; border-radius:9px; padding:11px 14px;
+      cursor:pointer; font-weight:600;
+      background:#374151; color:white;
+    }
+    .meeting-controls button:disabled { opacity:.45; cursor:not-allowed; }
+    .meeting-controls .danger { background:#dc2626; }
+    .meeting-controls .active-control { background:#4f46e5; }
+    .meeting-controls .leave { background:#b91c1c; }
+    #meetingNotice {
+      font-size:12px; color:#fbbf24; text-align:center;
+      min-height:16px;
+    }
+    @media(max-width:800px) {
+      .live-layout,.live-form-grid { grid-template-columns:1fr; }
+      .meeting-sidebar { width:100%; max-width:none; }
+      .meeting-main { flex-direction:column; }
+      .meeting-sidebar.open { height:40%; border-left:0; border-top:1px solid #374151; }
+      #participantGrid { grid-template-columns:repeat(auto-fit,minmax(145px,1fr)); }
+      .participant-tile { min-height:115px; }
+      .meeting-controls { gap:7px; padding:10px 5px; }
+      .meeting-controls button { padding:10px; font-size:12px; }
+    }
+  </style>
+</head>
+
+<body>
+<div class="el-dashboard live-page">
+
+  <div class="el-page-header">
+    <div>
+      <div class="el-page-kicker">Teaching workspace</div>
+      <h1>EqualLearn Live</h1>
+      <p>Create section-based classes or private student meetings.</p>
+    </div>
+    <a href="dashboard.html" class="el-btn">Back to dashboard</a>
+  </div>
+
+  <section class="el-card">
+    <div class="el-card-title">
+      <h3>Create Live Session</h3>
+      <span>Choose your classroom and participants</span>
+    </div>
+
+    <label for="liveTitle">Session title</label>
+    <input id="liveTitle" class="live-field" maxlength="120"
+      placeholder="Example: Gender Equality - Lesson 1">
+
+    <div class="live-form-grid live-section">
+      <div>
+        <label for="meetingType">Meeting type</label>
+        <select id="meetingType" class="live-field">
+          <option value="batch">Batch Meeting - Entire section</option>
+          <option value="one_on_one">One-on-One Meeting - One student</option>
+          <option value="livestream">Livestream - Teacher broadcasts</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="sectionSelect">Assigned section</label>
+        <select id="sectionSelect" class="live-field">
+          <option value="">Loading assigned sections...</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="studentSelectWrap" class="live-section live-hidden">
+      <label for="studentSelect">Select one student</label>
+      <select id="studentSelect" class="live-field">
+        <option value="">Select a section first</option>
+      </select>
+      <p class="live-help">Only the selected student and teacher can join this private meeting.</p>
+    </div>
+
+    <div class="live-section">
+      <label for="liveDescription">Description</label>
+      <textarea id="liveDescription" class="live-field" rows="3"
+        maxlength="500" placeholder="Describe your live class..."></textarea>
+    </div>
+
+    <div class="live-actions">
+      <button id="createLiveBtn" class="el-btn el-btn-primary" type="button">
+        Create Session
+      </button>
+    </div>
+    <p id="createMessage" class="live-message" role="status"></p>
+  </section>
+
+  <div class="live-layout">
+    <section class="el-card">
+      <div class="el-card-title">
+        <h3>Classroom Preview</h3>
+        <span id="liveStatus" class="live-status">
+          <span class="live-dot"></span> Not connected
+        </span>
+      </div>
+
+      <div class="live-preview" id="teacherPreview">
+        <div>
+          <div style="font-size:42px">🎥</div>
+          <h3>EqualLearn Live Room</h3>
+          <p id="previewMessage">Create a session to prepare your classroom.</p>
+        </div>
+      </div>
+
+      <div class="live-actions">
+        <button id="startLiveBtn" class="el-btn el-btn-primary" type="button" disabled>
+          Start Meeting
+        </button>
+        <button id="micBtn" class="el-btn" type="button" disabled>Microphone</button>
+        <button id="cameraBtn" class="el-btn" type="button" disabled>Camera</button>
+        <button id="endLiveBtn" class="el-btn" type="button" disabled>End Session</button>
+      </div>
+      <p id="connectionMessage" class="live-message" role="status">No active connection.</p>
+    </section>
+
+    <section class="el-card">
+      <div class="el-card-title">
+        <h3>Session Information</h3>
+        <span>Current classroom</span>
+      </div>
+
+      <div class="live-info">
+        <div><small>Title</small><strong id="sessionTitle">Not created</strong></div>
+        <div><small>Session ID</small><strong id="sessionId">—</strong></div>
+        <div><small>Meeting type</small><strong id="sessionMode">—</strong></div>
+        <div><small>Section</small><strong id="sessionSection">—</strong></div>
+        <div><small>Participants</small><strong id="sessionParticipants">—</strong></div>
+        <div><small>Teacher</small><strong id="sessionTeacher">Loading...</strong></div>
+        <div><small>Status</small><strong id="sessionState">Not created</strong></div>
+      </div>
+    </section>
+  </div>
+
+  <a id="logout" href="../login.html" style="display:none">Logout</a>
+</div>
+
+<!-- Full-screen meeting interface -->
+<div id="meetingScreen" aria-label="EqualLearn meeting">
+  <div class="meeting-topbar">
+    <div>
+      <div class="meeting-brand">EqualLearn Live</div>
+      <div class="meeting-top-meta" id="meetingTitle">Connecting...</div>
+    </div>
+    <div>
+      <span id="meetingClock" class="meeting-top-meta">LIVE</span>
+      <button id="participantsToggle" type="button">People</button>
+      <button id="chatToggle" type="button">Chat</button>
+    </div>
+  </div>
+
+  <div class="meeting-main">
+    <main class="meeting-stage">
+      <div id="participantGrid">
+        <div class="participant-tile">
+          <div class="participant-placeholder">Connecting to meeting...</div>
+        </div>
+      </div>
+      <div id="meetingNotice" role="status"></div>
+    </main>
+
+    <aside class="meeting-sidebar" id="meetingSidebar">
+      <div class="sidebar-header">
+        <strong id="sidebarTitle">Participants</strong>
+        <button id="closeSidebar" type="button">Close</button>
+      </div>
+      <div id="meetingParticipants"></div>
+      <div id="meetingChatMessages" class="live-hidden"></div>
+      <form id="meetingChatForm" class="meeting-chat-form live-hidden">
+        <input id="meetingChatInput" maxlength="1000"
+          placeholder="Send a message..." autocomplete="off">
+        <button type="submit">Send</button>
+      </form>
+    </aside>
+  </div>
+
+  <div class="meeting-controls">
+    <button id="meetingMicBtn" type="button">Mute mic</button>
+    <button id="meetingCameraBtn" type="button">Turn camera off</button>
+    <button id="screenShareBtn" type="button">Share screen</button>
+    <button id="meetingPeopleBtn" type="button">Participants</button>
+    <button id="meetingChatBtn" type="button">Chat</button>
+    <button id="meetingLeaveBtn" class="leave" type="button">Leave</button>
+    <button id="meetingEndBtn" class="danger" type="button">End for everyone</button>
+  </div>
+</div>
+
+<script type="module" src="../assets/js/teacher_live.js"></script>
+<script type="module" src="../assets/js/ui-shell.js"></script>
+<script type="module" src="../assets/js/pwa.js"></script>
+<script type="module" src="../assets/js/theme.js"></script>
+</body>
+</html>
