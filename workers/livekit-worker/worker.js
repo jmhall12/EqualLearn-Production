@@ -373,7 +373,7 @@ export default {
         }, 400, headers);
       }
 
-      // 4. Read the actual live session.
+           // 4. Read and validate the actual live session.
       const session = await getFirestoreDocument(
         `liveSessions/${encodeURIComponent(roomId)}`,
         idToken
@@ -383,6 +383,12 @@ export default {
         return json({
           error: "Live session does not exist."
         }, 404, headers);
+      }
+
+      if (session.roomId !== roomId) {
+        return json({
+          error: "Live session ID does not match."
+        }, 403, headers);
       }
 
       if (String(session.status || "").toLowerCase() !== "live") {
@@ -400,6 +406,7 @@ export default {
       }
 
       const teacherUid = String(session.teacherUid || "");
+      const sectionId = String(session.sectionId || "");
 
       const participantUids = Array.isArray(session.participantUids)
         ? session.participantUids.map(String)
@@ -413,11 +420,46 @@ export default {
       const isTeacher = role === "teacher" && teacherUid === uid;
       const isStudent = role === "student";
 
-      // 5. Confirm permission to join.
+      if (!sectionId) {
+        return json({
+          error: "The live session has no assigned section."
+        }, 403, headers);
+      }
+
+      // 5. Verify the teacher is still assigned to this section.
+      if (isTeacher) {
+        const section = await getFirestoreDocument(
+          `sections/${encodeURIComponent(sectionId)}`,
+          idToken
+        );
+
+        const teacherIds = Array.isArray(section?.teacherIds)
+          ? section.teacherIds.map(String)
+          : [];
+
+        const teacherIsAssigned =
+          teacherIds.includes(uid) ||
+          String(section?.teacherId || "") === uid;
+
+        if (!section || !teacherIsAssigned) {
+          return json({
+            error: "You are no longer assigned to this classroom."
+          }, 403, headers);
+        }
+      }
+
+      // 6. Verify student section membership and session participation.
+      const studentBelongsToSection =
+        isStudent &&
+        String(user.sectionId || "") === sectionId;
+
       const isParticipant =
         isAdmin ||
         isTeacher ||
-        participantUids.includes(uid);
+        (
+          studentBelongsToSection &&
+          participantUids.includes(uid)
+        );
 
       if (!isParticipant) {
         return json({
@@ -425,14 +467,13 @@ export default {
         }, 403, headers);
       }
 
-      // 6. Determine camera and microphone publishing permission.
-      let canPublish = false;
-
-      if (isAdmin || isTeacher) {
-        canPublish = true;
-      } else if (isStudent && mode === "meeting") {
-        canPublish = publishUids.includes(uid);
-      }
+      // 7. Determine publishing permissions.
+      // Livestream: teacher/admin can publish; students watch.
+      // Meeting: authorized students may also use their mic and camera.
+      const canPublish =
+        isAdmin ||
+        isTeacher ||
+        (isStudent && mode === "meeting" && isParticipant);
 
       // 7. Create LiveKit access token.
       const room = `el-${roomId}`;
