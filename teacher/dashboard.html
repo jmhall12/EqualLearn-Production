@@ -1,7 +1,196 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#635bff"><title>Teacher Dashboard - EqualLearn</title><link rel="manifest" href="../manifest.webmanifest"><link rel="stylesheet" href="../assets/css/equallearn.css"><link rel="icon" href="../assets/icons/icon-192.png"></head><body>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="#635bff">
+
+    <title>Teacher Dashboard - EqualLearn</title>
+
+    <link rel="manifest" href="../manifest.webmanifest">
+    <link rel="stylesheet" href="../assets/css/equallearn.css">
+    <link rel="icon" href="../assets/icons/icon-192.png">
+</head>
+
+<body>
 <div class="el-dashboard">
-<div class="el-page-header"><div><div class="el-page-kicker">Teaching workspace</div><h1>Teacher dashboard</h1><p id="teacherName">Loading teacher...</p></div><a class="el-btn el-btn-primary" href="modules.html"><span data-icon="plus"></span> New module</a></div>
-<section class="el-grid el-grid-4"><article class="el-card el-stat"><div class="el-stat-icon"><span data-icon="modules"></span></div><div class="el-stat-label">Modules</div><div id="moduleCount" class="el-stat-value">0</div><div class="el-stat-meta">Learning units</div></article><article class="el-card el-stat"><div class="el-stat-icon"><span data-icon="lesson"></span></div><div class="el-stat-label">Lessons</div><div id="lessonCount" class="el-stat-value">0</div><div class="el-stat-meta">Lesson content</div></article><article class="el-card el-stat"><div class="el-stat-icon"><span data-icon="quiz"></span></div><div class="el-stat-label">Quizzes</div><div id="quizCount" class="el-stat-value">0</div><div class="el-stat-meta">Assessment questions</div></article><article class="el-card el-stat"><div class="el-stat-icon"><span data-icon="users"></span></div><div class="el-stat-label">Students</div><div id="studentCount" class="el-stat-value">0</div><div class="el-stat-meta">Assigned learners</div></article></section>
-<section class="el-grid el-grid-2" style="margin-top:18px"><article class="el-card"><div class="el-card-title"><h3>Quick actions</h3><span>Create and manage content</span></div><div class="el-quick-grid"><a class="el-quick" href="modules.html"><span class="icon"><span data-icon="modules"></span></span><strong>Modules</strong><span>Create and organize modules.</span></a><a class="el-quick" href="lessons.html"><span class="icon"><span data-icon="lesson"></span></span><strong>Lessons</strong><span>Add lesson material.</span></a><a class="el-quick" href="quiz_builder.html"><span class="icon"><span data-icon="quiz"></span></span><strong>Quiz builder</strong><span>Build assessments.</span></a></div></article><article class="el-card"><div class="el-card-title"><h3>Class engagement</h3><span>Example visualization</span></div><div style="display:grid;gap:18px"><div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px"><span>Module completion</span><strong>78%</strong></div><div class="el-progress"><span style="width:78%"></span></div></div><div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px"><span>Quiz participation</span><strong>64%</strong></div><div class="el-progress"><span style="width:64%"></span></div></div><div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px"><span>Lesson activity</span><strong>86%</strong></div><div class="el-progress"><span style="width:86%"></span></div></div></div></article></section>
-<a id="logout" href="../login.html" style="display:none">Logout</a></div>
-<script type="module" src="../assets/js/teacher_dashboard.js"></script><script type="module" src="../assets/js/ui-shell.js"></script><script type="module" src="../assets/js/pwa.js"></script><script type="module" src="../assets/js/theme.js"></script></body></html>
+
+    <!-- HEADER -->
+    <div class="el-page-header">
+        <div>
+            <div class="el-page-kicker">Teaching workspace</div>
+            <h1>Teacher dashboard</h1>
+            <p id="teacherName">Loading teacher...</p>
+        </div>
+
+        <a class="el-btn el-btn-primary" href="modules.html">
+            <span data-icon="plus"></span> New module
+        </a>
+    </div>
+
+    <!-- STATISTICS -->
+    <section class="el-grid el-grid-4">
+
+        <article class="el-card el-stat">
+            <div class="el-stat-icon"><span data-icon="modules"></span></div>
+            <div class="el-stat-label">Modules</div>
+            <div id="moduleCount" class="el-stat-value">0</div>
+            <div class="el-stat-meta">Learning units</div>
+        </article>
+
+        <article class="el-card el-stat">
+            <div class="el-stat-icon"><span data-icon="lesson"></span></div>
+            <div class="el-stat-label">Lessons</div>
+            <div id="lessonCount" class="el-stat-value">0</div>
+            <div class="el-stat-meta">Lesson content</div>
+        </article>
+
+        <article class="el-card el-stat">
+            <div class="el-stat-icon"><span data-icon="quiz"></span></div>
+            <div class="el-stat-label">Quizzes</div>
+            <div id="quizCount" class="el-stat-value">0</div>
+            <div class="el-stat-meta">Assessment questions</div>
+        </article>
+
+        <article class="el-card el-stat">
+            <div class="el-stat-icon"><span data-icon="users"></span></div>
+            <div class="el-stat-label">Students</div>
+            <div id="studentCount" class="el-stat-value">0</div>
+            <div class="el-stat-meta">Assigned learners</div>
+        </article>
+
+    </section>
+
+    <!-- QUICK ACTIONS AND ENGAGEMENT -->
+    <section class="el-grid el-grid-2" style="margin-top:18px">
+
+        <article class="el-card">
+            <div class="el-card-title">
+                <h3>Quick actions</h3>
+                <span>Create and manage content</span>
+            </div>
+
+            <div class="el-quick-grid">
+
+                <a class="el-quick" href="modules.html">
+                    <span class="icon"><span data-icon="modules"></span></span>
+                    <strong>Modules</strong>
+                    <span>Create and organize modules.</span>
+                </a>
+
+                <a class="el-quick" href="lessons.html">
+                    <span class="icon"><span data-icon="lesson"></span></span>
+                    <strong>Lessons</strong>
+                    <span>Add lesson material.</span>
+                </a>
+
+                <a class="el-quick" href="quiz_builder.html">
+                    <span class="icon"><span data-icon="quiz"></span></span>
+                    <strong>Quiz builder</strong>
+                    <span>Build assessments.</span>
+                </a>
+
+                <!-- NEW: LIVE CLASSES -->
+                <a class="el-quick" href="live.html">
+                    <span class="icon"><span data-icon="video"></span></span>
+                    <strong>Live Classes</strong>
+                    <span>Start livestream or interactive classroom meetings.</span>
+                </a>
+
+            </div>
+        </article>
+
+        <article class="el-card">
+            <div class="el-card-title">
+                <h3>Class engagement</h3>
+                <span>Example visualization</span>
+            </div>
+
+            <div style="display:grid;gap:18px">
+
+                <div>
+                    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px">
+                        <span>Module completion</span>
+                        <strong>78%</strong>
+                    </div>
+                    <div class="el-progress">
+                        <span style="width:78%"></span>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px">
+                        <span>Quiz participation</span>
+                        <strong>64%</strong>
+                    </div>
+                    <div class="el-progress">
+                        <span style="width:64%"></span>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px">
+                        <span>Lesson activity</span>
+                        <strong>86%</strong>
+                    </div>
+                    <div class="el-progress">
+                        <span style="width:86%"></span>
+                    </div>
+                </div>
+
+            </div>
+        </article>
+
+    </section>
+
+    <!-- NEW: EQUALLEARN LIVE -->
+    <section class="el-card" style="margin-top:18px">
+
+        <div class="el-card-title">
+            <h3>EqualLearn Live</h3>
+            <span>Real-time classroom sessions</span>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap">
+
+            <div style="flex:1;min-width:220px">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                    <span data-icon="video"></span>
+                    <strong>Live classroom experience</strong>
+                </div>
+
+                <h2 style="margin:0 0 8px">
+                    Bring your classroom online.
+                </h2>
+
+                <p style="color:var(--el-muted,#64748b);margin:0">
+                    Conduct live lessons, interact with students,
+                    and manage your virtual classroom using EqualLearn Live.
+                </p>
+            </div>
+
+            <a href="live.html" class="el-btn el-btn-primary">
+                <span data-icon="video"></span>
+                Open Live Classes
+            </a>
+
+        </div>
+
+    </section>
+
+    <!-- LOGOUT -->
+    <a id="logout" href="../login.html" style="display:none">
+        Logout
+    </a>
+
+</div>
+
+<!-- EXISTING SCRIPTS -->
+<script type="module" src="../assets/js/teacher_dashboard.js"></script>
+<script type="module" src="../assets/js/ui-shell.js"></script>
+<script type="module" src="../assets/js/pwa.js"></script>
+<script type="module" src="../assets/js/theme.js"></script>
+
+</body>
+</html>
