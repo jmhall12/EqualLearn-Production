@@ -1,0 +1,645 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#635bdb">
+  <title>EqualLearn Live</title>
+
+  <link rel="stylesheet" href="../assets/css/style.css">
+
+  <style>
+    :root {
+      --live-bg: #f5f6fb;
+      --live-card: #ffffff;
+      --live-text: #20243a;
+      --live-muted: #7b8197;
+      --live-primary: #635bdb;
+      --live-border: #e8eaf2;
+    }
+
+    body {
+      background: var(--live-bg);
+      color: var(--live-text);
+    }
+
+    .live-page {
+      width: min(1400px, 100%);
+      margin: auto;
+      padding: 28px;
+    }
+
+    .live-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 26px;
+    }
+
+    .live-heading h1 {
+      margin: 0;
+      font-size: clamp(25px, 4vw, 34px);
+      font-weight: 800;
+    }
+
+    .live-heading p {
+      margin: 7px 0 0;
+      color: var(--live-muted);
+      font-size: 14px;
+    }
+
+    .live-card {
+      background: var(--live-card);
+      border: 1px solid var(--live-border);
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: 0 8px 28px rgba(20, 25, 50, .04);
+    }
+
+    .live-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .live-card-header h2 {
+      margin: 0;
+      font-size: 19px;
+    }
+
+    .live-card-header p {
+      margin: 5px 0 0;
+      font-size: 12px;
+      color: var(--live-muted);
+    }
+
+    .live-count {
+      display: inline-grid;
+      place-items: center;
+      min-width: 25px;
+      height: 25px;
+      padding: 0 7px;
+      margin-left: 5px;
+      border-radius: 20px;
+      background: #eeedff;
+      color: var(--live-primary);
+      font-size: 11px;
+    }
+
+    .live-refresh {
+      border: 1px solid var(--live-border);
+      background: white;
+      color: var(--live-text);
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .live-refresh:hover {
+      border-color: var(--live-primary);
+      color: var(--live-primary);
+    }
+
+    .student-live-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 15px;
+    }
+
+    .student-live-card {
+      border: 1px solid var(--live-border);
+      border-radius: 15px;
+      padding: 18px;
+      background: white;
+    }
+
+    .student-live-card h3 {
+      margin: 0 0 9px;
+      font-size: 16px;
+    }
+
+    .student-live-card p {
+      color: var(--live-muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .student-live-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .student-live-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 9px;
+      border-radius: 30px;
+      background: #fff3e9;
+      color: #b96b24;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .student-live-status.is-live {
+      background: #e8f9ef;
+      color: #16834b;
+    }
+
+    .student-live-status.is-live::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #18a957;
+    }
+
+    .student-join-btn {
+      width: 100%;
+      margin-top: 12px;
+      padding: 12px;
+      border: 0;
+      border-radius: 10px;
+      background: var(--live-primary);
+      color: white;
+      font-weight: 750;
+      cursor: pointer;
+    }
+
+    .student-join-btn:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    .live-empty {
+      grid-column: 1 / -1;
+      padding: 35px 15px;
+      text-align: center;
+      color: var(--live-muted);
+      border: 1px dashed var(--live-border);
+      border-radius: 14px;
+    }
+
+    /* FULL SCREEN MEETING */
+
+    #studentMeetingScreen {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      display: flex;
+      flex-direction: column;
+      background: #101321;
+      color: white;
+    }
+
+    #studentMeetingScreen[hidden] {
+      display: none !important;
+    }
+
+    .meeting-topbar {
+      min-height: 66px;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid #2b3042;
+      background: #171b2b;
+    }
+
+    .meeting-brand {
+      font-weight: 800;
+      font-size: 16px;
+    }
+
+    .meeting-subtitle {
+      display: block;
+      color: #a7aec3;
+      font-size: 11px;
+      margin-top: 4px;
+    }
+
+    .meeting-layout {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 300px;
+    }
+
+    .meeting-stage {
+      min-width: 0;
+      min-height: 0;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .meeting-notice {
+      color: #aeb5c8;
+      font-size: 12px;
+      margin-bottom: 12px;
+    }
+
+    .meeting-grid {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      grid-auto-rows: minmax(180px, 1fr);
+      gap: 12px;
+      overflow-y: auto;
+    }
+
+    .meeting-tile {
+      position: relative;
+      min-height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-radius: 15px;
+      background: #242a3d;
+      border: 1px solid #353c52;
+    }
+
+    .meeting-tile video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #101321;
+    }
+
+    .meeting-tile audio {
+      display: none;
+    }
+
+    .meeting-tile-name {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      background: rgba(0,0,0,.6);
+      color: white;
+      font-size: 11px;
+      z-index: 2;
+    }
+
+    .meeting-sidebar {
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: #191e2e;
+      border-left: 1px solid #30364a;
+    }
+
+    .meeting-sidebar-section {
+      padding: 16px;
+      border-bottom: 1px solid #30364a;
+    }
+
+    .meeting-sidebar-section h3 {
+      margin: 0 0 12px;
+      font-size: 14px;
+    }
+
+    #studentMeetingPeople {
+      max-height: 180px;
+      overflow-y: auto;
+      color: #c3c9d8;
+      font-size: 12px;
+    }
+
+    #studentMeetingChat {
+      flex: 1;
+      min-height: 100px;
+      overflow-y: auto;
+      padding: 14px;
+      font-size: 12px;
+      color: #dce1ed;
+    }
+
+    .meeting-chat-form {
+      display: flex;
+      gap: 7px;
+      padding: 12px;
+      border-top: 1px solid #30364a;
+    }
+
+    .meeting-chat-form input {
+      min-width: 0;
+      flex: 1;
+      padding: 10px;
+      border-radius: 9px;
+      border: 1px solid #41485d;
+      background: #252b3e;
+      color: white;
+    }
+
+    .meeting-chat-form button {
+      padding: 9px 12px;
+      border: 0;
+      border-radius: 9px;
+      background: var(--live-primary);
+      color: white;
+      font-weight: 700;
+    }
+
+    .meeting-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 15px;
+      background: #171b2b;
+      border-top: 1px solid #30364a;
+    }
+
+    .meeting-controls button {
+      min-width: 105px;
+      padding: 11px 15px;
+      border: 1px solid #41485d;
+      border-radius: 10px;
+      background: #282e42;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .meeting-controls button:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+    }
+
+    .meeting-controls .leave-button {
+      background: #d94355;
+      border-color: #d94355;
+    }
+
+    .meeting-back {
+      color: white;
+      text-decoration: none;
+      font-size: 12px;
+      opacity: .8;
+    }
+
+    @media(max-width: 850px) {
+      .meeting-layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(0, 1fr) auto;
+      }
+
+      .meeting-sidebar {
+        max-height: 230px;
+        border-left: 0;
+        border-top: 1px solid #30364a;
+      }
+
+      .meeting-sidebar-section {
+        padding: 10px 14px;
+      }
+
+      #studentMeetingPeople {
+        max-height: 70px;
+      }
+
+      #studentMeetingChat {
+        min-height: 65px;
+      }
+
+      .meeting-stage {
+        padding: 10px;
+      }
+
+      .meeting-grid {
+        grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+        grid-auto-rows: minmax(135px, 1fr);
+        gap: 8px;
+      }
+
+      .meeting-controls {
+        gap: 7px;
+        padding: 10px;
+      }
+
+      .meeting-controls button {
+        min-width: 85px;
+        padding: 10px;
+        font-size: 11px;
+      }
+    }
+
+    @media(max-width: 520px) {
+      .live-page {
+        padding: 18px 13px;
+      }
+
+      .live-card {
+        padding: 15px;
+      }
+
+      .meeting-topbar {
+        padding: 10px 13px;
+      }
+
+      .meeting-brand {
+        font-size: 14px;
+      }
+
+      .meeting-controls button {
+        min-width: 70px;
+        font-size: 10px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="live-page">
+
+    <header class="live-heading">
+      <div>
+        <h1>EqualLearn Live</h1>
+        <p>Join your teacher's live classroom and participate in discussions.</p>
+      </div>
+
+      <a class="live-refresh" href="dashboard.html">
+        ← Dashboard
+      </a>
+    </header>
+
+    <section class="live-card">
+
+      <div class="live-card-header">
+        <div>
+          <h2>
+            Live Classes
+            <span class="live-count" id="liveSessionCount">0</span>
+          </h2>
+          <p>Scheduled and ongoing meetings assigned to your section.</p>
+        </div>
+
+        <button
+          type="button"
+          class="live-refresh"
+          id="refreshLiveBtn">
+          ↻ Refresh
+        </button>
+      </div>
+
+      <div
+        id="liveSessionList"
+        class="student-live-list">
+
+        <div class="live-empty">
+          Loading your live classes...
+        </div>
+
+      </div>
+
+      <p
+        id="studentLiveMessage"
+        role="status"
+        aria-live="polite"
+        style="font-size:12px;margin-top:15px;color:var(--live-muted)">
+      </p>
+
+    </section>
+
+  </main>
+
+  <!-- FULL SCREEN LIVE MEETING -->
+
+  <section id="studentMeetingScreen" hidden>
+
+    <header class="meeting-topbar">
+      <div>
+        <div class="meeting-brand" id="studentMeetingTitle">
+          EqualLearn Live
+        </div>
+        <span
+          class="meeting-subtitle"
+          id="studentMeetingNotice">
+          Connecting to classroom...
+        </span>
+      </div>
+
+      <a href="live.html" class="meeting-back">
+        Meeting room
+      </a>
+    </header>
+
+    <div class="meeting-layout">
+
+      <main class="meeting-stage">
+
+        <div
+          class="meeting-notice"
+          id="studentMeetingConnection">
+          Waiting for participants...
+        </div>
+
+        <div
+          class="meeting-grid"
+          id="studentParticipantGrid">
+
+          <div class="meeting-tile">
+            Connecting to your classroom...
+          </div>
+
+        </div>
+
+      </main>
+
+      <aside class="meeting-sidebar">
+
+        <section class="meeting-sidebar-section">
+          <h3>Participants</h3>
+          <div id="studentMeetingPeople">
+            Loading participants...
+          </div>
+        </section>
+
+        <section class="meeting-sidebar-section">
+          <h3>In-meeting chat</h3>
+        </section>
+
+        <div id="studentMeetingChat">
+          <p style="color:#929bb0">
+            Messages will appear here.
+          </p>
+        </div>
+
+        <form
+          class="meeting-chat-form"
+          id="studentMeetingChatForm">
+
+          <input
+            type="text"
+            id="studentMeetingChatInput"
+            placeholder="Send a message..."
+            maxlength="500"
+            autocomplete="off">
+
+          <button type="submit">Send</button>
+
+        </form>
+
+      </aside>
+
+    </div>
+
+    <footer class="meeting-controls">
+
+      <button
+        type="button"
+        id="studentMeetingMic"
+        disabled>
+        🎙 Microphone
+      </button>
+
+      <button
+        type="button"
+        id="studentMeetingCamera"
+        disabled>
+        📷 Camera
+      </button>
+
+      <button
+        type="button"
+        id="studentMeetingShare"
+        disabled>
+        ▣ Share Screen
+      </button>
+
+      <button
+        type="button"
+        class="leave-button"
+        id="studentMeetingLeave">
+        Leave
+      </button>
+
+    </footer>
+
+  </section>
+
+  <!-- EXISTING EQUALLEARN SCRIPTS -->
+
+  <script type="module" src="../assets/js/student_live.js"></script>
+  <script type="module" src="../assets/js/ui-shell.js"></script>
+  <script type="module" src="../assets/js/pwa.js"></script>
+  <script type="module" src="../assets/js/theme.js"></script>
+
+</body>
+</html>

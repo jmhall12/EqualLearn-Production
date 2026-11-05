@@ -12,6 +12,10 @@ const encoder = new TextEncoder();
 let cachedFirebaseKeys = null;
 let cachedFirebaseKeysUntil = 0;
 
+/* =========================================
+   RESPONSE AND CORS
+========================================= */
+
 function json(data, status = 200, headers = {}) {
   return new Response(JSON.stringify(data), {
     status,
@@ -35,12 +39,17 @@ function corsHeaders(origin) {
   };
 }
 
+/* =========================================
+   JWT HELPERS
+========================================= */
+
 function base64url(input) {
   const bytes = typeof input === "string"
     ? encoder.encode(input)
     : input;
 
   let binary = "";
+
   for (const byte of bytes) {
     binary += String.fromCharCode(byte);
   }
@@ -52,12 +61,15 @@ function base64url(input) {
 }
 
 function decodeBase64url(value) {
-  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+  const normalized = value
+    .replace(/-/g, "+")
+    .replace(/_/g, "/");
+
   const binary = atob(
     normalized + "=".repeat((4 - normalized.length % 4) % 4)
   );
 
-  return Uint8Array.from(binary, c => c.charCodeAt(0));
+  return Uint8Array.from(binary, char => char.charCodeAt(0));
 }
 
 function decodeJwtPart(value) {
@@ -66,8 +78,15 @@ function decodeJwtPart(value) {
   );
 }
 
+/* =========================================
+   FIREBASE TOKEN VERIFICATION
+========================================= */
+
 async function getFirebaseKeys() {
-  if (cachedFirebaseKeys && Date.now() < cachedFirebaseKeysUntil) {
+  if (
+    cachedFirebaseKeys &&
+    Date.now() < cachedFirebaseKeysUntil
+  ) {
     return cachedFirebaseKeys;
   }
 
@@ -124,7 +143,10 @@ async function verifyFirebaseToken(idToken) {
   if (!jwk) {
     cachedFirebaseKeys = null;
     cachedFirebaseKeysUntil = 0;
-    throw new Error("Firebase signing key not found. Please sign in again.");
+
+    throw new Error(
+      "Firebase signing key not found. Please sign in again."
+    );
   }
 
   const publicKey = await crypto.subtle.importKey(
@@ -152,6 +174,10 @@ async function verifyFirebaseToken(idToken) {
   return payload;
 }
 
+/* =========================================
+   FIRESTORE REST DECODER
+========================================= */
+
 function decodeFirestoreValue(value) {
   if (!value) return null;
 
@@ -163,11 +189,15 @@ function decodeFirestoreValue(value) {
   if ("nullValue" in value) return null;
 
   if ("arrayValue" in value) {
-    return (value.arrayValue.values || []).map(decodeFirestoreValue);
+    return (value.arrayValue.values || []).map(
+      decodeFirestoreValue
+    );
   }
 
   if ("mapValue" in value) {
-    return decodeFirestoreFields(value.mapValue.fields || {});
+    return decodeFirestoreFields(
+      value.mapValue.fields || {}
+    );
   }
 
   return null;
@@ -195,20 +225,37 @@ async function getFirestoreDocument(path, idToken) {
 
   const result = await response.json().catch(() => ({}));
 
-  if (response.status === 404) return null;
+  if (response.status === 404) {
+    return null;
+  }
 
   if (!response.ok) {
     throw new Error(
-      result.error?.message || "Unable to read Firestore document."
+      result.error?.message ||
+      "Unable to read Firestore document."
     );
   }
 
   return decodeFirestoreFields(result.fields || {});
 }
 
+/* =========================================
+   VALIDATION HELPERS
+========================================= */
+
 function isUUIDv4(value) {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value
+  );
 }
+
+function normalize(value) {
+  return String(value ?? "").trim().toLowerCase();
+}
+
+/* =========================================
+   LIVEKIT TOKEN GENERATOR
+========================================= */
 
 async function createLiveKitToken(env, options) {
   const {
@@ -233,24 +280,26 @@ async function createLiveKitToken(env, options) {
     iat: now,
     exp: now + 600,
     name: `EqualLearn ${role}`,
+
     video: {
       room,
       roomJoin: true,
       canSubscribe: true,
       canPublish,
       canPublishData: true,
-      ...(canPublish ? {
-        canPublishSources: [
-          "camera",
-          "microphone",
-          "screen_share",
-          "screen_share_audio"
-        ]
-      } : {}),
-      ...(role === "teacher" || role === "admin"
-        ? { roomAdmin: true }
+
+      ...(canPublish
+        ? {
+            canPublishSources: [
+              "camera",
+              "microphone",
+              "screen_share",
+              "screen_share_audio"
+            ]
+          }
         : {})
     },
+
     metadata: JSON.stringify({
       role,
       mode,
@@ -282,16 +331,26 @@ async function createLiveKitToken(env, options) {
   return `${unsigned}.${base64url(new Uint8Array(signature))}`;
 }
 
+/* =========================================
+   MAIN WORKER
+========================================= */
+
 export default {
   async fetch(request, env) {
     const origin = request.headers.get("Origin") || "";
     const headers = corsHeaders(origin);
     const url = new URL(request.url);
 
+    /* CORS ORIGIN VALIDATION */
     if (origin && !ALLOWED_ORIGINS.has(origin)) {
-      return json({ error: "Origin not allowed." }, 403, headers);
+      return json(
+        { success: false, error: "Origin not allowed." },
+        403,
+        headers
+      );
     }
 
+    /* PREFLIGHT */
     if (request.method === "OPTIONS") {
       return new Response(null, {
         status: 204,
@@ -299,33 +358,57 @@ export default {
       });
     }
 
-    if (request.method === "GET" && url.pathname === "/health") {
+    /* HEALTH CHECK */
+    if (
+      request.method === "GET" &&
+      url.pathname === "/health"
+    ) {
       return json({
         success: true,
         service: "EqualLearn Live Token Service"
       }, 200, headers);
     }
 
-    if (request.method !== "POST" || url.pathname !== "/token") {
-      return json({ error: "Endpoint not found." }, 404, headers);
+    /* TOKEN ENDPOINT ONLY */
+    if (
+      request.method !== "POST" ||
+      url.pathname !== "/token"
+    ) {
+      return json(
+        { success: false, error: "Endpoint not found." },
+        404,
+        headers
+      );
     }
 
     try {
+      /* =====================================
+         1. CHECK ENVIRONMENT VARIABLES
+      ===================================== */
+
       if (
         !env.LIVEKIT_API_KEY ||
         !env.LIVEKIT_API_SECRET ||
         !env.LIVEKIT_URL
       ) {
         return json({
+          success: false,
           error: "LiveKit environment variables are incomplete."
         }, 500, headers);
       }
 
-      const authorization = request.headers.get("Authorization") || "";
+      /* =====================================
+         2. VERIFY FIREBASE AUTHENTICATION
+      ===================================== */
+
+      const authorization =
+        request.headers.get("Authorization") || "";
+
       const match = authorization.match(/^Bearer\s+(.+)$/i);
 
       if (!match) {
         return json({
+          success: false,
           error: "Firebase authentication is required."
         }, 401, headers);
       }
@@ -333,47 +416,73 @@ export default {
       const idToken = match[1].trim();
 
       if (!idToken || idToken.length > 10000) {
-        return json({ error: "Invalid authentication token." }, 401, headers);
+        return json({
+          success: false,
+          error: "Invalid authentication token."
+        }, 401, headers);
       }
 
-      // 1. Verify Firebase authentication.
       const firebaseUser = await verifyFirebaseToken(idToken);
       const uid = firebaseUser.sub;
 
-      // 2. Verify EqualLearn account.
+      /* =====================================
+         3. VERIFY EQUALLEARN USER PROFILE
+      ===================================== */
+
       const user = await getFirestoreDocument(
         `users/${encodeURIComponent(uid)}`,
         idToken
       );
 
       if (!user) {
-        return json({ error: "User profile not found." }, 403, headers);
+        return json({
+          success: false,
+          error: "User profile not found."
+        }, 403, headers);
       }
 
-      const role = String(user.role || "").toLowerCase();
-      const status = String(user.status || "").toLowerCase();
+      const role = normalize(user.role);
+      const status = normalize(user.status);
 
       if (
-        user.uid && user.uid !== uid ||
+        (user.uid && user.uid !== uid) ||
         status !== "active" ||
         !["admin", "teacher", "student"].includes(role)
       ) {
         return json({
+          success: false,
           error: "Your EqualLearn account is not authorized."
         }, 403, headers);
       }
 
-      // 3. Validate requested room.
-      const body = await request.json();
+      /* =====================================
+         4. VALIDATE REQUESTED ROOM
+      ===================================== */
+
+      let body;
+
+      try {
+        body = await request.json();
+      } catch {
+        return json({
+          success: false,
+          error: "Invalid JSON request body."
+        }, 400, headers);
+      }
+
       const roomId = String(body.roomId || "").trim();
 
       if (!isUUIDv4(roomId)) {
         return json({
+          success: false,
           error: "A valid UUIDv4 roomId is required."
         }, 400, headers);
       }
 
-           // 4. Read and validate the actual live session.
+      /* =====================================
+         5. READ ACTUAL LIVE SESSION
+      ===================================== */
+
       const session = await getFirestoreDocument(
         `liveSessions/${encodeURIComponent(roomId)}`,
         idToken
@@ -381,29 +490,37 @@ export default {
 
       if (!session) {
         return json({
+          success: false,
           error: "Live session does not exist."
         }, 404, headers);
       }
 
-      if (session.roomId !== roomId) {
+      if (String(session.roomId || "") !== roomId) {
         return json({
+          success: false,
           error: "Live session ID does not match."
         }, 403, headers);
       }
 
-      if (String(session.status || "").toLowerCase() !== "live") {
+      if (normalize(session.status) !== "live") {
         return json({
+          success: false,
           error: "This session is not currently live."
         }, 403, headers);
       }
 
-      const mode = String(session.mode || "").toLowerCase();
+      const mode = normalize(session.mode);
 
       if (!["livestream", "meeting"].includes(mode)) {
         return json({
+          success: false,
           error: "Invalid live session mode."
         }, 400, headers);
       }
+
+      /* =====================================
+         6. READ SESSION IDENTITY AND PERMISSIONS
+      ===================================== */
 
       const teacherUid = String(session.teacherUid || "");
       const sectionId = String(session.sectionId || "");
@@ -416,18 +533,154 @@ export default {
         ? session.publishUids.map(String)
         : [];
 
+      const meetingType = normalize(
+        session.meetingType ||
+        (mode === "livestream" ? "livestream" : "batch")
+      );
+
+      const targetStudentUid = String(
+        session.targetStudentUid || ""
+      );
+
       const isAdmin = role === "admin";
-      const isTeacher = role === "teacher" && teacherUid === uid;
+      const isTeacher = role === "teacher";
       const isStudent = role === "student";
 
-      if (!sectionId) {
+      /* =====================================
+         7. VALIDATE REQUIRED SESSION FIELDS
+      ===================================== */
+
+      if (!teacherUid || !sectionId) {
         return json({
-          error: "The live session has no assigned section."
+          success: false,
+          error: "The live session is missing its teacher or section."
         }, 403, headers);
       }
 
-      // 5. Verify the teacher is still assigned to this section.
+      if (!participantUids.includes(teacherUid)) {
+        return json({
+          success: false,
+          error: "The session owner is missing from the participant list."
+        }, 403, headers);
+      }
+
+      if (!publishUids.includes(teacherUid)) {
+        return json({
+          success: false,
+          error: "The teacher must be authorized to publish."
+        }, 403, headers);
+      }
+
+      if (
+        !["batch", "one_on_one", "livestream"].includes(meetingType)
+      ) {
+        return json({
+          success: false,
+          error: "Invalid meeting type."
+        }, 400, headers);
+      }
+
+      /* =====================================
+         8. ENSURE MODE MATCHES MEETING TYPE
+      ===================================== */
+
+      if (
+        (meetingType === "livestream" && mode !== "livestream") ||
+        (meetingType !== "livestream" && mode !== "meeting")
+      ) {
+        return json({
+          success: false,
+          error: "Session mode does not match meeting type."
+        }, 403, headers);
+      }
+
+      /* =====================================
+         9. VALIDATE PARTICIPANT AND PUBLISH LISTS
+      ===================================== */
+
+      const uniqueParticipants = [...new Set(participantUids)];
+      const uniquePublishers = [...new Set(publishUids)];
+
+      if (
+        uniqueParticipants.length !== participantUids.length ||
+        uniquePublishers.length !== publishUids.length ||
+        publishUids.some(
+          participantUid => !participantUids.includes(participantUid)
+        )
+      ) {
+        return json({
+          success: false,
+          error: "Invalid participant or publishing permissions."
+        }, 403, headers);
+      }
+
+      /* =====================================
+         10. VALIDATE BATCH MEETING
+      ===================================== */
+
+      if (meetingType === "batch") {
+        if (
+          targetStudentUid ||
+          mode !== "meeting" ||
+          publishUids.length !== participantUids.length
+        ) {
+          return json({
+            success: false,
+            error: "Invalid Batch Meeting configuration."
+          }, 403, headers);
+        }
+      }
+
+      /* =====================================
+         11. VALIDATE ONE-ON-ONE MEETING
+      ===================================== */
+
+      if (meetingType === "one_on_one") {
+        if (
+          !targetStudentUid ||
+          targetStudentUid === teacherUid ||
+          participantUids.length !== 2 ||
+          !participantUids.includes(targetStudentUid) ||
+          mode !== "meeting" ||
+          publishUids.length !== participantUids.length
+        ) {
+          return json({
+            success: false,
+            error: "Invalid One-on-One configuration."
+          }, 403, headers);
+        }
+      }
+
+      /* =====================================
+         12. VALIDATE LIVESTREAM
+      ===================================== */
+
+      if (meetingType === "livestream") {
+        if (
+          targetStudentUid ||
+          mode !== "livestream" ||
+          publishUids.length !== 1 ||
+          publishUids[0] !== teacherUid
+        ) {
+          return json({
+            success: false,
+            error: "Invalid Livestream configuration."
+          }, 403, headers);
+        }
+      }
+
+      /* =====================================
+         13. VERIFY TEACHER IDENTITY AND ASSIGNMENT
+      ===================================== */
+
       if (isTeacher) {
+        if (teacherUid !== uid) {
+          return json({
+            success: false,
+            error: "Only the session owner teacher can join as teacher."
+          }, 403, headers);
+        }
+
         const section = await getFirestoreDocument(
           `sections/${encodeURIComponent(sectionId)}`,
           idToken
@@ -443,39 +696,90 @@ export default {
 
         if (!section || !teacherIsAssigned) {
           return json({
+            success: false,
             error: "You are no longer assigned to this classroom."
           }, 403, headers);
         }
       }
 
-      // 6. Verify student section membership and session participation.
-      const studentBelongsToSection =
-        isStudent &&
-        String(user.sectionId || "") === sectionId;
+      /* =====================================
+         14. VERIFY STUDENT PARTICIPATION
+      ===================================== */
 
-      const isParticipant =
-        isAdmin ||
-        isTeacher ||
-        (
-          studentBelongsToSection &&
-          participantUids.includes(uid)
-        );
+      let isStudentParticipant = false;
 
-      if (!isParticipant) {
+      if (isStudent) {
+        const studentSectionId = String(user.sectionId || "");
+
+        const belongsToSection =
+          studentSectionId === sectionId;
+
+        const isListedParticipant =
+          participantUids.includes(uid);
+
+        const isValidTarget =
+          meetingType !== "one_on_one" ||
+          targetStudentUid === uid;
+
+        isStudentParticipant =
+          belongsToSection &&
+          isListedParticipant &&
+          isValidTarget;
+
+        if (!isStudentParticipant) {
+          return json({
+            success: false,
+            error: "You are not authorized to join this classroom."
+          }, 403, headers);
+        }
+      }
+
+      /* =====================================
+         15. VERIFY ROLE AUTHORIZATION
+      ===================================== */
+
+      if (
+        !isAdmin &&
+        !isTeacher &&
+        !isStudentParticipant
+      ) {
         return json({
+          success: false,
           error: "You are not authorized to join this classroom."
         }, 403, headers);
       }
 
-      // 7. Determine publishing permissions.
-      // Livestream: teacher/admin can publish; students watch.
-      // Meeting: authorized students may also use their mic and camera.
+      /* =====================================
+         16. DETERMINE PUBLISHING PERMISSIONS
+
+         ADMIN:
+         - Can publish audio/video.
+         - Can participate in the room.
+         - Does not receive roomAdmin privilege.
+
+         TEACHER:
+         - Must own the session.
+         - Must still be assigned to the section.
+
+         STUDENT:
+         - Must be an authorized participant.
+         - Must be included in publishUids.
+         - Can publish only in interactive meetings.
+      ===================================== */
+
       const canPublish =
         isAdmin ||
         isTeacher ||
-        (isStudent && mode === "meeting" && isParticipant);
+        (
+          isStudentParticipant &&
+          mode === "meeting" &&
+          publishUids.includes(uid)
+        );
 
-      // 7. Create LiveKit access token.
+      /* =====================================
+         17. CREATE LIVEKIT ACCESS TOKEN
+      ===================================== */
+
       const room = `el-${roomId}`;
 
       const token = await createLiveKitToken(env, {
@@ -486,6 +790,10 @@ export default {
         canPublish
       });
 
+      /* =====================================
+         18. RETURN ACCESS DETAILS
+      ===================================== */
+
       return json({
         success: true,
         serverUrl: env.LIVEKIT_URL,
@@ -494,21 +802,27 @@ export default {
         roomId,
         role,
         mode,
+        meetingType,
         canPublish,
         canSubscribe: true,
         expiresIn: 600
       }, 200, headers);
 
     } catch (error) {
-      console.error("EqualLearn Live error:", error.message);
-
-      const authError = /Firebase token|authentication is required|signing key/i.test(
+      console.error(
+        "EqualLearn Live error:",
         error.message
       );
 
+      const authError =
+        /Firebase token|authentication is required|signing key/i.test(
+          error.message
+        );
+
       return json({
         success: false,
-        error: error.message || "Unable to create LiveKit token."
+        error: error.message ||
+          "Unable to create LiveKit token."
       }, authError ? 401 : 500, headers);
     }
   }

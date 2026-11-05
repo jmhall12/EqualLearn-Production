@@ -6,5 +6,5 @@ compatibility_date = "2026-11-05"
 [vars]
 FIREBASE_PROJECT_ID = "equallearn-eb389"
 FIREBASE_WEB_API_KEY = "AIzaSyDs5tws2jGZAS2q-9op_lIgAdyqfIXW4Uw"
-LIVEKIT_API_KEY = "YOUR_LIVEKIT_API_KEY"
-LIVEKIT_URL = "wss://YOUR-LIVEKIT-SERVER.livekit.cloud"
+LIVEKIT_API_KEY = "API6VvcBuqAWyhMY"
+LIVEKIT_URL = "wss://equallearn-live-u99xcl74.livekit.cloud"

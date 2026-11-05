@@ -23,6 +23,7 @@ const labels = {
       ['register-teacher.html', 'userPlus', 'Register Teacher'],
       ['class-assignments.html', 'classes', 'Class Assignments'],
       ['reports.html', 'chart', 'Reports'],
+      ['live.html', 'video', 'Live'],
       ['settings.html', 'settings', 'Settings']
     ]
   },
@@ -38,15 +39,17 @@ const labels = {
     ]
   },
 
-  student: {
+    student: {
     title: 'Student',
     nav: [
       ['dashboard.html', 'home', 'Dashboard'],
       ['modules.html', 'modules', 'Modules'],
+      ['live.html', 'video', 'Live'],
       ['progress.html', 'progress', 'Progress'],
       ['profile.html', 'profile', 'Profile']
     ]
   }
+  
 };
 
 // ========================================
