@@ -330,6 +330,86 @@ async function createLiveKitToken(env, options) {
 
   return `${unsigned}.${base64url(new Uint8Array(signature))}`;
 }
+async function createLiveKitAdminToken(env, roomName) {
+  const now = Math.floor(Date.now() / 1000);
+
+  const header = {
+    alg: "HS256",
+    typ: "JWT"
+  };
+
+  const payload = {
+    iss: env.LIVEKIT_API_KEY,
+    sub: "equallearn-server",
+    nbf: now,
+    iat: now,
+    exp: now + 300,
+    video: {
+      room: roomName,
+      roomAdmin: true,
+      roomJoin: true
+    }
+  };
+
+  const unsigned =
+    `${base64url(JSON.stringify(header))}.` +
+    `${base64url(JSON.stringify(payload))}`;
+
+  const signingKey = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(env.LIVEKIT_API_SECRET),
+    {
+      name: "HMAC",
+      hash: "SHA-256"
+    },
+    false,
+    ["sign"]
+  );
+
+  const signature = await crypto.subtle.sign(
+    "HMAC",
+    signingKey,
+    encoder.encode(unsigned)
+  );
+
+  return `${unsigned}.${base64url(new Uint8Array(signature))}`;
+}
+
+async function deleteLiveKitRoom(env, roomId) {
+  const roomName = `el-${roomId}`;
+
+  const adminToken = await createLiveKitAdminToken(
+    env,
+    roomName
+  );
+
+  const serverUrl = env.LIVEKIT_URL
+    .replace(/^wss:/i, "https:")
+    .replace(/^ws:/i, "http:")
+    .replace(/\/+$/, "");
+
+  const response = await fetch(
+    `${serverUrl}/twirp/livekit.RoomService/DeleteRoom`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        room: roomName
+      })
+    }
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+
+    throw new Error(
+      `LiveKit room termination failed (${response.status}): ${errorText.slice(0, 300)}`
+    );
+  }
+}
 
 /* =========================================
    MAIN WORKER
@@ -370,16 +450,16 @@ export default {
     }
 
     /* TOKEN ENDPOINT ONLY */
-    if (
-      request.method !== "POST" ||
-      url.pathname !== "/token"
-    ) {
-      return json(
-        { success: false, error: "Endpoint not found." },
-        404,
-        headers
-      );
-    }
+   if (
+  request.method !== "POST" ||
+  !["/token", "/end"].includes(url.pathname)
+) {
+  return json(
+    { success: false, error: "Endpoint not found." },
+    404,
+    cors
+  );
+}
 
     try {
       /* =====================================
@@ -501,6 +581,35 @@ export default {
           error: "Live session ID does not match."
         }, 403, headers);
       }
+
+      // Secure End for Everyone endpoint.
+// Only the teacher who owns this session can terminate its room.
+if (url.pathname === "/end") {
+  if (
+    user.role !== "teacher" ||
+    session.teacherUid !== uid
+  ) {
+    return json({
+      success: false,
+      error: "Only the session's assigned teacher can end this classroom."
+    }, 403, cors);
+  }
+
+  if (session.status !== "live") {
+    return json({
+      success: false,
+      error: "This classroom is not currently live."
+    }, 409, cors);
+  }
+
+  await deleteLiveKitRoom(env, roomId);
+
+  return json({
+    success: true,
+    message: "Everyone has been disconnected from the classroom.",
+    roomId
+  }, 200, cors);
+}
 
       if (normalize(session.status) !== "live") {
         return json({

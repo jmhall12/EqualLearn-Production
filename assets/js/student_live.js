@@ -535,8 +535,12 @@ async function loadLiveSessions(uid) {
         ...item.data()
       }))
       .filter(session =>
-        ["scheduled", "live"].includes(session.status)
-      )
+  ["scheduled", "live", "ended"].includes(session.status)
+)
+.filter(session =>
+  session.status !== "ended" ||
+  ["batch", "livestream"].includes(session.meetingType)
+)
       .filter(session => {
         if (
           session.meetingType === "one_on_one" &&
@@ -656,17 +660,21 @@ function createSessionCard(session) {
 
   const badge = document.createElement("span");
 
-  badge.className =
-    "student-live-badge " +
-    (
-      session.status === "live"
-        ? "is-live"
-        : "is-scheduled"
-    );
-
-  badge.textContent =
+ badge.className =
+  "student-live-badge " +
+  (
     session.status === "live"
-      ? "LIVE NOW"
+      ? "is-live"
+      : session.status === "ended"
+        ? "is-ended"
+        : "is-scheduled"
+  );
+
+badge.textContent =
+  session.status === "live"
+    ? "LIVE NOW"
+    : session.status === "ended"
+      ? "ENDED"
       : "SCHEDULED";
 
   header.append(title, badge);
@@ -709,17 +717,21 @@ function createSessionCard(session) {
   button.className =
     "el-btn el-btn-primary student-join-btn";
 
-  if (session.status === "live") {
-    button.textContent = "Join Meeting";
+ if (session.status === "live") {
+  button.textContent = "Join Meeting";
 
-    button.addEventListener("click", () => {
-      openMeetingPage(session.id);
-    });
+  button.addEventListener("click", () => {
+    openMeetingPage(session.id);
+  });
 
-  } else {
-    button.textContent = "Waiting for Teacher";
-    button.disabled = true;
-  }
+} else if (session.status === "ended") {
+  button.textContent = "Waiting for Teacher to Restart";
+  button.disabled = true;
+
+} else {
+  button.textContent = "Waiting for Teacher";
+  button.disabled = true;
+}
 
   card.append(
     header,

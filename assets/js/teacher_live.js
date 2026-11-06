@@ -4,7 +4,7 @@ import { requireRole } from "./session.js";
 
 import {
   collection, query, where, getDocs, doc, setDoc,
-  updateDoc, serverTimestamp
+updateDoc, deleteDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
 import {
@@ -491,12 +491,19 @@ async function startLiveClass() {
   showMessage(connectionMessage, "Connecting to LiveKit...");
   setStatus("Connecting", "#d97706");
 
+    const previousStatus = currentSession?.status || "scheduled";
+
   try {
     await updateDoc(doc(db, "liveSessions", currentSessionId), {
       status: "live",
       startedAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
+
+    currentSession = {
+      ...currentSession,
+      status: "live"
+    };
 
     const access = await requestLiveKitToken(currentSessionId);
 
@@ -767,42 +774,119 @@ async function leaveMeeting() {
 }
 
 async function endLiveClass() {
-  if (!currentSessionId || !currentRoom) return;
+  if (!currentSessionId || !currentRoom || busy) return;
 
-  if (!confirm("End this session for everyone? This cannot be undone.")) return;
+  const isOneOnOne =
+    currentSession?.meetingType === "one_on_one";
+
+  const confirmMessage = isOneOnOne
+    ? "End this private meeting? The session record will be deleted."
+    : "End this meeting for everyone? The session will remain available so you can restart it.";
+
+  if (!confirm(confirmMessage)) return;
 
   busy = true;
   meetingEndBtn.disabled = true;
 
+  const endingSessionId = currentSessionId;
+  const endingSession = currentSession;
+
   try {
+    // First, ask the authenticated Worker to terminate the LiveKit room.
+    const user = auth.currentUser;
+    if (!user) throw new Error("Please sign in again.");
+
+    const idToken = await user.getIdToken();
+
+    const response = await fetch(
+      "https://equallearn-live-token.jommelhallig655.workers.dev/end",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`
+        },
+        body: JSON.stringify({ roomId: endingSessionId })
+      }
+    );
+
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok || !result.success) {
+      throw new Error(result.error || "Unable to end the LiveKit room.");
+    }
+
+    // Disconnect the teacher's local LiveKit connection.
     await currentRoom.disconnect();
     currentRoom = null;
 
-    await updateDoc(doc(db, "liveSessions", currentSessionId), {
-      status: "ended",
-      endedAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    });
+   if (isOneOnOne) {
+  const sessionRef = doc(db, "liveSessions", endingSessionId);
+
+  await updateDoc(sessionRef, {
+    status: "ended",
+    endedAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  });
+
+  await deleteDoc(sessionRef);
+
+      currentSessionId = null;
+      currentSession = null;
+
+      if (sessionState) sessionState.textContent = "Deleted";
+      setStatus("Private session deleted");
+      showMessage(
+        connectionMessage,
+        "The one-on-one meeting has ended and its session record was deleted."
+      );
+
+      startBtn.disabled = true;
+      createBtn.disabled = false;
+    } else {
+      // Batch and livestream sessions remain available for restart.
+      await updateDoc(doc(db, "liveSessions", endingSessionId), {
+        status: "ended",
+        endedAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+
+      currentSession = {
+        ...endingSession,
+        status: "ended"
+      };
+
+      if (sessionState) sessionState.textContent = "Ended — Ready to restart";
+      setStatus("Ended — Ready to restart");
+      showMessage(
+        connectionMessage,
+        "The meeting ended for everyone. You can restart this same session."
+      );
+
+      // Keep currentSessionId and currentSession.
+      // Do not create another liveSessions document.
+      startBtn.disabled = false;
+      createBtn.disabled = true;
+    }
 
     hideMeeting();
+    clearPreview(
+      isOneOnOne
+        ? "The private classroom has ended."
+        : "The classroom has ended. You can restart this session."
+    );
 
-    if (sessionState) sessionState.textContent = "Ended";
-    setStatus("Ended");
-    clearPreview("This live classroom has ended.");
-    showMessage(connectionMessage, "Live session successfully ended.");
-
-    currentSessionId = null;
-    currentSession = null;
-
-    startBtn.disabled = true;
     endBtn.disabled = true;
     micBtn.disabled = true;
     cameraBtn.disabled = true;
-    createBtn.disabled = false;
 
   } catch (error) {
     console.error("END SESSION ERROR:", error);
-    showMessage(connectionMessage, error.message || "Unable to end session.", true);
+    showMessage(
+      connectionMessage,
+      error.message || "Unable to end the session.",
+      true
+    );
     meetingEndBtn.disabled = false;
   } finally {
     busy = false;
