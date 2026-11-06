@@ -1,0 +1,1433 @@
+
+/* ==========================================================
+   EQUALLEARN — UNIVERSAL PREMIUM GLASSMORPHISM
+   Admin / Teacher / Student / Shared Pages
+   ========================================================== */
+
+/* ==========================================================
+   01. DESIGN TOKENS
+   ========================================================== */
+
+:root {
+    --glass-bg: rgba(255,255,255,.58);
+    --glass-bg-strong: rgba(255,255,255,.78);
+    --glass-bg-solid: #ffffff;
+
+    --glass-border: rgba(255,255,255,.82);
+    --glass-border-soft: rgba(210,215,237,.65);
+
+    --glass-shadow:
+        0 12px 38px rgba(57,65,120,.10);
+
+    --glass-shadow-hover:
+        0 18px 45px rgba(80,72,160,.16);
+
+    --glass-purple: #7865dc;
+    --glass-purple-dark: #6652ca;
+    --glass-cyan: #55bcca;
+
+    --glass-muted: #858ba6;
+    --glass-text: #252945;
+
+    --glass-success: #25866a;
+    --glass-danger: #c43c55;
+    --glass-warning: #a36c1e;
+
+    --glass-radius: 20px;
+    --glass-radius-sm: 13px;
+
+    --glass-blur: blur(20px) saturate(150%);
+}
+
+/* ==========================================================
+   02. GLOBAL PAGE BACKGROUND
+   ========================================================== */
+
+html {
+    min-height: 100%;
+    background: #edf0fa;
+}
+
+body {
+    min-height: 100vh;
+    margin: 0;
+    color: var(--glass-text);
+
+    background:
+        radial-gradient(
+            circle at 8% 8%,
+            rgba(160,140,255,.25),
+            transparent 32%
+        ),
+        radial-gradient(
+            circle at 92% 18%,
+            rgba(80,200,220,.17),
+            transparent 30%
+        ),
+        radial-gradient(
+            circle at 50% 100%,
+            rgba(180,170,255,.16),
+            transparent 40%
+        ),
+        linear-gradient(
+            135deg,
+            #edf0fa,
+            #e9edfa 55%,
+            #f3f5fc
+        );
+
+    background-attachment: fixed;
+}
+
+body,
+button,
+input,
+select,
+textarea {
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+}
+
+img {
+    max-width: 100%;
+}
+
+a {
+    color: var(--glass-purple-dark);
+    transition: color .2s ease;
+}
+
+a:hover {
+    color: var(--glass-purple);
+}
+
+/* ==========================================================
+   03. PAGE ANIMATIONS
+   ========================================================== */
+
+@keyframes glassPageEnter {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes glassCardEnter {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes glassModalEnter {
+    from {
+        opacity: 0;
+        transform: translateY(15px) scale(.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes glassPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(120,101,220,0);
+    }
+
+    50% {
+        box-shadow: 0 0 0 5px rgba(120,101,220,.10);
+    }
+}
+
+/* Apply animation to application content, not the sidebar */
+
+.el-page-content {
+    animation: glassPageEnter .45s ease both;
+}
+
+/* ==========================================================
+   04. UNIVERSAL PAGE CONTAINERS
+   ========================================================== */
+
+.el-dashboard {
+    width: min(1440px, calc(100% - 48px));
+    margin: 0 auto;
+    padding: 35px 0 55px;
+    box-sizing: border-box;
+}
+
+/* Standalone and non-dashboard pages */
+
+.container,
+.reports-container,
+.settings-container,
+.admin-live-page,
+.page,
+.modules-container,
+.lessons-container,
+.quiz-container,
+.profile-container,
+.progress-container {
+    width: min(1450px, calc(100% - 48px));
+    max-width: 1450px;
+    margin: 0 auto;
+    padding: 30px 0 50px;
+    box-sizing: border-box;
+}
+
+/* Pages inside the application shell */
+
+.el-page-content > .container,
+.el-page-content > .reports-container,
+.el-page-content > .settings-container,
+.el-page-content > .admin-live-page,
+.el-page-content > .page,
+.el-page-content > .modules-container,
+.el-page-content > .lessons-container,
+.el-page-content > .quiz-container,
+.el-page-content > .profile-container,
+.el-page-content > .progress-container {
+    width: min(1450px, calc(100% - 48px));
+    max-width: 1450px;
+    margin: 0 auto;
+}
+
+/* ==========================================================
+   05. UNIVERSAL HEADERS
+   ========================================================== */
+
+.el-page-header,
+.reports-header,
+.settings-header,
+.header,
+.page-header,
+.admin-live-heading {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 18px;
+
+    margin-bottom: 23px;
+}
+
+.el-page-header {
+    padding: 27px 30px;
+
+    border: 1px solid var(--glass-border);
+    border-radius: 25px;
+
+    background: rgba(255,255,255,.40);
+
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+
+    box-shadow: var(--glass-shadow);
+}
+
+.el-page-kicker {
+    margin-bottom: 8px;
+    color: var(--glass-purple);
+
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+}
+
+.el-page-header h1,
+.reports-header h1,
+.settings-header h1,
+.header h1,
+.page-header h1,
+.admin-live-heading h1 {
+    margin: 0;
+    color: var(--glass-text);
+
+    font-size: clamp(24px,4vw,34px);
+    font-weight: 800;
+    letter-spacing: -1px;
+}
+
+.el-page-header p,
+.reports-header p,
+.settings-header p,
+.header p,
+.page-header p {
+    margin: 8px 0 0;
+    color: var(--glass-muted);
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+/* ==========================================================
+   06. UNIVERSAL GLASS CARDS
+   ========================================================== */
+
+.el-card,
+.card,
+.panel,
+.stat,
+.stat-card,
+.summary-card,
+.filter-card,
+.table-card,
+.settings-card,
+.form-card,
+.live-admin-stat,
+.live-session-item,
+.student-live-card,
+.admin-stat,
+.admin-session-card,
+.admin-live-panel {
+    min-width: 0;
+
+    border: 1px solid var(--glass-border) !important;
+    border-radius: var(--glass-radius) !important;
+
+    background: var(--glass-bg) !important;
+
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+
+    box-shadow: var(--glass-shadow) !important;
+
+    transition:
+        transform .25s ease,
+        box-shadow .25s ease,
+        border-color .25s ease,
+        background .25s ease;
+}
+
+.el-card {
+    padding: 23px;
+}
+
+.el-card:hover,
+.live-admin-stat:hover,
+.live-session-item:hover,
+.student-live-card:hover,
+.summary-card:hover,
+.stat-card:hover,
+.admin-session-card:hover {
+    transform: translateY(-3px);
+
+    border-color: rgba(150,132,245,.35) !important;
+
+    background: var(--glass-bg-strong) !important;
+
+    box-shadow: var(--glass-shadow-hover) !important;
+}
+
+/* Keep large form and table containers stable */
+
+.settings-card:hover,
+.form-card:hover,
+.filter-card:hover,
+.table-card:hover,
+.panel:hover,
+.admin-live-panel:hover {
+    transform: none;
+}
+
+/* ==========================================================
+   07. CARD TITLES
+   ========================================================== */
+
+.el-card-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    margin-bottom: 21px;
+}
+
+.el-card-title h3 {
+    margin: 0;
+    color: var(--glass-text);
+
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: -.3px;
+}
+
+.el-card-title > span,
+.el-card-title div > span {
+    color: var(--glass-muted);
+    font-size: 11px;
+}
+
+/* ==========================================================
+   08. DASHBOARD GRIDS
+   ========================================================== */
+
+.el-grid {
+    display: grid;
+    gap: 18px;
+}
+
+.el-grid-2 {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+}
+
+.el-grid-3 {
+    grid-template-columns: repeat(3,minmax(0,1fr));
+}
+
+.el-grid-4 {
+    grid-template-columns: repeat(4,minmax(0,1fr));
+}
+
+/* ==========================================================
+   09. STATISTICS
+   ========================================================== */
+
+.el-stat,
+.stat,
+.stat-card,
+.summary-card,
+.admin-stat {
+    position: relative;
+    overflow: hidden;
+    padding: 21px !important;
+}
+
+.el-stat {
+    min-height: 165px;
+}
+
+.el-stat::after,
+.stat-card::after,
+.summary-card::after,
+.admin-stat::after {
+    content: "";
+
+    position: absolute;
+    top: -35px;
+    right: -35px;
+
+    width: 105px;
+    height: 105px;
+
+    border-radius: 50%;
+
+    background: radial-gradient(
+        circle,
+        rgba(150,130,245,.13),
+        transparent 70%
+    );
+
+    pointer-events: none;
+}
+
+.el-stat-icon {
+    width: 46px;
+    height: 46px;
+
+    display: grid;
+    place-items: center;
+
+    margin-bottom: 18px;
+
+    border: 1px solid rgba(255,255,255,.9);
+    border-radius: 15px;
+
+    color: var(--glass-purple);
+
+    background: linear-gradient(
+        145deg,
+        rgba(255,255,255,.88),
+        rgba(221,218,255,.55)
+    );
+
+    box-shadow: 5px 6px 15px rgba(95,85,160,.10);
+}
+
+.el-stat-label,
+.stat-label {
+    color: var(--glass-muted);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.el-stat-value,
+.stat-value,
+.summary-card strong,
+.stat-card strong {
+    margin-top: 5px;
+    color: var(--glass-text);
+
+    font-size: 31px;
+    font-weight: 800;
+    letter-spacing: -1.3px;
+    font-variant-numeric: tabular-nums;
+}
+
+.el-stat-meta,
+.stat-note {
+    margin-top: 5px;
+    color: var(--glass-muted);
+    font-size: 10px;
+}
+
+/* ==========================================================
+   10. QUICK ACTIONS
+   ========================================================== */
+
+.el-quick-grid {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 13px;
+}
+
+.el-quick {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 9px;
+
+    padding: 17px;
+
+    border: 1px solid rgba(255,255,255,.85);
+    border-radius: 18px;
+
+    color: var(--glass-text);
+    text-decoration: none;
+
+    background: rgba(255,255,255,.42);
+
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+
+    box-shadow: 0 5px 18px rgba(70,75,130,.06);
+
+    transition: .25s ease;
+}
+
+.el-quick:hover {
+    transform: translateY(-4px);
+
+    border-color: rgba(139,119,238,.4);
+
+    color: var(--glass-text);
+    background: rgba(255,255,255,.76);
+
+    box-shadow: 0 12px 25px rgba(94,80,180,.12);
+}
+
+.el-quick .icon {
+    width: 43px;
+    height: 43px;
+
+    display: grid;
+    place-items: center;
+
+    border-radius: 14px;
+
+    color: var(--glass-purple);
+    background: rgba(225,220,255,.78);
+}
+
+.el-quick strong {
+    color: var(--glass-text);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.el-quick > span:last-child {
+    color: var(--glass-muted);
+    font-size: 10px;
+    line-height: 1.65;
+}
+
+/* ==========================================================
+   11. UNIVERSAL BUTTONS
+   ========================================================== */
+
+.el-btn,
+button,
+.btn,
+.save-btn,
+.reset-btn,
+.back-btn,
+.primary,
+.secondary,
+.ghost {
+   font-family: Inter, "Segoe UI", Arial, sans-serif;
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease,
+        background .2s ease,
+        border-color .2s ease;
+}
+
+.el-btn {
+    min-height: 42px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    padding: 10px 17px;
+
+    border: 1px solid rgba(255,255,255,.85);
+    border-radius: 13px;
+
+    color: var(--glass-purple-dark);
+    background: rgba(255,255,255,.55);
+
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
+    box-shadow: 0 5px 15px rgba(75,72,140,.08);
+
+    font-size: 12px;
+    font-weight: 800;
+    text-decoration: none;
+
+    cursor: pointer;
+}
+
+.el-btn:hover,
+button:not(:disabled):hover,
+.btn:not(:disabled):hover,
+.save-btn:hover,
+.reset-btn:hover,
+.back-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 9px 22px rgba(75,72,140,.13);
+}
+
+button:active,
+.el-btn:active,
+.btn:active {
+    transform: scale(.98);
+}
+
+.el-btn-primary,
+.primary,
+.save-btn {
+    border-color: transparent !important;
+    color: white !important;
+
+    background: linear-gradient(
+        135deg,
+        #9584f1,
+        #6d58d0
+    ) !important;
+
+    box-shadow: 0 8px 20px rgba(109,88,208,.25) !important;
+}
+
+.el-btn-primary:hover,
+.primary:hover,
+.save-btn:hover {
+    background: linear-gradient(
+        135deg,
+        #a292fa,
+        #715bd8
+    ) !important;
+}
+
+.secondary,
+.ghost,
+.back-btn,
+.reset-btn {
+    color: var(--glass-purple-dark);
+    background: rgba(255,255,255,.65);
+    border: 1px solid rgba(255,255,255,.9);
+}
+
+button:disabled,
+.btn:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ==========================================================
+   12. UNIVERSAL FORM CONTROLS
+   ========================================================== */
+
+.el-page-content input:not([type="checkbox"]):not([type="radio"]),
+.el-page-content select,
+.el-page-content textarea,
+.container input:not([type="checkbox"]):not([type="radio"]),
+.container select,
+.container textarea,
+.reports-container input,
+.reports-container select,
+.settings-container input,
+.settings-container select,
+.settings-container textarea,
+.student-session-join input {
+    width: 100%;
+    max-width: 100%;
+    min-height: 43px;
+
+    box-sizing: border-box;
+    padding: 11px 13px;
+
+    color: var(--glass-text);
+    background: rgba(255,255,255,.72);
+
+    border: 1px solid rgba(220,223,240,.85);
+    border-radius: 12px;
+
+    outline: none;
+
+    font: inherit;
+    font-size: 13px;
+
+    transition:
+        border-color .2s ease,
+        box-shadow .2s ease,
+        background .2s ease;
+}
+
+.el-page-content textarea,
+.container textarea,
+.settings-container textarea {
+    min-height: 110px;
+    resize: vertical;
+}
+
+.el-page-content input:focus,
+.el-page-content select:focus,
+.el-page-content textarea:focus,
+.container input:focus,
+.container select:focus,
+.container textarea:focus,
+.reports-container input:focus,
+.reports-container select:focus,
+.settings-container input:focus,
+.settings-container select:focus,
+.settings-container textarea:focus {
+    border-color: rgba(120,101,220,.65);
+    background: rgba(255,255,255,.95);
+
+    box-shadow: 0 0 0 4px rgba(120,101,220,.10);
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: #a0a6ba;
+}
+
+label {
+    color: #424761;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+/* Do not stretch checkboxes or radio buttons */
+
+input[type="checkbox"],
+input[type="radio"] {
+    accent-color: var(--glass-purple);
+    cursor: pointer;
+}
+
+/* ==========================================================
+   13. FORM LAYOUTS
+   ========================================================== */
+
+.form-group,
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 17px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 15px;
+}
+
+.settings-card {
+    padding: 25px !important;
+    margin-bottom: 19px;
+}
+
+.settings-card h2,
+.form-card h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: var(--glass-text);
+}
+
+/* ==========================================================
+   14. FILTERS AND TOOLBARS
+   ========================================================== */
+
+.filter-card,
+.toolbar,
+.admin-live-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 11px;
+
+    padding: 17px !important;
+    margin-bottom: 18px;
+}
+
+.filter-card input,
+.filter-card select,
+.toolbar input,
+.toolbar select {
+    flex: 1 1 150px;
+    min-width: 130px;
+}
+
+/* ==========================================================
+   15. UNIVERSAL TABLES
+   ========================================================== */
+
+.table-card,
+.table-wrap,
+.table-wrapper {
+    overflow: hidden;
+}
+
+.table-wrapper,
+.table-wrap {
+    overflow-x: auto;
+    border-radius: 15px;
+}
+
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+thead th,
+th {
+    padding: 15px 13px;
+
+    color: #777f98;
+    background: rgba(244,245,253,.94);
+
+    border-bottom: 1px solid #e8eaf3;
+
+    font-size: 10px;
+    font-weight: 850;
+    letter-spacing: .55px;
+    text-align: left;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+tbody td,
+td {
+    padding: 14px 13px;
+
+    color: #424862;
+    border-bottom: 1px solid rgba(225,228,239,.7);
+
+    font-size: 12px;
+    vertical-align: middle;
+}
+
+tbody tr {
+    transition: background .2s ease;
+}
+
+tbody tr:hover {
+    background: rgba(237,235,255,.58);
+}
+
+tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+/* ==========================================================
+   16. STATUS BADGES
+   ========================================================== */
+
+.pill,
+.live-status,
+.el-badge,
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+
+    padding: 6px 10px;
+
+    border: 1px solid rgba(255,255,255,.75);
+    border-radius: 30px;
+
+    font-size: 10px;
+    font-weight: 850;
+}
+
+.pending,
+.scheduled,
+.live-status.scheduled {
+    color: var(--glass-warning);
+    background: rgba(255,242,210,.85);
+}
+
+.verified,
+.ended,
+.live-status.ended {
+    color: var(--glass-success);
+    background: rgba(216,248,235,.85);
+}
+
+.rejected {
+    color: var(--glass-danger);
+    background: rgba(255,225,231,.85);
+}
+
+.live-status.live {
+    color: #c43c55;
+    background: rgba(255,225,231,.85);
+}
+
+/* ==========================================================
+   17. PROGRESS BARS
+   ========================================================== */
+
+.el-progress {
+    height: 9px;
+    overflow: hidden;
+
+    border: 1px solid rgba(255,255,255,.8);
+    border-radius: 30px;
+
+    background: rgba(117,120,160,.12);
+
+    box-shadow: inset 2px 2px 5px rgba(80,80,130,.08);
+}
+
+.el-progress > span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+
+    background: linear-gradient(
+        90deg,
+        #a99af8,
+        #705bd2,
+        #57bcca
+    );
+
+    box-shadow: 0 0 10px rgba(120,101,220,.25);
+}
+
+/* ==========================================================
+   18. CHARTS
+   ========================================================== */
+
+.el-chart {
+    min-height: 175px;
+
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    gap: 13px;
+
+    padding: 20px 10px 0;
+
+    border-radius: 17px;
+    background: rgba(255,255,255,.25);
+}
+
+.el-chart .el-bar {
+    width: 10%;
+    min-height: 8px;
+
+    border-radius: 9px 9px 3px 3px;
+
+    background: linear-gradient(
+        180deg,
+        #a99af8,
+        #705bd2
+    );
+
+    box-shadow: 0 5px 13px rgba(112,91,210,.17);
+    transition: height .3s ease;
+}
+
+.el-chart-labels {
+    display: flex;
+    justify-content: space-around;
+    gap: 10px;
+
+    margin-top: 10px;
+
+    color: var(--glass-muted);
+    font-size: 10px;
+}
+
+/* ==========================================================
+   19. MODALS AND DIALOGS
+   ========================================================== */
+
+.modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 18px;
+
+    background: rgba(31,35,64,.42);
+
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+/* Preserve the original modal show/hide behavior */
+
+.modal[hidden],
+.modal.hidden {
+    display: none !important;
+}
+
+.modal-content {
+    width: min(480px,100%);
+    max-height: 90vh;
+    overflow-y: auto;
+
+    padding: 27px;
+
+    border: 1px solid rgba(255,255,255,.95);
+    border-radius: 23px;
+
+    color: var(--glass-text);
+    background: rgba(255,255,255,.96);
+
+    box-shadow: 0 25px 80px rgba(25,30,70,.22);
+
+    animation: glassModalEnter .25s ease both;
+}
+
+.modal-content h2 {
+    margin-top: 0;
+    color: var(--glass-text);
+}
+
+.modal-content .buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.modal-content .buttons button {
+    flex: 1;
+    min-height: 43px;
+    border-radius: 11px;
+}
+
+/* ==========================================================
+   20. NOTIFICATIONS AND FEEDBACK
+   ========================================================== */
+
+.notification {
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(125,130,170,.15);
+}
+
+.notification:last-child {
+    border-bottom: 0;
+}
+
+.notification-title {
+    color: var(--glass-text);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.notification-message,
+.notification-time {
+    color: var(--glass-muted);
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.notification-time {
+    margin-top: 6px;
+}
+
+.notification.unread .notification-title {
+    color: var(--glass-purple);
+}
+
+.notice,
+.message,
+.alert,
+#securityMessage {
+    padding: 12px 15px;
+    border-radius: 12px;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.notice {
+    color: #554bb2;
+    background: rgba(240,239,255,.85);
+}
+
+.error,
+.notice.error,
+.message.error {
+    color: #ad2736;
+    background: rgba(255,240,241,.92);
+}
+
+.success-note,
+.notice.success,
+.message.success {
+    color: #167348;
+    background: rgba(234,248,239,.92);
+}
+
+/* ==========================================================
+   21. LOADING AND EMPTY STATES
+   ========================================================== */
+
+.loading,
+.empty,
+.live-empty {
+    padding: 30px;
+    color: var(--glass-muted);
+    text-align: center;
+    font-size: 12px;
+}
+
+.live-error {
+    color: var(--glass-danger);
+    font-size: 12px;
+}
+
+/* ==========================================================
+   22. ADMIN LIVE MONITORING
+   ========================================================== */
+
+.live-admin-stat {
+    padding: 18px;
+}
+
+.live-admin-stat > span {
+    color: var(--glass-muted);
+    font-size: 11px;
+}
+
+.live-admin-stat strong {
+    display: block;
+    margin-top: 7px;
+
+    color: var(--glass-text);
+    font-size: 28px;
+    font-weight: 800;
+}
+
+.live-session-list {
+    display: grid;
+    gap: 13px;
+}
+
+.live-session-item {
+    padding: 18px;
+}
+
+.live-session-title {
+    color: var(--glass-text);
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.live-session-meta {
+    color: var(--glass-muted);
+}
+
+/* ==========================================================
+   23. STUDENT PROFILE AND LIVE CLASS
+   ========================================================== */
+
+.el-profile-item {
+    padding: 15px !important;
+
+    border: 1px solid rgba(255,255,255,.85) !important;
+    border-radius: 16px !important;
+
+    background: rgba(255,255,255,.43) !important;
+
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.el-profile-item span {
+    color: var(--glass-muted);
+}
+
+.el-profile-item strong {
+    color: var(--glass-text);
+}
+
+.student-live-card {
+    padding: 18px !important;
+}
+
+.student-live-card-header h4 {
+    color: var(--glass-text);
+}
+
+.student-live-meta,
+.student-live-description {
+    color: var(--glass-muted);
+}
+
+.student-live-video {
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 19px !important;
+
+    background: linear-gradient(
+        145deg,
+        #17182f,
+        #28234f
+    ) !important;
+
+    box-shadow: inset 0 0 35px rgba(0,0,0,.25);
+}
+
+.student-live-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.student-live-controls button {
+    border-radius: 13px;
+}
+
+.student-session-join {
+    padding: 20px;
+
+    border: 1px solid var(--glass-border) !important;
+    border-radius: 19px !important;
+
+    background: rgba(255,255,255,.38);
+
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+}
+
+/* ==========================================================
+   24. TEACHER AND STUDENT FORMS
+   ========================================================== */
+
+.form-card,
+.student-session-join,
+.settings-card {
+    color: var(--glass-text);
+}
+
+.form-card h2,
+.form-card h3 {
+    color: var(--glass-text);
+}
+
+.form-card p {
+    color: var(--glass-muted);
+    line-height: 1.7;
+}
+
+/* ==========================================================
+   25. ACCESSIBILITY AND INTERACTION
+   ========================================================== */
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 3px solid rgba(120,101,220,.35);
+    outline-offset: 3px;
+}
+
+button:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* ==========================================================
+   26. RESPONSIVE LAYOUT
+   ========================================================== */
+
+@media(max-width: 1100px) {
+    .el-grid-4 {
+        grid-template-columns: repeat(2,minmax(0,1fr));
+    }
+
+    .summary-grid {
+        grid-template-columns: repeat(2,minmax(0,1fr));
+    }
+}
+
+@media(max-width: 900px) {
+    .el-dashboard {
+        width: min(100% - 36px,760px);
+    }
+
+    .container,
+    .reports-container,
+    .settings-container,
+    .page,
+    .admin-live-page {
+        width: calc(100% - 30px);
+    }
+
+    .el-grid-3 {
+        grid-template-columns: repeat(2,minmax(0,1fr));
+    }
+}
+
+@media(max-width: 640px) {
+    .el-dashboard {
+        width: calc(100% - 26px);
+        padding-top: 18px;
+        padding-bottom: 35px;
+    }
+
+    .container,
+    .reports-container,
+    .settings-container,
+    .page,
+    .admin-live-page {
+        width: calc(100% - 24px);
+        padding-top: 16px;
+        padding-bottom: 30px;
+    }
+
+    .el-page-header {
+        padding: 21px;
+        border-radius: 21px;
+    }
+
+    .el-page-header h1 {
+        font-size: 26px;
+    }
+
+    .el-card {
+        padding: 18px;
+        border-radius: 20px !important;
+    }
+
+    .el-grid-2,
+    .el-grid-3,
+    .el-grid-4 {
+        grid-template-columns: 1fr;
+    }
+
+    .el-quick-grid {
+        grid-template-columns: repeat(2,minmax(0,1fr));
+    }
+
+    .live-admin-stats {
+        grid-template-columns: 1fr !important;
+    }
+
+    .live-session-meta {
+        grid-template-columns: 1fr !important;
+    }
+
+    .student-live-card-header {
+        flex-wrap: wrap;
+    }
+
+    .el-page-header > .el-btn {
+        width: 100%;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .summary-grid {
+        grid-template-columns: repeat(2,minmax(0,1fr));
+    }
+
+    .table-wrapper,
+    .table-wrap {
+        overflow-x: auto;
+    }
+}
+
+@media(max-width: 380px) {
+    .el-quick-grid,
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .el-page-header {
+        padding: 17px;
+    }
+}
+
+/* ==========================================================
+   27. REDUCED MOTION
+   ========================================================== */
+
+@media(prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+    }
+}
+
+/* ==========================================================
+   28. BACKDROP FILTER FALLBACK
+   ========================================================== */
+
+@supports not (
+    (backdrop-filter: blur(10px)) or
+    (-webkit-backdrop-filter: blur(10px))
+) {
+    .el-card,
+    .el-page-header,
+    .el-quick,
+    .student-live-card,
+    .live-admin-stat,
+    .live-session-item,
+    .settings-card,
+    .form-card,
+    .filter-card,
+    .table-card {
+        background: rgba(255,255,255,.94) !important;
+    }
+}

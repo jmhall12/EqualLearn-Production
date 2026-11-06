@@ -1,0 +1,967 @@
+
+/* ==========================================================
+   EQUALLEARN — SKEUOMORPHIC SIDEBAR + APP SHELL
+   Designed for the actual ui-shell.js structure
+   ========================================================== */
+
+:root {
+  --side-width: 258px;
+  --side-collapsed-width: 88px;
+
+  --side-bg: #e9ecf7;
+  --side-text: #303653;
+  --side-muted: #858ba5;
+  --side-purple: #7965dc;
+  --side-purple-dark: #624ec5;
+
+  --side-raised:
+    6px 6px 13px rgba(145,153,184,.30),
+    -6px -6px 13px rgba(255,255,255,.95);
+
+  --side-pressed:
+    inset 4px 4px 8px rgba(145,153,184,.28),
+    inset -4px -4px 8px rgba(255,255,255,.95);
+}
+
+/* ==========================================================
+   1. APPLICATION LAYOUT
+   ========================================================== */
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background: #edf0fa;
+}
+
+.el-app-shell {
+  display: grid !important;
+  grid-template-columns: var(--side-width) minmax(0, 1fr);
+  min-height: 100vh;
+  width: 100%;
+  align-items: stretch;
+  transition: grid-template-columns .25s ease;
+}
+
+.el-app-main {
+  min-width: 0;
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: clip;
+  display: flex;
+  flex-direction: column;
+}
+
+.el-page-content {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  padding: 0;
+}
+
+/* Prevent nested dashboard width from breaking the shell */
+
+.el-page-content > .el-dashboard {
+  width: min(1440px, calc(100% - 48px));
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 28px 0 45px;
+  box-sizing: border-box;
+}
+
+/* ==========================================================
+   2. SKEUOMORPHIC SIDEBAR BODY
+   ========================================================== */
+
+.el-sidebar {
+  position: sticky !important;
+  top: 0;
+  z-index: 1000;
+
+  width: 100%;
+  height: 100vh;
+  min-height: 100vh;
+
+  display: flex !important;
+  flex-direction: column;
+  align-items: stretch;
+
+  box-sizing: border-box;
+  padding: 20px 13px 15px;
+
+  color: var(--side-text);
+
+  background:
+    linear-gradient(
+      145deg,
+      #f6f7fd 0%,
+      #e9ecf7 55%,
+      #e3e7f3 100%
+    ) !important;
+
+  border-right: 1px solid rgba(255,255,255,.9);
+
+  box-shadow:
+    8px 0 25px rgba(90,100,145,.10),
+    inset -1px 0 0 rgba(255,255,255,.8);
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  scrollbar-width: thin;
+  scrollbar-color: rgba(120,101,220,.25) transparent;
+
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+
+  transition:
+    padding .25s ease,
+    width .25s ease,
+    transform .25s ease;
+}
+
+/* ==========================================================
+   3. BRAND / LOGO
+   ========================================================== */
+
+.el-sidebar-brand {
+  min-height: 67px;
+  width: 100%;
+
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+
+  padding: 5px 7px 17px;
+  margin-bottom: 17px;
+
+  box-sizing: border-box;
+
+  border-bottom: 1px solid rgba(145,153,184,.22);
+
+  overflow: hidden;
+}
+
+.el-wordmark-mark {
+  width: 49px !important;
+  height: 49px !important;
+  min-width: 49px !important;
+
+  display: grid !important;
+  place-items: center;
+
+  overflow: hidden;
+
+  border-radius: 15px;
+
+  background: linear-gradient(
+    145deg,
+    #ffffff,
+    #e5e4f7
+  );
+
+  border: 1px solid rgba(255,255,255,.95);
+
+  box-shadow:
+    5px 5px 11px rgba(135,143,180,.25),
+    -5px -5px 11px rgba(255,255,255,.95);
+}
+
+.el-wordmark-mark img {
+  display: block !important;
+
+  width: 100% !important;
+  height: 100% !important;
+
+  max-width: 100% !important;
+  max-height: 100% !important;
+
+  object-fit: cover !important;
+  border-radius: 14px;
+}
+
+.el-wordmark-text {
+  display: block;
+  min-width: 0;
+
+  color: #252945;
+
+  font-size: 19px;
+  font-weight: 850;
+  letter-spacing: -1px;
+
+  white-space: nowrap;
+}
+
+.el-wordmark-text::first-letter {
+  color: var(--side-purple);
+}
+
+/* ==========================================================
+   4. COLLAPSE BUTTON
+   ========================================================== */
+
+.el-sidebar-collapse {
+  position: absolute;
+  top: 27px;
+  right: 9px;
+
+  width: 27px;
+  height: 27px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid rgba(255,255,255,.95);
+  border-radius: 9px;
+
+  color: var(--side-purple-dark);
+
+  background: linear-gradient(
+    145deg,
+    #ffffff,
+    #e8eaf5
+  );
+
+  box-shadow: var(--side-raised);
+
+  cursor: pointer;
+  transition: .2s ease;
+}
+
+.el-sidebar-collapse:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    7px 7px 14px rgba(135,143,180,.3),
+    -5px -5px 12px white;
+}
+
+.el-sidebar-collapse:active {
+  box-shadow: var(--side-pressed);
+  transform: scale(.96);
+}
+
+.el-collapse-symbol {
+  font-size: 20px;
+  line-height: 1;
+}
+
+/* ==========================================================
+   5. ROLE CHIP
+   ========================================================== */
+
+.el-role-chip {
+  padding: 10px 12px;
+  margin: 0 2px 17px;
+
+  border: 1px solid rgba(255,255,255,.9);
+  border-radius: 12px;
+
+  color: var(--side-purple-dark);
+
+  background: rgba(255,255,255,.52);
+
+  box-shadow:
+    inset 2px 2px 5px rgba(145,153,184,.08),
+    inset -2px -2px 5px rgba(255,255,255,.9);
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .6px;
+
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* ==========================================================
+   6. NAVIGATION CONTAINER
+   ========================================================== */
+
+.el-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+
+  width: 100%;
+  min-width: 0;
+}
+
+.el-sidebar > .el-nav {
+  flex: 1;
+}
+
+/* ==========================================================
+   7. NAVIGATION BUTTONS
+   ========================================================== */
+
+.el-sidebar .el-nav a {
+  position: relative;
+
+  min-height: 47px;
+  width: 100%;
+
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 13px;
+
+  box-sizing: border-box;
+
+  padding: 10px 12px !important;
+  margin: 0 !important;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(255,255,255,.92) !important;
+  border-radius: 14px !important;
+
+  color: var(--side-text) !important;
+
+  background: linear-gradient(
+    145deg,
+    #f7f8fd,
+    #e7eaf5
+  ) !important;
+
+  box-shadow: var(--side-raised) !important;
+
+  font-size: 12px;
+  font-weight: 750;
+  text-decoration: none !important;
+
+  white-space: nowrap;
+
+  transition:
+    transform .18s ease,
+    box-shadow .18s ease,
+    color .18s ease,
+    background .18s ease;
+}
+
+/* HOVER */
+
+.el-sidebar .el-nav a:hover {
+  transform: translateY(-2px);
+
+  color: var(--side-purple-dark) !important;
+
+  background: linear-gradient(
+    145deg,
+    #ffffff,
+    #eae7fb
+  ) !important;
+
+  box-shadow:
+    8px 8px 16px rgba(130,140,175,.28),
+    -6px -6px 13px rgba(255,255,255,.98) !important;
+}
+
+/* PRESSED */
+
+.el-sidebar .el-nav a:active {
+  transform: scale(.985);
+  box-shadow: var(--side-pressed) !important;
+}
+
+/* ACTIVE PAGE */
+
+.el-sidebar .el-nav a.active {
+  color: var(--side-purple-dark) !important;
+
+  background: linear-gradient(
+    145deg,
+    #e5e1f8,
+    #f1effc
+  ) !important;
+
+  border-color: rgba(255,255,255,.98) !important;
+
+  box-shadow: var(--side-pressed) !important;
+
+  transform: none;
+}
+
+/* ACTIVE INDICATOR */
+
+.el-sidebar .el-nav a.active::before {
+  content: "";
+
+  position: absolute;
+  left: 0;
+  top: 50%;
+
+  width: 4px;
+  height: 23px;
+
+  transform: translateY(-50%);
+
+  border-radius: 0 5px 5px 0;
+
+  background: linear-gradient(
+    180deg,
+    #a99af8,
+    #705bd2
+  );
+
+  box-shadow: 0 0 9px rgba(120,101,220,.4);
+}
+
+/* NAV ICON */
+
+.el-nav-icon {
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+
+  display: grid;
+  place-items: center;
+
+  color: var(--side-purple);
+
+  filter: drop-shadow(
+    1px 1px 1px rgba(255,255,255,.9)
+  );
+}
+
+.el-nav-icon svg {
+  width: 19px;
+  height: 19px;
+  display: block;
+}
+
+.el-sidebar .el-nav a.active .el-nav-icon {
+  color: var(--side-purple-dark);
+}
+
+/* NAV LABEL */
+
+.el-nav-label {
+  display: block;
+  min-width: 0;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+/* ==========================================================
+   8. LOGOUT SECTION
+   ========================================================== */
+
+.el-sidebar-bottom {
+  flex-shrink: 0;
+
+  padding-top: 13px;
+  margin-top: 15px;
+
+  border-top: 1px solid rgba(145,153,184,.22);
+}
+
+.el-sidebar-bottom a {
+  color: #bd5269 !important;
+}
+
+.el-sidebar-bottom a .el-nav-icon {
+  color: #d45d78;
+}
+
+.el-sidebar-bottom a:hover {
+  background: linear-gradient(
+    145deg,
+    #fff0f2,
+    #f8e5e9
+  ) !important;
+}
+
+/* ==========================================================
+   9. COLLAPSED SIDEBAR
+   ========================================================== */
+
+body.el-sidebar-collapsed .el-app-shell {
+  grid-template-columns:
+    var(--side-collapsed-width)
+    minmax(0, 1fr);
+}
+
+body.el-sidebar-collapsed .el-sidebar {
+  padding-left: 11px;
+  padding-right: 11px;
+}
+
+body.el-sidebar-collapsed .el-sidebar-brand {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+body.el-sidebar-collapsed .el-wordmark-text,
+body.el-sidebar-collapsed .el-role-chip,
+body.el-sidebar-collapsed .el-nav-label {
+  display: none !important;
+}
+
+body.el-sidebar-collapsed .el-sidebar .el-nav a {
+  justify-content: center;
+  padding: 10px 5px !important;
+}
+
+body.el-sidebar-collapsed .el-sidebar .el-nav a.active::before {
+  left: -1px;
+}
+
+body.el-sidebar-collapsed .el-sidebar-collapse {
+  right: 4px;
+}
+
+/* ==========================================================
+   10. TOPBAR
+   ========================================================== */
+
+.el-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 500;
+
+  min-height: 76px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+
+  box-sizing: border-box;
+
+  padding: 13px 28px;
+
+  border-bottom: 1px solid rgba(255,255,255,.75);
+
+  background: rgba(245,247,255,.68);
+
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+}
+
+.el-topbar-title {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  min-width: 0;
+}
+
+.el-page-kicker {
+  color: var(--side-purple);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+}
+
+.el-page-title {
+  margin-top: 3px;
+  color: #252945;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.el-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* USER PILL */
+
+.el-user-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 8px 13px;
+
+  border: 1px solid rgba(255,255,255,.9);
+  border-radius: 14px;
+
+  background: rgba(255,255,255,.55);
+
+  box-shadow:
+    4px 4px 10px rgba(145,153,184,.16),
+    -4px -4px 10px rgba(255,255,255,.9);
+}
+
+.el-user-pill small,
+.el-user-pill strong {
+  display: block;
+}
+
+.el-user-pill small {
+  color: var(--side-muted);
+  font-size: 9px;
+}
+
+.el-user-pill strong {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  color: var(--side-text);
+  font-size: 11px;
+}
+
+.el-avatar {
+  width: 35px;
+  height: 35px;
+  min-width: 35px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid rgba(255,255,255,.9);
+  border-radius: 12px;
+
+  color: white;
+
+  background: linear-gradient(
+    145deg,
+    #a493f5,
+    #705bd2
+  );
+
+  box-shadow:
+    3px 3px 8px rgba(110,91,200,.25),
+    -3px -3px 8px rgba(255,255,255,.8);
+
+  font-weight: 850;
+}
+
+/* MENU TOGGLE */
+
+.el-menu-toggle {
+  width: 40px;
+  height: 40px;
+
+  display: none;
+  place-items: center;
+
+  border: 1px solid rgba(255,255,255,.9);
+  border-radius: 12px;
+
+  color: var(--side-purple-dark);
+
+  background: linear-gradient(
+    145deg,
+    #ffffff,
+    #e7eaf5
+  );
+
+  box-shadow: var(--side-raised);
+
+  cursor: pointer;
+}
+
+.el-menu-toggle:active {
+  box-shadow: var(--side-pressed);
+}
+
+/* ==========================================================
+   11. MOBILE DRAWER
+   ========================================================== */
+
+@media(max-width: 900px) {
+
+  .el-app-shell,
+  body.el-sidebar-collapsed .el-app-shell {
+    display: block !important;
+    min-height: 100vh;
+  }
+
+  .el-sidebar,
+  body.el-sidebar-collapsed .el-sidebar {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+
+    width: min(285px, 82vw) !important;
+    height: 100dvh;
+    min-height: 100dvh;
+
+    padding: 20px 13px 15px;
+
+    transform: translateX(-110%);
+    transition: transform .25s ease;
+
+    box-shadow: 15px 0 35px rgba(50,55,100,.22) !important;
+  }
+
+  body.el-nav-open .el-sidebar {
+    transform: translateX(0);
+  }
+
+  body.el-sidebar-collapsed .el-wordmark-text,
+  body.el-sidebar-collapsed .el-role-chip,
+  body.el-sidebar-collapsed .el-nav-label {
+    display: block !important;
+  }
+
+  body.el-sidebar-collapsed .el-sidebar .el-nav a {
+    justify-content: flex-start;
+    padding: 10px 12px !important;
+  }
+
+  .el-menu-toggle {
+    display: grid;
+  }
+
+  .el-topbar {
+    min-height: 67px;
+    padding: 10px 15px;
+  }
+
+  .el-page-content > .el-dashboard {
+    width: calc(100% - 28px);
+    padding-top: 20px;
+  }
+
+  /* Mobile backdrop */
+
+  body.el-nav-open::before {
+    content: "";
+
+    position: fixed;
+    inset: 0;
+    z-index: 900;
+
+    background: rgba(30,35,65,.32);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+  }
+
+  body.el-nav-open .el-sidebar {
+    z-index: 1000;
+  }
+
+  .el-user-pill {
+    padding: 6px;
+  }
+
+  .el-user-pill > div {
+    display: none;
+  }
+}
+
+/* ==========================================================
+   12. SMALL SCREENS
+   ========================================================== */
+
+@media(max-width: 480px) {
+  .el-page-title {
+    font-size: 14px;
+  }
+
+  .el-topbar {
+    gap: 8px;
+  }
+
+  .el-topbar-title {
+    gap: 10px;
+  }
+
+  .el-avatar {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+  }
+}
+
+/* ==========================================================
+   13. ACCESSIBILITY
+   ========================================================== */
+
+.el-sidebar a:focus-visible,
+.el-sidebar button:focus-visible,
+.el-menu-toggle:focus-visible {
+  outline: 3px solid rgba(120,101,220,.45);
+  outline-offset: 3px;
+}
+
+@media(prefers-reduced-motion: reduce) {
+  .el-sidebar *,
+  .el-app-shell *,
+  .el-topbar * {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+  }
+}
+
+/* SIDEBAR: FLUSH TO THE LEFT EDGE */
+.sidebar,
+.app-sidebar,
+#sidebar,
+#appSidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    margin: 0 !important;
+    transform: none;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    border-radius: 0 18px 18px 0 !important;
+}
+
+/* Remove outer page spacing around sidebar */
+html,
+body {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+
+/* =====================================================
+   EQUALLEARN — APP SHELL CONTENT ALIGNMENT FIX
+   Preserve the existing sidebar and navigation.
+===================================================== */
+
+/* Main application grid */
+.el-app-shell {
+    display: grid !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    grid-template-columns: var(--side-width) minmax(0, 1fr) !important;
+    gap: 0 !important;
+    align-items: stretch;
+}
+
+/* Sidebar occupies only its defined grid column */
+.el-app-shell > .el-sidebar {
+    grid-column: 1;
+    grid-row: 1;
+    position: sticky !important;
+    top: 0 !important;
+    left: auto !important;
+    width: 100% !important;
+    min-width: 0;
+    height: 100vh !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+}
+
+/* Main content starts immediately after sidebar */
+.el-app-shell > .el-app-main {
+    grid-column: 2;
+    grid-row: 1;
+    display: flex !important;
+    flex-direction: column;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-x: clip !important;
+}
+
+/* Content wrapper must not center or offset its children */
+.el-app-main > .el-page-content {
+    display: block !important;
+    flex: 1 1 auto;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-x: clip;
+}
+
+/* Direct page content: remove unwanted max-width and auto margins */
+.el-page-content > .page,
+.el-page-content > main.page {
+    display: block !important;
+    position: relative;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box;
+}
+
+/* Registration layout */
+.el-page-content > .page > .layout {
+    display: grid;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    grid-template-columns:
+        minmax(0, .85fr)
+        minmax(0, 1.15fr);
+    gap: 18px;
+}
+
+.el-page-content > .page > .layout > * {
+    min-width: 0 !important;
+    max-width: 100%;
+}
+
+/* Avoid horizontal overflow from form fields */
+.el-page-content .form-card,
+.el-page-content .form-grid,
+.el-page-content .input-group {
+    min-width: 0 !important;
+    max-width: 100%;
+}
+
+.el-page-content .input-group input {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+}
+
+/* Collapsed sidebar */
+body.el-sidebar-collapsed .el-app-shell {
+    grid-template-columns:
+        var(--side-collapsed-width)
+        minmax(0, 1fr) !important;
+}
+
+/* Tablet */
+@media (max-width: 1100px) and (min-width: 901px) {
+    .el-page-content > .page > .layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* Mobile shell remains a drawer */
+@media (max-width: 900px) {
+    .el-app-shell,
+    body.el-sidebar-collapsed .el-app-shell {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    .el-app-shell > .el-sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: min(285px, 82vw) !important;
+        height: 100dvh !important;
+        border-radius: 0 16px 16px 0 !important;
+    }
+
+    .el-app-shell > .el-app-main {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .el-page-content > .page > .layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

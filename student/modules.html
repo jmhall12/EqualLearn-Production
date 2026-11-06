@@ -2,193 +2,791 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#635bff">
-<title>EqualLearn | Classwork</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#635bff">
 
-<link rel="stylesheet" href="../assets/css/style.css">
-<link rel="stylesheet" href="../assets/css/equallearn.css">
-<link rel="manifest" href="../manifest.webmanifest">
-<link rel="icon" href="../assets/icons/icon-192.png">
+    <title>EqualLearn | Classwork</title>
 
-<style>
-body {
-  background: #f5f6fc;
-  margin: 0;
-}
-.classroom {
-  max-width: 950px;
-  margin: auto;
-  padding: 25px 20px 110px;
-}
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 25px;
-}
-.page-header h1 { margin: 0; font-size: 29px; }
-.page-header p { color: #777; margin-bottom: 0; }
-.banner {
-  background: linear-gradient(120deg,#635bff,#8874ff);
-  color: white;
-  border-radius: 18px;
-  padding: 28px;
-  margin-bottom: 22px;
-}
-.banner h2 { margin: 0 0 8px; }
-.banner p { margin: 0; opacity: .9; }
-.tabs {
-  display: flex;
-  gap: 22px;
-  overflow-x: auto;
-  border-bottom: 1px solid #ddd;
-  margin-bottom: 22px;
-}
-.tab {
-  border: 0;
-  background: transparent;
-  padding: 13px 4px;
-  color: #777;
-  font-weight: 700;
-  white-space: nowrap;
-}
-.tab.active {
-  color: #635bff;
-  border-bottom: 3px solid #635bff;
-}
-.section-heading {
-  margin: 25px 0 12px;
-  font-size: 17px;
-}
-.content-card {
-  background: white;
-  border: 1px solid #e8e9f2;
-  border-radius: 15px;
-  padding: 18px;
-  margin-bottom: 13px;
-  box-shadow: 0 4px 18px rgba(0,0,0,.035);
-}
-.content-top {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-}
-.content-icon {
-  width: 43px;
-  height: 43px;
-  flex-shrink: 0;
-  display: grid;
-  place-items: center;
-  background: #efedff;
-  border-radius: 12px;
-  font-size: 20px;
-}
-.content-card h3 { margin: 0 0 7px; font-size: 16px; }
-.content-card p {
-  color: #70758a;
-  font-size: 14px;
-  line-height: 1.55;
-  margin: 0;
-  overflow-wrap: anywhere;
-}
-.content-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 13px;
-}
-.meta {
-  background: #f3f4f8;
-  padding: 6px 9px;
-  border-radius: 7px;
-  color: #666b7e;
-  font-size: 11px;
-}
-.content-action {
-  display: inline-block;
-  margin-top: 14px;
-  color: #635bff;
-  font-weight: 700;
-  text-decoration: none;
-  font-size: 14px;
-}
-.empty {
-  padding: 35px 15px;
-  text-align: center;
-  background: white;
-  color: #777;
-  border-radius: 14px;
-}
-.hidden { display: none !important; }
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(100%,950px);
-  height: 68px;
-  background: white;
-  border: 1px solid #e8e9f2;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  z-index: 100;
-}
-.bottom-nav a {
-  text-decoration: none;
-  color: #777;
-  font-size: 13px;
-  text-align: center;
-}
-.bottom-nav .active { color: #635bff; }
-@media(max-width:600px) {
-  .classroom { padding: 20px 14px 100px; }
-  .banner { padding: 22px; }
-}
-</style>
+    <!-- EQUALLEARN TYPOGRAPHY -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- GLOBAL DESIGN SYSTEM -->
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/equallearn.css">
+    <link rel="stylesheet" href="../assets/css/glass-dashboard.css">
+    <link rel="stylesheet" href="../assets/css/sidebar-skeuomorphism.css">
+
+    <link rel="manifest" href="../manifest.webmanifest">
+    <link rel="icon" type="image/png" href="../assets/icons/equallearn-logo.png">
+
+    <style>
+        /* =================================================
+           EQUALLEARN CLASSWORK
+           GLASSMORPHISM DESIGN SYSTEM
+        ================================================= */
+
+        :root {
+            --class-primary: #635bdb;
+            --class-primary-light: #8178ff;
+            --class-text: #252945;
+            --class-muted: #858ba6;
+            --class-glass: rgba(255,255,255,.65);
+            --class-border: rgba(255,255,255,.86);
+            --class-shadow: 0 10px 30px rgba(65,70,130,.07);
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            min-height: 100%;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        body {
+            color: var(--class-text);
+            background:
+                radial-gradient(circle at 10% 5%, rgba(99,91,219,.12), transparent 35%),
+                radial-gradient(circle at 90% 85%, rgba(120,170,255,.12), transparent 35%),
+                linear-gradient(135deg, #f4f5ff, #eceeff 55%, #f8f8ff);
+            font-family: "DM Sans", sans-serif;
+        }
+
+        /* Application shell compatibility */
+        .el-app-shell {
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
+        }
+
+        .el-app-main {
+            min-width: 0;
+            max-width: 100%;
+            overflow-x: clip;
+        }
+
+        .el-page-content {
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
+            margin: 0;
+            padding: 0;
+            overflow-x: clip;
+        }
+
+        /* =================================================
+           MAIN CONTENT
+        ================================================= */
+
+        .classroom {
+            width: 100%;
+            max-width: 1200px;
+            min-width: 0;
+            margin: 0 auto;
+            padding: 27px clamp(15px, 2.2vw, 30px) 45px;
+            animation: classPageEnter .55s ease both;
+        }
+
+        /* =================================================
+           PAGE HEADER
+        ================================================= */
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+            min-width: 0;
+            margin-bottom: 22px;
+        }
+
+        .page-header > div {
+            min-width: 0;
+        }
+
+        .page-header .eyebrow {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--class-primary);
+            font-size: 10px;
+            font-weight: 850;
+            letter-spacing: 1.2px;
+        }
+
+        .page-header h1 {
+            margin: 0;
+            color: var(--class-text);
+            font-family: "Plus Jakarta Sans", sans-serif;
+            font-size: clamp(26px, 3vw, 34px);
+            font-weight: 850;
+            letter-spacing: -.9px;
+        }
+
+        .page-header .subtitle {
+            margin: 8px 0 0;
+            color: var(--class-muted);
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        /* =================================================
+           HERO BANNER
+        ================================================= */
+
+        .banner {
+            position: relative;
+            min-width: 0;
+            margin-bottom: 22px;
+            padding: clamp(23px, 3vw, 32px);
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,.3);
+            border-radius: 21px;
+            color: white;
+            background:
+                radial-gradient(circle at 90% 10%, rgba(255,255,255,.2), transparent 35%),
+                linear-gradient(120deg, #5148c9, #8874ff);
+            box-shadow: 0 12px 28px rgba(99,91,219,.17);
+            animation: classPageEnter .6s .08s ease both;
+        }
+
+        .banner::before {
+            content: "";
+            position: absolute;
+            width: 190px;
+            height: 190px;
+            right: -65px;
+            bottom: -130px;
+            border: 1px solid rgba(255,255,255,.23);
+            border-radius: 50%;
+            box-shadow:
+                0 0 0 22px rgba(255,255,255,.04),
+                0 0 0 45px rgba(255,255,255,.025);
+            pointer-events: none;
+        }
+
+        .banner-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .banner-label {
+            display: block;
+            margin-bottom: 9px;
+            color: rgba(255,255,255,.76);
+            font-size: 10px;
+            font-weight: 850;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+        }
+
+        .banner h2 {
+            margin: 0 0 9px;
+            color: white;
+            font-family: "Plus Jakarta Sans", sans-serif;
+            font-size: clamp(21px, 3vw, 27px);
+            font-weight: 850;
+            letter-spacing: -.5px;
+        }
+
+        .banner p {
+            max-width: 650px;
+            margin: 0;
+            color: rgba(255,255,255,.87);
+            font-size: 13px;
+            line-height: 1.75;
+        }
+
+        /* =================================================
+           TABS
+        ================================================= */
+
+        .tabs-wrapper {
+            width: 100%;
+            min-width: 0;
+            margin-bottom: 22px;
+            padding: 7px;
+            overflow: hidden;
+            border: 1px solid var(--class-border);
+            border-radius: 16px;
+            background: rgba(255,255,255,.55);
+            box-shadow: 0 6px 20px rgba(65,70,130,.045);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+        }
+
+        .tabs {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            width: 100%;
+            min-width: 0;
+            overflow-x: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(99,91,219,.25) transparent;
+        }
+
+        .tab {
+            position: relative;
+            flex: 0 0 auto;
+            min-height: 41px;
+            padding: 10px 17px;
+            border: 1px solid transparent;
+            border-radius: 11px;
+            color: #777d96;
+            background: transparent;
+            font-family: "DM Sans", sans-serif;
+            font-size: 12px;
+            font-weight: 750;
+            white-space: nowrap;
+            cursor: pointer;
+            transition:
+                color .2s ease,
+                background .2s ease,
+                box-shadow .2s ease,
+                transform .2s ease;
+        }
+
+        .tab:hover {
+            color: var(--class-primary);
+            background: rgba(255,255,255,.65);
+        }
+
+        .tab.active {
+            color: white;
+            border-color: rgba(255,255,255,.2);
+            background: linear-gradient(110deg, #635bdb, #8178ff);
+            box-shadow: 0 5px 13px rgba(99,91,219,.2);
+        }
+
+        .tab:active {
+            transform: scale(.97);
+        }
+
+        /* =================================================
+           CLASS CONTENT
+        ================================================= */
+
+        #classContent {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 14px;
+            min-width: 0;
+        }
+
+        .section-heading {
+            margin: 25px 0 12px;
+            color: var(--class-text);
+            font-family: "Plus Jakarta Sans", sans-serif;
+            font-size: 16px;
+            font-weight: 850;
+        }
+
+        /* =================================================
+           CONTENT CARDS
+        ================================================= */
+
+        .content-card {
+            position: relative;
+            min-width: 0;
+            padding: 20px;
+            overflow: hidden;
+            border: 1px solid var(--class-border);
+            border-radius: 18px;
+            background: var(--class-glass);
+            box-shadow:
+                var(--class-shadow),
+                inset 0 1px 0 rgba(255,255,255,.8);
+            backdrop-filter: blur(17px);
+            -webkit-backdrop-filter: blur(17px);
+            transition:
+                transform .23s ease,
+                box-shadow .23s ease,
+                border-color .23s ease,
+                background .23s ease;
+            animation: classCardEnter .45s ease both;
+        }
+
+        .content-card::after {
+            content: "";
+            position: absolute;
+            top: -60px;
+            right: -60px;
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            background: rgba(120,101,220,.045);
+            pointer-events: none;
+            transition: transform .3s ease;
+        }
+
+        .content-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(120,101,220,.2);
+            background: rgba(255,255,255,.79);
+            box-shadow: 0 14px 32px rgba(65,70,130,.10);
+        }
+
+        .content-card:hover::after {
+            transform: scale(1.35);
+        }
+
+        .content-top {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            min-width: 0;
+        }
+
+        .content-icon {
+            flex-shrink: 0;
+            width: 47px;
+            height: 47px;
+            display: grid;
+            place-items: center;
+            border: 1px solid rgba(255,255,255,.9);
+            border-radius: 14px;
+            color: var(--class-primary);
+            background: rgba(120,101,220,.11);
+            box-shadow: 0 5px 13px rgba(80,70,160,.06);
+            font-size: 20px;
+            transition: transform .23s ease;
+        }
+
+        .content-card:hover .content-icon {
+            transform: rotate(-5deg) scale(1.06);
+        }
+
+        .content-top > div:last-child {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .content-card h3 {
+            margin: 0 0 7px;
+            color: var(--class-text);
+            font-family: "Plus Jakarta Sans", sans-serif;
+            font-size: 15px;
+            font-weight: 850;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        .content-card p {
+            margin: 0;
+            color: #70758a;
+            font-size: 12px;
+            line-height: 1.75;
+            overflow-wrap: anywhere;
+        }
+
+        /* =================================================
+           CONTENT METADATA
+        ================================================= */
+
+        .content-meta {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .meta {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            max-width: 100%;
+            padding: 6px 10px;
+            border: 1px solid rgba(255,255,255,.8);
+            border-radius: 8px;
+            color: #666b7e;
+            background: rgba(242,243,250,.78);
+            font-size: 10px;
+            font-weight: 700;
+            overflow-wrap: anywhere;
+        }
+
+        /* =================================================
+           CONTENT ACTION
+        ================================================= */
+
+        .content-action {
+            position: relative;
+            z-index: 1;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            margin-top: 15px;
+            color: var(--class-primary);
+            font-size: 12px;
+            font-weight: 850;
+            text-decoration: none;
+            transition: gap .2s ease, color .2s ease;
+        }
+
+        .content-action:hover {
+            gap: 12px;
+            color: var(--class-primary-light);
+        }
+
+        /* =================================================
+           EMPTY AND LOADING STATES
+        ================================================= */
+
+        .empty {
+            grid-column: 1 / -1;
+            padding: 38px 18px;
+            border: 1px solid var(--class-border);
+            border-radius: 17px;
+            color: var(--class-muted);
+            background: rgba(255,255,255,.57);
+            box-shadow: var(--class-shadow);
+            text-align: center;
+            font-size: 12px;
+            line-height: 1.7;
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+        }
+
+        .empty::before {
+            content: "📚";
+            display: block;
+            margin-bottom: 10px;
+            font-size: 26px;
+        }
+
+        /* =================================================
+           HIDDEN STATE
+        ================================================= */
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* =================================================
+           BOTTOM NAVIGATION
+           Retained for mobile navigation.
+        ================================================= */
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            gap: 5px;
+            width: min(100%, 950px);
+            min-height: 68px;
+            padding: 7px 10px;
+            border: 1px solid rgba(255,255,255,.9);
+            border-bottom: 0;
+            border-radius: 18px 18px 0 0;
+            background: rgba(255,255,255,.83);
+            box-shadow: 0 -7px 28px rgba(65,70,130,.09);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            transform: translateX(-50%);
+        }
+
+        .bottom-nav a {
+            flex: 1;
+            min-width: 0;
+            padding: 7px 5px;
+            border-radius: 11px;
+            color: #858ba6;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1.7;
+            text-align: center;
+            text-decoration: none;
+            transition:
+                color .2s ease,
+                background .2s ease,
+                transform .2s ease;
+        }
+
+        .bottom-nav a:hover {
+            color: var(--class-primary);
+            background: rgba(120,101,220,.07);
+        }
+
+        .bottom-nav a.active {
+            color: var(--class-primary);
+            background: rgba(120,101,220,.1);
+        }
+
+        /* =================================================
+           ANIMATIONS
+        ================================================= */
+
+        @keyframes classPageEnter {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes classCardEnter {
+            from {
+                opacity: 0;
+                transform: translateY(13px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #classContent .content-card:nth-child(1) {
+            animation-delay: .04s;
+        }
+
+        #classContent .content-card:nth-child(2) {
+            animation-delay: .08s;
+        }
+
+        #classContent .content-card:nth-child(3) {
+            animation-delay: .12s;
+        }
+
+        #classContent .content-card:nth-child(4) {
+            animation-delay: .16s;
+        }
+
+        /* =================================================
+           RESPONSIVE
+        ================================================= */
+
+        @media(max-width: 900px) {
+            .classroom {
+                padding: 23px 17px 100px;
+            }
+
+            .bottom-nav {
+                width: 100%;
+                border-radius: 17px 17px 0 0;
+            }
+        }
+
+        @media(max-width: 600px) {
+            .classroom {
+                padding: 18px 13px 100px;
+            }
+
+            .page-header h1 {
+                font-size: 26px;
+            }
+
+            .banner {
+                padding: 22px;
+                border-radius: 17px;
+            }
+
+            .banner h2 {
+                font-size: 22px;
+            }
+
+            .tabs-wrapper {
+                padding: 5px;
+                border-radius: 13px;
+            }
+
+            .tab {
+                min-height: 39px;
+                padding: 9px 13px;
+                font-size: 11px;
+            }
+
+            .content-card {
+                padding: 17px;
+                border-radius: 16px;
+            }
+
+            .content-icon {
+                width: 42px;
+                height: 42px;
+                border-radius: 12px;
+            }
+
+            .content-card h3 {
+                font-size: 14px;
+            }
+
+            .content-card p {
+                font-size: 11px;
+            }
+
+            .bottom-nav {
+                min-height: 64px;
+                padding-bottom: max(7px, env(safe-area-inset-bottom));
+            }
+        }
+
+        /* =================================================
+           ACCESSIBILITY
+        ================================================= */
+
+        button:focus-visible,
+        a:focus-visible {
+            outline: 3px solid rgba(120,101,220,.38);
+            outline-offset: 3px;
+        }
+
+        @media(prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+
+        @supports not (backdrop-filter: blur(10px)) {
+            .content-card,
+            .tabs-wrapper,
+            .bottom-nav {
+                background: rgba(255,255,255,.97);
+            }
+        }
+    </style>
 </head>
 
 <body>
+
 <main class="classroom">
 
-  <header class="page-header">
-    <div>
-      <p>EQUALLEARN STUDENT WORKSPACE</p>
-      <h1>Classwork</h1>
+    <!-- PAGE HEADER -->
+    <header class="page-header">
+        <div>
+            <span class="eyebrow">EQUALLEARN STUDENT WORKSPACE</span>
+            <h1>Classwork</h1>
+            <p class="subtitle">
+                Your learning activities, resources, and classroom updates.
+            </p>
+        </div>
+    </header>
+
+    <!-- LEARNING BANNER -->
+    <section class="banner">
+        <div class="banner-content">
+            <span class="banner-label">Your learning space</span>
+            <h2>Everything you need to learn.</h2>
+            <p>
+                Announcements, learning materials, assignments and quizzes
+                are organized in one place. Explore your classwork and
+                continue your learning journey.
+            </p>
+        </div>
+    </section>
+
+    <!-- CLASSWORK TABS -->
+    <div class="tabs-wrapper">
+        <nav class="tabs" aria-label="Classwork categories">
+
+            <button
+                type="button"
+                class="tab active"
+                data-tab="all">
+                All
+            </button>
+
+            <button
+                type="button"
+                class="tab"
+                data-tab="announcements">
+                Announcements
+            </button>
+
+            <button
+                type="button"
+                class="tab"
+                data-tab="assignments">
+                Assignments
+            </button>
+
+            <button
+                type="button"
+                class="tab"
+                data-tab="materials">
+                Materials
+            </button>
+
+            <button
+                type="button"
+                class="tab"
+                data-tab="quizzes">
+                Quizzes
+            </button>
+
+        </nav>
     </div>
-  </header>
 
-  <section class="banner">
-    <h2>Learning Space</h2>
-    <p>Announcements, learning materials, assignments and quizzes in one place.</p>
-  </section>
-
-  <nav class="tabs">
-    <button class="tab active" data-tab="all">All</button>
-    <button class="tab" data-tab="announcements">Announcements</button>
-    <button class="tab" data-tab="assignments">Assignments</button>
-    <button class="tab" data-tab="materials">Materials</button>
-    <button class="tab" data-tab="quizzes">Quizzes</button>
-  </nav>
-
-  <section id="classContent">
-    <div class="empty">Loading your classwork...</div>
-  </section>
+    <!-- DYNAMIC CLASSWORK CONTENT -->
+    <section id="classContent">
+        <div class="empty">
+            Loading your classwork...
+        </div>
+    </section>
 
 </main>
 
-<nav class="bottom-nav">
-  <a href="dashboard.html">🏠<br>Home</a>
-  <a href="modules.html" class="active">📚<br>Classwork</a>
-  <a href="progress.html">📈<br>Progress</a>
-  <a href="profile.html">👤<br>Profile</a>
+<!-- MOBILE BOTTOM NAVIGATION -->
+<nav class="bottom-nav" aria-label="Student navigation">
+
+    <a href="dashboard.html">
+        🏠<br>
+        Home
+    </a>
+
+    <a href="modules.html" class="active" aria-current="page">
+        📚<br>
+        Classwork
+    </a>
+
+    <a href="progress.html">
+        📈<br>
+        Progress
+    </a>
+
+    <a href="profile.html">
+        👤<br>
+        Profile
+    </a>
+
 </nav>
 
+<!-- EXISTING CLASSWORK LOGIC -->
 <script type="module" src="../assets/js/modules.js"></script>
+
+<!-- EQUALLEARN APPLICATION SHELL -->
 <script type="module" src="../assets/js/ui-shell.js"></script>
+
+<!-- PWA AND THEME -->
 <script type="module" src="../assets/js/pwa.js"></script>
 <script type="module" src="../assets/js/theme.js"></script>
+
 </body>
 </html>

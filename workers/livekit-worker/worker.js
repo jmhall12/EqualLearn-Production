@@ -330,7 +330,7 @@ async function createLiveKitToken(env, options) {
 
   return `${unsigned}.${base64url(new Uint8Array(signature))}`;
 }
-async function createLiveKitAdminToken(env, roomName) {
+async function createLiveKitAdminToken(env) {
   const now = Math.floor(Date.now() / 1000);
 
   const header = {
@@ -338,6 +338,7 @@ async function createLiveKitAdminToken(env, roomName) {
     typ: "JWT"
   };
 
+  // DeleteRoom requires the roomCreate grant.
   const payload = {
     iss: env.LIVEKIT_API_KEY,
     sub: "equallearn-server",
@@ -345,9 +346,7 @@ async function createLiveKitAdminToken(env, roomName) {
     iat: now,
     exp: now + 300,
     video: {
-      room: roomName,
-      roomAdmin: true,
-      roomJoin: true
+      roomCreate: true
     }
   };
 
@@ -377,16 +376,17 @@ async function createLiveKitAdminToken(env, roomName) {
 
 async function deleteLiveKitRoom(env, roomId) {
   const roomName = `el-${roomId}`;
+  const adminToken = await createLiveKitAdminToken(env);
 
-  const adminToken = await createLiveKitAdminToken(
-    env,
-    roomName
-  );
-
-  const serverUrl = env.LIVEKIT_URL
+  const serverUrl = String(env.LIVEKIT_URL || "")
+    .trim()
     .replace(/^wss:/i, "https:")
     .replace(/^ws:/i, "http:")
     .replace(/\/+$/, "");
+
+  if (!serverUrl || !/^https?:\/\//i.test(serverUrl)) {
+    throw new Error("Invalid LIVEKIT_URL configuration.");
+  }
 
   const response = await fetch(
     `${serverUrl}/twirp/livekit.RoomService/DeleteRoom`,
@@ -457,7 +457,7 @@ export default {
   return json(
     { success: false, error: "Endpoint not found." },
     404,
-    cors
+    headers
   );
 }
 
@@ -582,24 +582,50 @@ export default {
         }, 403, headers);
       }
 
-      // Secure End for Everyone endpoint.
-// Only the teacher who owns this session can terminate its room.
+     // Secure End for Everyone endpoint.
+// Only the active teacher assigned to this session can terminate the room.
 if (url.pathname === "/end") {
-  if (
-    user.role !== "teacher" ||
-    session.teacherUid !== uid
-  ) {
+  if (role !== "teacher" || String(session.teacherUid || "") !== uid) {
     return json({
       success: false,
       error: "Only the session's assigned teacher can end this classroom."
-    }, 403, cors);
+    }, 403, headers);
   }
 
-  if (session.status !== "live") {
+  if (normalize(session.status) !== "live") {
     return json({
       success: false,
       error: "This classroom is not currently live."
-    }, 409, cors);
+    }, 409, headers);
+  }
+
+  const sectionId = String(session.sectionId || "");
+
+  if (!sectionId) {
+    return json({
+      success: false,
+      error: "The classroom has no valid section assignment."
+    }, 403, headers);
+  }
+
+  const section = await getFirestoreDocument(
+    `sections/${encodeURIComponent(sectionId)}`,
+    idToken
+  );
+
+  const teacherIds = Array.isArray(section?.teacherIds)
+    ? section.teacherIds.map(String)
+    : [];
+
+  const isAssignedTeacher =
+    teacherIds.includes(uid) ||
+    String(section?.teacherId || "") === uid;
+
+  if (!section || !isAssignedTeacher) {
+    return json({
+      success: false,
+      error: "You are no longer assigned to this classroom."
+    }, 403, headers);
   }
 
   await deleteLiveKitRoom(env, roomId);
@@ -608,7 +634,7 @@ if (url.pathname === "/end") {
     success: true,
     message: "Everyone has been disconnected from the classroom.",
     roomId
-  }, 200, cors);
+  }, 200, headers);
 }
 
       if (normalize(session.status) !== "live") {

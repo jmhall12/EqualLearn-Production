@@ -43,22 +43,64 @@ const sessionTeacher = document.getElementById("sessionTeacher");
 const sessionState = document.getElementById("sessionState");
 
 // Meeting elements
-const meetingScreen = document.getElementById("meetingScreen");
-const meetingTitle = document.getElementById("meetingTitle");
-const participantGrid = document.getElementById("participantGrid");
-const meetingNotice = document.getElementById("meetingNotice");
-const meetingParticipants = document.getElementById("meetingParticipants");
-const meetingSidebar = document.getElementById("meetingSidebar");
-const sidebarTitle = document.getElementById("sidebarTitle");
-const meetingChatMessages = document.getElementById("meetingChatMessages");
-const meetingChatForm = document.getElementById("meetingChatForm");
-const meetingChatInput = document.getElementById("meetingChatInput");
+// ========================================
+// LEAVE MEETING CHOICES
+// ========================================
 
-const meetingMicBtn = document.getElementById("meetingMicBtn");
-const meetingCameraBtn = document.getElementById("meetingCameraBtn");
-const screenShareBtn = document.getElementById("screenShareBtn");
-const meetingEndBtn = document.getElementById("meetingEndBtn");
-const meetingLeaveBtn = document.getElementById("meetingLeaveBtn");
+const leaveChoiceModal = document.getElementById("leaveChoiceModal");
+const leaveOnlyChoice = document.getElementById("leaveOnlyChoice");
+const endEveryoneChoice = document.getElementById("endEveryoneChoice");
+const cancelLeaveChoice = document.getElementById("cancelLeaveChoice");
+
+function openLeaveChoices() {
+  if (!currentRoom || busy) return;
+
+  leaveChoiceModal?.classList.add("open");
+}
+
+function closeLeaveChoices() {
+  leaveChoiceModal?.classList.remove("open");
+}
+
+// Open the choices when teacher clicks Leave
+meetingLeaveBtn?.addEventListener("click", openLeaveChoices);
+
+// Teacher leaves without ending the session
+leaveOnlyChoice?.addEventListener("click", async () => {
+  closeLeaveChoices();
+
+  if (busy) return;
+
+  await leaveMeeting();
+});
+
+// Teacher ends the meeting for everyone
+endEveryoneChoice?.addEventListener("click", async () => {
+  closeLeaveChoices();
+
+  if (busy) return;
+
+  await endLiveClass(true);
+});
+
+// Cancel popup
+cancelLeaveChoice?.addEventListener("click", closeLeaveChoices);
+
+// Close when clicking outside the dialog
+leaveChoiceModal?.addEventListener("click", event => {
+  if (event.target === leaveChoiceModal) {
+    closeLeaveChoices();
+  }
+});
+
+// Close popup using Escape
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") {
+    closeLeaveChoices();
+  }
+});
+
+
 
 let currentUser = null;
 let currentSessionId = null;
@@ -593,26 +635,49 @@ async function startLiveClass() {
     cameraBtn.disabled = false;
     endBtn.disabled = false;
 
-  } catch (error) {
+    } catch (error) {
     console.error("START LIVE ERROR:", error);
 
     if (currentRoom) {
-      try { await currentRoom.disconnect(); } catch {}
+      try {
+        await currentRoom.disconnect();
+      } catch (disconnectError) {
+        console.warn("LiveKit disconnect error:", disconnectError);
+      }
+
       currentRoom = null;
     }
 
     try {
       await updateDoc(doc(db, "liveSessions", currentSessionId), {
-        status: "scheduled",
+        status: previousStatus,
         updatedAt: serverTimestamp()
       });
+
+      currentSession = {
+        ...currentSession,
+        status: previousStatus
+      };
     } catch (updateError) {
-      console.error("Unable to restore scheduled state:", updateError);
+      console.error("Unable to restore previous session state:", updateError);
     }
 
-    showMessage(connectionMessage, error.message || "Unable to start session.", true);
-    setStatus("Connection failed", "#dc2626");
-    if (sessionState) sessionState.textContent = "Scheduled";
+    showMessage(
+      connectionMessage,
+      error.message || "Unable to start session.",
+      true
+    );
+
+    setStatus(
+      previousStatus === "ended" ? "Ended — Ready to restart" : "Connection failed",
+      "#dc2626"
+    );
+
+    if (sessionState) {
+      sessionState.textContent =
+        previousStatus === "ended" ? "Ended — Ready to restart" : "Scheduled";
+    }
+
     startBtn.disabled = false;
 
   } finally {
@@ -773,7 +838,7 @@ async function leaveMeeting() {
   showMessage(connectionMessage, "You left the meeting. The session remains live.");
 }
 
-async function endLiveClass() {
+async function endLiveClass(skipConfirmation = false) {
   if (!currentSessionId || !currentRoom || busy) return;
 
   const isOneOnOne =
@@ -783,7 +848,7 @@ async function endLiveClass() {
     ? "End this private meeting? The session record will be deleted."
     : "End this meeting for everyone? The session will remain available so you can restart it.";
 
-  if (!confirm(confirmMessage)) return;
+  if (!skipConfirmation && !confirm(confirmMessage)) return;
 
   busy = true;
   meetingEndBtn.disabled = true;
@@ -926,7 +991,8 @@ endBtn?.addEventListener("click", endLiveClass);
 meetingMicBtn?.addEventListener("click", toggleMicrophone);
 meetingCameraBtn?.addEventListener("click", toggleCamera);
 screenShareBtn?.addEventListener("click", toggleScreenShare);
-meetingLeaveBtn?.addEventListener("click", leaveMeeting);
+
+// Leave button is already connected to openLeaveChoices().
 meetingEndBtn?.addEventListener("click", endLiveClass);
 
 document.getElementById("participantsToggle")

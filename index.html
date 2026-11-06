@@ -1,32 +1,1760 @@
+
 <!DOCTYPE html>
-<html lang="en"><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#5b5cf0">
-<title>EqualLearn — Learn anywhere</title>
-<meta name="description" content="EqualLearn is a responsive learning platform for students, teachers, and administrators, available on the web and Android.">
-<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="assets/icons/icon-192.png"><link rel="stylesheet" href="assets/css/equallearn.css">
-</head><body>
-<header class="el-site-header">
-  <a class="el-wordmark" href="index.html" aria-label="EqualLearn home"><span class="el-wordmark-mark"><img src="assets/icons/icon-192.png" alt=""></span><span class="el-wordmark-text">EqualLearn</span></a>
-  <nav class="el-site-nav"><a href="#features">Features</a><a href="#android">Android app</a><a class="el-btn el-btn-ghost" href="login.html">Sign in</a><a class="el-btn el-btn-primary" href="register.html">Get started</a></nav>
-</header>
-<main>
-<section class="el-home-hero">
-  <div class="el-home-copy">
-    <div class="el-eyebrow"><span data-icon="zap"></span> Web + Android learning platform</div>
-    <h1>Learning that is <span>clear, visual, and ready anywhere.</span></h1>
-    <p>EqualLearn gives students a focused learning space, teachers simple content tools, and administrators a clear view of the platform—all from one responsive system.</p>
-    <div class="el-home-actions"><a class="el-btn el-btn-primary el-btn-lg" href="login.html">Sign in <span data-icon="arrowRight"></span></a><a class="el-btn el-btn-secondary el-btn-lg" href="#android"><span data-icon="smartphone"></span> See Android app</a></div>
-    <div class="el-trust-row"><span><i data-icon="shield"></i> Firebase accounts</span><span><i data-icon="zap"></i> Fast responsive UI</span><span><i data-icon="globe"></i> Web + mobile</span></div>
-  </div>
-  <div class="el-device-stage" aria-label="EqualLearn dashboard preview">
-    <div class="el-browser-mock"><div class="el-browser-bar"><span></span><span></span><span></span><b>EqualLearn</b></div><div class="el-browser-body"><div class="el-preview-sidebar"><div></div><i></i><i></i><i></i><i></i></div><div class="el-preview-main"><small>STUDENT DASHBOARD</small><h3>Welcome back 👋</h3><div class="el-preview-stats"><i></i><i></i><i></i></div><div class="el-preview-chart"><span style="height:38%"></span><span style="height:58%"></span><span style="height:49%"></span><span style="height:78%"></span><span style="height:65%"></span><span style="height:88%"></span></div></div></div></div>
-    <div class="el-phone-mock"><div class="el-phone-notch"></div><div class="el-phone-screen"><div class="el-mini-brand"><img src="assets/icons/icon-192.png" alt=""><b>EqualLearn</b></div><small>YOUR PROGRESS</small><strong>72%</strong><div class="el-progress"><span style="width:72%"></span></div><div class="el-phone-card"></div><div class="el-phone-card short"></div></div></div>
-  </div>
-</section>
-<section id="features" class="el-home-section"><div class="el-section-head"><div><span class="el-section-kicker">Built for every role</span><h2>One platform, three focused workspaces.</h2></div><p>Every page adapts from desktop to phone without sacrificing the tools each user needs.</p></div><div class="el-feature-cards"><article><span class="el-feature-icon" data-icon="profile"></span><h3>Students</h3><p>Learn from modules, take quizzes, review results, and see progress clearly.</p></article><article><span class="el-feature-icon" data-icon="teacher"></span><h3>Teachers</h3><p>Create lessons and modules, build quizzes, and manage assigned learners.</p></article><article><span class="el-feature-icon" data-icon="chart"></span><h3>Administrators</h3><p>Manage users, classes, reports, settings, and platform activity in one place.</p></article></div></section>
-<section id="android" class="el-apk-section"><div class="el-apk-copy"><span class="el-section-kicker">EqualLearn for Android</span><h2>Take the same learning experience to your phone.</h2><p>The Android APK connects to the same EqualLearn website and Firebase backend. Accounts, lessons, quizzes, and progress stay together across desktop and mobile.</p><div class="el-apk-points"><span><i data-icon="check"></i> Same login and database</span><span><i data-icon="check"></i> Responsive mobile interface</span><span><i data-icon="check"></i> Built automatically with GitHub Actions</span></div><div class="el-home-actions"><a class="el-btn el-btn-primary el-btn-lg" href="https://github.com/Jardeleza0921/equallearn/actions" target="_blank" rel="noopener"><span data-icon="download"></span> View APK builds</a><a class="el-btn el-btn-secondary el-btn-lg" href="MOBILE_APP.md">How the app works</a></div></div><div class="el-apk-visual"><div class="el-app-icon-large"><img src="assets/icons/icon-512.png" alt="EqualLearn app icon"><span>EqualLearn</span></div><div class="el-apk-badge"><span data-icon="smartphone"></span><div><small>ANDROID APP</small><b>EqualLearn APK</b></div></div></div></section>
-<section class="el-cta"><div><span class="el-section-kicker">Ready to learn?</span><h2>Open your EqualLearn workspace.</h2></div><div class="el-home-actions"><a class="el-btn el-btn-primary el-btn-lg" href="login.html">Sign in</a><a class="el-btn el-btn-secondary el-btn-lg" href="register.html">Create student account</a></div></section>
-</main>
-<footer class="el-site-footer"><a class="el-wordmark" href="index.html"><span class="el-wordmark-mark"><img src="assets/icons/icon-192.png" alt=""></span><span class="el-wordmark-text">EqualLearn</span></a><p>Responsive learning for web and Android.</p></footer>
-<script type="module" src="assets/js/theme.js"></script><script type="module">import {hydrateIcons} from './assets/js/icons.js'; hydrateIcons();</script><script type="module" src="assets/js/pwa.js"></script>
-</body></html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#edf0fa">
+
+  <title>EqualLearn — Learning Without Limits</title>
+  <meta name="description" content="EqualLearn is a modern learning platform connecting students, teachers, and administrators through one seamless digital learning experience.">
+  <meta name="application-name" content="EqualLearn">
+
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="assets/css/equallearn.css">
+
+  <style>
+    :root {
+      --bg: #edf0fa;
+      --surface: #edf0fa;
+      --surface-light: #f5f6fc;
+      --text: #252945;
+      --muted: #858ba6;
+      --purple: #7865dc;
+      --purple-dark: #6652ca;
+      --purple-light: #a99af8;
+      --cyan: #57bcca;
+      --green: #42b995;
+      --border: rgba(255,255,255,.75);
+      --shadow-out:
+        10px 10px 24px rgba(163,171,198,.32),
+        -10px -10px 24px rgba(255,255,255,.92);
+      --shadow-soft:
+        5px 5px 14px rgba(163,171,198,.25),
+        -5px -5px 14px rgba(255,255,255,.9);
+      --shadow-in:
+        inset 5px 5px 12px rgba(163,171,198,.25),
+        inset -5px -5px 12px rgba(255,255,255,.9);
+      --radius: 26px;
+      --font-heading: "Plus Jakarta Sans", sans-serif;
+      --font-body: "DM Sans", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 105px;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(ellipse at 10% 5%, rgba(169,154,248,.18), transparent 35%),
+        radial-gradient(ellipse at 95% 35%, rgba(87,188,202,.12), transparent 32%),
+        var(--bg);
+      font-family: var(--font-body);
+      overflow-x: hidden;
+    }
+
+    body, button, a {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .premium-container {
+      width: min(1160px, calc(100% - 48px));
+      margin-inline: auto;
+    }
+
+    .premium-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(237,240,250,.86);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      border-bottom: 1px solid rgba(255,255,255,.7);
+    }
+
+    .premium-nav {
+      min-height: 82px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .premium-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+      font-family: var(--font-heading);
+      font-size: 21px;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+   .brand-icon {
+  width: 43px;
+  height: 43px;
+  display: block;
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: 13px;
+  box-shadow:
+    5px 5px 12px rgba(115,95,210,.25),
+    -4px -4px 10px rgba(255,255,255,.9);
+}
+
+@media (max-width: 480px) {
+  .brand-icon {
+    width: 40px;
+    height: 40px;
+  }
+}
+    .premium-links {
+      display: flex;
+      align-items: center;
+      gap: 34px;
+    }
+
+    .premium-links > a:not(.premium-btn) {
+      color: #777e9b;
+      font-size: 13px;
+      font-weight: 700;
+      transition: color .2s ease;
+    }
+
+    .premium-links > a:not(.premium-btn):hover {
+      color: var(--purple);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .premium-btn {
+      min-height: 47px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      padding: 0 22px;
+      border: 0;
+      border-radius: 15px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 800;
+      transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+    }
+
+    .premium-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .premium-btn-primary {
+      color: white;
+      background: linear-gradient(135deg, #9584f1, #6d58d0);
+      box-shadow:
+        6px 6px 14px rgba(113,91,208,.25),
+        -4px -4px 10px rgba(255,255,255,.85);
+    }
+
+    .premium-btn-primary:hover {
+      box-shadow:
+        8px 9px 18px rgba(113,91,208,.3),
+        -4px -4px 10px rgba(255,255,255,.9);
+    }
+
+    .premium-btn-ghost {
+      color: var(--purple-dark);
+      background: var(--surface);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .premium-btn-ghost:hover {
+      box-shadow: var(--shadow-in);
+    }
+
+    .mobile-menu-button {
+      width: 46px;
+      height: 46px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      border-radius: 15px;
+      color: var(--purple);
+      background: var(--surface);
+      box-shadow: var(--shadow-soft);
+      cursor: pointer;
+      font-size: 22px;
+    }
+
+    /* HERO */
+
+    .premium-hero {
+      min-height: 650px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      gap: 65px;
+      padding-top: 75px;
+      padding-bottom: 85px;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 10px 15px;
+      margin-bottom: 25px;
+      border-radius: 30px;
+      color: var(--purple-dark);
+      background: var(--surface);
+      box-shadow: var(--shadow-soft);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+    }
+
+    .hero-badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 4px rgba(66,185,149,.13);
+    }
+
+    .hero-title {
+      max-width: 610px;
+      margin: 0;
+      font-family: var(--font-heading);
+      font-size: clamp(42px, 5.3vw, 68px);
+      line-height: 1.1;
+      letter-spacing: -3.8px;
+      font-weight: 800;
+    }
+
+    .hero-title .highlight {
+      color: var(--purple);
+      position: relative;
+      display: inline-block;
+    }
+
+    .hero-description {
+      max-width: 500px;
+      margin: 25px 0 30px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.9;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .hero-note {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 28px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .hero-note-icon {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      color: var(--green);
+      background: var(--surface);
+      box-shadow: var(--shadow-soft);
+    }
+
+    /* DASHBOARD PREVIEW */
+
+    .hero-visual {
+      position: relative;
+      min-width: 0;
+    }
+
+    .visual-glow {
+      position: absolute;
+      width: 330px;
+      height: 330px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: rgba(155,139,244,.2);
+      filter: blur(65px);
+      pointer-events: none;
+    }
+
+    .dashboard-preview {
+      position: relative;
+      z-index: 1;
+      padding: 24px;
+      border: 1px solid rgba(255,255,255,.85);
+      border-radius: 30px;
+      background: rgba(237,240,250,.76);
+      box-shadow:
+        18px 18px 40px rgba(152,161,190,.3),
+        -18px -18px 40px rgba(255,255,255,.95);
+      transform: rotate(1deg);
+    }
+
+    .preview-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .preview-brand {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-family: var(--font-heading);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .preview-brand-icon {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      border-radius: 11px;
+      color: white;
+      background: linear-gradient(135deg, #a99af8, #705bd2);
+    }
+
+    .preview-avatar {
+      width: 35px;
+      height: 35px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: white;
+      background: linear-gradient(135deg, #77c7d3, #6e72d7);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .preview-welcome {
+      padding: 19px;
+      margin-bottom: 17px;
+      border-radius: 20px;
+      background: linear-gradient(130deg, #8471e2, #6655c3);
+      color: white;
+      box-shadow: 7px 8px 17px rgba(105,85,195,.23);
+    }
+
+    .preview-welcome small {
+      opacity: .8;
+      font-size: 10px;
+    }
+
+    .preview-welcome h3 {
+      margin: 7px 0 5px;
+      font-family: var(--font-heading);
+      font-size: 19px;
+    }
+
+    .preview-welcome p {
+      margin: 0;
+      font-size: 10px;
+      opacity: .85;
+    }
+
+    .preview-section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 20px 0 12px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .preview-section-title span:last-child {
+      color: var(--purple);
+      font-size: 10px;
+    }
+
+    .preview-course {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 13px;
+      margin-bottom: 10px;
+      border-radius: 16px;
+      background: var(--surface);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .course-icon {
+      width: 42px;
+      height: 42px;
+      flex-shrink: 0;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      font-size: 17px;
+    }
+
+    .course-icon.purple {
+      color: #7763d9;
+      background: #e7e1ff;
+    }
+
+    .course-icon.cyan {
+      color: #3b9dac;
+      background: #d9f1f4;
+    }
+
+    .course-icon.orange {
+      color: #c48a4d;
+      background: #f8ead8;
+    }
+
+    .course-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .course-info strong {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 11px;
+    }
+
+    .course-info small {
+      color: var(--muted);
+      font-size: 9px;
+    }
+
+    .course-progress {
+      height: 5px;
+      margin-top: 8px;
+      overflow: hidden;
+      border-radius: 10px;
+      background: #dfe3f0;
+    }
+
+    .course-progress span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #a99af8, #705bd2);
+    }
+
+    .course-percent {
+      color: var(--purple);
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .preview-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 17px;
+    }
+
+    .preview-stat {
+      padding: 14px;
+      border-radius: 16px;
+      background: var(--surface);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .preview-stat small {
+      color: var(--muted);
+      font-size: 9px;
+    }
+
+    .preview-stat strong {
+      display: block;
+      margin-top: 5px;
+      font-family: var(--font-heading);
+      font-size: 20px;
+    }
+
+    .floating-note {
+      position: absolute;
+      z-index: 2;
+      right: -25px;
+      bottom: 55px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 13px 16px;
+      border: 1px solid white;
+      border-radius: 17px;
+      background: var(--surface);
+      box-shadow: var(--shadow-out);
+      animation: float 4s ease-in-out infinite;
+    }
+
+    .floating-note-icon {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      color: white;
+      background: var(--green);
+    }
+
+    .floating-note strong {
+      display: block;
+      font-size: 10px;
+    }
+
+    .floating-note small {
+      color: var(--muted);
+      font-size: 9px;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-9px); }
+    }
+
+    /* GENERAL SECTIONS */
+
+    .premium-section {
+      padding: 100px 0;
+    }
+
+    .section-heading {
+      max-width: 650px;
+      margin: 0 auto 55px;
+      text-align: center;
+    }
+
+    .section-kicker {
+      display: inline-block;
+      padding: 9px 14px;
+      margin-bottom: 17px;
+      border-radius: 30px;
+      color: var(--purple-dark);
+      background: var(--surface);
+      box-shadow: var(--shadow-soft);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .section-heading h2 {
+      margin: 0;
+      font-family: var(--font-heading);
+      font-size: clamp(30px, 4vw, 43px);
+      line-height: 1.2;
+      letter-spacing: -1.8px;
+    }
+
+    .section-heading p {
+      margin: 17px auto 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.9;
+    }
+
+    /* FEATURES */
+
+    #features {
+      background: rgba(255,255,255,.2);
+      border-top: 1px solid rgba(255,255,255,.5);
+      border-bottom: 1px solid rgba(255,255,255,.5);
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 23px;
+    }
+
+    .feature-card {
+      min-height: 280px;
+      padding: 30px;
+      border: 1px solid rgba(255,255,255,.8);
+      border-radius: 25px;
+      background: var(--surface);
+      box-shadow: var(--shadow-out);
+      transition: transform .25s ease, box-shadow .25s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-7px);
+      box-shadow:
+        14px 16px 30px rgba(152,161,190,.3),
+        -10px -10px 25px rgba(255,255,255,.95);
+    }
+
+    .feature-icon {
+      width: 58px;
+      height: 58px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 25px;
+      border-radius: 19px;
+      color: var(--purple);
+      background: var(--surface);
+      box-shadow: var(--shadow-soft);
+      font-size: 24px;
+    }
+
+    .feature-card h3 {
+      margin: 0 0 12px;
+      font-family: var(--font-heading);
+      font-size: 18px;
+      letter-spacing: -.5px;
+    }
+
+    .feature-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.85;
+    }
+
+    /* ANDROID */
+
+    #android {
+      padding-top: 95px;
+      padding-bottom: 95px;
+    }
+
+    .android-section {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1fr .8fr;
+      align-items: center;
+      gap: 50px;
+      padding: 55px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.85);
+      border-radius: 32px;
+      background: var(--surface);
+      box-shadow: var(--shadow-out);
+    }
+
+    .android-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .android-content h2 {
+      margin: 0;
+      font-family: var(--font-heading);
+      font-size: clamp(30px, 4vw, 42px);
+      line-height: 1.2;
+      letter-spacing: -1.7px;
+    }
+
+    .android-content p {
+      max-width: 530px;
+      margin: 18px 0 25px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.9;
+    }
+
+    .android-points {
+      display: grid;
+      gap: 13px;
+      margin-bottom: 28px;
+    }
+
+    .android-point {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      color: #626986;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .android-point span {
+      width: 23px;
+      height: 23px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: var(--green);
+      background: var(--surface);
+      box-shadow: var(--shadow-soft);
+      font-size: 11px;
+    }
+
+    .phone-visual {
+      min-height: 320px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .phone-frame {
+      width: 190px;
+      height: 330px;
+      padding: 11px;
+      border: 1px solid rgba(255,255,255,.9);
+      border-radius: 32px;
+      background: #e9ecf7;
+      box-shadow:
+        12px 15px 30px rgba(151,160,190,.35),
+        -9px -9px 22px rgba(255,255,255,.95);
+      transform: rotate(5deg);
+    }
+
+    .phone-screen {
+      height: 100%;
+      padding: 18px 13px;
+      overflow: hidden;
+      border-radius: 23px;
+      background: linear-gradient(155deg, #f9faff, #e9eafa);
+    }
+
+    .phone-notch {
+      width: 60px;
+      height: 6px;
+      margin: 0 auto 23px;
+      border-radius: 10px;
+      background: #d2d5e4;
+    }
+
+    .phone-logo {
+      width: 39px;
+      height: 39px;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 13px;
+      border-radius: 13px;
+      color: white;
+      background: linear-gradient(135deg, #a99af8, #705bd2);
+      font-weight: 800;
+    }
+
+    .phone-screen h4 {
+      margin: 0;
+      text-align: center;
+      font-family: var(--font-heading);
+      font-size: 13px;
+    }
+
+    .phone-screen > p {
+      margin: 6px 0 18px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 8px;
+    }
+
+    .phone-mini-card {
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 13px;
+      background: var(--surface);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .phone-mini-card strong {
+      display: block;
+      font-size: 9px;
+    }
+
+    .phone-mini-card small {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 8px;
+    }
+
+    .phone-mini-bar {
+      height: 5px;
+      margin-top: 9px;
+      overflow: hidden;
+      border-radius: 10px;
+      background: #dfe3f0;
+    }
+
+    .phone-mini-bar span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--purple);
+    }
+
+    /* ABOUT */
+
+    #about {
+      background: rgba(255,255,255,.2);
+      border-top: 1px solid rgba(255,255,255,.5);
+      border-bottom: 1px solid rgba(255,255,255,.5);
+    }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+    }
+
+    .about-card {
+      padding: 28px;
+      border-radius: 23px;
+      background: var(--surface);
+      box-shadow: var(--shadow-out);
+      text-align: center;
+    }
+
+    .about-card-icon {
+      width: 53px;
+      height: 53px;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 17px;
+      border-radius: 18px;
+      color: var(--purple);
+      background: var(--surface);
+      box-shadow: var(--shadow-soft);
+      font-size: 22px;
+    }
+
+    .about-card h3 {
+      margin: 0 0 9px;
+      font-family: var(--font-heading);
+      font-size: 15px;
+    }
+
+    .about-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.8;
+    }
+
+    /* CTA */
+
+    .cta-wrap {
+      padding-top: 95px;
+      padding-bottom: 95px;
+    }
+
+    .premium-cta {
+      position: relative;
+      padding: 65px 35px;
+      overflow: hidden;
+      border-radius: 32px;
+      color: white;
+      background: linear-gradient(135deg, #9584ef, #6654c7);
+      box-shadow:
+        14px 16px 32px rgba(111,91,201,.28),
+        -8px -8px 22px rgba(255,255,255,.8);
+      text-align: center;
+    }
+
+    .premium-cta::before,
+    .premium-cta::after {
+      content: "";
+      position: absolute;
+      border: 1px solid rgba(255,255,255,.13);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .premium-cta::before {
+      width: 340px;
+      height: 340px;
+      top: -230px;
+      left: -80px;
+    }
+
+    .premium-cta::after {
+      width: 440px;
+      height: 440px;
+      right: -160px;
+      bottom: -330px;
+    }
+
+    .premium-cta .section-kicker {
+      color: white;
+      background: rgba(255,255,255,.15);
+      box-shadow: inset 2px 2px 5px rgba(0,0,0,.08);
+    }
+
+    .premium-cta h2 {
+      position: relative;
+      z-index: 1;
+      max-width: 650px;
+      margin: 0 auto;
+      font-family: var(--font-heading);
+      font-size: clamp(30px, 4vw, 43px);
+      line-height: 1.2;
+      letter-spacing: -1.5px;
+    }
+
+    .premium-cta p {
+      position: relative;
+      z-index: 1;
+      max-width: 530px;
+      margin: 17px auto 25px;
+      color: rgba(255,255,255,.82);
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    .premium-cta .premium-btn {
+      position: relative;
+      z-index: 1;
+      color: var(--purple-dark);
+      background: #f4f2ff;
+      box-shadow:
+        5px 6px 13px rgba(49,37,119,.2),
+        -4px -4px 10px rgba(255,255,255,.25);
+    }
+
+    /* FOOTER */
+
+    .premium-footer {
+      padding: 45px 0 25px;
+      border-top: 1px solid rgba(255,255,255,.8);
+      background: rgba(237,240,250,.7);
+    }
+
+    .footer-main {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 35px;
+      padding-bottom: 35px;
+    }
+
+    .footer-description {
+      max-width: 340px;
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.8;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 25px;
+    }
+
+    .footer-links a {
+      color: #777e9b;
+      font-size: 12px;
+      font-weight: 700;
+      transition: color .2s ease;
+    }
+
+    .footer-links a:hover {
+      color: var(--purple);
+    }
+
+    .footer-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      padding-top: 22px;
+      border-top: 1px solid rgba(160,169,195,.2);
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    /* REVEAL ANIMATION */
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(22px);
+      transition: opacity .7s ease, transform .7s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* RESPONSIVE */
+
+    @media (max-width: 950px) {
+      .premium-links {
+        gap: 19px;
+      }
+
+      .premium-hero {
+        gap: 35px;
+      }
+
+      .hero-title {
+        font-size: clamp(40px, 6vw, 58px);
+      }
+
+      .android-section {
+        gap: 25px;
+        padding: 40px;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .premium-container {
+        width: min(100% - 36px, 580px);
+      }
+
+      .premium-nav {
+        min-height: 72px;
+      }
+
+      .mobile-menu-button {
+        display: inline-flex;
+      }
+
+      .premium-links {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 18px;
+        right: 18px;
+        display: none;
+        align-items: stretch;
+        flex-direction: column;
+        gap: 7px;
+        padding: 18px;
+        border: 1px solid rgba(255,255,255,.9);
+        border-radius: 22px;
+        background: rgba(237,240,250,.98);
+        box-shadow: var(--shadow-out);
+      }
+
+      .premium-links.open {
+        display: flex;
+      }
+
+      .premium-links > a:not(.premium-btn) {
+        padding: 12px 10px;
+        border-radius: 11px;
+      }
+
+      .premium-links > a:not(.premium-btn):hover {
+        background: rgba(255,255,255,.6);
+      }
+
+      .premium-links .nav-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        margin-top: 8px;
+      }
+
+      .premium-links .premium-btn {
+        width: 100%;
+        padding-inline: 12px;
+      }
+
+      .premium-hero {
+        min-height: auto;
+        grid-template-columns: 1fr;
+        gap: 50px;
+        padding-top: 65px;
+        padding-bottom: 70px;
+      }
+
+      .hero-content {
+        text-align: center;
+      }
+
+      .hero-title {
+        max-width: 600px;
+        margin-inline: auto;
+        font-size: clamp(42px, 9vw, 59px);
+        letter-spacing: -2.8px;
+      }
+
+      .hero-description {
+        margin-inline: auto;
+      }
+
+      .hero-actions {
+        justify-content: center;
+      }
+
+      .hero-note {
+        justify-content: center;
+      }
+
+      .hero-visual {
+        width: min(100%, 500px);
+        margin-inline: auto;
+      }
+
+      .feature-grid,
+      .about-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .feature-card {
+        min-height: auto;
+      }
+
+      .premium-section {
+        padding: 75px 0;
+      }
+
+      .android-section {
+        grid-template-columns: 1fr;
+        padding: 32px 25px;
+      }
+
+      .android-content {
+        text-align: center;
+      }
+
+      .android-points {
+        width: fit-content;
+        margin-inline: auto;
+        text-align: left;
+      }
+
+      .phone-visual {
+        min-height: 330px;
+      }
+
+      .footer-main {
+        flex-direction: column;
+      }
+
+      .footer-links {
+        gap: 18px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .premium-container {
+        width: calc(100% - 30px);
+      }
+
+      .premium-brand {
+        font-size: 19px;
+      }
+
+      .brand-icon {
+        width: 40px;
+        height: 40px;
+      }
+
+      .premium-hero {
+        padding-top: 52px;
+      }
+
+      .hero-title {
+        font-size: 42px;
+        letter-spacing: -2.4px;
+      }
+
+      .hero-description {
+        font-size: 13px;
+      }
+
+      .hero-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .hero-actions .premium-btn {
+        width: 100%;
+      }
+
+      .dashboard-preview {
+        padding: 17px;
+        border-radius: 24px;
+      }
+
+      .floating-note {
+        right: -4px;
+        bottom: 25px;
+        padding: 10px;
+      }
+
+      .premium-section {
+        padding: 65px 0;
+      }
+
+      .section-heading {
+        margin-bottom: 35px;
+      }
+
+      .section-heading h2 {
+        font-size: 31px;
+      }
+
+      .feature-card {
+        padding: 25px;
+      }
+
+      .android-section {
+        padding: 28px 20px;
+        border-radius: 25px;
+      }
+
+      .premium-cta {
+        padding: 52px 22px;
+        border-radius: 25px;
+      }
+
+      .premium-cta h2 {
+        font-size: 32px;
+      }
+
+      .footer-bottom {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important;
+      }
+
+      .reveal {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <header class="premium-header">
+    <div class="premium-container premium-nav">
+
+      <a class="premium-brand" href="index.html" aria-label="EqualLearn home">
+  <img
+    class="brand-icon"
+    src="assets/icons/equallearn-logo.png"
+    alt="EqualLearn"
+  >
+  <span class="brand-name">Equal<span>Learn</span></span>
+</a>
+
+      <button
+        class="mobile-menu-button"
+        id="mobileMenuButton"
+        type="button"
+        aria-label="Toggle navigation"
+        aria-expanded="false"
+        aria-controls="mainNavigation"
+      >
+        <span id="menuIcon">☰</span>
+      </button>
+
+      <nav class="premium-links" id="mainNavigation" aria-label="Main navigation">
+        <a href="#features">Features</a>
+        <a href="#android">Android App</a>
+        <a href="#about">About</a>
+
+        <div class="nav-actions">
+          <a class="premium-btn premium-btn-ghost" href="login.html">Sign in</a>
+          <a class="premium-btn premium-btn-primary" href="register.html">Get started ↗</a>
+        </div>
+      </nav>
+
+    </div>
+  </header>
+
+  <main>
+
+    <!-- HERO -->
+    <section class="premium-container premium-hero">
+
+      <div class="hero-content reveal">
+
+        <div class="hero-badge">
+          <span class="hero-badge-dot"></span>
+          A smarter way to learn
+        </div>
+
+        <h1 class="hero-title">
+          Learning without
+          <span class="highlight">limits</span>
+          or barriers.
+        </h1>
+
+        <p class="hero-description">
+          A connected learning experience designed to bring students,
+          educators, and administrators together. Learn, collaborate,
+          and grow in one inclusive digital space.
+        </p>
+
+        <div class="hero-actions">
+          <a class="premium-btn premium-btn-primary" href="register.html">
+            Get started <span>↗</span>
+          </a>
+
+          <a class="premium-btn premium-btn-ghost" href="#features">
+            Explore platform <span>→</span>
+          </a>
+        </div>
+
+        <div class="hero-note">
+          <span class="hero-note-icon">✓</span>
+          <span>Designed for accessible and inclusive education</span>
+        </div>
+
+      </div>
+
+      <!-- Dashboard preview -->
+      <div class="hero-visual reveal">
+
+        <div class="visual-glow"></div>
+
+        <div class="dashboard-preview">
+
+          <div class="preview-topbar">
+            <div class="preview-brand">
+              <span class="preview-brand-icon">E</span>
+              EqualLearn
+            </div>
+            <div class="preview-avatar">S</div>
+          </div>
+
+          <div class="preview-welcome">
+            <small>YOUR LEARNING SPACE</small>
+            <h3>Welcome back, Student!</h3>
+            <p>Keep moving forward. Every lesson counts.</p>
+          </div>
+
+          <div class="preview-section-title">
+            <span>Continue learning</span>
+            <span>View all →</span>
+          </div>
+
+          <div class="preview-course">
+            <div class="course-icon purple">✦</div>
+            <div class="course-info">
+              <strong>Gender Equality</strong>
+              <small>Learning module</small>
+              <div class="course-progress">
+                <span style="width:75%"></span>
+              </div>
+            </div>
+            <span class="course-percent">75%</span>
+          </div>
+
+          <div class="preview-course">
+            <div class="course-icon cyan">◎</div>
+            <div class="course-info">
+              <strong>Social Awareness</strong>
+              <small>Learning module</small>
+              <div class="course-progress">
+                <span style="width:48%"></span>
+              </div>
+            </div>
+            <span class="course-percent">48%</span>
+          </div>
+
+          <div class="preview-course">
+            <div class="course-icon orange">◇</div>
+            <div class="course-info">
+              <strong>Respect & Inclusion</strong>
+              <small>Learning module</small>
+              <div class="course-progress">
+                <span style="width:30%"></span>
+              </div>
+            </div>
+            <span class="course-percent">30%</span>
+          </div>
+
+          <div class="preview-stats">
+            <div class="preview-stat">
+              <small>Learning progress</small>
+              <strong>68%</strong>
+            </div>
+            <div class="preview-stat">
+              <small>Lessons completed</small>
+              <strong>12</strong>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="floating-note">
+          <div class="floating-note-icon">✓</div>
+          <div>
+            <strong>Keep it up!</strong>
+            <small>Progress matters</small>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="premium-section" id="features">
+      <div class="premium-container">
+
+        <div class="section-heading reveal">
+          <span class="section-kicker">One connected platform</span>
+          <h2>Everything you need to <span style="color:var(--purple)">learn and grow.</span></h2>
+          <p>
+            A learning environment that supports the different roles
+            in education through one organized digital experience.
+          </p>
+        </div>
+
+        <div class="feature-grid">
+
+          <article class="feature-card reveal">
+            <div class="feature-icon">✧</div>
+            <h3>For Students</h3>
+            <p>
+              Access learning materials, explore educational content,
+              participate in activities, and track your learning progress.
+            </p>
+          </article>
+
+          <article class="feature-card reveal">
+            <div class="feature-icon">▤</div>
+            <h3>For Teachers</h3>
+            <p>
+              Support learning activities, organize educational resources,
+              and guide students through their learning journey.
+            </p>
+          </article>
+
+          <article class="feature-card reveal">
+            <div class="feature-icon">⌘</div>
+            <h3>For Administrators</h3>
+            <p>
+              Manage the learning environment and help maintain an organized
+              platform for the academic community.
+            </p>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ANDROID APP -->
+    <section class="premium-container" id="android">
+
+      <div class="android-section reveal">
+
+        <div class="android-content">
+
+          <span class="section-kicker">Learn beyond the desktop</span>
+
+          <h2>Your learning space, <span style="color:var(--purple)">on the go.</span></h2>
+
+          <p>
+            EqualLearn is designed with a mobile learning experience in mind.
+            Access your educational platform through a convenient mobile interface.
+          </p>
+
+          <div class="android-points">
+            <div class="android-point">
+              <span>✓</span>
+              Mobile-friendly learning experience
+            </div>
+            <div class="android-point">
+              <span>✓</span>
+              Convenient access to learning resources
+            </div>
+            <div class="android-point">
+              <span>✓</span>
+              Designed for everyday use
+            </div>
+          </div>
+
+          <a class="premium-btn premium-btn-primary" href="MOBILE_APP.md">
+            Explore mobile app information ↗
+          </a>
+
+        </div>
+
+        <div class="phone-visual" aria-label="Illustration of the EqualLearn mobile interface">
+
+          <div class="phone-frame">
+            <div class="phone-screen">
+
+              <div class="phone-notch"></div>
+
+              <div class="phone-logo">E</div>
+              <h4>EqualLearn</h4>
+              <p>Your learning journey starts here</p>
+
+              <div class="phone-mini-card">
+                <strong>Gender Equality</strong>
+                <small>Continue your lesson</small>
+                <div class="phone-mini-bar">
+                  <span style="width:75%"></span>
+                </div>
+              </div>
+
+              <div class="phone-mini-card">
+                <strong>Social Awareness</strong>
+                <small>Learning module</small>
+                <div class="phone-mini-bar">
+                  <span style="width:48%"></span>
+                </div>
+              </div>
+
+              <div class="phone-mini-card">
+                <strong>Respect & Inclusion</strong>
+                <small>Learning module</small>
+                <div class="phone-mini-bar">
+                  <span style="width:30%"></span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section class="premium-section" id="about">
+      <div class="premium-container">
+
+        <div class="section-heading reveal">
+          <span class="section-kicker">Designed for education</span>
+          <h2>Learning should be <span style="color:var(--purple)">for everyone.</span></h2>
+          <p>
+            EqualLearn promotes a learning environment where access,
+            awareness, and participation matter.
+          </p>
+        </div>
+
+        <div class="about-grid">
+
+          <article class="about-card reveal">
+            <div class="about-card-icon">◎</div>
+            <h3>Inclusive Learning</h3>
+            <p>
+              Encourage an educational environment where everyone
+              can participate and learn.
+            </p>
+          </article>
+
+          <article class="about-card reveal">
+            <div class="about-card-icon">✦</div>
+            <h3>Awareness & Education</h3>
+            <p>
+              Support understanding through organized learning
+              materials and educational activities.
+            </p>
+          </article>
+
+          <article class="about-card reveal">
+            <div class="about-card-icon">↗</div>
+            <h3>Continuous Growth</h3>
+            <p>
+              Make learning a continuous journey through accessible
+              digital learning experiences.
+            </p>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- CALL TO ACTION -->
+    <section class="premium-container cta-wrap">
+
+      <div class="premium-cta reveal">
+
+        <span class="section-kicker">Your next step starts here</span>
+
+        <h2>Make every learning opportunity count.</h2>
+
+        <p>
+          Be part of a connected learning environment.
+          Start exploring EqualLearn today.
+        </p>
+
+        <a class="premium-btn" href="register.html">
+          Get started with EqualLearn ↗
+        </a>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="premium-footer">
+    <div class="premium-container">
+
+      <div class="footer-main">
+
+        <div>
+          <a class="premium-brand" href="index.html">
+            <span class="brand-icon">E</span>
+            <span class="brand-name">Equal<span>Learn</span></span>
+          </a>
+
+          <p class="footer-description">
+            A connected digital learning experience designed
+            to support inclusive education and awareness.
+          </p>
+        </div>
+
+        <nav class="footer-links" aria-label="Footer navigation">
+          <a href="#features">Features</a>
+          <a href="#android">Android</a>
+          <a href="#about">About</a>
+          <a href="login.html">Sign in</a>
+          <a href="register.html">Register</a>
+        </nav>
+
+      </div>
+
+      <div class="footer-bottom">
+        <span>© <span id="currentYear"></span> EqualLearn. All rights reserved.</span>
+        <span>Learning without limits or barriers.</span>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- EXISTING PROJECT SCRIPTS -->
+  <script type="module" src="assets/js/theme.js"></script>
+
+  <script type="module">
+    import { hydrateIcons } from "./assets/js/icons.js";
+
+    if (typeof hydrateIcons === "function") {
+      hydrateIcons();
+    }
+  </script>
+
+  <script type="module" src="assets/js/pwa.js"></script>
+
+  <script>
+    // Mobile navigation
+    const menuButton = document.getElementById("mobileMenuButton");
+    const navigation = document.getElementById("mainNavigation");
+    const menuIcon = document.getElementById("menuIcon");
+
+    if (menuButton && navigation) {
+      menuButton.addEventListener("click", () => {
+        const isOpen = navigation.classList.toggle("open");
+
+        menuButton.setAttribute("aria-expanded", String(isOpen));
+
+        if (menuIcon) {
+          menuIcon.textContent = isOpen ? "✕" : "☰";
+        }
+      });
+
+      navigation.querySelectorAll("a").forEach(link => {
+        link.addEventListener("click", () => {
+          navigation.classList.remove("open");
+          menuButton.setAttribute("aria-expanded", "false");
+
+          if (menuIcon) {
+            menuIcon.textContent = "☰";
+          }
+        });
+      });
+
+      document.addEventListener("click", event => {
+        if (
+          navigation.classList.contains("open") &&
+          !navigation.contains(event.target) &&
+          !menuButton.contains(event.target)
+        ) {
+          navigation.classList.remove("open");
+          menuButton.setAttribute("aria-expanded", "false");
+
+          if (menuIcon) {
+            menuIcon.textContent = "☰";
+          }
+        }
+      });
+    }
+
+    // Reveal animation
+    const revealElements = document.querySelectorAll(".reveal");
+
+    if ("IntersectionObserver" in window) {
+      const revealObserver = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+            revealObserver.unobserve(entry.target);
+          }
+        });
+      }, {
+        threshold: 0.12
+      });
+
+      revealElements.forEach(element => {
+        revealObserver.observe(element);
+      });
+    } else {
+      revealElements.forEach(element => {
+        element.classList.add("visible");
+      });
+    }
+
+    // Footer year
+    const yearElement = document.getElementById("currentYear");
+
+    if (yearElement) {
+      yearElement.textContent = new Date().getFullYear();
+    }
+  </script>
+
+</body>
+</html>

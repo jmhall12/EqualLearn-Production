@@ -79,7 +79,7 @@ if (role) {
     aside.innerHTML = `
       <div class="el-sidebar-brand">
         <span class="el-wordmark-mark">
-          <img src="../assets/icons/icon-192.png" alt="EqualLearn">
+          <img src="../assets/icons/equallearn-logo.png" alt="EqualLearn">
         </span>
         <span class="el-wordmark-text">EqualLearn</span>
       </div>

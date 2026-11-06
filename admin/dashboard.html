@@ -3,129 +3,283 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#635bff">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#edf0fa">
+
   <title>Admin Dashboard - EqualLearn</title>
+
   <link rel="manifest" href="../manifest.webmanifest">
-  <link rel="stylesheet" href="../assets/css/equallearn.css">
-  <link rel="icon" href="../assets/icons/icon-192.png">
+  <link rel="icon" href="../assets/icons/equallearn-logo.png">
+
+  <!-- BASE EQUALLEARN STYLES -->
+  <link rel="stylesheet" href="../assets/css/sidebar-skeuomorphism.css">
+
+  <!-- ADMIN DASHBOARD STYLES -->
   <style>
     .live-admin-toolbar {
-      display:flex; justify-content:space-between; align-items:center;
-      gap:12px; flex-wrap:wrap; margin-bottom:16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
     }
+
     .live-admin-stats {
-      display:grid; grid-template-columns:repeat(3,minmax(0,1fr));
-      gap:12px; margin-bottom:18px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 15px;
+      margin-bottom: 22px;
     }
+
     .live-admin-stat {
-      padding:16px; border:1px solid var(--el-border,#e5e7eb);
-      border-radius:14px; background:var(--el-card,#fff);
+      min-width: 0;
+      padding: 21px;
+      border: 1px solid rgba(255,255,255,.8);
+      border-radius: 20px;
+      background: rgba(255,255,255,.42);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow: 0 8px 25px rgba(57,65,120,.07);
+      transition: .25s ease;
     }
-    .live-admin-stat strong { display:block; font-size:26px; margin-top:6px; }
-    .live-session-list { display:grid; gap:12px; }
+
+    .live-admin-stat:hover {
+      transform: translateY(-3px);
+      background: rgba(255,255,255,.7);
+      box-shadow: 0 14px 30px rgba(80,72,160,.12);
+    }
+
+    .live-admin-stat > span {
+      color: var(--glass-muted, #858ba6);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .live-admin-stat strong {
+      display: block;
+      margin-top: 9px;
+      color: var(--glass-text, #252945);
+      font-size: 30px;
+      font-weight: 800;
+    }
+
+    .live-session-list {
+      display: grid;
+      gap: 13px;
+    }
+
     .live-session-item {
-      padding:16px; border:1px solid var(--el-border,#e5e7eb);
-      border-radius:14px; display:grid; gap:12px;
+      display: grid;
+      gap: 13px;
+      padding: 19px;
+      border: 1px solid rgba(255,255,255,.8);
+      border-radius: 18px;
+      background: rgba(255,255,255,.42);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 7px 22px rgba(57,65,120,.06);
     }
+
     .live-session-top {
-      display:flex; justify-content:space-between; gap:12px;
-      flex-wrap:wrap; align-items:center;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
     }
-    .live-session-title { font-weight:700; font-size:16px; }
+
+    .live-session-title {
+      color: var(--glass-text, #252945);
+      font-size: 15px;
+      font-weight: 800;
+    }
+
     .live-session-meta {
-      display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:8px; font-size:13px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      color: var(--glass-muted, #858ba6);
+      font-size: 12px;
     }
-    .live-session-meta span { overflow-wrap:anywhere; }
+
+    .live-session-meta span {
+      overflow-wrap: anywhere;
+    }
+
     .live-status {
-      display:inline-flex; align-items:center; border-radius:20px;
-      padding:5px 10px; font-size:12px; font-weight:700;
-      background:#e5e7eb; color:#374151;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 12px;
+      border: 1px solid rgba(255,255,255,.8);
+      border-radius: 30px;
+      font-size: 11px;
+      font-weight: 800;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
     }
-    .live-status.live { background:#fee2e2; color:#b91c1c; }
-    .live-status.scheduled { background:#fef3c7; color:#92400e; }
-    .live-status.ended { background:#dcfce7; color:#166534; }
-    .live-empty { padding:24px; text-align:center; opacity:.7; }
-    .live-error { color:#b91c1c; font-size:13px; }
-    @media(max-width:600px) {
-      .live-admin-stats { grid-template-columns:1fr; }
-      .live-session-meta { grid-template-columns:1fr; }
+
+    .live-status.live {
+      color: #c43c55;
+      background: rgba(255,225,231,.85);
+    }
+
+    .live-status.scheduled {
+      color: #a36c1e;
+      background: rgba(255,242,210,.85);
+    }
+
+    .live-status.ended {
+      color: #25866a;
+      background: rgba(216,248,235,.85);
+    }
+
+    .live-empty {
+      padding: 30px 20px;
+      border: 1px dashed rgba(120,101,220,.3);
+      border-radius: 17px;
+      color: var(--glass-muted, #858ba6);
+      text-align: center;
+      background: rgba(255,255,255,.25);
+    }
+
+    .live-error {
+      color: #c43c55;
+      font-size: 13px;
+    }
+
+    #liveSessionsMessage {
+      margin-bottom: 12px;
+      color: var(--glass-muted, #858ba6);
+      font-size: 12px;
+    }
+
+    #liveLastUpdated {
+      margin-top: 6px;
+    }
+
+    .admin-monitor-card {
+      margin-top: 22px;
+    }
+
+    .admin-activity-card {
+      margin-top: 18px;
+    }
+
+    @media(max-width: 600px) {
+      .live-admin-stats {
+        grid-template-columns: 1fr;
+      }
+
+      .live-session-meta {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
+
+  <!-- GLASSMORPHISM OVERRIDES: LOAD LAST -->
+  <link rel="stylesheet" href="../assets/css/glass-dashboard.css">
 </head>
+
 <body>
+
 <div class="el-dashboard">
 
-  <div class="el-page-header">
+  <!-- PAGE HEADER -->
+  <header class="el-page-header">
     <div>
-      <div class="el-page-kicker">Overview</div>
+      <div class="el-page-kicker">Administration workspace</div>
       <h1>Admin dashboard</h1>
       <p id="adminName">Loading administrator...</p>
     </div>
-    <a class="el-btn el-btn-primary" href="register-teacher.html">
-      <span data-icon="plus"></span> Add teacher
-    </a>
-  </div>
 
+    <a class="el-btn el-btn-primary" href="register-teacher.html">
+      <span data-icon="plus"></span>
+      Add teacher
+    </a>
+  </header>
+
+  <!-- PLATFORM STATISTICS -->
   <section class="el-grid el-grid-4">
+
     <article class="el-card el-stat">
-      <div class="el-stat-icon"><span data-icon="teacher"></span></div>
+      <div class="el-stat-icon">
+        <span data-icon="teacher"></span>
+      </div>
       <div class="el-stat-label">Teachers</div>
       <div class="el-stat-value" id="teacherCount">0</div>
       <div class="el-stat-meta">Registered teaching accounts</div>
     </article>
 
     <article class="el-card el-stat">
-      <div class="el-stat-icon"><span data-icon="users"></span></div>
+      <div class="el-stat-icon">
+        <span data-icon="users"></span>
+      </div>
       <div class="el-stat-label">Students</div>
       <div class="el-stat-value" id="studentCount">0</div>
       <div class="el-stat-meta">Active learner profiles</div>
     </article>
 
     <article class="el-card el-stat">
-      <div class="el-stat-icon"><span data-icon="modules"></span></div>
+      <div class="el-stat-icon">
+        <span data-icon="modules"></span>
+      </div>
       <div class="el-stat-label">Modules</div>
       <div class="el-stat-value" id="moduleCount">0</div>
       <div class="el-stat-meta">Learning modules created</div>
     </article>
 
     <article class="el-card el-stat">
-      <div class="el-stat-icon"><span data-icon="lesson"></span></div>
+      <div class="el-stat-icon">
+        <span data-icon="lesson"></span>
+      </div>
       <div class="el-stat-label">Lessons</div>
       <div class="el-stat-value" id="lessonCount">0</div>
       <div class="el-stat-meta">Published lesson content</div>
     </article>
+
   </section>
 
   <!-- EQUALLEARN LIVE ADMIN MONITOR -->
-  <section class="el-card" style="margin-top:22px">
+  <section class="el-card admin-monitor-card">
+
     <div class="el-card-title">
       <div>
         <h3>EqualLearn Live Monitoring</h3>
         <span>Monitor classroom sessions across the platform</span>
       </div>
-      <button type="button" class="el-btn el-btn-primary"
-              id="refreshLiveSessions">
+
+      <button
+        type="button"
+        class="el-btn el-btn-primary"
+        id="refreshLiveSessions">
+        <span data-icon="refresh-cw"></span>
         Refresh
       </button>
     </div>
 
+    <!-- LIVE SESSION STATISTICS -->
     <div class="live-admin-stats">
+
       <div class="live-admin-stat">
         <span>Ongoing sessions</span>
         <strong id="liveOngoingCount">0</strong>
       </div>
+
       <div class="live-admin-stat">
         <span>Scheduled sessions</span>
         <strong id="liveScheduledCount">0</strong>
       </div>
+
       <div class="live-admin-stat">
         <span>Ended sessions</span>
         <strong id="liveEndedCount">0</strong>
       </div>
+
     </div>
 
+    <!-- SESSION LIST -->
     <div class="live-admin-toolbar">
       <div>
         <strong>Live classroom sessions</strong>
@@ -139,15 +293,26 @@
       Loading live sessions...
     </div>
 
-    <div class="live-session-list" id="adminLiveSessions"></div>
+    <div
+      class="live-session-list"
+      id="adminLiveSessions">
+    </div>
+
   </section>
 
-  <section class="el-grid el-grid-2" style="margin-top:18px">
+  <!-- ACTIVITY AND QUICK ACTIONS -->
+  <section class="el-grid el-grid-2 admin-activity-card">
+
+    <!-- PLATFORM ACTIVITY -->
     <article class="el-card">
+
       <div class="el-card-title">
-        <h3>Platform activity</h3>
-        <span>Visual overview</span>
+        <div>
+          <h3>Platform activity</h3>
+          <span>Visual overview</span>
+        </div>
       </div>
+
       <div class="el-chart">
         <span class="el-bar" style="height:38%"></span>
         <span class="el-bar" style="height:55%"></span>
@@ -157,60 +322,101 @@
         <span class="el-bar" style="height:88%"></span>
         <span class="el-bar" style="height:79%"></span>
       </div>
+
       <div class="el-chart-labels">
-        <span>Mon</span><span>Tue</span><span>Wed</span>
-        <span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+        <span>Mon</span>
+        <span>Tue</span>
+        <span>Wed</span>
+        <span>Thu</span>
+        <span>Fri</span>
+        <span>Sat</span>
+        <span>Sun</span>
       </div>
+
     </article>
 
+    <!-- QUICK ACTIONS -->
     <article class="el-card">
+
       <div class="el-card-title">
-        <h3>Quick actions</h3>
-        <span>Manage EqualLearn</span>
+        <div>
+          <h3>Quick actions</h3>
+          <span>Manage EqualLearn</span>
+        </div>
       </div>
+
       <div class="el-quick-grid">
+
         <a class="el-quick" href="register-teacher.html">
-          <span class="icon"><span data-icon="plus"></span></span>
+          <span class="icon">
+            <span data-icon="plus"></span>
+          </span>
           <strong>Register teacher</strong>
           <span>Create a teaching account.</span>
         </a>
+
         <a class="el-quick" href="students.html">
-          <span class="icon"><span data-icon="users"></span></span>
+          <span class="icon">
+            <span data-icon="users"></span>
+          </span>
           <strong>Students</strong>
           <span>Review learner accounts.</span>
         </a>
+
         <a class="el-quick" href="class-assignments.html">
-          <span class="icon"><span data-icon="classes"></span></span>
+          <span class="icon">
+            <span data-icon="classes"></span>
+          </span>
           <strong>Assignments</strong>
           <span>Connect classes and teachers.</span>
         </a>
+
         <a class="el-quick" href="reports.html">
-          <span class="icon"><span data-icon="progress"></span></span>
+          <span class="icon">
+            <span data-icon="progress"></span>
+          </span>
           <strong>Reports</strong>
           <span>View performance data.</span>
         </a>
+
         <a class="el-quick" href="manage-teachers.html">
-          <span class="icon"><span data-icon="teacher"></span></span>
+          <span class="icon">
+            <span data-icon="teacher"></span>
+          </span>
           <strong>Teachers</strong>
           <span>Manage teaching profiles.</span>
         </a>
+
         <a class="el-quick" href="settings.html">
-          <span class="icon"><span data-icon="settings"></span></span>
+          <span class="icon">
+            <span data-icon="settings"></span>
+          </span>
           <strong>Settings</strong>
           <span>Account and security.</span>
         </a>
+
       </div>
     </article>
+
   </section>
 
-  <a href="../login.html" id="logout" style="display:none">Logout</a>
+  <!-- HIDDEN LOGOUT CONTROL USED BY EXISTING UI -->
+  <a href="../login.html" id="logout" style="display:none">
+    Logout
+  </a>
+
 </div>
 
+<!-- EXISTING APPLICATION SCRIPTS -->
 <script type="module" src="../assets/js/admin-dashboard.js"></script>
 <script type="module" src="../assets/js/admin_live.js"></script>
 
+<!-- UI SHELL -->
 <script type="module" src="../assets/js/ui-shell.js"></script>
+
+<!-- PWA AND THEME -->
 <script type="module" src="../assets/js/pwa.js"></script>
 <script type="module" src="../assets/js/theme.js"></script>
+
 </body>
 </html>

@@ -4,85 +4,370 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#635bff">
+    <meta name="theme-color" content="#edf0fa">
 
     <title>Student Dashboard - EqualLearn</title>
 
     <link rel="manifest" href="../manifest.webmanifest">
-    <link rel="stylesheet" href="../assets/css/equallearn.css">
-    <link rel="icon" href="../assets/icons/icon-192.png">
+    <link rel="icon" type="image/png" href="../assets/icons/equallearn-logo.png">
+
+    <!-- EQUALLEARN TYPOGRAPHY -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- GLOBAL DESIGN SYSTEM -->
+    <link rel="stylesheet" href="../assets/css/sidebar-skeuomorphism.css">
+    <link rel="stylesheet" href="../assets/css/glass-dashboard.css">
 
     <style>
+        /* =====================================================
+           STUDENT DASHBOARD
+           EqualLearn Glassmorphism Design
+        ===================================================== */
+
+        :root {
+            --student-purple: #7865dc;
+            --student-purple-dark: #5f4dc2;
+            --student-text: #252945;
+            --student-muted: #858ba6;
+            --student-glass: rgba(255,255,255,.62);
+            --student-border: rgba(255,255,255,.85);
+            --student-shadow: 0 10px 30px rgba(65,70,130,.07);
+        }
+
+        .el-dashboard,
+        .el-dashboard * {
+            box-sizing: border-box;
+        }
+
+        .el-dashboard {
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            margin: 0;
+            padding: 26px clamp(15px, 2vw, 30px) 40px;
+            color: var(--student-text);
+            font-family: "DM Sans", sans-serif;
+            overflow-x: clip;
+        }
+
+        .el-dashboard h1,
+        .el-dashboard h2,
+        .el-dashboard h3,
+        .el-dashboard h4,
+        .el-dashboard strong {
+            font-family: "Plus Jakarta Sans", sans-serif;
+        }
+
+        /* =====================================================
+           PAGE HEADER
+        ===================================================== */
+
+        .el-dashboard .el-page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+            width: 100%;
+            min-width: 0;
+            margin-bottom: 23px;
+            animation: studentFadeUp .55s ease both;
+        }
+
+        .el-dashboard .el-page-header > div {
+            min-width: 0;
+        }
+
+        .el-dashboard .el-page-kicker {
+            margin-bottom: 8px;
+            color: var(--student-purple);
+            font-size: 11px;
+            font-weight: 850;
+            letter-spacing: 1.3px;
+            text-transform: uppercase;
+        }
+
+        .el-dashboard .el-page-header h1 {
+            margin: 0;
+            color: var(--student-text);
+            font-size: clamp(25px, 3vw, 34px);
+            font-weight: 850;
+            letter-spacing: -1px;
+            overflow-wrap: anywhere;
+        }
+
+        .el-dashboard .el-page-header p {
+            margin: 8px 0 0;
+            color: var(--student-muted);
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        /* =====================================================
+           MAIN GRID
+        ===================================================== */
+
+        .el-dashboard .el-grid {
+            display: grid;
+            width: 100%;
+            min-width: 0;
+            gap: 17px;
+        }
+
+        .el-dashboard .el-grid-2 {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        /* =====================================================
+           GLASS CARDS
+        ===================================================== */
+
+        .el-dashboard .el-card {
+            position: relative;
+            min-width: 0;
+            padding: 22px;
+            border: 1px solid var(--student-border);
+            border-radius: 21px;
+            background: var(--student-glass);
+            box-shadow:
+                var(--student-shadow),
+                inset 0 1px 0 rgba(255,255,255,.8);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            transition:
+                transform .25s ease,
+                box-shadow .25s ease,
+                border-color .25s ease,
+                background .25s ease;
+            animation: studentFadeUp .6s ease both;
+        }
+
+        .el-dashboard .el-card:hover {
+            border-color: rgba(255,255,255,.98);
+            box-shadow:
+                0 15px 36px rgba(65,70,130,.10),
+                inset 0 1px 0 rgba(255,255,255,.9);
+        }
+
+        .el-dashboard .el-card-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            min-width: 0;
+            margin-bottom: 18px;
+        }
+
+        .el-dashboard .el-card-title h3 {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 0;
+            color: var(--student-text);
+            font-size: 16px;
+            font-weight: 850;
+            letter-spacing: -.3px;
+        }
+
+        .el-dashboard .el-card-title > span {
+            color: var(--student-muted);
+            font-size: 11px;
+        }
+
+        /* =====================================================
+           PROFILE
+        ===================================================== */
+
         .el-profile-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 12px;
         }
 
         .el-profile-item {
-            padding: 14px;
-            border: 1px solid var(--el-border);
-            border-radius: 14px;
-            background: #fafaff;
+            min-width: 0;
+            padding: 16px;
+            border: 1px solid rgba(255,255,255,.85);
+            border-radius: 17px;
+            background: rgba(255,255,255,.43);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            box-shadow: 0 6px 18px rgba(70,75,130,.05);
+            transition: transform .22s ease, background .22s ease, box-shadow .22s ease;
+        }
+
+        .el-profile-item:hover {
+            transform: translateY(-3px);
+            background: rgba(255,255,255,.72);
+            box-shadow: 0 10px 22px rgba(70,75,130,.09);
         }
 
         .el-profile-item span {
             display: block;
+            color: var(--student-muted);
             font-size: 10px;
-            color: var(--el-muted);
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: .05em;
+            letter-spacing: .7px;
         }
 
         .el-profile-item strong {
             display: block;
-            margin-top: 5px;
+            margin-top: 7px;
+            color: var(--student-text);
+            font-size: 13px;
+            overflow-wrap: anywhere;
+        }
+
+        /* =====================================================
+           LEARNING PROGRESS
+        ===================================================== */
+
+        .student-progress-layout {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .student-progress-circle {
+            width: 92px;
+            height: 92px;
+            flex-shrink: 0;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: conic-gradient(
+                #8069e8 0 72%,
+                rgba(120,120,160,.12) 72% 100%
+            );
+            box-shadow: 0 7px 20px rgba(120,101,220,.15);
+            animation: studentProgressIn .9s .2s ease both;
+        }
+
+        .student-progress-circle-inner {
+            width: 70px;
+            height: 70px;
+            display: grid;
+            place-items: center;
+            border: 1px solid rgba(255,255,255,.9);
+            border-radius: 50%;
+            color: var(--student-text);
+            background: rgba(255,255,255,.9);
+            font-size: 17px;
+            font-weight: 800;
+            box-shadow: inset 0 1px 4px rgba(70,75,130,.06);
+        }
+
+        .student-progress-copy {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .student-progress-copy strong {
+            color: var(--student-text);
             font-size: 13px;
         }
 
+        .student-progress-copy p {
+            margin: 6px 0 11px;
+            color: var(--student-muted);
+            font-size: 11px;
+            line-height: 1.7;
+        }
+
+        .student-progress-copy .el-progress {
+            width: 100%;
+            height: 8px;
+            overflow: hidden;
+            border-radius: 20px;
+            background: rgba(120,120,160,.12);
+        }
+
+        .student-progress-copy .el-progress span {
+            display: block;
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #9b85f3, #6d59d2);
+            animation: studentBarIn 1s .3s ease both;
+        }
+
+        /* =====================================================
+           NOTIFICATIONS
+        ===================================================== */
+
         .notification {
-            padding: 13px 0;
-            border-bottom: 1px solid var(--el-border);
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(125,130,170,.15);
+            transition: background .2s ease, padding-left .2s ease;
         }
 
         .notification:last-child {
             border-bottom: 0;
         }
 
+        .notification:hover {
+            padding-left: 7px;
+            background: rgba(255,255,255,.35);
+        }
+
         .notification-title {
-            font-weight: 700;
+            color: var(--student-text);
             font-size: 12px;
+            font-weight: 800;
         }
 
         .notification-message {
+            margin-top: 4px;
+            color: var(--student-muted);
             font-size: 11px;
-            color: var(--el-muted);
-            margin-top: 3px;
+            line-height: 1.6;
         }
 
         .notification-time {
-            font-size: 9px;
-            color: #9ca3af;
-            margin-top: 5px;
+            margin-top: 6px;
+            color: #9297ad;
+            font-size: 10px;
         }
 
         .notification.unread .notification-title {
-            color: var(--el-primary);
+            color: var(--student-purple);
         }
 
-        /* LIVE CLASSES */
+        /* =====================================================
+           LIVE CLASSES
+        ===================================================== */
+
+        .student-live-room {
+            margin-top: 20px;
+        }
 
         .student-live-list {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 14px;
+            gap: 15px;
         }
 
         .student-live-card {
-            padding: 17px;
-            border: 1px solid var(--el-border);
-            border-radius: 16px;
-            background: var(--el-card, #fff);
+            min-width: 0;
+            padding: 19px;
+            border: 1px solid rgba(255,255,255,.85);
+            border-radius: 19px;
+            background: rgba(255,255,255,.43);
+            backdrop-filter: blur(17px);
+            -webkit-backdrop-filter: blur(17px);
+            box-shadow: 0 7px 22px rgba(57,65,120,.07);
+            transition: .25s ease;
+            animation: studentFadeUp .45s ease both;
+        }
+
+        .student-live-card:hover {
+            transform: translateY(-3px);
+            background: rgba(255,255,255,.7);
+            box-shadow: 0 14px 30px rgba(80,72,160,.12);
         }
 
         .student-live-card-header {
@@ -93,38 +378,44 @@
         }
 
         .student-live-card-header h4 {
-            font-size: 14px;
             margin: 0;
+            color: var(--student-text);
+            font-size: 14px;
+            font-weight: 800;
             overflow-wrap: anywhere;
         }
 
         .student-live-badge {
             flex-shrink: 0;
-            padding: 5px 9px;
+            padding: 6px 10px;
+            border: 1px solid rgba(255,255,255,.8);
             border-radius: 30px;
-            font-size: 9px;
+            font-size: 10px;
             font-weight: 800;
         }
 
         .student-live-badge.is-live {
-            color: #dc2626;
-            background: #fee2e2;
+            color: #c43c55;
+            background: rgba(255,225,231,.85);
         }
 
         .student-live-badge.is-scheduled {
-            color: #92400e;
-            background: #fef3c7;
+            color: #a36c1e;
+            background: rgba(255,242,210,.85);
         }
 
         .student-live-meta {
-            margin: 10px 0 0;
-            color: var(--el-muted);
+            margin: 11px 0 0;
+            color: var(--student-muted);
             font-size: 11px;
+            line-height: 1.7;
         }
 
         .student-live-description {
-            margin: 12px 0;
+            margin: 13px 0;
+            color: var(--student-muted);
             font-size: 12px;
+            line-height: 1.65;
             overflow-wrap: anywhere;
         }
 
@@ -138,38 +429,112 @@
             cursor: not-allowed;
         }
 
-        /* LIVE ROOM */
+        /* =====================================================
+           SESSION ID JOIN PANEL
+        ===================================================== */
 
-        .student-live-room {
-            margin-top: 18px;
+        .student-session-join {
+            margin: 17px 0;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,.85);
+            border-radius: 19px;
+            background: rgba(255,255,255,.42);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 7px 22px rgba(57,65,120,.06);
+            transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+        }
+
+        .student-session-join:focus-within {
+            border-color: rgba(120,101,220,.42);
+            box-shadow: 0 10px 28px rgba(120,101,220,.10);
+            background: rgba(255,255,255,.62);
+        }
+
+        .student-session-join h4 {
+            margin: 0 0 7px;
+            color: var(--student-text);
+            font-size: 14px;
+        }
+
+        .student-session-join > p {
+            margin: 0 0 13px;
+            color: var(--student-muted);
+            font-size: 11px;
+        }
+
+        .student-session-join-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .student-session-join input {
+            flex: 1;
+            min-width: 180px;
+            min-height: 44px;
+            padding: 11px 14px;
+            border: 1px solid rgba(255,255,255,.9);
+            border-radius: 12px;
+            outline: none;
+            color: var(--student-text);
+            background: rgba(255,255,255,.65);
+            box-shadow: inset 2px 2px 6px rgba(80,80,130,.05);
+            font: inherit;
+            font-size: 12px;
+            transition: .2s ease;
+        }
+
+        .student-session-join input:focus {
+            border-color: rgba(120,101,220,.6);
+            box-shadow: 0 0 0 4px rgba(120,101,220,.1);
+        }
+
+        #sessionIdMessage {
+            margin: 10px 0 0;
+            font-size: 12px;
+        }
+
+        /* =====================================================
+           LIVE ROOM
+        ===================================================== */
+
+        #studentLiveRoom[hidden] {
+            display: none !important;
         }
 
         .student-live-video {
             width: 100%;
-            min-height: 220px;
-            max-height: 500px;
+            min-height: 240px;
+            max-height: 520px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             gap: 12px;
             overflow: hidden;
-            border-radius: 16px;
-            background: #101827;
-            padding: 12px;
+            padding: 14px;
+            border: 1px solid rgba(255,255,255,.15);
+            border-radius: 19px;
+            color: white;
+            background:
+                radial-gradient(circle at 50% 0%, rgba(116,94,220,.3), transparent 55%),
+                linear-gradient(145deg, #17182f, #28234f);
+            box-shadow: inset 0 0 35px rgba(0,0,0,.25);
         }
 
         .student-live-video video {
             max-width: 100%;
-            max-height: 460px;
-            border-radius: 10px;
+            max-height: 470px;
+            border-radius: 12px;
+            object-fit: contain;
         }
 
         .student-live-controls {
             display: flex;
             flex-wrap: wrap;
-            gap: 9px;
-            margin-top: 14px;
+            gap: 10px;
+            margin-top: 15px;
         }
 
         .student-live-controls button:disabled {
@@ -178,18 +543,276 @@
         }
 
         .student-live-message {
-            margin-top: 12px;
+            margin-top: 13px;
+            color: var(--student-muted);
             font-size: 12px;
-            color: var(--el-muted);
         }
 
-        @media(max-width: 640px) {
+        /* =====================================================
+           QUICK LEARNING LINKS
+        ===================================================== */
+
+        .el-dashboard .el-quick-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+            gap: 12px;
+        }
+
+        .el-dashboard .el-quick {
+            min-width: 0;
+            padding: 16px;
+            border: 1px solid rgba(255,255,255,.85);
+            border-radius: 16px;
+            background: rgba(255,255,255,.46);
+            text-decoration: none;
+            transition: transform .22s ease, box-shadow .22s ease, background .22s ease;
+        }
+
+        .el-dashboard .el-quick:hover {
+            transform: translateY(-4px);
+            background: rgba(255,255,255,.78);
+            box-shadow: 0 12px 25px rgba(75,72,140,.10);
+        }
+
+        .el-dashboard .el-quick .icon {
+            width: 38px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            margin-bottom: 12px;
+            border: 1px solid rgba(255,255,255,.9);
+            border-radius: 12px;
+            color: var(--student-purple);
+            background: rgba(120,101,220,.1);
+        }
+
+        .el-dashboard .el-quick strong {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--student-text);
+            font-size: 12px;
+        }
+
+        .el-dashboard .el-quick > span:last-child {
+            display: block;
+            color: var(--student-muted);
+            font-size: 10px;
+            line-height: 1.6;
+        }
+
+        /* =====================================================
+           BUTTONS
+        ===================================================== */
+
+        .el-dashboard .el-btn {
+            transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+        }
+
+        .el-dashboard .el-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            filter: saturate(1.06);
+        }
+
+        .el-dashboard .el-btn:active:not(:disabled) {
+            transform: translateY(0) scale(.98);
+        }
+
+        .el-dashboard .el-btn:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        /* =====================================================
+           NOTIFICATION COUNTERS
+        ===================================================== */
+
+        #liveSessionCount,
+        #notificationCount {
+            display: inline-grid;
+            place-items: center;
+            min-width: 22px;
+            height: 22px;
+            padding: 0 6px;
+            border: 1px solid rgba(255,255,255,.85);
+            border-radius: 99px;
+            color: var(--student-purple);
+            background: rgba(120,101,220,.13);
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        /* =====================================================
+           LOADING STATE
+        ===================================================== */
+
+        .el-dashboard .loading {
+            padding: 18px;
+            color: var(--student-muted);
+            font-size: 12px;
+            text-align: center;
+        }
+
+        /* =====================================================
+           ACCESSIBILITY
+        ===================================================== */
+
+        .el-dashboard :is(input, button, a, select):focus-visible {
+            outline: 3px solid rgba(120,101,220,.32);
+            outline-offset: 3px;
+        }
+
+        /* =====================================================
+           ANIMATIONS
+        ===================================================== */
+
+        @keyframes studentFadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(13px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes studentProgressIn {
+            from {
+                opacity: .45;
+                transform: scale(.88) rotate(-18deg);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) rotate(0);
+            }
+        }
+
+        @keyframes studentBarIn {
+            from {
+                width: 0;
+            }
+        }
+
+        /* Staggered card entrance */
+        .el-dashboard > section:nth-of-type(1) > .el-card:nth-child(1) {
+            animation-delay: .08s;
+        }
+
+        .el-dashboard > section:nth-of-type(1) > .el-card:nth-child(2) {
+            animation-delay: .16s;
+        }
+
+        .el-dashboard .student-live-room {
+            animation-delay: .2s;
+        }
+
+        /* =====================================================
+           RESPONSIVE
+        ===================================================== */
+
+        @media(max-width: 900px) {
+            .el-dashboard {
+                padding: 22px 17px 35px;
+            }
+
+            .el-dashboard .el-grid-2 {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+
+        @media(max-width: 760px) {
             .el-profile-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
 
             .student-live-card-header {
                 flex-wrap: wrap;
+            }
+
+            .student-live-list {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+
+        @media(max-width: 480px) {
+            .el-dashboard {
+                padding: 16px 12px 28px;
+            }
+
+            .el-dashboard .el-page-header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .el-dashboard .el-page-header .el-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .el-profile-grid {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .el-dashboard .el-card {
+                padding: 17px;
+                border-radius: 17px;
+            }
+
+            .student-progress-layout {
+                align-items: flex-start;
+                gap: 13px;
+            }
+
+            .student-progress-circle {
+                width: 76px;
+                height: 76px;
+            }
+
+            .student-progress-circle-inner {
+                width: 58px;
+                height: 58px;
+                font-size: 14px;
+            }
+
+            .student-session-join-row {
+                flex-direction: column;
+            }
+
+            .student-session-join-row input,
+            .student-session-join-row button {
+                width: 100%;
+            }
+
+            .student-live-controls button {
+                flex: 1 1 100%;
+            }
+
+            .el-dashboard .el-quick-grid {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+
+        /* =====================================================
+           REDUCED MOTION
+        ===================================================== */
+
+        @media(prefers-reduced-motion: reduce) {
+            .el-dashboard *,
+            .el-dashboard *::before,
+            .el-dashboard *::after {
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+
+        @supports not (backdrop-filter: blur(10px)) {
+            .el-dashboard .el-card,
+            .el-profile-item,
+            .student-live-card,
+            .student-session-join {
+                background: rgba(255,255,255,.96);
             }
         }
     </style>
@@ -200,10 +823,9 @@
 <div class="el-dashboard">
 
     <!-- PAGE HEADER -->
-
-    <div class="el-page-header">
+    <header class="el-page-header">
         <div>
-            <div class="el-page-kicker">Learning workspace</div>
+            <div class="el-page-kicker">Your learning journey</div>
 
             <h1>
                 Hello, <span id="studentName">Student</span>
@@ -213,14 +835,15 @@
         </div>
 
         <a class="el-btn el-btn-primary" href="modules.html">
-            Continue learning →
+            <span data-icon="book-open"></span>
+            Continue learning
         </a>
-    </div>
+    </header>
 
     <!-- STUDENT PROFILE AND PROGRESS -->
-
     <section class="el-grid el-grid-2">
 
+        <!-- YOUR CLASS -->
         <article class="el-card">
 
             <div class="el-card-title">
@@ -249,6 +872,7 @@
 
         </article>
 
+        <!-- LEARNING PROGRESS -->
         <article class="el-card">
 
             <div class="el-card-title">
@@ -256,24 +880,21 @@
                 <span>Keep going</span>
             </div>
 
-            <div style="display:flex;align-items:center;gap:18px">
+            <div class="student-progress-layout">
 
-                <div style="width:86px;height:86px;border-radius:50%;background:conic-gradient(var(--el-primary) 0 72%,#eceef4 72%);display:grid;place-items:center">
-
-                    <div style="width:66px;height:66px;border-radius:50%;background:white;display:grid;place-items:center;font-weight:800">
+                <div class="student-progress-circle">
+                    <div class="student-progress-circle-inner">
                         72%
                     </div>
-
                 </div>
 
-                <div style="flex:1">
+                <div class="student-progress-copy">
 
-                    <strong style="font-size:13px">
-                        Weekly learning goal
-                    </strong>
+                    <strong>Weekly learning goal</strong>
 
-                    <p style="font-size:11px;color:var(--el-muted);margin:5px 0 10px">
-                        Complete your modules and quizzes to improve your progress.
+                    <p>
+                        Complete your modules and quizzes to improve
+                        your progress.
                     </p>
 
                     <div class="el-progress">
@@ -288,134 +909,160 @@
 
     </section>
 
-   <!-- LIVE CLASSES -->
-<section class="el-card student-live-room">
+    <!-- EQUALLEARN LIVE -->
+    <section class="el-card student-live-room">
 
-    <div class="el-card-title">
-        <div>
-            <h3>
-                EqualLearn Live
-                <span
-                    id="liveSessionCount"
-                    style="display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:99px;background:var(--el-primary-soft);color:var(--el-primary);font-size:10px">
-                    0
-                </span>
-            </h3>
-            <span>Scheduled and ongoing classes for your section</span>
+        <div class="el-card-title">
+
+            <div>
+                <h3>
+                    <span data-icon="video"></span>
+                    EqualLearn Live
+
+                    <span id="liveSessionCount">0</span>
+                </h3>
+
+                <span>Scheduled and ongoing classes for your section</span>
+            </div>
+
+            <button
+                type="button"
+                class="el-btn"
+                id="refreshLiveBtn">
+                <span data-icon="refresh-cw"></span>
+                Refresh
+            </button>
+
         </div>
 
-        <button type="button" class="el-btn" id="refreshLiveBtn">
-            Refresh
-        </button>
-    </div>
+        <!-- JOIN USING SESSION ID -->
+        <div class="student-session-join">
 
-    <!-- JOIN USING SESSION ID -->
-    <div class="student-session-join"
-         style="margin:16px 0;padding:16px;border:1px solid var(--el-border);border-radius:14px">
+            <h4>Join using Session ID</h4>
 
-        <h4 style="margin:0 0 6px;font-size:14px">
-            Join using Session ID
-        </h4>
+            <p>
+                Enter the Session ID provided by your teacher.
+            </p>
 
-        <p style="margin:0 0 12px;font-size:11px;color:var(--el-muted)">
-            Enter the Session ID provided by your teacher.
-        </p>
+            <div class="student-session-join-row">
 
-        <div style="display:flex;gap:9px;flex-wrap:wrap">
-            <input
-                type="text"
-                id="studentSessionIdInput"
-                placeholder="Paste Session ID here"
-                autocomplete="off"
-                spellcheck="false"
-                maxlength="100"
-                style="flex:1;min-width:180px;padding:12px;border:1px solid var(--el-border);border-radius:10px;font:inherit">
+                <input
+                    type="text"
+                    id="studentSessionIdInput"
+                    placeholder="Paste Session ID here"
+                    autocomplete="off"
+                    spellcheck="false"
+                    maxlength="100"
+                >
+
+                <button
+                    type="button"
+                    class="el-btn el-btn-primary"
+                    id="joinBySessionIdBtn">
+                    <span data-icon="video"></span>
+                    Join Class
+                </button>
+
+            </div>
+
+            <p
+                id="sessionIdMessage"
+                role="status"
+                aria-live="polite">
+            </p>
+
+        </div>
+
+        <!-- AVAILABLE LIVE SESSIONS -->
+        <div
+            id="liveSessionList"
+            class="student-live-list">
+
+            <p class="loading">Loading live classes...</p>
+
+        </div>
+
+    </section>
+
+    <!-- STUDENT LIVE ROOM -->
+    <section
+        class="el-card student-live-room"
+        id="studentLiveRoom"
+        hidden>
+
+        <div class="el-card-title">
+
+            <h3 id="studentLiveTitle">EqualLearn Live</h3>
+
+            <span id="studentLiveStatus">Connecting...</span>
+
+        </div>
+
+        <div
+            id="studentLiveVideo"
+            class="student-live-video">
+
+            <p style="color:white">
+                Connecting to classroom...
+            </p>
+
+        </div>
+
+        <div class="student-live-controls">
+
+            <button
+                type="button"
+                class="el-btn"
+                id="studentMicBtn"
+                disabled>
+                <span data-icon="mic-off"></span>
+                Mute Microphone
+            </button>
+
+            <button
+                type="button"
+                class="el-btn"
+                id="studentCameraBtn"
+                disabled>
+                <span data-icon="video-off"></span>
+                Turn Camera Off
+            </button>
 
             <button
                 type="button"
                 class="el-btn el-btn-primary"
-                id="joinBySessionIdBtn">
-                Join Class
+                id="studentLeaveBtn">
+
+                <span data-icon="log-out"></span>
+                Leave Classroom
+
             </button>
+
         </div>
 
         <p
-            id="sessionIdMessage"
-            role="status"
-            aria-live="polite"
-            style="margin:10px 0 0;font-size:12px">
+            id="studentLiveMessage"
+            class="student-live-message">
         </p>
-    </div>
 
-    <!-- AVAILABLE SESSIONS -->
-    <div id="liveSessionList" class="student-live-list">
-        <p class="loading">Loading live classes...</p>
-    </div>
-
-</section>
-
-<!-- STUDENT LIVE ROOM -->
-<section
-    class="el-card student-live-room"
-    id="studentLiveRoom"
-    hidden>
-
-    <div class="el-card-title">
-        <h3 id="studentLiveTitle">EqualLearn Live</h3>
-        <span id="studentLiveStatus">Connecting...</span>
-    </div>
-
-    <div id="studentLiveVideo" class="student-live-video">
-        <p style="color:white">Connecting to classroom...</p>
-    </div>
-
-    <div class="student-live-controls">
-
-        <button
-            type="button"
-            class="el-btn"
-            id="studentMicBtn"
-            disabled>
-            Mute Microphone
-        </button>
-
-        <button
-            type="button"
-            class="el-btn"
-            id="studentCameraBtn"
-            disabled>
-            Turn Camera Off
-        </button>
-
-        <button
-            type="button"
-            class="el-btn el-btn-primary"
-            id="studentLeaveBtn">
-            Leave Classroom
-        </button>
-
-    </div>
-
-    <p id="studentLiveMessage" class="student-live-message"></p>
-
-</section>
-
-  
+    </section>
 
     <!-- LEARNING AND NOTIFICATIONS -->
-
     <section class="el-grid el-grid-2" style="margin-top:18px">
 
+        <!-- CONTINUE LEARNING -->
         <article class="el-card">
 
             <div class="el-card-title">
+
                 <h3>Continue learning</h3>
 
                 <a
                     href="modules.html"
-                    style="color:var(--el-primary);font-size:11px;text-decoration:none;font-weight:700">
-                    View modules
+                    style="color:var(--student-purple);font-size:11px;text-decoration:none;font-weight:800">
+                    View modules →
                 </a>
+
             </div>
 
             <div class="el-quick-grid">
@@ -467,7 +1114,6 @@
         </article>
 
         <!-- NOTIFICATIONS -->
-
         <article class="el-card">
 
             <div class="el-card-title">
@@ -475,11 +1121,7 @@
                 <h3>
                     Notifications
 
-                    <span
-                        id="notificationCount"
-                        style="display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:99px;background:var(--el-primary-soft);color:var(--el-primary);font-size:10px">
-                        0
-                    </span>
+                    <span id="notificationCount">0</span>
                 </h3>
 
                 <span>Latest updates</span>
@@ -487,9 +1129,11 @@
             </div>
 
             <div id="notificationList">
+
                 <div class="loading">
                     Loading notifications...
                 </div>
+
             </div>
 
         </article>
@@ -498,11 +1142,14 @@
 
 </div>
 
-<!-- SCRIPTS -->
-
+<!-- EXISTING APPLICATION SCRIPTS -->
 <script type="module" src="../assets/js/dashboard.js"></script>
 <script type="module" src="../assets/js/student_live.js"></script>
+
+<!-- UI SHELL -->
 <script type="module" src="../assets/js/ui-shell.js"></script>
+
+<!-- PWA AND THEME -->
 <script type="module" src="../assets/js/pwa.js"></script>
 <script type="module" src="../assets/js/theme.js"></script>
 

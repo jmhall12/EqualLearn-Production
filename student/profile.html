@@ -7,32 +7,48 @@
   <title>Student Profile - EqualLearn</title>
 
   <link rel="manifest" href="../manifest.webmanifest">
-  <link rel="icon" href="../assets/icons/icon-192.png">
+  <link rel="icon" href="../assets/icons/equallearn-logo.png">
+
   <link rel="stylesheet" href="../assets/css/equallearn.css">
+  <link rel="stylesheet" href="../assets/css/glass-dashboard.css">
+  <link rel="stylesheet" href="../assets/css/sidebar-skeuomorphism.css">
 
   <style>
     .profile-layout {
       display: grid;
       grid-template-columns: minmax(0, 1.3fr) minmax(260px, .7fr);
       gap: 20px;
+      align-items: start;
+      width: 100%;
     }
 
     .profile-panel {
-      background: var(--el-surface);
-      border: 1px solid var(--el-border);
-      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.68);
+      border: 1px solid rgba(255, 255, 255, 0.75);
+      border-radius: 22px;
       padding: 24px;
-      box-shadow: var(--el-shadow);
+      box-shadow:
+        0 12px 35px rgba(31, 38, 135, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      min-width: 0;
     }
 
     .profile-panel h2 {
       margin-top: 0;
+      margin-bottom: 20px;
+      color: var(--el-text);
     }
 
     .profile-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 15px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .profile-field {
+      min-width: 0;
     }
 
     .profile-field.full {
@@ -44,6 +60,7 @@
       font-size: 13px;
       font-weight: 700;
       margin-bottom: 7px;
+      color: var(--el-text);
     }
 
     .profile-field input,
@@ -53,220 +70,447 @@
       padding: 11px 13px;
       border: 1px solid var(--el-border);
       border-radius: 12px;
-      background: white;
+      background: rgba(255, 255, 255, 0.78);
       color: var(--el-text);
+      font: inherit;
+      font-size: 14px;
+      outline: none;
+      transition:
+        border-color .2s ease,
+        box-shadow .2s ease,
+        background .2s ease;
+    }
+
+    .profile-field input:focus,
+    .profile-field select:focus {
+      border-color: var(--el-primary);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.12);
     }
 
     .profile-field input[readonly] {
-      background: #f3f4f8;
+      background: rgba(243, 244, 248, 0.85);
       color: var(--el-muted);
+      cursor: not-allowed;
     }
 
     .profile-help {
       color: var(--el-muted);
       font-size: 12px;
-      line-height: 1.6;
+      line-height: 1.7;
       margin-top: 7px;
     }
 
     .profile-message {
-      padding: 13px;
-      border-radius: 12px;
+      padding: 13px 15px;
+      border-radius: 13px;
       background: var(--el-primary-soft);
       color: var(--el-primary);
       font-size: 13px;
-      margin-bottom: 18px;
+      line-height: 1.6;
+      margin-bottom: 20px;
+      border: 1px solid rgba(99, 91, 255, 0.1);
     }
 
     .profile-message.success {
-      background: #ecfdf3;
+      background: rgba(236, 253, 243, 0.9);
       color: #15803d;
+      border-color: rgba(21, 128, 61, 0.12);
     }
 
     .profile-message.error {
-      background: #fff1f2;
+      background: rgba(255, 241, 242, 0.9);
       color: #be123c;
+      border-color: rgba(190, 18, 60, 0.12);
     }
 
     .profile-actions {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
-      margin-top: 20px;
+      align-items: center;
+      margin-top: 22px;
     }
 
-    @media(max-width: 760px) {
-      .profile-layout,
+    .profile-actions button,
+    .profile-actions a {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+    }
+
+    .profile-divider {
+      border: 0;
+      border-top: 1px solid var(--el-border);
+      margin: 20px 0;
+    }
+
+    .profile-info-item {
+      padding: 13px 0;
+      border-bottom: 1px solid rgba(120, 120, 150, 0.12);
+    }
+
+    .profile-info-item:last-child {
+      border-bottom: 0;
+    }
+
+    .profile-info-item strong {
+      display: block;
+      color: var(--el-text);
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .profile-info-item span {
+      display: block;
+      color: var(--el-muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    /* STUDENT PROFILE PHOTO */
+
+    .profile-photo-section {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 18px;
+      margin-bottom: 22px;
+      border: 1px solid rgba(145, 151, 180, .2);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, .48);
+    }
+
+    .profile-photo-frame {
+      width: 112px;
+      height: 112px;
+      flex: 0 0 112px;
+      overflow: hidden;
+      border-radius: 50%;
+      border: 4px solid white;
+      background: #eeedff;
+      box-shadow: 0 5px 18px rgba(31, 38, 135, .12);
+    }
+
+    .profile-photo-frame img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .profile-photo-details {
+      min-width: 0;
+    }
+
+    .profile-photo-details strong {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--el-text);
+    }
+
+    .profile-photo-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .profile-photo-buttons button {
+      padding: 9px 13px;
+      border: 1px solid var(--el-border);
+      border-radius: 10px;
+      background: white;
+      color: var(--el-text);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .profile-photo-buttons button:hover {
+      border-color: var(--el-primary);
+      color: var(--el-primary);
+    }
+
+    .profile-photo-buttons button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    #profilePhotoInput {
+      display: none;
+    }
+
+    @media (max-width: 900px) {
+      .profile-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .profile-panel {
+        padding: 18px;
+        border-radius: 18px;
+      }
+
       .profile-grid {
         grid-template-columns: 1fr;
+        gap: 14px;
       }
 
       .profile-field.full {
         grid-column: auto;
+      }
+
+      .profile-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .profile-actions button,
+      .profile-actions a {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .profile-photo-section {
+        align-items: flex-start;
+        gap: 14px;
+        padding: 14px;
+      }
+
+      .profile-photo-frame {
+        width: 86px;
+        height: 86px;
+        flex-basis: 86px;
+      }
+
+      .profile-photo-buttons {
+        flex-direction: column;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .profile-field input,
+      .profile-field select {
+        transition: none;
       }
     }
   </style>
 </head>
 
 <body>
+  <main class="el-dashboard">
 
-<main class="el-dashboard">
-
-  <header class="el-page-header">
-    <div>
-      <div class="el-page-kicker">Account settings</div>
-      <h1>My Student Profile</h1>
-      <p>Complete your academic information and keep your student record updated.</p>
-    </div>
-  </header>
-
-  <div class="profile-layout">
-
-    <section class="profile-panel">
-
-      <h2>Personal & Academic Information</h2>
-
-      <div id="profileMessage"
-           class="profile-message"
-           role="status">
-        Loading your profile...
+    <header class="el-page-header">
+      <div>
+        <div class="el-page-kicker">Account settings</div>
+        <h1>My Student Profile</h1>
+        <p>Complete your academic information and keep your student record updated.</p>
       </div>
+    </header>
 
-      <form id="studentProfileForm">
+    <div class="profile-layout">
 
-        <div class="profile-grid">
+      <section class="profile-panel">
+        <h2>Personal & Academic Information</h2>
 
-          <input
-  id="profileName"
-  type="text"
-  maxlength="120"
-  placeholder="Enter your full name"
-  autocomplete="name"
-  required>
+        <!-- STUDENT PROFILE PHOTO -->
+        <div class="profile-photo-section">
 
-          <div class="profile-field full">
-            <label for="profileEmail">Institutional Email</label>
-            <input id="profileEmail" type="email" readonly>
-            <div class="profile-help">
-              Your email is provided by your authenticated account.
+          <div class="profile-photo-frame">
+            <img
+              id="profilePhoto"
+              src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' rx='60' fill='%23eeedff'/%3E%3Ccircle cx='60' cy='43' r='22' fill='%239b95e8'/%3E%3Cpath d='M20 112c3-25 19-38 40-38s37 13 40 38' fill='%239b95e8'/%3E%3C/svg%3E"
+              alt="Student profile picture">
+          </div>
+
+          <div class="profile-photo-details">
+            <strong>Profile Picture</strong>
+
+            <p class="profile-help">
+              Upload a clear photo of yourself. JPG, PNG, or WebP.
+              Maximum file size: 5 MB.
+            </p>
+
+            <div class="profile-photo-buttons">
+              <button
+                type="button"
+                id="chooseProfilePhoto"
+                aria-describedby="profilePhotoStatus">
+                Upload Photo
+              </button>
+
+              <button
+                type="button"
+                id="removeProfilePhoto">
+                Remove Photo
+              </button>
+            </div>
+
+            <input
+              type="file"
+              id="profilePhotoInput"
+              accept="image/jpeg,image/png,image/webp">
+
+            <div
+              id="profilePhotoStatus"
+              class="profile-help"
+              role="status"
+              aria-live="polite">
             </div>
           </div>
-
-          <div class="profile-field">
-            <label for="profileStudentNumber">Student ID Number *</label>
-            <input
-              id="profileStudentNumber"
-              type="text"
-              maxlength="40"
-              placeholder="Enter your student ID"
-              required>
-          </div>
-
-          <div class="profile-field">
-            <label for="profileCourse">Course / Program *</label>
-            <input
-              id="profileCourse"
-              type="text"
-              maxlength="120"
-              placeholder="e.g. BS Information Technology"
-              required>
-          </div>
-
-          <div class="profile-field">
-            <label for="profileYear">Year Level *</label>
-            <select id="profileYear" required>
-              <option value="">Select year level</option>
-              <option value="1">1st Year</option>
-              <option value="2">2nd Year</option>
-              <option value="3">3rd Year</option>
-              <option value="4">4th Year</option>
-              <option value="5">5th Year</option>
-            </select>
-          </div>
-
-          <div class="profile-field">
-            <label for="profileSection">Section</label>
-            <input
-              id="profileSection"
-              type="text"
-              maxlength="80"
-              placeholder="e.g. BSIT 4A">
-          </div>
-
-          <div class="profile-field full">
-            <label for="profileCohort">Academic Year</label>
-            <input
-              id="profileCohort"
-              type="text"
-              maxlength="80"
-              placeholder="e.g. 2026-2027">
-          </div>
-
         </div>
+
+        <div
+          id="profileMessage"
+          class="profile-message"
+          role="status"
+          aria-live="polite">
+          Loading your profile...
+        </div>
+
+        <form id="studentProfileForm">
+          <div class="profile-grid">
+
+            <div class="profile-field full">
+              <label for="profileName">Full Name *</label>
+              <input
+                id="profileName"
+                type="text"
+                maxlength="120"
+                placeholder="Your registered full name"
+                autocomplete="name"
+                readonly
+                required>
+            </div>
+
+            <div class="profile-field full">
+              <label for="profileEmail">Institutional Email</label>
+              <input
+                id="profileEmail"
+                type="email"
+                readonly
+                autocomplete="email">
+
+              <div class="profile-help">
+                Your email is provided by your authenticated account.
+              </div>
+            </div>
+
+            <div class="profile-field">
+              <label for="profileStudentNumber">Student ID Number *</label>
+              <input
+                id="profileStudentNumber"
+                type="text"
+                maxlength="40"
+                placeholder="Enter your student ID"
+                required>
+            </div>
+
+            <div class="profile-field">
+              <label for="profileCourse">Course / Program *</label>
+              <input
+                id="profileCourse"
+                type="text"
+                maxlength="120"
+                placeholder="e.g. BS Information Technology"
+                required>
+            </div>
+
+            <div class="profile-field">
+              <label for="profileYear">Year Level *</label>
+              <select id="profileYear" required>
+                <option value="">Select year level</option>
+                <option value="1">1st Year</option>
+                <option value="2">2nd Year</option>
+                <option value="3">3rd Year</option>
+                <option value="4">4th Year</option>
+                <option value="5">5th Year</option>
+              </select>
+            </div>
+
+            <div class="profile-field">
+              <label for="profileSection">Section</label>
+              <input
+                id="profileSection"
+                type="text"
+                maxlength="80"
+                placeholder="e.g. BSIT 4A">
+            </div>
+
+            <div class="profile-field full">
+              <label for="profileCohort">Academic Year</label>
+              <input
+                id="profileCohort"
+                type="text"
+                maxlength="80"
+                placeholder="e.g. 2026-2027">
+            </div>
+
+          </div>
+
+          <p class="profile-help">
+            Academic details are initially self-reported and must be
+            verified by an authorized administrator or official MIS/LSM record.
+          </p>
+
+          <div class="profile-actions">
+            <button
+              type="submit"
+              id="saveProfile"
+              class="el-btn el-btn-primary">
+              Save Profile
+            </button>
+
+            <a
+              href="dashboard.html"
+              class="el-btn el-btn-secondary">
+              Back to Dashboard
+            </a>
+          </div>
+        </form>
+      </section>
+
+      <aside class="profile-panel">
+        <h2>Profile Information</h2>
 
         <p class="profile-help">
-          Academic details are initially self-reported and must be
-          verified by an authorized administrator or official MIS/LSM record.
+          Completing your academic profile helps EqualLearn organize
+          your student records and classroom information.
         </p>
 
-        <div class="profile-actions">
+        <hr class="profile-divider">
 
-          <button
-            type="submit"
-            id="saveProfile"
-            class="el-btn el-btn-primary">
-            Save Profile
-          </button>
-
-          <a
-            href="dashboard.html"
-            class="el-btn el-btn-secondary">
-            Back to Dashboard
-          </a>
-
+        <div class="profile-info-item">
+          <strong>Course</strong>
+          <span>Your enrolled academic program.</span>
         </div>
 
-      </form>
+        <div class="profile-info-item">
+          <strong>Year Level</strong>
+          <span>Your current academic year.</span>
+        </div>
 
-    </section>
+        <div class="profile-info-item">
+          <strong>Student ID</strong>
+          <span>Your official institutional student number.</span>
+        </div>
 
-    <aside class="profile-panel">
+        <div class="profile-info-item">
+          <strong>Verification</strong>
+          <span>Your academic details may be reviewed by an administrator.</span>
+        </div>
+      </aside>
 
-      <h2>Profile Information</h2>
+    </div>
+  </main>
 
-      <p class="profile-help">
-        Completing your academic profile helps EqualLearn organize
-        your student records and classroom information.
-      </p>
-
-      <hr>
-
-      <p><strong>Course</strong><br>
-        Your enrolled academic program.
-      </p>
-
-      <p><strong>Year Level</strong><br>
-        Your current academic year.
-      </p>
-
-      <p><strong>Student ID</strong><br>
-        Your official institutional student number.
-      </p>
-
-      <p><strong>Verification</strong><br>
-        Your academic details may be reviewed by an administrator.
-      </p>
-
-    </aside>
-
-  </div>
-
-</main>
-
-<script type="module" src="../assets/js/student-profile.js"></script>
-<script type="module" src="../assets/js/ui-shell.js"></script>
-<script type="module" src="../assets/js/pwa.js"></script>
-<script type="module" src="../assets/js/theme.js"></script>
-
+  <script type="module" src="../assets/js/student-profile.js"></script>
+  <script type="module" src="../assets/js/ui-shell.js"></script>
+  <script type="module" src="../assets/js/pwa.js"></script>
+  <script type="module" src="../assets/js/theme.js"></script>
 </body>
 </html>
