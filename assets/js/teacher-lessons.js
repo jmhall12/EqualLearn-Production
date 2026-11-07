@@ -1,5 +1,9 @@
 
+<<<<<<< HEAD
 import { auth, db, storage } from "./firebase-config.js";
+=======
+import { auth, db } from "./firebase-config.js";
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
 
 import {
   onAuthStateChanged
@@ -9,7 +13,10 @@ import {
   collection,
   addDoc,
   getDocs,
+<<<<<<< HEAD
   getDoc,
+=======
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
   updateDoc,
   deleteDoc,
   doc,
@@ -19,12 +26,19 @@ import {
   where
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
+<<<<<<< HEAD
 import {
   ref,
   uploadBytesResumable,
   getDownloadURL,
   deleteObject
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-storage.js";
+=======
+
+// ==========================================
+// DOM ELEMENTS
+// ==========================================
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
 
 const $ = (id) => document.getElementById(id);
 
@@ -35,15 +49,51 @@ const closeModal = $("closeModal");
 const cancelBtn = $("cancelBtn");
 const saveLesson = $("saveLesson");
 const modalTitle = $("modalTitle");
+
 const moduleSelect = $("moduleSelect");
 const lessonTitle = $("lessonTitle");
 const lessonDescription = $("lessonDescription");
 const lessonFile = $("lessonFile");
 const videoUrl = $("videoUrl");
+
 const uploadStatus = $("uploadStatus");
 const currentFile = $("currentFile");
 
+<<<<<<< HEAD
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
+=======
+
+// ==========================================
+// CONFIGURATION
+// ==========================================
+
+// Firestore maximum document size is 1 MiB.
+// Base64 increases file size by approximately 33%.
+// Keep attachment size limited to leave room for
+// lesson title, description, and other document data.
+
+const MAX_FILE_SIZE = 500 * 1024;
+
+const ALLOWED_EXTENSIONS = new Set([
+  "pdf",
+  "doc",
+  "docx",
+  "ppt",
+  "pptx",
+  "xls",
+  "xlsx",
+  "txt",
+  "jpg",
+  "jpeg",
+  "png",
+  "webp"
+]);
+
+
+// ==========================================
+// STATE
+// ==========================================
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
 
 let currentUser = null;
 let currentRole = "";
@@ -54,6 +104,7 @@ let existingFileUrl = "";
 let existingFileName = "";
 let existingFilePath = "";
 
+<<<<<<< HEAD
 let modules = [];
 let lessons = [];
 
@@ -61,6 +112,23 @@ let activeUploadTask = null;
 let uploadStartedAt = 0;
 let lastProgressBytes = 0;
 let lastProgressTime = 0;
+=======
+let existingFileData = "";
+let existingFileMime = "";
+let existingFileSize = 0;
+
+let modules = [];
+let lessons = [];
+
+let activeReader = null;
+let uploadCancelled = false;
+let isBusy = false;
+
+
+// ==========================================
+// UPLOAD PANEL
+// ==========================================
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
 
 let isSaving = false;
 
@@ -75,7 +143,11 @@ uploadPanel.hidden = true;
 
 uploadPanel.innerHTML = `
   <div class="el-upload-head">
+<<<<<<< HEAD
     <strong>Uploading attachment</strong>
+=======
+    <strong id="lessonUploadTitle">Preparing attachment</strong>
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
     <span id="lessonUploadPercent">0%</span>
   </div>
 
@@ -84,24 +156,38 @@ uploadPanel.innerHTML = `
   </div>
 
   <div class="el-upload-meta" id="lessonUploadMeta">
+<<<<<<< HEAD
     Preparing upload…
+=======
+    Waiting for file...
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
   </div>
 
   <button
     type="button"
     class="el-upload-cancel"
+<<<<<<< HEAD
     id="lessonCancelUpload">
+=======
+    id="lessonCancelUpload"
+  >
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
     Cancel upload
   </button>
 `;
 
 uploadStatus?.insertAdjacentElement("afterend", uploadPanel);
 
+<<<<<<< HEAD
+=======
+const lessonUploadTitle = $("lessonUploadTitle");
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
 const lessonUploadPercent = $("lessonUploadPercent");
 const lessonUploadBar = $("lessonUploadBar");
 const lessonUploadMeta = $("lessonUploadMeta");
 const lessonCancelUpload = $("lessonCancelUpload");
 
+<<<<<<< HEAD
 lessonCancelUpload?.addEventListener("click", () => {
   if (!activeUploadTask) return;
 
@@ -111,14 +197,39 @@ lessonCancelUpload?.addEventListener("click", () => {
 // ========================================
 // AUTHENTICATION AND ROLE VERIFICATION
 // ========================================
+=======
+
+// ==========================================
+// AUTHENTICATION
+// ==========================================
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     window.location.href = "../login.html";
     return;
   }
+<<<<<<< HEAD
 
   currentUser = user;
+=======
+
+  currentUser = user;
+
+  await loadModules();
+  await loadLessons();
+});
+
+
+// ==========================================
+// MODULE LOADING
+// ==========================================
+
+async function loadModules() {
+  moduleSelect.innerHTML = `
+    <option value="">Select Module</option>
+  `;
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
 
   try {
     const profileSnap = await getDoc(
@@ -222,9 +333,11 @@ async function loadModules() {
   } catch (error) {
     console.error("Module loading error:", error);
 
-    moduleSelect.innerHTML =
-      `<option value="">Unable to load modules</option>`;
+    moduleSelect.innerHTML = `
+      <option value="">Unable to load modules</option>
+    `;
 
+<<<<<<< HEAD
     throw error;
   }
 }
@@ -232,6 +345,21 @@ async function loadModules() {
 // ========================================
 // LOAD LESSONS
 // ========================================
+=======
+    if (error.code === "failed-precondition") {
+      console.error(
+        "A Firestore composite index may be required:",
+        error.message
+      );
+    }
+  }
+}
+
+
+// ==========================================
+// LESSON LOADING
+// ==========================================
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
 
 async function loadLessons() {
   lessonList.innerHTML = `
@@ -243,6 +371,7 @@ async function loadLessons() {
   `;
 
   try {
+<<<<<<< HEAD
     const lessonsRef = collection(db, "lessons");
 
     const lessonsQuery =
@@ -258,12 +387,26 @@ async function loadLessons() {
           );
 
     const snapshot = await getDocs(lessonsQuery);
+=======
+    const snapshot = await getDocs(
+      collection(db, "lessons")
+    );
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
 
     lessons = snapshot.docs.map((item) => ({
       id: item.id,
       ...item.data()
     }));
 
+<<<<<<< HEAD
+=======
+    lessons.sort(
+      (a, b) =>
+        (b.createdAt?.seconds || 0) -
+        (a.createdAt?.seconds || 0)
+    );
+
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
     renderLessons();
 
   } catch (error) {
@@ -271,7 +414,11 @@ async function loadLessons() {
 
     lessonList.innerHTML = `
       <div class="message-box">
+<<<<<<< HEAD
         <strong>Unable to load lessons.</strong>
+=======
+        Unable to load lessons.
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
         <br>
         <small>${escapeHTML(error.message)}</small>
       </div>
@@ -279,9 +426,16 @@ async function loadLessons() {
   }
 }
 
+<<<<<<< HEAD
 // ========================================
 // RENDER LESSONS
 // ========================================
+=======
+
+// ==========================================
+// RENDER LESSONS
+// ==========================================
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
 
 function renderLessons() {
   if (!lessons.length) {
@@ -313,6 +467,7 @@ function renderLessons() {
     card.className = "lesson-card";
     card.dataset.id = lesson.id;
 
+<<<<<<< HEAD
     const fileHTML = lesson.fileUrl
       ? `
         <div class="file-info">
@@ -327,6 +482,42 @@ function renderLessons() {
         </div>
       `
       : "";
+=======
+    const hasFirestoreFile =
+      Boolean(lesson.fileDataBase64);
+
+    const hasLegacyFile =
+      Boolean(lesson.fileUrl);
+
+    let fileHTML = "";
+
+    if (hasFirestoreFile || hasLegacyFile) {
+      fileHTML = `
+        <div class="file-info">
+          <strong>
+            ${escapeHTML(lesson.fileName || "Lesson File")}
+          </strong>
+
+          <br>
+
+          <a
+            href="${escapeAttribute(getLessonFileURL(lesson))}"
+            download="${escapeAttribute(lesson.fileName || "lesson-file")}"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Open / Download attachment →
+          </a>
+
+          ${
+            hasFirestoreFile
+              ? `<small>Stored in Firestore</small>`
+              : `<small>Legacy attachment</small>`
+          }
+        </div>
+      `;
+    }
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
 
     const videoHTML = lesson.videoUrl
       ? `
@@ -334,7 +525,12 @@ function renderLessons() {
           <a
             href="${escapeAttribute(lesson.videoUrl)}"
             target="_blank"
+<<<<<<< HEAD
             rel="noopener noreferrer">
+=======
+            rel="noopener noreferrer"
+          >
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
             Watch video →
           </a>
         </div>
@@ -346,7 +542,13 @@ function renderLessons() {
         ${escapeHTML(moduleName)}
       </span>
 
+<<<<<<< HEAD
       <h2>${escapeHTML(lesson.title || "Untitled Lesson")}</h2>
+=======
+      <h2>
+        ${escapeHTML(lesson.title || "Untitled Lesson")}
+      </h2>
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
 
       <p class="lesson-description">
         ${escapeHTML(lesson.description || "No description.")}
@@ -372,12 +574,42 @@ function renderLessons() {
   lessonList.replaceChildren(fragment);
 }
 
+<<<<<<< HEAD
 // ========================================
 // LESSON ACTIONS
 // ========================================
 
 lessonList?.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-action]");
+=======
+
+// ==========================================
+// ATTACHMENT DATA URL
+// ==========================================
+
+function getLessonFileURL(lesson) {
+  if (lesson.fileDataBase64) {
+    const mime =
+      lesson.fileMimeType ||
+      "application/octet-stream";
+
+    return `data:${mime};base64,${lesson.fileDataBase64}`;
+  }
+
+  // Support old Storage-based lesson records.
+  return lesson.fileUrl || "";
+}
+
+
+// ==========================================
+// LESSON CARD ACTIONS
+// ==========================================
+
+lessonList?.addEventListener("click", (event) => {
+  const button = event.target.closest(
+    "button[data-action]"
+  );
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
 
   if (!button) return;
 
@@ -394,9 +626,16 @@ lessonList?.addEventListener("click", (event) => {
   }
 });
 
+<<<<<<< HEAD
 // ========================================
 // OPEN AND CLOSE MODAL
 // ========================================
+=======
+
+// ==========================================
+// MODAL EVENTS
+// ==========================================
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
 
 openModal?.addEventListener("click", () => {
   resetForm();
@@ -405,12 +644,29 @@ openModal?.addEventListener("click", () => {
 
   modal.classList.add("show");
 
+<<<<<<< HEAD
   requestAnimationFrame(() => lessonTitle.focus());
 });
 
 closeModal?.addEventListener("click", closeLessonModal);
 
 cancelBtn?.addEventListener("click", closeLessonModal);
+=======
+  requestAnimationFrame(() => {
+    lessonTitle.focus();
+  });
+});
+
+closeModal?.addEventListener(
+  "click",
+  closeLessonModal
+);
+
+cancelBtn?.addEventListener(
+  "click",
+  closeLessonModal
+);
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
 
 modal?.addEventListener("click", (event) => {
   if (event.target === modal) {
@@ -427,9 +683,16 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
+<<<<<<< HEAD
 // ========================================
 // FILE SELECTION
 // ========================================
+=======
+
+// ==========================================
+// FILE SELECTION
+// ==========================================
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
 
 lessonFile?.addEventListener("change", () => {
   const file = lessonFile.files?.[0];
@@ -442,9 +705,16 @@ lessonFile?.addEventListener("change", () => {
   try {
     validateFile(file);
 
+<<<<<<< HEAD
     showLessonStatus(
       `${file.name} • ${formatFileSize(file.size)} • ready to upload`
     );
+=======
+    uploadStatus.classList.remove("error");
+
+    uploadStatus.textContent =
+      `${file.name} • ${formatFileSize(file.size)} • ready to save`;
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
 
   } catch (error) {
     lessonFile.value = "";
@@ -453,6 +723,7 @@ lessonFile?.addEventListener("change", () => {
   }
 });
 
+<<<<<<< HEAD
 // ========================================
 // EDIT LESSON
 // ========================================
@@ -544,14 +815,114 @@ saveLesson?.addEventListener("click", async () => {
       true
     );
   }
+=======
+
+// ==========================================
+// EDIT LESSON
+// ==========================================
+
+function editLesson(id) {
+  const lesson = lessons.find(
+    (item) => item.id === id
+  );
+
+  if (!lesson) return;
+
+  resetForm();
+
+  editingLessonId = id;
+
+  modalTitle.textContent = "Edit Lesson";
+
+  moduleSelect.value = lesson.moduleId || "";
+
+  lessonTitle.value = lesson.title || "";
+
+  lessonDescription.value =
+    lesson.description || "";
+
+  videoUrl.value = lesson.videoUrl || "";
+
+  existingFileUrl = lesson.fileUrl || "";
+  existingFileName = lesson.fileName || "";
+  existingFilePath = lesson.filePath || "";
+
+  existingFileData =
+    lesson.fileDataBase64 || "";
+
+  existingFileMime =
+    lesson.fileMimeType || "";
+
+  existingFileSize =
+    lesson.fileSize || 0;
+
+  if (
+    existingFileName ||
+    existingFileUrl ||
+    existingFileData
+  ) {
+    currentFile.style.display = "block";
+
+    currentFile.innerHTML = `
+      <strong>Current attachment</strong>
+      <br>
+
+      ${escapeHTML(existingFileName || "Lesson file")}
+
+      ${
+        existingFileData || existingFileUrl
+          ? `
+            <br>
+            <a
+              href="${escapeAttribute(
+                getLessonFileURL(lesson)
+              )}"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Open file →
+            </a>
+          `
+          : ""
+      }
+
+      <br>
+
+      <small>
+        Select a new file only to replace it.
+      </small>
+    `;
+  }
+
+  modal.classList.add("show");
+
+  requestAnimationFrame(() => {
+    lessonTitle.focus();
+  });
+}
+
+
+// ==========================================
+// SAVE LESSON
+// ==========================================
+
+saveLesson?.addEventListener("click", async () => {
+  if (isBusy) return;
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
 
   const moduleId = moduleSelect.value;
+
   const titleValue = lessonTitle.value.trim();
-  const descriptionValue = lessonDescription.value.trim();
+
+  const descriptionValue =
+    lessonDescription.value.trim();
+
   const youtube = videoUrl.value.trim();
+
   const file = lessonFile.files?.[0] || null;
 
   if (!moduleId) {
+<<<<<<< HEAD
     return showLessonStatus("Please select a module.", true);
   }
 
@@ -573,6 +944,17 @@ saveLesson?.addEventListener("click", async () => {
   ) {
     return showLessonStatus(
       "You are not authorized to add lessons to this module.",
+=======
+    return showLessonStatus(
+      "Please select a module.",
+      true
+    );
+  }
+
+  if (!titleValue) {
+    return showLessonStatus(
+      "Please enter the lesson title.",
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
       true
     );
   }
@@ -581,6 +963,7 @@ saveLesson?.addEventListener("click", async () => {
     try {
       validateFile(file);
     } catch (error) {
+<<<<<<< HEAD
       return showLessonStatus(error.message, true);
     }
   }
@@ -594,38 +977,108 @@ saveLesson?.addEventListener("click", async () => {
   setBusy(true, file ? "Preparing upload…" : "Saving lesson…");
 
   const oldPath = existingFilePath;
+=======
+      return showLessonStatus(
+        error.message,
+        true
+      );
+    }
+  }
+
+  setBusy(true, file
+    ? "Preparing attachment..."
+    : "Saving lesson..."
+  );
+
+  uploadCancelled = false;
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
 
   try {
-    let fileUrl = existingFileUrl;
+    let fileDataBase64 = existingFileData;
+    let fileMimeType = existingFileMime;
     let fileName = existingFileName;
+    let fileSize = existingFileSize;
+
+    let fileUrl = existingFileUrl;
     let filePath = existingFilePath;
 
     if (file) {
+<<<<<<< HEAD
       const upload = await uploadLessonFile(file);
 
       fileUrl = upload.url;
+=======
+      const attachment = await readFileAsBase64(file);
+
+      if (uploadCancelled) {
+        throw new Error("Upload cancelled.");
+      }
+
+      fileDataBase64 = attachment.base64;
+      fileMimeType = attachment.mime;
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
       fileName = file.name;
-      filePath = upload.path;
+      fileSize = file.size;
+
+      // New Firestore attachments no longer use Storage URLs.
+      fileUrl = "";
+      filePath = "";
     }
 
+<<<<<<< HEAD
     const moduleName =
       selectedModule.title ||
       selectedModule.name ||
+=======
+    if (uploadCancelled) {
+      throw new Error("Upload cancelled.");
+    }
+
+    const selectedModule = modules.find(
+      (item) => item.id === moduleId
+    );
+
+    const moduleName =
+      selectedModule?.title ||
+      selectedModule?.name ||
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
       "";
 
     const payload = {
       moduleId,
       moduleName,
+<<<<<<< HEAD
       title: titleValue,
       description: descriptionValue,
       fileUrl,
       fileName,
       filePath,
+=======
+
+      title: titleValue,
+      description: descriptionValue,
+
+      fileUrl,
+      filePath,
+      fileName,
+
+      fileDataBase64,
+      fileMimeType,
+      fileSize,
+
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
       videoUrl: youtube,
+
       updatedAt: serverTimestamp()
     };
 
+    setUploadProgress(
+      95,
+      "Saving lesson to Firestore..."
+    );
+
     if (editingLessonId) {
+<<<<<<< HEAD
       const lessonRef = doc(
         db,
         "lessons",
@@ -651,6 +1104,13 @@ saveLesson?.addEventListener("click", async () => {
 
       await updateDoc(lessonRef, payload);
 
+=======
+      await updateDoc(
+        doc(db, "lessons", editingLessonId),
+        payload
+      );
+
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
       const index = lessons.findIndex(
         (item) => item.id === editingLessonId
       );
@@ -675,13 +1135,17 @@ saveLesson?.addEventListener("click", async () => {
       lessons.unshift({
         id: created.id,
         ...payload,
+<<<<<<< HEAD
         createdBy: currentUser.uid,
+=======
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
         createdAt: {
           seconds: Math.floor(Date.now() / 1000)
         }
       });
     }
 
+<<<<<<< HEAD
     if (file && oldPath && oldPath !== filePath) {
       deleteObject(
         ref(storage, oldPath)
@@ -689,6 +1153,12 @@ saveLesson?.addEventListener("click", async () => {
         console.warn("Old lesson file cleanup skipped:", error);
       });
     }
+=======
+    setUploadProgress(
+      100,
+      "Lesson saved successfully."
+    );
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
 
     renderLessons();
 
@@ -705,14 +1175,21 @@ saveLesson?.addEventListener("click", async () => {
     );
 
   } finally {
+<<<<<<< HEAD
     activeUploadTask = null;
 
     isSaving = false;
+=======
+    activeReader = null;
+
+    uploadCancelled = false;
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
 
     setBusy(false);
   }
 });
 
+<<<<<<< HEAD
 // ========================================
 // UPLOAD LESSON FILE
 // ========================================
@@ -840,6 +1317,130 @@ function updateLessonProgress(bytes, total) {
   lastProgressBytes = bytes;
   lastProgressTime = now;
 }
+=======
+
+// ==========================================
+// READ FILE AND CONVERT TO BASE64
+// ==========================================
+
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    activeReader = reader;
+
+    uploadPanel.hidden = false;
+
+    lessonUploadTitle.textContent =
+      "Reading attachment";
+
+    setUploadProgress(
+      0,
+      `Preparing ${file.name}...`
+    );
+
+    reader.onprogress = (event) => {
+      if (!event.lengthComputable) return;
+
+      const percent = Math.round(
+        (event.loaded / event.total) * 85
+      );
+
+      setUploadProgress(
+        percent,
+        `${formatFileSize(event.loaded)} of ${formatFileSize(event.total)}`
+      );
+    };
+
+    reader.onload = () => {
+      if (uploadCancelled) {
+        reject(new Error("Upload cancelled."));
+        return;
+      }
+
+      const result = String(reader.result || "");
+
+      const parts = result.split(",");
+
+      const base64 = parts[1];
+
+      if (!base64) {
+        reject(
+          new Error("Unable to convert attachment.")
+        );
+
+        return;
+      }
+
+      resolve({
+        base64,
+        mime: file.type || "application/octet-stream"
+      });
+    };
+
+    reader.onerror = () => {
+      reject(
+        new Error("Unable to read the selected file.")
+      );
+    };
+
+    reader.onabort = () => {
+      reject(
+        new Error("Upload cancelled.")
+      );
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+
+
+// ==========================================
+// CANCEL UPLOAD
+// ==========================================
+
+lessonCancelUpload?.addEventListener("click", () => {
+  if (!isBusy) return;
+
+  uploadCancelled = true;
+
+  if (activeReader && activeReader.readyState === FileReader.LOADING) {
+    activeReader.abort();
+  } else {
+    showLessonStatus(
+      "The file is already being saved to Firestore. Please wait for the operation to finish.",
+      true
+    );
+  }
+});
+
+
+// ==========================================
+// UPLOAD PROGRESS DISPLAY
+// ==========================================
+
+function setUploadProgress(percent, text) {
+  const safePercent = Math.max(
+    0,
+    Math.min(100, percent)
+  );
+
+  uploadPanel.hidden = false;
+
+  lessonUploadBar.style.width =
+    `${safePercent}%`;
+
+  lessonUploadPercent.textContent =
+    `${Math.round(safePercent)}%`;
+
+  lessonUploadMeta.textContent = text;
+}
+
+
+// ==========================================
+// DELETE LESSON
+// ==========================================
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
 
 // ========================================
 // DELETE LESSON
@@ -852,6 +1453,7 @@ async function deleteLesson(id) {
 
   if (!lesson) return;
 
+<<<<<<< HEAD
   if (
     currentRole !== "admin" &&
     lesson.createdBy !== currentUser.uid
@@ -883,6 +1485,18 @@ async function deleteLesson(id) {
     }
 
     await deleteDoc(lessonRef);
+=======
+  const confirmed = confirm(
+    `Delete "${lesson.title || "this lesson"}"?`
+  );
+
+  if (!confirmed) return;
+
+  try {
+    await deleteDoc(
+      doc(db, "lessons", id)
+    );
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
 
     lessons = lessons.filter(
       (item) => item.id !== id
@@ -890,6 +1504,7 @@ async function deleteLesson(id) {
 
     renderLessons();
 
+<<<<<<< HEAD
     if (data.filePath) {
       deleteObject(
         ref(storage, data.filePath)
@@ -925,13 +1540,57 @@ function closeLessonModal(force = false) {
   }
 
   modal.classList.remove("show");
+=======
+  } catch (error) {
+    console.error("Delete lesson error:", error);
+
+    alert(
+      error.message || "Unable to delete lesson."
+    );
+  }
+}
+
+
+// ==========================================
+// CLOSE MODAL
+// ==========================================
+
+function closeLessonModal(force = false) {
+  if (!force && isBusy) {
+    const confirmed = confirm(
+      "An operation is still running. Cancel the file reading and close?"
+    );
+
+    if (!confirmed) return;
+
+    uploadCancelled = true;
+
+    if (
+      activeReader &&
+      activeReader.readyState === FileReader.LOADING
+    ) {
+      activeReader.abort();
+    }
+
+    return;
+  }
+
+  modal?.classList.remove("show");
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
 
   resetForm();
 }
 
+<<<<<<< HEAD
 // ========================================
 // RESET FORM
 // ========================================
+=======
+
+// ==========================================
+// RESET FORM
+// ==========================================
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
 
 function resetForm() {
   editingLessonId = null;
@@ -940,6 +1599,7 @@ function resetForm() {
   existingFileName = "";
   existingFilePath = "";
 
+<<<<<<< HEAD
   moduleSelect.value = "";
   lessonTitle.value = "";
   lessonDescription.value = "";
@@ -961,21 +1621,70 @@ function resetForm() {
     "Preparing upload…";
 
   activeUploadTask = null;
+=======
+  existingFileData = "";
+  existingFileMime = "";
+  existingFileSize = 0;
+
+  if (moduleSelect) moduleSelect.value = "";
+
+  if (lessonTitle) lessonTitle.value = "";
+
+  if (lessonDescription) {
+    lessonDescription.value = "";
+  }
+
+  if (lessonFile) lessonFile.value = "";
+
+  if (videoUrl) videoUrl.value = "";
+
+  if (currentFile) {
+    currentFile.style.display = "none";
+    currentFile.innerHTML = "";
+  }
+
+  if (uploadStatus) {
+    uploadStatus.textContent = "";
+    uploadStatus.classList.remove("error");
+  }
+
+  uploadPanel.hidden = true;
+
+  setUploadProgress(
+    0,
+    "Waiting for file..."
+  );
+
+  activeReader = null;
+  uploadCancelled = false;
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
 
   setBusy(false);
 }
 
+<<<<<<< HEAD
 // ========================================
 // BUSY STATE
 // ========================================
 
 function setBusy(busy, label = "Saving…") {
+=======
+
+// ==========================================
+// BUSY STATE
+// ==========================================
+
+function setBusy(busy, label = "Saving...") {
+  isBusy = busy;
+
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
   [
     moduleSelect,
     lessonTitle,
     lessonDescription,
     lessonFile,
     videoUrl,
+<<<<<<< HEAD
     closeModal,
     cancelBtn
   ].forEach((element) => {
@@ -993,8 +1702,45 @@ function setBusy(busy, label = "Saving…") {
 // ========================================
 // STATUS MESSAGE
 // ========================================
+=======
+    closeModal
+  ].forEach((element) => {
+    if (element) {
+      element.disabled = busy;
+    }
+  });
+
+  if (cancelBtn) {
+    cancelBtn.disabled = busy;
+  }
+
+  if (saveLesson) {
+    saveLesson.disabled = busy;
+
+    saveLesson.textContent = busy
+      ? label
+      : "Save Lesson";
+  }
+
+  modal?.classList.toggle(
+    "is-busy",
+    busy
+  );
+
+  if (lessonCancelUpload) {
+    lessonCancelUpload.disabled = !busy;
+  }
+}
+
+
+// ==========================================
+// STATUS MESSAGE
+// ==========================================
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
 
 function showLessonStatus(text, error = false) {
+  if (!uploadStatus) return;
+
   uploadStatus.textContent = text;
 
   uploadStatus.classList.toggle(
@@ -1003,6 +1749,7 @@ function showLessonStatus(text, error = false) {
   );
 }
 
+<<<<<<< HEAD
 // ========================================
 // VALIDATE FILE
 // ========================================
@@ -1015,10 +1762,34 @@ function validateFile(file) {
   }
 
   const ext = file.name
+=======
+
+// ==========================================
+// FILE VALIDATION
+// ==========================================
+
+function validateFile(file) {
+  if (!file) {
+    throw new Error("Please select a file.");
+  }
+
+  if (file.size === 0) {
+    throw new Error("The selected file is empty.");
+  }
+
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error(
+      `File is too large. Maximum allowed size is ${formatFileSize(MAX_FILE_SIZE)}.`
+    );
+  }
+
+  const extension = file.name
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
     .split(".")
     .pop()
     ?.toLowerCase();
 
+<<<<<<< HEAD
   const allowed = new Set([
     "pdf",
     "doc",
@@ -1035,12 +1806,16 @@ function validateFile(file) {
   ]);
 
   if (!allowed.has(ext)) {
+=======
+  if (!ALLOWED_EXTENSIONS.has(extension)) {
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
     throw new Error(
       "This file type is not supported."
     );
   }
 }
 
+<<<<<<< HEAD
 // ========================================
 // VALIDATE YOUTUBE URL
 // ========================================
@@ -1107,10 +1882,55 @@ function formatEta(seconds) {
 // ========================================
 // FORMAT FILE SIZE
 // ========================================
+=======
+
+// ==========================================
+// ERROR HANDLING
+// ==========================================
+
+function readableUploadError(error) {
+  if (
+    uploadCancelled ||
+    error?.message === "Upload cancelled."
+  ) {
+    return "Attachment reading cancelled. The lesson was not saved.";
+  }
+
+  if (
+    error?.code === "permission-denied" ||
+    error?.code === "firestore/permission-denied"
+  ) {
+    return "Firestore permission denied. Check your Firestore Rules.";
+  }
+
+  if (
+    error?.code === "resource-exhausted"
+  ) {
+    return "Firestore document or quota limit reached. Try a smaller attachment.";
+  }
+
+  if (
+    error?.code === "invalid-argument"
+  ) {
+    return "The attachment or lesson data is too large or invalid.";
+  }
+
+  return (
+    error?.message ||
+    "Unable to save the lesson."
+  );
+}
+
+
+// ==========================================
+// FILE SIZE FORMAT
+// ==========================================
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
 
 function formatFileSize(bytes) {
   if (!bytes) return "0 B";
 
+<<<<<<< HEAD
   const units = ["B", "KB", "MB", "GB"];
 
   const i = Math.min(
@@ -1145,3 +1965,46 @@ function escapeAttribute(value) {
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;");
 }
+=======
+  const units = [
+    "B",
+    "KB",
+    "MB",
+    "GB"
+  ];
+
+  const index = Math.min(
+    units.length - 1,
+    Math.floor(
+      Math.log(bytes) / Math.log(1024)
+    )
+  );
+
+  return `${(
+    bytes / 1024 ** index
+  ).toFixed(index ? 1 : 0)} ${units[index]}`;
+}
+
+
+// ==========================================
+// HTML ESCAPING
+// ==========================================
+
+function escapeHTML(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+
+function escapeAttribute(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+>>>>>>> faae2a94bfd09f90b79508f5fcef52694676c81f
