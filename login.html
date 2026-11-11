@@ -21,638 +21,884 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 
-  <style>
-    :root {
-      --page: #e9eaf5;
-      --page-light: #f0f1fa;
-      --surface: #e9eaf5;
-      --text: #252744;
-      --muted: #898ba8;
-      --purple: #7063e9;
-      --purple-dark: #574bd0;
-      --purple-soft: #a99fff;
-      --green: #42a985;
-      --danger: #bd535a;
-      --success: #318b69;
-      --shadow-dark: #c9cad7;
-      --shadow-light: #ffffff;
-      --radius: 25px;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html {
-      min-height: 100%;
-    }
-
-    body {
-      min-height: 100vh;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      align-items: stretch;
-      justify-content: center;
-      overflow-x: hidden;
-      color: var(--text);
-      background:
-        radial-gradient(circle at 12% 15%, rgba(255,255,255,.75), transparent 28%),
-        radial-gradient(circle at 85% 80%, rgba(164,154,255,.15), transparent 32%),
-        var(--page);
-      font-family: "DM Sans", sans-serif;
-    }
-
-    a, button, input {
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    a {
-      text-decoration: none;
-    }
-
-    button, input {
-      font: inherit;
-    }
-
-    .el-public {
-      width: 100%;
-      min-height: 100vh;
-      display: grid;
-      grid-template-columns: 1.02fr .98fr;
-    }
-
-    /* LEFT BRANDING PANEL */
-
-    .el-hero {
-      position: relative;
-      min-height: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      overflow: hidden;
-      padding: clamp(38px, 7vw, 105px);
-      color: white;
-      background:
-        radial-gradient(circle at 85% 12%, rgba(255,255,255,.20), transparent 31%),
-        radial-gradient(circle at 10% 90%, rgba(158,143,255,.35), transparent 36%),
-        linear-gradient(145deg, #6257dc, #786ce9 54%, #5145c4);
-    }
-
-    .el-hero::before,
-    .el-hero::after {
-      content: "";
-      position: absolute;
-      pointer-events: none;
-      border: 1px solid rgba(255,255,255,.16);
-      border-radius: 50%;
-    }
-
-    .el-hero::before {
-      width: 490px;
-      height: 490px;
-      right: -200px;
-      top: -175px;
-    }
-
-    .el-hero::after {
-      width: 355px;
-      height: 355px;
-      right: -125px;
-      top: -105px;
-    }
-
-    .el-wordmark {
-      position: absolute;
-      top: 38px;
-      left: clamp(35px, 7vw, 100px);
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      color: white;
-      font-family: "Plus Jakarta Sans", sans-serif;
-      font-size: 23px;
-      font-weight: 800;
-      letter-spacing: -.7px;
-    }
-
-    .el-wordmark-mark {
-      width: 45px;
-      height: 45px;
-      display: grid;
-      place-items: center;
-      overflow: hidden;
-      border-radius: 14px;
-      background: rgba(255,255,255,.95);
-      box-shadow:
-        5px 5px 12px rgba(40,31,120,.18),
-        -4px -4px 12px rgba(255,255,255,.18);
-    }
-
-    .el-wordmark-mark img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .el-hero-content {
-      position: relative;
-      z-index: 2;
-      max-width: 570px;
-      margin-top: 35px;
-    }
-
-    .el-hero-tag {
-      width: fit-content;
-      display: inline-flex;
-      align-items: center;
-      gap: 9px;
-      padding: 10px 15px;
-      border: 1px solid rgba(255,255,255,.26);
-      border-radius: 30px;
-      background: rgba(255,255,255,.13);
-      box-shadow:
-        inset 2px 2px 5px rgba(255,255,255,.09),
-        4px 4px 12px rgba(40,31,120,.09);
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 1.2px;
-      text-transform: uppercase;
-    }
-
-    .el-hero h1 {
-      max-width: 530px;
-      margin: 27px 0 18px;
-      font-family: "Plus Jakarta Sans", sans-serif;
-      font-size: clamp(40px, 5vw, 62px);
-      font-weight: 800;
-      line-height: 1.12;
-      letter-spacing: -2.5px;
-    }
-
-    .el-hero h1 span {
-      color: #d9d2ff;
-    }
-
-    .el-hero-description {
-      max-width: 460px;
-      margin: 0;
-      color: rgba(255,255,255,.82);
-      font-size: 15px;
-      line-height: 1.9;
-    }
-
-    .el-feature-list {
-      display: grid;
-      gap: 19px;
-      margin-top: 46px;
-    }
-
-    .el-feature {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-
-    .el-feature-icon {
-      flex-shrink: 0;
-      width: 46px;
-      height: 46px;
-      display: grid;
-      place-items: center;
-      border: 1px solid rgba(255,255,255,.22);
-      border-radius: 15px;
-      background: rgba(255,255,255,.13);
-      box-shadow:
-        5px 5px 12px rgba(40,31,120,.13),
-        -4px -4px 12px rgba(255,255,255,.12);
-    }
-
-    .el-feature-icon svg {
-      width: 21px;
-      height: 21px;
-    }
-
-    .el-feature strong {
-      display: block;
-      margin-bottom: 5px;
-      font-size: 13px;
-    }
-
-    .el-feature span {
-      color: rgba(255,255,255,.75);
-      font-size: 11px;
-      line-height: 1.5;
-    }
-
-    /* RIGHT LOGIN PANEL */
-
-    .el-auth-panel {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 50px clamp(20px, 5vw, 70px);
-      background: var(--page);
-    }
-
-    .el-auth-card {
-      width: 100%;
-      max-width: 440px;
-      padding: clamp(27px, 4vw, 43px);
-      border: 1px solid rgba(255,255,255,.65);
-      border-radius: 27px;
-      background: var(--surface);
-      box-shadow:
-        14px 14px 30px var(--shadow-dark),
-        -14px -14px 30px var(--shadow-light);
-      animation: cardAppear .65s ease both;
-    }
-
-    @keyframes cardAppear {
-      from {
-        opacity: 0;
-        transform: translateY(16px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* BACK TO HOME */
-
-    .el-back {
-      display: inline-flex;
-      align-items: center;
-      gap: 9px;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 700;
-      transition: color .2s, transform .2s;
-    }
-
-    .el-back:hover {
-      color: var(--purple);
-      transform: translateX(-3px);
-    }
-
-    .el-back:focus-visible,
-    .el-forgot-link:focus-visible,
-    .el-auth-footer a:focus-visible {
-      outline: 3px solid rgba(112,99,233,.35);
-      outline-offset: 4px;
-      border-radius: 5px;
-    }
-
-    /* LOGIN HEADING */
-
-    .el-auth-heading {
-      margin-top: 38px;
-      margin-bottom: 31px;
-    }
-
-    .el-auth-heading h2 {
-      margin: 0 0 10px;
-      color: var(--text);
-      font-family: "Plus Jakarta Sans", sans-serif;
-      font-size: 31px;
-      font-weight: 800;
-      letter-spacing: -1.2px;
-    }
-
-    .el-auth-heading p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.7;
-    }
-
-    .el-heading-mark {
-      width: 47px;
-      height: 47px;
-      display: grid;
-      place-items: center;
-      margin-bottom: 22px;
-      border-radius: 15px;
-      color: var(--purple);
-      background: var(--surface);
-      box-shadow:
-        6px 6px 12px var(--shadow-dark),
-        -6px -6px 12px var(--shadow-light);
-      font-size: 21px;
-    }
-
-    /* FORM FIELDS */
-
-    .el-field {
-      margin-bottom: 21px;
-    }
-
-    .el-field label {
-      display: block;
-      margin-bottom: 10px;
-      color: #454762;
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    .el-input-wrap {
-      position: relative;
-    }
-
-    .el-field input {
-      width: 100%;
-      height: 54px;
-      padding: 0 17px;
-      border: 1px solid rgba(255,255,255,.48);
-      border-radius: 14px;
-      outline: none;
-      color: var(--text);
-      background: var(--page);
-      box-shadow:
-        inset 5px 5px 10px #cecfdb,
-        inset -5px -5px 10px #ffffff;
-      font-family: inherit;
-      font-size: 13px;
-      transition: box-shadow .25s, border-color .25s, background .25s;
-    }
-
-    .el-field input::placeholder {
-      color: #a3a5bb;
-    }
-
-    .el-field input:focus {
-      border-color: rgba(112,99,233,.55);
-      background: #f0f0fa;
-      box-shadow:
-        inset 3px 3px 7px #d0d1dd,
-        inset -3px -3px 7px #ffffff,
-        0 0 0 3px rgba(112,99,233,.10);
-    }
-
-    .el-field input:disabled {
-      opacity: .7;
-      cursor: not-allowed;
-    }
-
-    /* FORGOT PASSWORD */
-
-    .el-forgot-row {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: -3px;
-      margin-bottom: 23px;
-    }
-
-    .el-forgot-link {
-      color: var(--purple-dark);
-      font-size: 12px;
-      font-weight: 800;
-      transition: color .2s;
-    }
-
-    .el-forgot-link:hover {
-      color: #4235b8;
-      text-decoration: underline;
-    }
-
-    /* LOGIN BUTTON */
-
-    .el-login-btn {
-      position: relative;
-      width: 100%;
-      min-height: 55px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 11px;
-      border: 1px solid rgba(255,255,255,.24);
-      border-radius: 15px;
-      color: white;
-      background: linear-gradient(120deg, #7063e9, #897af3);
-      box-shadow:
-        7px 7px 15px rgba(112,99,233,.22),
-        -5px -5px 12px rgba(255,255,255,.7);
-      font-family: inherit;
-      font-size: 13px;
-      font-weight: 800;
-      cursor: pointer;
-      transition: transform .2s, box-shadow .2s, opacity .2s;
-    }
-
-    .el-login-btn:hover {
-      transform: translateY(-2px);
-      box-shadow:
-        9px 10px 19px rgba(112,99,233,.27),
-        -5px -5px 12px rgba(255,255,255,.7);
-    }
-
-    .el-login-btn:active {
-      transform: translateY(1px);
-      box-shadow:
-        inset 3px 3px 7px rgba(44,35,140,.25),
-        inset -3px -3px 7px rgba(255,255,255,.12);
-    }
-
-    .el-login-btn:disabled {
-      opacity: .65;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .el-login-btn svg {
-      width: 19px;
-      height: 19px;
-    }
-
-    /* MESSAGE */
-
-    #message:empty {
-      display: none;
-    }
-
-    #message {
-      overflow-wrap: anywhere;
-      white-space: pre-line;
-      margin-bottom: 18px;
-      padding: 13px 15px;
-      border-radius: 12px;
-      font-size: 12px;
-      line-height: 1.6;
-      box-shadow:
-        inset 3px 3px 6px rgba(0,0,0,.035),
-        inset -3px -3px 6px rgba(255,255,255,.65);
-    }
-
-    #message.error {
-      display: block;
-      color: var(--danger);
-      border: 1px solid rgba(189,83,90,.15);
-      background: #f5e7e9;
-    }
-
-    #message.success {
-      display: block;
-      color: var(--success);
-      border: 1px solid rgba(49,139,105,.15);
-      background: #e2f2eb;
-    }
-
-    /* REGISTER FOOTER */
-
-    .el-auth-footer {
-      margin-top: 29px;
-      padding-top: 22px;
-      border-top: 1px solid rgba(255,255,255,.7);
-      text-align: center;
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .el-auth-footer a {
-      color: var(--purple-dark);
-      font-weight: 800;
-    }
-
-    .el-auth-footer a:hover {
-      text-decoration: underline;
-    }
-
-    /* SECURITY NOTE */
-
-    .el-security-note {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      margin-top: 25px;
-      color: #999bb0;
-      font-size: 10px;
-      font-weight: 600;
-    }
-
-    .el-security-note svg {
-      width: 14px;
-      height: 14px;
-      color: var(--green);
-    }
-
-    /* RESPONSIVE */
-
-    @media (max-width: 850px) {
-      .el-public {
-        grid-template-columns: 1fr;
-      }
-
-      .el-hero {
-        min-height: 340px;
-        padding: 95px 35px 43px;
-      }
-
-      .el-wordmark {
-        top: 25px;
-        left: 35px;
-      }
-
-      .el-hero-content {
-        margin-top: 0;
-      }
-
-      .el-hero h1 {
-        max-width: 600px;
-        font-size: 43px;
-      }
-
-      .el-hero-description {
-        font-size: 14px;
-      }
-
-      .el-feature-list {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 13px;
-        margin-top: 28px;
-      }
-
-      .el-feature {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 10px;
-      }
-
-      .el-auth-panel {
-        padding: 48px 22px 65px;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .el-hero {
-        min-height: 300px;
-        padding: 86px 24px 30px;
-      }
-
-      .el-wordmark {
-        left: 24px;
-      }
-
-      .el-hero h1 {
-        font-size: 35px;
-        letter-spacing: -1.5px;
-      }
-
-      .el-hero-description {
-        font-size: 12px;
-        line-height: 1.75;
-      }
-
-      .el-feature-list {
-        grid-template-columns: 1fr;
-        gap: 13px;
-        margin-top: 25px;
-      }
-
-      .el-feature {
-        flex-direction: row;
-        align-items: center;
-      }
-
-      .el-feature-icon {
-        width: 38px;
-        height: 38px;
-      }
-
-      .el-auth-panel {
-        padding: 30px 16px 45px;
-      }
-
-      .el-auth-card {
-        padding: 27px 21px;
-        border-radius: 22px;
-      }
-
-      .el-auth-heading {
-        margin-top: 30px;
-      }
-
-      .el-auth-heading h2 {
-        font-size: 28px;
-      }
-
-      .el-field input {
-        height: 52px;
-      }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      *,
-      *::before,
-      *::after {
-        scroll-behavior: auto !important;
-        transition-duration: .01ms !important;
-        animation-duration: .01ms !important;
-        animation-iteration-count: 1 !important;
-      }
-    }
-  </style>
+
+  
+<style>
+/* =========================================
+   EQUALLEARN — SOFT CLAYMORPHISM
+   Muted Lavender / Soft 3D / Responsive
+========================================= */
+
+:root {
+  color-scheme: light;
+
+  --page: #e8e8f1;
+  --page-light: #efeff6;
+  --surface: #ebebf4;
+  --surface-raised: #efeff6;
+
+  --text: #292940;
+  --muted: #77788f;
+  --muted-light: #999aaf;
+
+  --purple: #7668df;
+  --purple-dark: #5d51c4;
+  --purple-soft: #c1b9f4;
+
+  --green: #42a985;
+  --danger: #bd535a;
+  --success: #318b69;
+
+  --shadow-dark: #c9c9d5;
+  --shadow-light: #f5f5fa;
+
+  --radius: 25px;
+}
+
+/* RESET */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+
+  overflow-x: hidden;
+
+  color: var(--text);
+
+  background:
+    radial-gradient(
+      circle at 12% 12%,
+      rgba(255,255,255,.45),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 88% 85%,
+      rgba(174,165,228,.13),
+      transparent 35%
+    ),
+    var(--page);
+
+  font-family: "DM Sans", sans-serif;
+}
+
+a,
+button,
+input {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a {
+  text-decoration: none;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+/* =========================================
+   MAIN LAYOUT
+========================================= */
+
+.el-public {
+  width: 100%;
+  min-height: 100vh;
+
+  display: grid;
+  grid-template-columns: 1.02fr .98fr;
+}
+
+/* =========================================
+   LEFT BRANDING PANEL
+========================================= */
+
+.el-hero {
+  position: relative;
+  min-height: 100%;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  overflow: hidden;
+
+  padding: clamp(38px, 7vw, 105px);
+
+  color: #fff;
+
+  background:
+    radial-gradient(
+      circle at 85% 12%,
+      rgba(255,255,255,.14),
+      transparent 31%
+    ),
+    radial-gradient(
+      circle at 10% 90%,
+      rgba(175,163,255,.23),
+      transparent 36%
+    ),
+    linear-gradient(
+      145deg,
+      #6258ca,
+      #7569d9 54%,
+      #5147ad
+    );
+}
+
+.el-hero::before,
+.el-hero::after {
+  content: "";
+
+  position: absolute;
+  pointer-events: none;
+
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 50%;
+}
+
+.el-hero::before {
+  width: 490px;
+  height: 490px;
+
+  right: -200px;
+  top: -175px;
+}
+
+.el-hero::after {
+  width: 355px;
+  height: 355px;
+
+  right: -125px;
+  top: -105px;
+}
+
+/* BRAND LOGO */
+
+.el-wordmark {
+  position: absolute;
+
+  top: 38px;
+  left: clamp(35px, 7vw, 100px);
+
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+
+  color: white;
+
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: -.7px;
+}
+
+.el-wordmark-mark {
+  width: 45px;
+  height: 45px;
+
+  display: grid;
+  place-items: center;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(255,255,255,.65);
+  border-radius: 15px;
+
+  background: #efedf8;
+
+  box-shadow:
+    4px 4px 9px rgba(35,25,110,.13),
+    -3px -3px 8px rgba(255,255,255,.28);
+}
+
+.el-wordmark-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* HERO CONTENT */
+
+.el-hero-content {
+  position: relative;
+  z-index: 2;
+
+  max-width: 570px;
+  margin-top: 35px;
+}
+
+.el-hero-tag {
+  width: fit-content;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+
+  padding: 10px 15px;
+
+  border: 1px solid rgba(255,255,255,.19);
+  border-radius: 30px;
+
+  background: rgba(255,255,255,.10);
+
+  box-shadow:
+    3px 4px 9px rgba(40,31,120,.10),
+    inset 1px 1px 3px rgba(255,255,255,.10);
+
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+.el-hero h1 {
+  max-width: 530px;
+
+  margin: 27px 0 18px;
+
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: clamp(40px, 5vw, 62px);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -2.5px;
+}
+
+.el-hero h1 span {
+  color: #d4cefa;
+}
+
+.el-hero-description {
+  max-width: 460px;
+  margin: 0;
+
+  color: rgba(255,255,255,.82);
+
+  font-size: 15px;
+  line-height: 1.9;
+}
+
+/* FEATURE LIST */
+
+.el-feature-list {
+  display: grid;
+  gap: 19px;
+
+  margin-top: 46px;
+}
+
+.el-feature {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.el-feature-icon {
+  flex-shrink: 0;
+
+  width: 46px;
+  height: 46px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid rgba(255,255,255,.17);
+  border-radius: 15px;
+
+  background: rgba(255,255,255,.11);
+
+  box-shadow:
+    4px 5px 9px rgba(35,25,110,.12),
+    -3px -3px 8px rgba(255,255,255,.10);
+}
+
+.el-feature-icon svg {
+  width: 21px;
+  height: 21px;
+}
+
+.el-feature strong {
+  display: block;
+
+  margin-bottom: 5px;
+
+  font-size: 13px;
+}
+
+.el-feature span {
+  color: rgba(255,255,255,.75);
+
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* =========================================
+   RIGHT LOGIN PANEL
+========================================= */
+
+.el-auth-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 50px clamp(20px, 5vw, 70px);
+
+  background: transparent;
+}
+
+/* =========================================
+   CLAY LOGIN CARD
+========================================= */
+
+.el-auth-card {
+  width: 100%;
+  max-width: 440px;
+
+  padding: clamp(27px, 4vw, 43px);
+
+  border: 1px solid rgba(255,255,255,.55);
+  border-radius: 28px;
+
+  background: linear-gradient(
+    145deg,
+    #efeff6,
+    #e7e7f0
+  );
+
+  box-shadow:
+    9px 10px 20px rgba(157,157,180,.24),
+    -8px -8px 18px rgba(255,255,255,.68),
+    inset 1px 1px 3px rgba(255,255,255,.60);
+
+  animation: cardAppear .6s ease both;
+}
+
+@keyframes cardAppear {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================================
+   BACK TO HOME
+========================================= */
+
+.el-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+
+  color: var(--muted);
+
+  font-size: 12px;
+  font-weight: 700;
+
+  transition:
+    color .2s,
+    transform .2s;
+}
+
+.el-back:hover {
+  color: var(--purple);
+  transform: translateX(-3px);
+}
+
+.el-back:focus-visible,
+.el-forgot-link:focus-visible,
+.el-auth-footer a:focus-visible {
+  outline: 3px solid rgba(112,99,233,.28);
+  outline-offset: 4px;
+  border-radius: 5px;
+}
+
+/* =========================================
+   LOGIN HEADING
+========================================= */
+
+.el-auth-heading {
+  margin-top: 38px;
+  margin-bottom: 31px;
+}
+
+.el-auth-heading h2 {
+  margin: 0 0 10px;
+
+  color: var(--text);
+
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 31px;
+  font-weight: 800;
+  letter-spacing: -1.2px;
+}
+
+.el-auth-heading p {
+  margin: 0;
+
+  color: var(--muted);
+
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* HEADING CLAY ICON */
+
+.el-heading-mark {
+  width: 47px;
+  height: 47px;
+
+  display: grid;
+  place-items: center;
+
+  margin-bottom: 22px;
+
+  border: 1px solid rgba(255,255,255,.65);
+  border-radius: 15px;
+
+  color: var(--purple);
+
+  background: linear-gradient(
+    145deg,
+    #f1f0f8,
+    #e7e6f0
+  );
+
+  box-shadow:
+    4px 5px 9px rgba(171,170,195,.23),
+    -4px -4px 9px rgba(255,255,255,.65);
+
+  font-size: 21px;
+}
+
+/* =========================================
+   FORM FIELDS
+========================================= */
+
+.el-field {
+  margin-bottom: 21px;
+}
+
+.el-field label {
+  display: block;
+
+  margin-bottom: 10px;
+
+  color: #45465f;
+
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.el-input-wrap {
+  position: relative;
+}
+
+.el-field input {
+  width: 100%;
+  height: 54px;
+
+  padding: 0 17px;
+
+  border: 1px solid rgba(255,255,255,.60);
+  border-radius: 15px;
+
+  outline: none;
+
+  color: var(--text);
+  background: #e9e9f2;
+
+  box-shadow:
+    inset 3px 3px 7px rgba(194,194,213,.48),
+    inset -3px -3px 7px rgba(255,255,255,.72);
+
+  font-family: inherit;
+  font-size: 13px;
+
+  transition:
+    box-shadow .25s,
+    border-color .25s,
+    background .25s;
+}
+
+.el-field input::placeholder {
+  color: #a0a1b5;
+}
+
+.el-field input:focus {
+  border-color: rgba(112,99,233,.48);
+
+  background: #eeeeF6;
+
+  box-shadow:
+    inset 2px 2px 5px rgba(194,194,213,.45),
+    inset -2px -2px 5px rgba(255,255,255,.75),
+    0 0 0 2px rgba(112,99,233,.08);
+}
+
+.el-field input:disabled {
+  opacity: .7;
+  cursor: not-allowed;
+}
+
+/* =========================================
+   PASSWORD TOGGLE SUPPORT
+========================================= */
+
+.el-input-wrap button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.el-input-wrap button:focus-visible {
+  outline: 2px solid rgba(112,99,233,.45);
+  outline-offset: 3px;
+}
+
+/* =========================================
+   FORGOT PASSWORD
+========================================= */
+
+.el-forgot-row {
+  display: flex;
+  justify-content: flex-end;
+
+  margin-top: -3px;
+  margin-bottom: 23px;
+}
+
+.el-forgot-link {
+  color: var(--purple-dark);
+
+  font-size: 12px;
+  font-weight: 800;
+
+  transition: color .2s;
+}
+
+.el-forgot-link:hover {
+  color: #4235a9;
+  text-decoration: underline;
+}
+
+/* =========================================
+   CLAY SIGN IN BUTTON
+========================================= */
+
+.el-login-btn {
+  position: relative;
+
+  width: 100%;
+  min-height: 55px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: 15px;
+
+  color: #fff;
+
+  background: linear-gradient(
+    120deg,
+    #7769df,
+    #695bcf
+  );
+
+  box-shadow:
+    4px 5px 10px rgba(91,77,190,.20),
+    -3px -3px 8px rgba(255,255,255,.40),
+    inset 1px 1px 3px rgba(255,255,255,.18);
+
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    transform .2s,
+    box-shadow .2s,
+    background .2s,
+    opacity .2s;
+}
+
+.el-login-btn:hover {
+  transform: translateY(-1px);
+
+  background: linear-gradient(
+    120deg,
+    #8173e5,
+    #7062d6
+  );
+
+  box-shadow:
+    5px 6px 12px rgba(91,77,190,.22),
+    -3px -3px 8px rgba(255,255,255,.42);
+}
+
+.el-login-btn:active {
+  transform: translateY(1px);
+
+  box-shadow:
+    inset 3px 3px 7px rgba(44,35,140,.24),
+    inset -2px -2px 5px rgba(255,255,255,.12);
+}
+
+.el-login-btn:disabled {
+  opacity: .65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.el-login-btn svg {
+  width: 19px;
+  height: 19px;
+}
+
+/* =========================================
+   MESSAGE / AUTH FEEDBACK
+========================================= */
+
+#message:empty {
+  display: none;
+}
+
+#message {
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+
+  margin-bottom: 18px;
+  padding: 13px 15px;
+
+  border-radius: 12px;
+
+  font-size: 12px;
+  line-height: 1.6;
+
+  box-shadow:
+    inset 2px 2px 5px rgba(0,0,0,.035),
+    inset -2px -2px 5px rgba(255,255,255,.60);
+}
+
+#message.error {
+  display: block;
+
+  color: var(--danger);
+
+  border: 1px solid rgba(189,83,90,.15);
+  background: #f3e6e8;
+}
+
+#message.success {
+  display: block;
+
+  color: var(--success);
+
+  border: 1px solid rgba(49,139,105,.15);
+  background: #e5f0ea;
+}
+
+/* =========================================
+   REGISTER FOOTER
+========================================= */
+
+.el-auth-footer {
+  margin-top: 29px;
+  padding-top: 22px;
+
+  border-top: 1px solid rgba(170,170,190,.35);
+
+  text-align: center;
+
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.el-auth-footer a {
+  color: var(--purple-dark);
+  font-weight: 800;
+}
+
+.el-auth-footer a:hover {
+  text-decoration: underline;
+}
+
+/* =========================================
+   SECURITY NOTE
+========================================= */
+
+.el-security-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  margin-top: 25px;
+
+  color: #85869c;
+
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.el-security-note svg {
+  width: 14px;
+  height: 14px;
+
+  color: var(--green);
+}
+
+/* =========================================
+   TABLET RESPONSIVE
+========================================= */
+
+@media (max-width: 850px) {
+
+  .el-public {
+    grid-template-columns: 1fr;
+  }
+
+  .el-hero {
+    min-height: 340px;
+    padding: 95px 35px 43px;
+  }
+
+  .el-wordmark {
+    top: 25px;
+    left: 35px;
+  }
+
+  .el-hero-content {
+    margin-top: 0;
+  }
+
+  .el-hero h1 {
+    max-width: 600px;
+    font-size: 43px;
+  }
+
+  .el-hero-description {
+    font-size: 14px;
+  }
+
+  .el-feature-list {
+    grid-template-columns: repeat(3, 1fr);
+
+    gap: 13px;
+    margin-top: 28px;
+  }
+
+  .el-feature {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .el-auth-panel {
+    padding: 48px 22px 65px;
+  }
+}
+
+/* =========================================
+   MOBILE RESPONSIVE
+========================================= */
+
+@media (max-width: 480px) {
+
+  .el-hero {
+    min-height: 300px;
+    padding: 86px 24px 30px;
+  }
+
+  .el-wordmark {
+    left: 24px;
+  }
+
+  .el-hero h1 {
+    font-size: 35px;
+    letter-spacing: -1.5px;
+  }
+
+  .el-hero-description {
+    font-size: 12px;
+    line-height: 1.75;
+  }
+
+  .el-feature-list {
+    grid-template-columns: 1fr;
+
+    gap: 13px;
+    margin-top: 25px;
+  }
+
+  .el-feature {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .el-feature-icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .el-auth-panel {
+    padding: 30px 16px 45px;
+  }
+
+  .el-auth-card {
+    padding: 27px 21px;
+    border-radius: 23px;
+  }
+
+  .el-auth-heading {
+    margin-top: 30px;
+  }
+
+  .el-auth-heading h2 {
+    font-size: 28px;
+  }
+
+  .el-field input {
+    height: 52px;
+  }
+}
+
+/* =========================================
+   ACCESSIBILITY
+========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+</style>
+
 </head>
 
 <body>
