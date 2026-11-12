@@ -1,5 +1,7 @@
 import { auth, db, storage } from "./firebase-config.js";
 
+import { notifySectionStudents } from "./notification-service.js";
+
 import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
@@ -816,7 +818,8 @@ async function saveModuleRecord(status) {
 
     };
 
-    let savedId = editingId;
+   let savedId = editingId;
+let shouldNotifyStudents = false;
 
     /* UPDATE EXISTING MODULE */
 
@@ -835,6 +838,10 @@ async function saveModuleRecord(status) {
       }
 
       const existingData = existingSnap.data();
+
+      shouldNotifyStudents =
+    existingData.status !== "active" &&
+    status === "active";
 
       if (
         currentRole !== "admin" &&
@@ -872,7 +879,45 @@ async function saveModuleRecord(status) {
 
       savedId = created.id;
 
+shouldNotifyStudents = status === "active";
+
     }
+
+// ========================================
+// NOTIFY STUDENTS WHEN MODULE IS PUBLISHED
+// ========================================
+
+if (
+    shouldNotifyStudents &&
+    selectedSectionIds.length > 0
+) {
+    try {
+        const notificationResult = await notifySectionStudents({
+            db,
+            auth,
+            sectionIds: selectedSectionIds,
+            contentType: "module",
+            contentId: savedId,
+            contentTitle: moduleTitle,
+            teacherName:
+                currentUser.displayName ||
+                currentUser.email ||
+                "Your teacher"
+        });
+
+        console.info(
+            "MODULE NOTIFICATIONS:",
+            notificationResult
+        );
+
+    } catch (notificationError) {
+        // Publishing must not be undone if notification delivery fails.
+        console.error(
+            "MODULE NOTIFICATION ERROR:",
+            notificationError
+        );
+    }
+}
 
     /* UPDATE LOCAL CACHE */
 

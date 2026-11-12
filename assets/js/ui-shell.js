@@ -14,22 +14,20 @@ const role = path.includes('/admin/')
   : null;
 
 const labels = {
- 
-admin: {
-  title: 'Administrator',
-  nav: [
-    ['dashboard.html', 'home', 'Dashboard'],
-    ['students.html', 'users', 'Students'],
-    ['manage-teachers.html', 'teacher', 'Teachers'],
-    ['register-teacher.html', 'userPlus', 'Register Teacher'],
-    ['class-assignments.html', 'classes', 'Class Assignments'],
-    ['check-content.html', 'lesson', 'Check Lessons & Modules'],
-    ['reports.html', 'chart', 'Reports'],
-    ['live.html', 'video', 'Live'],
-    ['settings.html', 'settings', 'Settings']
-  ]
-},
-
+  admin: {
+    title: 'Administrator',
+    nav: [
+      ['dashboard.html', 'home', 'Dashboard'],
+      ['students.html', 'users', 'Students'],
+      ['manage-teachers.html', 'teacher', 'Teachers'],
+      ['register-teacher.html', 'userPlus', 'Register Teacher'],
+      ['class-assignments.html', 'classes', 'Class Assignments'],
+      ['check-content.html', 'lesson', 'Check Lessons & Modules'],
+      ['reports.html', 'chart', 'Reports'],
+      ['live.html', 'video', 'Live'],
+      ['settings.html', 'settings', 'Settings']
+    ]
+  },
 
   teacher: {
     title: 'Teacher',
@@ -42,7 +40,7 @@ admin: {
     ]
   },
 
-    student: {
+  student: {
     title: 'Student',
     nav: [
       ['dashboard.html', 'home', 'Dashboard'],
@@ -52,14 +50,162 @@ admin: {
       ['profile.html', 'profile', 'Profile']
     ]
   }
-  
 };
+
+// ========================================
+// EQUALLEARN SHELL THEME
+// ========================================
+
+function injectShellStyles() {
+  if (document.getElementById('equallearn-shell-theme')) return;
+
+  const style = document.createElement('style');
+  style.id = 'equallearn-shell-theme';
+
+  style.textContent = `
+    /* TOP HEADER */
+    body .el-app-shell .el-app-main .el-topbar {
+      min-height: 76px !important;
+      height: auto !important;
+      padding: 14px 22px !important;
+      margin-bottom: 24px !important;
+
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      gap: 16px !important;
+
+      background: #111a2e !important;
+      color: #f8fafc !important;
+
+      border: 1px solid #263550 !important;
+      border-radius: 16px !important;
+
+      box-shadow: 0 8px 25px rgba(0,0,0,.16) !important;
+    }
+
+    /* HEADER TITLE GROUP */
+    body .el-app-shell .el-topbar-title {
+      display: flex !important;
+      align-items: center !important;
+      gap: 14px !important;
+      min-width: 0 !important;
+    }
+
+    /* EQUALLEARN SMALL LABEL */
+    body .el-app-shell .el-page-kicker {
+      color: #aab7d0 !important;
+      font-size: 12px !important;
+      font-weight: 800 !important;
+      letter-spacing: .1em !important;
+      text-transform: uppercase !important;
+      margin-bottom: 5px !important;
+    }
+
+    /* PAGE TITLE */
+    body .el-app-shell .el-page-title {
+      color: #ffffff !important;
+      font-size: 23px !important;
+      font-weight: 800 !important;
+      line-height: 1.3 !important;
+      letter-spacing: -.5px !important;
+      opacity: 1 !important;
+      text-shadow: none !important;
+    }
+
+    /* TEACHER / ADMIN / STUDENT PROFILE */
+    body .el-app-shell .el-user-pill {
+      display: flex !important;
+      align-items: center !important;
+      gap: 11px !important;
+
+      padding: 8px 13px !important;
+
+      background: #0b1427 !important;
+      border: 1px solid #34415e !important;
+      border-radius: 15px !important;
+
+      color: #ffffff !important;
+    }
+
+    body .el-app-shell .el-user-pill small {
+      display: block !important;
+      color: #aab7d0 !important;
+      font-size: 11px !important;
+      line-height: 1.4 !important;
+    }
+
+    body .el-app-shell .el-user-pill strong {
+      display: block !important;
+      color: #ffffff !important;
+      font-size: 13px !important;
+      font-weight: 800 !important;
+      line-height: 1.4 !important;
+    }
+
+    body .el-app-shell .el-avatar {
+      background: linear-gradient(135deg, #ddd6fe, #c7d2fe) !important;
+      color: #4f46e5 !important;
+      border-radius: 11px !important;
+    }
+
+    /* MOBILE MENU BUTTON */
+    body .el-app-shell .el-menu-toggle {
+      background: #18243b !important;
+      color: #ffffff !important;
+      border: 1px solid #34415e !important;
+    }
+
+    /* MOBILE RESPONSIVENESS */
+    @media (max-width: 900px) {
+      body .el-app-shell .el-topbar {
+        min-height: 64px !important;
+        padding: 10px 13px !important;
+        margin-bottom: 16px !important;
+      }
+
+      body .el-app-shell .el-page-title {
+        font-size: 18px !important;
+      }
+
+      body .el-app-shell .el-page-kicker {
+        font-size: 10px !important;
+      }
+
+      body .el-app-shell .el-user-pill {
+        padding: 6px 8px !important;
+      }
+    }
+
+    @media (max-width: 520px) {
+      body .el-app-shell .el-topbar {
+        gap: 8px !important;
+      }
+
+      body .el-app-shell .el-topbar-title {
+        gap: 8px !important;
+      }
+
+      body .el-app-shell .el-page-title {
+        font-size: 15px !important;
+      }
+
+      body .el-app-shell .el-user-pill strong {
+        display: none !important;
+      }
+    }
+  `;
+
+  document.head.appendChild(style);
+}
 
 // ========================================
 // APPLICATION SHELL
 // ========================================
 
 if (role) {
+  injectShellStyles();
+
   const bodyChildren = [...document.body.children];
 
   const contentNodes = bodyChildren.filter(el =>

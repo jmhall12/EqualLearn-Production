@@ -1,37 +1,38 @@
+
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#635bff">
+    <meta name="theme-color" content="#0b1020">
 
-    <title>Manage Lessons</title>
+    <title>Manage Lessons - EqualLearn</title>
 
     <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/equallearn.css">
+    <link rel="manifest" href="../manifest.webmanifest">
+    <link rel="icon" href="../assets/icons/equallearn-logo.png">
 
     <style>
-
         * {
             box-sizing: border-box;
         }
 
         body {
             margin: 0;
-            background: #ECECFF;
-            font-family:inherit;
             min-height: 100vh;
+            font-family: inherit;
+            background: #0b1020;
         }
 
         .page {
             width: 100%;
-            max-width: 900px;
+            max-width: 1480px;
             margin: auto;
             padding: 35px 25px 60px;
         }
 
         /* HEADER */
-
         .header {
             display: flex;
             justify-content: space-between;
@@ -42,13 +43,13 @@
 
         .header-left h1 {
             margin: 0;
-            color: #6C63FF;
+            color: #ffffff;
             font-size: 32px;
         }
 
         .header-left p {
             margin: 6px 0 0;
-            color: #666;
+            color: #aab7d0;
         }
 
         .header-buttons {
@@ -62,50 +63,52 @@
             border-radius: 12px;
             padding: 12px 18px;
             font-family: inherit;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
         }
 
         .back-btn {
-            background: #dddfff;
-            color: #6C63FF;
+            background: #25204d;
+            color: #c5beff;
         }
 
         .add-btn {
-            background: #6C63FF;
-            color: white;
+            background: linear-gradient(135deg, #635bff, #8b5cf6);
+            color: #ffffff;
         }
 
         .back-btn:hover,
         .add-btn:hover {
-            opacity: .9;
+            filter: brightness(1.12);
         }
 
         /* LESSON CARD */
-
         .lesson-card {
-            background: white;
+            background: #111a2e !important;
+            color: #f8fafc !important;
+            border: 1px solid #263550 !important;
             border-radius: 18px;
             padding: 22px;
             margin-bottom: 18px;
-            box-shadow: 0 5px 20px rgba(0,0,0,.08);
+            box-shadow: 0 8px 25px rgba(0,0,0,.16);
         }
 
         .lesson-card h2 {
             margin: 0 0 8px;
             font-size: 21px;
+            color: #ffffff !important;
         }
 
         .lesson-description {
-            color: #666;
+            color: #cbd5e1 !important;
             margin: 0 0 15px;
             line-height: 1.6;
         }
 
         .module-badge {
             display: inline-block;
-            background: #F0EFFF;
-            color: #6C63FF;
+            background: #25204d !important;
+            color: #c5beff !important;
             padding: 7px 12px;
             border-radius: 20px;
             font-size: 13px;
@@ -114,23 +117,33 @@
         }
 
         .file-info {
-            background: #F7F7FF;
+            background: #18243b !important;
+            border: 1px solid #30415f;
             padding: 12px;
             border-radius: 10px;
             margin-top: 12px;
-            color: #555;
+            color: #e2e8f0 !important;
             font-size: 14px;
+        }
+
+        .file-info strong {
+            color: #ffffff !important;
+        }
+
+        .file-info a,
+        .video-info a {
+            color: #a99fff !important;
+            text-decoration: underline;
+        }
+
+        .file-info small {
+            color: #aab7d0 !important;
         }
 
         .video-info {
             margin-top: 10px;
             font-size: 14px;
-        }
-
-        .video-info a {
-            color: #6C63FF;
-            text-decoration: none;
-            font-weight: 600;
+            color: #cbd5e1;
         }
 
         .actions {
@@ -145,38 +158,42 @@
             border: none;
             padding: 12px;
             border-radius: 10px;
-            color: white;
             font-family: inherit;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
         }
 
         .edit-btn {
-            background: #2196F3;
+            background: #25204d !important;
+            color: #c5beff !important;
         }
 
         .delete-btn {
-            background: #F44336;
+            background: #44202b !important;
+            color: #ffb7c0 !important;
+        }
+
+        .edit-btn:hover,
+        .delete-btn:hover {
+            filter: brightness(1.15);
         }
 
         /* EMPTY / LOADING */
-
         .message-box {
-            background: white;
+            background: #111a2e !important;
+            border: 1px solid #263550 !important;
             border-radius: 18px;
             padding: 30px;
             text-align: center;
-            color: #777;
-            box-shadow: 0 5px 20px rgba(0,0,0,.06);
+            color: #aab7d0 !important;
         }
 
         /* MODAL */
-
         .modal {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,.55);
+            background: rgba(0,0,0,.72);
             z-index: 9999;
             padding: 20px;
             overflow-y: auto;
@@ -191,10 +208,12 @@
         .modal-content {
             width: 100%;
             max-width: 550px;
-            background: white;
+            background: #111a2e !important;
+            color: #f8fafc !important;
+            border: 1px solid #30415f !important;
             border-radius: 20px;
             padding: 25px;
-            box-shadow: 0 20px 50px rgba(0,0,0,.2);
+            box-shadow: 0 20px 50px rgba(0,0,0,.4);
         }
 
         .modal-header {
@@ -206,11 +225,13 @@
 
         .modal-header h2 {
             margin: 0;
+            color: #ffffff !important;
         }
 
         .close-btn {
             border: none;
-            background: #eee;
+            background: #25204d;
+            color: #ffffff;
             width: 35px;
             height: 35px;
             border-radius: 50%;
@@ -224,6 +245,7 @@
 
         .form-group label {
             display: block;
+            color: #e5ecf8 !important;
             font-weight: 600;
             margin-bottom: 7px;
         }
@@ -233,17 +255,30 @@
         .form-group select {
             width: 100%;
             padding: 12px;
-            border: 1px solid #ddd;
+            border: 1px solid #30415f !important;
             border-radius: 10px;
+            background: #0b1427 !important;
+            color: #f8fafc !important;
             font-family: inherit;
             font-size: 14px;
             outline: none;
         }
 
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: #8291aa;
+        }
+
+        .form-group select option {
+            background: #111a2e;
+            color: #ffffff;
+        }
+
         .form-group input:focus,
         .form-group textarea:focus,
         .form-group select:focus {
-            border-color: #6C63FF;
+            border-color: #756bff !important;
+            box-shadow: 0 0 0 3px rgba(99,91,255,.18);
         }
 
         .form-group textarea {
@@ -254,22 +289,23 @@
         .file-help {
             margin-top: 6px;
             font-size: 12px;
-            color: #777;
+            color: #aab7d0;
         }
 
         .upload-status {
             margin-top: 8px;
             font-size: 13px;
-            color: #6C63FF;
+            color: #a99fff;
         }
 
         .current-file {
-            background: #F5F5FF;
+            background: #18243b !important;
+            border: 1px solid #30415f;
             padding: 10px;
             border-radius: 10px;
             margin-top: 8px;
             font-size: 13px;
-            color: #555;
+            color: #e2e8f0 !important;
         }
 
         .modal-actions {
@@ -285,18 +321,18 @@
             border: none;
             border-radius: 10px;
             font-family: inherit;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
         }
 
         .cancel-btn {
-            background: #ddd;
-            color: #444;
+            background: #263550 !important;
+            color: #ffffff !important;
         }
 
         .save-btn {
-            background: #6C63FF;
-            color: white;
+            background: #635bff !important;
+            color: #ffffff !important;
         }
 
         .save-btn:disabled {
@@ -304,10 +340,8 @@
             cursor: not-allowed;
         }
 
-        /* MOBILE */
-
+        /* RESPONSIVE */
         @media (max-width: 600px) {
-
             .page {
                 padding: 25px 15px 50px;
             }
@@ -334,233 +368,157 @@
             .modal-content {
                 padding: 20px;
             }
-
         }
-
     </style>
-
-<link rel="manifest" href="../manifest.webmanifest">
-<link rel="stylesheet" href="../assets/css/equallearn.css">
-<link rel="icon" href="../assets/icons/equallearn-logo.png"></head>
+</head>
 
 <body>
 
-<div class="page">
+    <div class="page">
 
-    <!-- HEADER -->
+        <!-- HEADER -->
+        <div class="header">
+            <div class="header-left">
+                <h1>Lessons</h1>
+                <p>Create and manage lessons for your students.</p>
+            </div>
 
-    <div class="header">
+            <div class="header-buttons">
+                <button
+                    class="back-btn"
+                    type="button"
+                    onclick="window.location.href='dashboard.html'">
+                    ← Back
+                </button>
 
-        <div class="header-left">
-
-            <h1>Lessons</h1>
-
-            <p>
-                Create and manage lessons for your students.
-            </p>
-
+                <button
+                    class="add-btn"
+                    type="button"
+                    id="openModal">
+                    + Add Lesson
+                </button>
+            </div>
         </div>
 
-        <div class="header-buttons">
-
-            <button
-                class="back-btn"
-                onclick="window.location.href='dashboard.html'">
-
-                ← Back
-
-            </button>
-
-            <button
-                class="add-btn"
-                id="openModal">
-
-                + Add Lesson
-
-            </button>
-
+        <!-- LESSON LIST -->
+        <div id="lessonList">
+            <div class="message-box">
+                Loading lessons...
+            </div>
         </div>
 
     </div>
 
+    <!-- ADD / EDIT MODAL -->
+    <div class="modal" id="lessonModal">
 
-    <!-- LESSON LIST -->
+        <div class="modal-content">
 
-    <div id="lessonList">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add Lesson</h2>
 
-        <div class="message-box">
-            Loading lessons...
+                <button
+                    class="close-btn"
+                    type="button"
+                    id="closeModal">
+                    ×
+                </button>
+            </div>
+
+            <!-- MODULE -->
+            <div class="form-group">
+                <label for="moduleSelect">Module</label>
+
+                <select id="moduleSelect">
+                    <option value="">Loading modules...</option>
+                </select>
+            </div>
+
+            <!-- TITLE -->
+            <div class="form-group">
+                <label for="lessonTitle">Lesson Title</label>
+
+                <input
+                    type="text"
+                    id="lessonTitle"
+                    placeholder="Example: What is Gender Equality?">
+            </div>
+
+            <!-- DESCRIPTION -->
+            <div class="form-group">
+                <label for="lessonDescription">Description</label>
+
+                <textarea
+                    id="lessonDescription"
+                    placeholder="Enter lesson description..."></textarea>
+            </div>
+
+            <!-- FILE -->
+            <div class="form-group">
+                <label for="lessonFile">Lesson File</label>
+
+                <input
+                    type="file"
+                    id="lessonFile"
+                    accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.jpg,.jpeg,.png">
+
+                <div class="file-help">
+                    Supported: PDF, Word, PowerPoint, Excel, TXT and images.
+                    Maximum file size: 20 MB.
+                </div>
+
+                <div
+                    class="current-file"
+                    id="currentFile"
+                    style="display:none;">
+                </div>
+
+                <div
+                    class="upload-status"
+                    id="uploadStatus">
+                </div>
+            </div>
+
+            <!-- YOUTUBE -->
+            <div class="form-group">
+                <label for="videoUrl">
+                    YouTube Link
+                    <span style="font-weight:400;color:#aab7d0;">
+                        (Optional)
+                    </span>
+                </label>
+
+                <input
+                    type="url"
+                    id="videoUrl"
+                    placeholder="https://www.youtube.com/watch?v=...">
+            </div>
+
+            <!-- ACTIONS -->
+            <div class="modal-actions">
+                <button
+                    class="cancel-btn"
+                    type="button"
+                    id="cancelBtn">
+                    Cancel
+                </button>
+
+                <button
+                    class="save-btn"
+                    type="button"
+                    id="saveLesson">
+                    Save Lesson
+                </button>
+            </div>
+
         </div>
-
     </div>
 
-</div>
-
-
-<!-- ADD / EDIT MODAL -->
-
-<div
-    class="modal"
-    id="lessonModal">
-
-    <div class="modal-content">
-
-        <div class="modal-header">
-
-            <h2 id="modalTitle">
-                Add Lesson
-            </h2>
-
-            <button
-                class="close-btn"
-                id="closeModal">
-
-                ×
-
-            </button>
-
-        </div>
-
-
-        <!-- MODULE -->
-
-        <div class="form-group">
-
-            <label for="moduleSelect">
-                Module
-            </label>
-
-            <select id="moduleSelect">
-
-                <option value="">
-                    Loading modules...
-                </option>
-
-            </select>
-
-        </div>
-
-
-        <!-- TITLE -->
-
-        <div class="form-group">
-
-            <label for="lessonTitle">
-                Lesson Title
-            </label>
-
-            <input
-                type="text"
-                id="lessonTitle"
-                placeholder="Example: What is Gender Equality?">
-
-        </div>
-
-
-        <!-- DESCRIPTION -->
-
-        <div class="form-group">
-
-            <label for="lessonDescription">
-                Description
-            </label>
-
-            <textarea
-                id="lessonDescription"
-                placeholder="Enter lesson description..."></textarea>
-
-        </div>
-
-
-        <!-- FILE -->
-
-        <div class="form-group">
-
-            <label for="lessonFile">
-                Lesson File
-            </label>
-
-            <input
-                type="file"
-                id="lessonFile"
-                accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.jpg,.jpeg,.png">
-
-            <div class="file-help">
-
-                Supported: PDF, Word, PowerPoint, Excel, TXT and images.
-                Maximum file size: 20 MB.
-
-            </div>
-
-            <div
-                class="current-file"
-                id="currentFile"
-                style="display:none;">
-
-            </div>
-
-            <div
-                class="upload-status"
-                id="uploadStatus">
-
-            </div>
-
-        </div>
-
-
-        <!-- YOUTUBE -->
-
-        <div class="form-group">
-
-            <label for="videoUrl">
-                YouTube Link
-                <span style="font-weight:400;color:#777;">
-                    (Optional)
-                </span>
-            </label>
-
-            <input
-                type="url"
-                id="videoUrl"
-                placeholder="https://www.youtube.com/watch?v=...">
-
-        </div>
-
-
-        <!-- ACTIONS -->
-
-        <div class="modal-actions">
-
-            <button
-                class="cancel-btn"
-                id="cancelBtn">
-
-                Cancel
-
-            </button>
-
-            <button
-                class="save-btn"
-                id="saveLesson">
-
-                Save Lesson
-
-            </button>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-<script
-    type="module"
-    src="../assets/js/teacher-lessons.js">
-</script>
-
-<script type="module" src="../assets/js/ui-shell.js"></script>
-<script type="module" src="../assets/js/pwa.js"></script>
-<script type="module" src="../assets/js/theme.js"></script></body>
-
+    <!-- EXISTING JAVASCRIPT -->
+    <script type="module" src="../assets/js/teacher-lessons.js"></script>
+    <script type="module" src="../assets/js/ui-shell.js"></script>
+    <script type="module" src="../assets/js/pwa.js"></script>
+    <script type="module" src="../assets/js/theme.js"></script>
+
+</body>
 </html>

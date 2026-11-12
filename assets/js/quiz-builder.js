@@ -7,48 +7,92 @@ import {
 
 import {
   collection,
-  getDocs,
-  addDoc,
-  deleteDoc,
   doc,
   getDoc,
-  serverTimestamp,
+  getDocs,
   query,
-  where
+  where,
+  writeBatch,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
 // =====================================================
-// ELEMENTS
+// DOM ELEMENTS
 // =====================================================
 
-const lessonSelect = document.getElementById("lessonSelect");
-const questionList = document.getElementById("questionList");
-const modal = document.getElementById("quizModal");
-const openModal = document.getElementById("openModal");
-const saveQuestion = document.getElementById("saveQuestion");
+const $ = (id) => document.getElementById(id);
 
-const quizMode = document.getElementById("quizMode");
-const externalFields = document.getElementById("externalFields");
-const nativeFields = document.getElementById("nativeFields");
+const quizTitle = $("quizTitle");
+const quizDescription = $("quizDescription");
+const lessonSelect = $("lessonSelect");
+const quizMode = $("quizMode");
 
-const closeModal = document.getElementById("closeModal");
-const cancelModal = document.getElementById("cancelModal");
+const externalFields = $("externalFields");
+const externalQuizUrl = $("externalQuizUrl");
+
+const sectionList = $("sectionList");
+const selectedSectionCount = $("selectedSectionCount");
+
+const passingScore = $("passingScore");
+const timeLimit = $("timeLimit");
+const attemptLimit = $("attemptLimit");
+const availableAt = $("availableAt");
+const dueDate = $("dueDate");
+
+const shuffleQuestions = $("shuffleQuestions");
+const shuffleChoices = $("shuffleChoices");
+
+const questionEditor = $("questionEditor");
+const questionType = $("questionType");
+const multipleChoiceFields = $("multipleChoiceFields");
+
+const questionInput = $("question");
+const choiceA = $("choiceA");
+const choiceB = $("choiceB");
+const choiceC = $("choiceC");
+const choiceD = $("choiceD");
+const correctAnswer = $("correctAnswer");
+const questionPoints = $("questionPoints");
+
+const addQuestionButton = $("addQuestion");
+const questionCount = $("questionCount");
+const questionList = $("questionList");
+
+const previewQuizButton = $("previewQuiz");
+const saveDraftButton = $("saveDraft");
+const publishQuizButton = $("publishQuiz");
+
+const builderMessage = $("builderMessage");
+const myQuizzes = $("myQuizzes");
+
+const backBtn = $("backBtn");
+
+// =====================================================
+// APPLICATION STATE
+// =====================================================
 
 let currentUser = null;
+let currentProfile = null;
 let currentRole = "";
 
+let lessons = [];
+let sections = [];
+let stagedQuestions = [];
+
+let isSaving = false;
+
 // =====================================================
-// AUTHENTICATION AND ROLE CHECK
+// AUTHENTICATION
 // =====================================================
 
 onAuthStateChanged(auth, async (user) => {
-
   if (!user) {
     window.location.href = "../login.html";
     return;
   }
 
   try {
+    currentUser = user;
 
     const profileSnapshot = await getDoc(
       doc(db, "users", user.uid)
@@ -58,16 +102,13 @@ onAuthStateChanged(auth, async (user) => {
       throw new Error("User profile not found.");
     }
 
-    const profile = profileSnapshot.data();
+    currentProfile = profileSnapshot.data();
 
-    currentRole = String(profile.role || "")
+    currentRole = String(currentProfile.role || "")
       .trim()
       .toLowerCase();
 
-    if (
-      currentRole !== "teacher" &&
-      currentRole !== "admin"
-    ) {
+    if (!["teacher", "admin"].includes(currentRole)) {
       alert("Only teachers and administrators can access Quiz Builder.");
 
       window.location.href =
@@ -78,84 +119,28 @@ onAuthStateChanged(auth, async (user) => {
       return;
     }
 
-    currentUser = user;
+    await Promise.all([
+      loadLessons(),
+      loadSections()
+    ]);
 
-    await loadLessons();
-    await loadQuestions();
+    await loadMyQuizzes();
+
+    updateQuizMode();
+    updateQuestionType();
 
   } catch (error) {
-
-    console.error("Quiz Builder access error:", error);
-
-    showError(
-      "Unable to verify your account. " + error.message
-    );
-
+    console.error("Quiz Builder initialization error:", error);
+    showMessage(error.message, "error");
   }
-
 });
 
 // =====================================================
-// MODAL
+// NAVIGATION
 // =====================================================
 
-openModal?.addEventListener("click", async () => {
-
-  resetForm();
-
-  await loadLessons();
-
-  if (modal) {
-    modal.style.display = "flex";
-  }
-
-});
-
-function hideModal() {
-
-  if (modal) {
-    modal.style.display = "none";
-  }
-
-}
-
-closeModal?.addEventListener("click", hideModal);
-cancelModal?.addEventListener("click", hideModal);
-
-window.addEventListener("click", (event) => {
-
-  if (event.target === modal) {
-    hideModal();
-  }
-
-});
-
-document.addEventListener("keydown", (event) => {
-
-  if (event.key === "Escape") {
-    hideModal();
-  }
-
-});
-
-// =====================================================
-// QUIZ MODE
-// =====================================================
-
-quizMode?.addEventListener("change", () => {
-
-  const mode = quizMode.value;
-
-  if (externalFields) {
-    externalFields.style.display =
-      mode === "external" ? "block" : "none";
-  }
-
-  if (nativeFields) {
-    nativeFields.style.display =
-      mode === "native" ? "block" : "none";
-  }
-
+backBtn?.addEventListener("click", () => {
+  window.history.back();
 });
 
 // =====================================================
@@ -163,19 +148,17 @@ quizMode?.addEventListener("change", () => {
 // =====================================================
 
 async function loadLessons() {
-
   if (!lessonSelect) return;
 
   lessonSelect.innerHTML =
     `<option value="">Loading lessons...</option>`;
 
   try {
-
     const snapshot = await getDocs(
       collection(db, "lessons")
     );
 
-    const lessons = snapshot.docs.map(item => ({
+    lessons = snapshot.docs.map((item) => ({
       id: item.id,
       ...item.data()
     }));
@@ -189,401 +172,886 @@ async function loadLessons() {
     lessonSelect.innerHTML =
       `<option value="">Select a lesson</option>`;
 
-    lessons.forEach(lesson => {
-
+    lessons.forEach((lesson) => {
       const option = document.createElement("option");
 
       option.value = lesson.id;
-      option.textContent =
-        lesson.title || "Untitled Lesson";
+      option.textContent = lesson.title || "Untitled Lesson";
 
       lessonSelect.appendChild(option);
-
     });
 
   } catch (error) {
-
-    console.error("Lessons loading error:", error);
+    console.error("Lesson loading error:", error);
 
     lessonSelect.innerHTML =
       `<option value="">Unable to load lessons</option>`;
 
+    throw error;
   }
-
 }
 
 // =====================================================
-// LOAD NATIVE QUESTIONS
+// LOAD SECTIONS
 // =====================================================
 
-async function loadQuestions() {
 
-  if (!questionList) return;
+async function loadSections() {
+  if (!sectionList || !currentUser) return;
 
-  questionList.innerHTML =
-    `<p>Loading questions...</p>`;
+  sectionList.innerHTML = "<p>Loading assigned sections...</p>";
 
   try {
+    const sectionsRef = collection(db, "sections");
+    let sectionDocuments = [];
 
-    const lessonSnapshot = await getDocs(
-      collection(db, "lessons")
+    if (currentRole === "admin") {
+      // Admin can load all sections.
+      const snapshot = await getDocs(sectionsRef);
+      sectionDocuments = snapshot.docs;
+
+    } else {
+      // Teachers can only load sections assigned to them.
+      const [multipleTeacher, singleTeacher] = await Promise.all([
+        getDocs(
+          query(
+            sectionsRef,
+            where("teacherIds", "array-contains", currentUser.uid)
+          )
+        ),
+
+        getDocs(
+          query(
+            sectionsRef,
+            where("teacherId", "==", currentUser.uid)
+          )
+        )
+      ]);
+
+      // Merge results and remove duplicate sections.
+      const uniqueSections = new Map();
+
+      [...multipleTeacher.docs, ...singleTeacher.docs].forEach((item) => {
+        uniqueSections.set(item.id, item);
+      });
+
+      sectionDocuments = [...uniqueSections.values()];
+    }
+
+    sections = sectionDocuments.map((item) => ({
+      id: item.id,
+      ...item.data()
+    }));
+
+    sections.sort((a, b) =>
+      getSectionName(a).localeCompare(getSectionName(b))
     );
 
-    const lessonMap = {};
+    renderSections();
 
-    lessonSnapshot.forEach(item => {
-      lessonMap[item.id] =
-        item.data().title || "Untitled Lesson";
-    });
+    if (!sections.length) {
+      sectionList.innerHTML =
+        "<p>No sections are currently assigned to your account.</p>";
+    }
 
-    const snapshot = await getDocs(
-      collection(db, "questions")
-    );
+  } catch (error) {
+    console.error("Section loading error:", error);
 
-    questionList.innerHTML = "";
+    sectionList.innerHTML =
+      `<p>Unable to load sections: ${error.message}</p>`;
 
-    if (snapshot.empty) {
-      questionList.innerHTML =
-        `<p>No questions found.</p>`;
+    throw error;
+  }
+}
+
+
+function getSectionName(section) {
+  return (
+    section.sectionName ||
+    section.name ||
+    section.title ||
+    section.section ||
+    "Unnamed Section"
+  );
+}
+
+function renderSections() {
+  if (!sectionList) return;
+
+  sectionList.innerHTML = "";
+
+  if (!sections.length) {
+    sectionList.innerHTML =
+      "<p>No available sections assigned to your account.</p>";
+
+    updateSelectedSectionCount();
+    return;
+  }
+
+  sections.forEach((section) => {
+    const wrapper = document.createElement("label");
+
+    wrapper.className = "section-option";
+
+    const checkbox = document.createElement("input");
+
+    checkbox.type = "checkbox";
+    checkbox.value = section.id;
+    checkbox.name = "quizSections";
+
+    checkbox.addEventListener("change", updateSelectedSectionCount);
+
+    const name = document.createElement("span");
+
+    name.textContent = getSectionName(section);
+
+    wrapper.append(checkbox, name);
+    sectionList.appendChild(wrapper);
+  });
+
+  updateSelectedSectionCount();
+}
+
+function getSelectedSectionIds() {
+  return Array.from(
+    sectionList?.querySelectorAll(
+      'input[name="quizSections"]:checked'
+    ) || []
+  ).map((checkbox) => checkbox.value);
+}
+
+function updateSelectedSectionCount() {
+  if (!selectedSectionCount) return;
+
+  selectedSectionCount.textContent =
+    `${getSelectedSectionIds().length} section(s) selected`;
+}
+
+// =====================================================
+// QUIZ MODE
+// =====================================================
+
+quizMode?.addEventListener("change", updateQuizMode);
+
+function updateQuizMode() {
+  const mode = quizMode?.value || "native";
+
+  if (externalFields) {
+    externalFields.style.display =
+      mode === "external" ? "block" : "none";
+  }
+
+  if (questionEditor) {
+    questionEditor.style.display =
+      mode === "native" ? "block" : "none";
+  }
+}
+
+// =====================================================
+// QUESTION TYPE
+// =====================================================
+
+questionType?.addEventListener("change", updateQuestionType);
+
+function updateQuestionType() {
+  const type = questionType?.value || "multiple_choice";
+
+  if (multipleChoiceFields) {
+    multipleChoiceFields.style.display =
+      type === "multiple_choice" ? "block" : "none";
+  }
+
+  if (correctAnswer) {
+    if (type === "true_false") {
+      correctAnswer.innerHTML = `
+        <option value="">Select correct answer</option>
+        <option value="A">True</option>
+        <option value="B">False</option>
+      `;
+    } else {
+      correctAnswer.innerHTML = `
+        <option value="">Select correct answer</option>
+        <option value="A">Choice A</option>
+        <option value="B">Choice B</option>
+        <option value="C">Choice C</option>
+        <option value="D">Choice D</option>
+      `;
+    }
+  }
+}
+
+// =====================================================
+// ADD QUESTION TO QUIZ
+// =====================================================
+
+addQuestionButton?.addEventListener("click", addQuestion);
+
+function addQuestion() {
+  const type = questionType?.value || "multiple_choice";
+
+  const question = questionInput?.value.trim() || "";
+
+  if (!question) {
+    showMessage("Enter a question first.", "error");
+    return;
+  }
+
+  const points = Number(questionPoints?.value || 1);
+
+  if (!Number.isFinite(points) || points <= 0) {
+    showMessage("Question points must be greater than zero.", "error");
+    return;
+  }
+
+  let choices = {};
+  let answer = correctAnswer?.value || "";
+
+  if (type === "multiple_choice") {
+    choices = {
+      A: choiceA?.value.trim() || "",
+      B: choiceB?.value.trim() || "",
+      C: choiceC?.value.trim() || "",
+      D: choiceD?.value.trim() || ""
+    };
+
+    if (Object.values(choices).some((value) => !value)) {
+      showMessage("Complete all four choices.", "error");
       return;
     }
 
-    snapshot.forEach(item => {
-
-      const question = item.data();
-
-      const card = document.createElement("div");
-
-      card.className = "card";
-
-      const title = document.createElement("h3");
-      title.textContent =
-        question.question || "Untitled Question";
-
-      const lesson = document.createElement("p");
-      lesson.textContent =
-        "Lesson: " +
-        (lessonMap[question.lessonId] || "Unknown Lesson");
-
-      const choices = document.createElement("div");
-      choices.className = "choices";
-
-      ["A", "B", "C", "D"].forEach(letter => {
-
-        const paragraph = document.createElement("p");
-
-        paragraph.textContent =
-          `${letter}. ${question["choice" + letter] || ""}`;
-
-        choices.appendChild(paragraph);
-
-      });
-
-      const answer = document.createElement("p");
-
-      answer.textContent =
-        "Correct Answer: " +
-        (question.correctAnswer || "Not specified");
-
-      const deleteButton = document.createElement("button");
-
-      deleteButton.type = "button";
-      deleteButton.className = "delete";
-      deleteButton.textContent = "Delete";
-
-      deleteButton.addEventListener("click", () => {
-        deleteQuestion(item.id, question.createdBy);
-      });
-
-      card.append(
-        title,
-        lesson,
-        choices,
-        answer,
-        deleteButton
-      );
-
-      questionList.appendChild(card);
-
-    });
-
-  } catch (error) {
-
-    console.error("Question loading error:", error);
-
-    showError(
-      "Unable to load questions. Check your Firestore permissions."
-    );
-
-    questionList.innerHTML =
-      `<p>Unable to load questions.</p>`;
-
+  } else {
+    choices = {
+      A: "True",
+      B: "False"
+    };
   }
 
+  const validAnswers = type === "true_false"
+    ? ["A", "B"]
+    : ["A", "B", "C", "D"];
+
+  if (!validAnswers.includes(answer)) {
+    showMessage("Select the correct answer.", "error");
+    return;
+  }
+
+  stagedQuestions.push({
+    order: stagedQuestions.length + 1,
+    type,
+    question,
+    choices,
+    correctAnswer: answer,
+    points
+  });
+
+  resetQuestionFields();
+  renderStagedQuestions();
+
+  showMessage("Question added to your quiz.", "success");
+}
+
+function resetQuestionFields() {
+  if (questionInput) questionInput.value = "";
+
+  if (choiceA) choiceA.value = "";
+  if (choiceB) choiceB.value = "";
+  if (choiceC) choiceC.value = "";
+  if (choiceD) choiceD.value = "";
+
+  if (correctAnswer) correctAnswer.value = "";
+
+  if (questionPoints) questionPoints.value = "1";
 }
 
 // =====================================================
-// SAVE
+// RENDER STAGED QUESTIONS
 // =====================================================
 
-saveQuestion?.addEventListener("click", async () => {
+function renderStagedQuestions() {
+  if (!questionList) return;
 
-  if (!currentUser) {
-    alert("Please log in again.");
+  questionList.innerHTML = "";
+
+  if (questionCount) {
+    questionCount.textContent = stagedQuestions.length;
+  }
+
+  if (!stagedQuestions.length) {
+    questionList.innerHTML =
+      "<p>No questions added yet.</p>";
+
     return;
   }
 
-  const mode = quizMode?.value || "native";
+  stagedQuestions.forEach((item, index) => {
+    const card = document.createElement("div");
 
-  const lessonId = lessonSelect?.value;
+    card.className = "question-card";
 
-  if (!lessonId) {
-    alert("Please select a lesson.");
+    const heading = document.createElement("h4");
+
+    heading.textContent =
+      `${index + 1}. ${item.question}`;
+
+    const type = document.createElement("p");
+
+    type.textContent =
+      `${item.type === "true_false" ? "True or False" : "Multiple Choice"} · ${item.points} point(s)`;
+
+    const choices = document.createElement("div");
+
+    Object.entries(item.choices).forEach(([letter, value]) => {
+      const line = document.createElement("p");
+
+      line.textContent = `${letter}. ${value}`;
+
+      choices.appendChild(line);
+    });
+
+    const answer = document.createElement("p");
+
+    answer.textContent =
+      `Correct answer: ${item.correctAnswer}`;
+
+    const remove = document.createElement("button");
+
+    remove.type = "button";
+    remove.textContent = "Remove";
+    remove.className = "delete-question";
+
+    remove.addEventListener("click", () => {
+      stagedQuestions.splice(index, 1);
+
+      stagedQuestions.forEach((question, i) => {
+        question.order = i + 1;
+      });
+
+      renderStagedQuestions();
+    });
+
+    card.append(heading, type, choices, answer, remove);
+
+    questionList.appendChild(card);
+  });
+}
+
+// =====================================================
+// PREVIEW QUIZ
+// =====================================================
+
+previewQuizButton?.addEventListener("click", () => {
+  const title = quizTitle?.value.trim() || "Untitled Quiz";
+
+  if (quizMode?.value === "external") {
+    showMessage(
+      "External quiz preview: " + title,
+      "info"
+    );
     return;
   }
 
-  saveQuestion.disabled = true;
-  saveQuestion.textContent = "Saving...";
-
-  try {
-
-    const lessonSnapshot = await getDoc(
-      doc(db, "lessons", lessonId)
-    );
-
-    if (!lessonSnapshot.exists()) {
-      throw new Error("Selected lesson does not exist.");
-    }
-
-    const lessonName =
-      lessonSnapshot.data().title || "Untitled Lesson";
-
-    if (mode === "external") {
-
-      const title = document
-        .getElementById("externalQuizTitle")
-        ?.value.trim();
-
-      const url = document
-        .getElementById("externalQuizUrl")
-        ?.value.trim();
-
-      const description = document
-        .getElementById("externalQuizDescription")
-        ?.value.trim() || "";
-
-      if (!title || !url) {
-        throw new Error("Enter the quiz title and link.");
-      }
-
-      let parsedURL;
-
-      try {
-        parsedURL = new URL(url);
-      } catch {
-        throw new Error("Enter a valid quiz URL.");
-      }
-
-      if (!["https:", "http:"].includes(parsedURL.protocol)) {
-        throw new Error("Only HTTP or HTTPS links are allowed.");
-      }
-
-      await addDoc(
-        collection(db, "quizzes"),
-        {
-          title,
-          description,
-          quizUrl: parsedURL.href,
-          lessonId,
-          lessonName,
-          type: "external",
-          status: "active",
-          createdBy: currentUser.uid,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        }
-      );
-
-      alert("External quiz link saved successfully.");
-
-    } else {
-
-      const question = document
-        .getElementById("question")
-        ?.value.trim();
-
-      const choiceA = document
-        .getElementById("choiceA")
-        ?.value.trim();
-
-      const choiceB = document
-        .getElementById("choiceB")
-        ?.value.trim();
-
-      const choiceC = document
-        .getElementById("choiceC")
-        ?.value.trim();
-
-      const choiceD = document
-        .getElementById("choiceD")
-        ?.value.trim();
-
-      const correctAnswer = document
-        .getElementById("correctAnswer")
-        ?.value;
-
-      if (!question) {
-        throw new Error("Enter a question.");
-      }
-
-      if (!choiceA || !choiceB || !choiceC || !choiceD) {
-        throw new Error("Complete all four choices.");
-      }
-
-      if (!["A", "B", "C", "D"].includes(correctAnswer)) {
-        throw new Error("Select the correct answer.");
-      }
-
-      await addDoc(
-        collection(db, "questions"),
-        {
-          lessonId,
-          question,
-          choiceA,
-          choiceB,
-          choiceC,
-          choiceD,
-          correctAnswer,
-          createdBy: currentUser.uid,
-          createdAt: serverTimestamp()
-        }
-      );
-
-      alert("Question added successfully.");
-
-    }
-
-    resetForm();
-    hideModal();
-
-    await loadQuestions();
-
-  } catch (error) {
-
-    console.error("Quiz save error:", error);
-
-    alert(
-      "Unable to save.\n\n" + error.message
-    );
-
-  } finally {
-
-    saveQuestion.disabled = false;
-    saveQuestion.textContent = "Save";
-
+  if (!stagedQuestions.length) {
+    showMessage("Add at least one question to preview.", "error");
+    return;
   }
 
+  const preview = stagedQuestions
+    .map((item, index) => {
+      const choices = Object.entries(item.choices)
+        .map(([letter, value]) => `${letter}. ${value}`)
+        .join("\n");
+
+      return `${index + 1}. ${item.question}\n${choices}`;
+    })
+    .join("\n\n");
+
+  alert(`${title}\n\n${preview}`);
 });
 
 // =====================================================
-// DELETE QUESTION
+// SAVE DRAFT / PUBLISH
 // =====================================================
 
-async function deleteQuestion(id, createdBy) {
+saveDraftButton?.addEventListener("click", () => {
+  saveQuiz("draft");
+});
 
+publishQuizButton?.addEventListener("click", () => {
+  saveQuiz("active");
+});
+
+async function saveQuiz(status) {
+  if (isSaving) return;
+
+  if (!currentUser) {
+    showMessage("Your session has expired. Please log in again.", "error");
+    return;
+  }
+
+  const title = quizTitle?.value.trim() || "";
+  const description = quizDescription?.value.trim() || "";
+  const lessonId = lessonSelect?.value || "";
+  const mode = quizMode?.value || "native";
+
+  const sectionIds = getSelectedSectionIds();
+
+  if (!title) {
+    showMessage("Enter a quiz title.", "error");
+    return;
+  }
+
+  if (!lessonId) {
+    showMessage("Select a lesson.", "error");
+    return;
+  }
+
+  if (!sectionIds.length) {
+    showMessage("Select at least one section.", "error");
+    return;
+  }
+
+  if (mode === "native" && !stagedQuestions.length) {
+    showMessage("Add at least one question.", "error");
+    return;
+  }
+
+  const lesson = lessons.find((item) => item.id === lessonId);
+
+  if (!lesson) {
+    showMessage("The selected lesson could not be found.", "error");
+    return;
+  }
+
+  let externalUrl = "";
+
+  if (mode === "external") {
+    externalUrl = externalQuizUrl?.value.trim() || "";
+
+    if (!externalUrl) {
+      showMessage("Enter the external quiz URL.", "error");
+      return;
+    }
+
+    try {
+      const parsed = new URL(externalUrl);
+
+      if (!["http:", "https:"].includes(parsed.protocol)) {
+        throw new Error();
+      }
+
+      externalUrl = parsed.href;
+
+    } catch {
+      showMessage("Enter a valid HTTP or HTTPS quiz URL.", "error");
+      return;
+    }
+  }
+
+  const passing = Number(passingScore?.value || 60);
+  const time = Number(timeLimit?.value || 0);
+  const attempts = Number(attemptLimit?.value || 1);
+
+  if (!Number.isFinite(passing) || passing < 0 || passing > 100) {
+    showMessage("Passing score must be between 0 and 100.", "error");
+    return;
+  }
+
+  if (!Number.isFinite(time) || time < 0) {
+    showMessage("Time limit cannot be negative.", "error");
+    return;
+  }
+
+  if (!Number.isInteger(attempts) || attempts < 1) {
+    showMessage("Attempt limit must be at least 1.", "error");
+    return;
+  }
+
+  const available = availableAt?.value || "";
+  const due = dueDate?.value || "";
+
+  if (available && due && new Date(due) <= new Date(available)) {
+    showMessage("The due date must be later than the availability date.", "error");
+    return;
+  }
+
+  const totalPoints = mode === "native"
+    ? stagedQuestions.reduce((sum, item) => sum + item.points, 0)
+    : 0;
+
+  isSaving = true;
+
+  const saveButton = status === "draft"
+    ? saveDraftButton
+    : publishQuizButton;
+
+  const originalText = saveButton?.textContent;
+
+  if (saveDraftButton) saveDraftButton.disabled = true;
+  if (publishQuizButton) publishQuizButton.disabled = true;
+
+  if (saveButton) {
+    saveButton.textContent = "Saving...";
+  }
+
+  try {
+    const batch = writeBatch(db);
+
+    const quizRef = doc(collection(db, "quizzes"));
+
+    const quizData = {
+      title,
+      description,
+      lessonId,
+      lessonName: lesson.title || "Untitled Lesson",
+
+      sectionIds,
+
+      type: mode,
+      status,
+
+      quizUrl: mode === "external" ? externalUrl : "",
+
+      passingScore: passing,
+      timeLimit: time,
+      attemptLimit: attempts,
+
+      availableAt: available || null,
+      dueDate: due || null,
+
+      shuffleQuestions: Boolean(shuffleQuestions?.checked),
+      shuffleChoices: Boolean(shuffleChoices?.checked),
+
+      totalQuestions: mode === "native" ? stagedQuestions.length : 0,
+      totalPoints,
+
+      createdBy: currentUser.uid,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+
+    batch.set(quizRef, quizData);
+
+    // Save native questions and answer keys separately.
+    if (mode === "native") {
+      stagedQuestions.forEach((item, index) => {
+        const questionRef = doc(
+          collection(db, "quizQuestions")
+        );
+
+        const answerKeyRef = doc(
+          collection(db, "quizAnswerKeys")
+        );
+
+        batch.set(questionRef, {
+          quizId: quizRef.id,
+          order: index + 1,
+          type: item.type,
+          question: item.question,
+          choices: item.choices,
+          points: item.points,
+          createdAt: serverTimestamp()
+        });
+
+        batch.set(answerKeyRef, {
+          quizId: quizRef.id,
+          questionId: questionRef.id,
+          correctAnswer: item.correctAnswer,
+          createdAt: serverTimestamp()
+        });
+      });
+    }
+
+    await batch.commit();
+
+    showMessage(
+      status === "active"
+        ? "Quiz published successfully."
+        : "Quiz saved as draft.",
+      "success"
+    );
+
+    resetBuilder();
+
+    await loadMyQuizzes();
+
+  } catch (error) {
+    console.error("Quiz save error:", error);
+
+    showMessage(
+      "Unable to save quiz: " + error.message,
+      "error"
+    );
+
+  } finally {
+    isSaving = false;
+
+    if (saveDraftButton) saveDraftButton.disabled = false;
+    if (publishQuizButton) publishQuizButton.disabled = false;
+
+    if (saveButton) {
+      saveButton.textContent = originalText || "Save";
+    }
+  }
+}
+
+// =====================================================
+// LOAD CREATED QUIZZES
+// =====================================================
+
+async function loadMyQuizzes() {
+  if (!myQuizzes || !currentUser) return;
+
+  myQuizzes.innerHTML = "<p>Loading quizzes...</p>";
+
+  try {
+    let snapshot;
+
+    if (currentRole === "admin") {
+      // Admin can list all quizzes.
+      snapshot = await getDocs(
+        collection(db, "quizzes")
+      );
+    } else {
+      // Teachers can only list quizzes they created.
+      snapshot = await getDocs(
+        query(
+          collection(db, "quizzes"),
+          where("createdBy", "==", currentUser.uid)
+        )
+      );
+    }
+
+    const quizDocuments = snapshot.docs.map((item) => ({
+      id: item.id,
+      ...item.data()
+    }));
+
+    quizDocuments.sort((a, b) => {
+      const dateA = a.createdAt?.seconds || 0;
+      const dateB = b.createdAt?.seconds || 0;
+
+      return dateB - dateA;
+    });
+
+    myQuizzes.innerHTML = "";
+
+    if (!quizDocuments.length) {
+      myQuizzes.innerHTML = "<p>No quizzes created yet.</p>";
+      return;
+    }
+
+    quizDocuments.forEach((quiz) => {
+      const card = document.createElement("div");
+      card.className = "quiz-card";
+
+      const heading = document.createElement("h3");
+      heading.textContent = quiz.title || "Untitled Quiz";
+
+      const lesson = document.createElement("p");
+      lesson.textContent =
+        "Lesson: " + (quiz.lessonName || "Unknown Lesson");
+
+      const type = document.createElement("p");
+      type.textContent =
+        "Type: " + (quiz.type || "native").toUpperCase();
+
+      const status = document.createElement("p");
+      status.textContent =
+        "Status: " + (quiz.status || "draft").toUpperCase();
+
+      const sectionsText = document.createElement("p");
+
+      const assignedNames = (quiz.sectionIds || []).map((id) => {
+        const section = sections.find((item) => item.id === id);
+        return section ? getSectionName(section) : id;
+      });
+
+      sectionsText.textContent =
+        "Sections: " + (assignedNames.join(", ") || "None");
+
+      const count = document.createElement("p");
+      count.textContent =
+        "Questions: " + (quiz.totalQuestions || 0);
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.textContent = "Delete Quiz";
+      remove.className = "delete-quiz";
+
+      remove.addEventListener("click", () => {
+        deleteQuiz(quiz.id, quiz.createdBy);
+      });
+
+      card.append(
+        heading,
+        lesson,
+        type,
+        status,
+        sectionsText,
+        count,
+        remove
+      );
+
+      myQuizzes.appendChild(card);
+    });
+
+  } catch (error) {
+    console.error("Quiz listing error:", error);
+
+    myQuizzes.innerHTML =
+      "<p>Unable to load quizzes. Check Firestore permissions.</p>";
+  }
+}
+
+// =====================================================
+// DELETE QUIZ
+// =====================================================
+
+async function deleteQuiz(quizId, createdBy) {
   if (
     currentRole !== "admin" &&
     createdBy !== currentUser?.uid
   ) {
-    alert("You can only delete questions you created.");
+    showMessage("You can only delete quizzes you created.", "error");
     return;
   }
 
-  if (!confirm("Delete this question?")) return;
-
-  try {
-
-    await deleteDoc(
-      doc(db, "questions", id)
-    );
-
-    alert("Question deleted.");
-
-    await loadQuestions();
-
-  } catch (error) {
-
-    console.error("Question delete error:", error);
-
-    alert(
-      "Unable to delete question.\n\n" + error.message
-    );
-
+  if (!confirm("Delete this quiz and its questions?")) {
+    return;
   }
 
+  try {
+    const [questionsSnapshot, keysSnapshot] = await Promise.all([
+      getDocs(
+        query(
+          collection(db, "quizQuestions"),
+          where("quizId", "==", quizId)
+        )
+      ),
+      getDocs(
+        query(
+          collection(db, "quizAnswerKeys"),
+          where("quizId", "==", quizId)
+        )
+      )
+    ]);
+
+    const documents = [
+      ...questionsSnapshot.docs,
+      ...keysSnapshot.docs
+    ];
+
+    // Firestore batches support up to 500 operations.
+    for (let i = 0; i < documents.length; i += 450) {
+      const batch = writeBatch(db);
+
+      documents.slice(i, i + 450).forEach((item) => {
+        batch.delete(item.ref);
+      });
+
+      await batch.commit();
+    }
+
+    const quizBatch = writeBatch(db);
+
+    quizBatch.delete(doc(db, "quizzes", quizId));
+
+    await quizBatch.commit();
+
+    showMessage("Quiz deleted successfully.", "success");
+
+    await loadMyQuizzes();
+
+  } catch (error) {
+    console.error("Quiz deletion error:", error);
+
+    showMessage(
+      "Unable to delete quiz: " + error.message,
+      "error"
+    );
+  }
 }
 
 // =====================================================
-// RESET FORM
+// RESET BUILDER
 // =====================================================
 
-function resetForm() {
-
-  [
-    "question",
-    "choiceA",
-    "choiceB",
-    "choiceC",
-    "choiceD",
-    "externalQuizTitle",
+function resetBuilder() {
+  const fields = [
+    "quizTitle",
+    "quizDescription",
     "externalQuizUrl",
-    "externalQuizDescription"
-  ].forEach(id => {
+    "availableAt",
+    "dueDate"
+  ];
 
-    const field = document.getElementById(id);
-
+  fields.forEach((id) => {
+    const field = $(id);
     if (field) field.value = "";
-
   });
 
   if (lessonSelect) lessonSelect.value = "";
 
+  if (passingScore) passingScore.value = "60";
+  if (timeLimit) timeLimit.value = "0";
+  if (attemptLimit) attemptLimit.value = "1";
+
+  if (shuffleQuestions) shuffleQuestions.checked = false;
+  if (shuffleChoices) shuffleChoices.checked = false;
+
+  if (sectionList) {
+    sectionList
+      .querySelectorAll('input[name="quizSections"]')
+      .forEach((checkbox) => {
+        checkbox.checked = false;
+      });
+  }
+
+  stagedQuestions = [];
+
+  resetQuestionFields();
+  renderStagedQuestions();
+  updateSelectedSectionCount();
+
   if (quizMode) {
     quizMode.value = "native";
-    quizMode.dispatchEvent(new Event("change"));
+    updateQuizMode();
   }
 
-  const correctAnswer =
-    document.getElementById("correctAnswer");
-
-  if (correctAnswer) {
-    correctAnswer.value = "";
+  if (questionType) {
+    questionType.value = "multiple_choice";
+    updateQuestionType();
   }
-
 }
 
 // =====================================================
-// ERROR MESSAGE
+// MESSAGES
 // =====================================================
 
-function showError(message) {
+function showMessage(message, type = "info") {
+  console.log(`[Quiz Builder] ${message}`);
 
-  console.error(message);
-
-  const existing = document.getElementById("quizError");
-
-  if (existing) {
-    existing.textContent = message;
+  if (!builderMessage) {
+    if (type === "error") {
+      alert(message);
+    }
     return;
   }
 
-  const error = document.createElement("p");
+  builderMessage.textContent = message;
+  builderMessage.className = `builder-message ${type}`;
+  builderMessage.style.display = "block";
 
-  error.id = "quizError";
-  error.className = "message error";
-  error.textContent = message;
-
-  document.querySelector(".container, main, .page")
-    ?.prepend(error);
-
+  builderMessage.scrollIntoView({
+    behavior: "smooth",
+    block: "nearest"
+  });
 }
+
+// =====================================================
+// INITIAL UI
+// =====================================================
+
+renderStagedQuestions();
+updateQuestionType();
+updateQuizMode();

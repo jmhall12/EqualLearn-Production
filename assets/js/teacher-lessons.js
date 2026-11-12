@@ -1,5 +1,7 @@
 import { auth, db } from "./firebase-config.js";
 
+import { notifySectionStudents } from "./notification-service.js";
+
 import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
@@ -810,6 +812,42 @@ saveLesson?.addEventListener("click", async () => {
           createdAt: serverTimestamp()
         }
       );
+
+      // ========================================
+// NOTIFY STUDENTS ABOUT NEW LESSON
+// ========================================
+
+if (
+    selectedModule.status === "active" &&
+    Array.isArray(selectedModule.sectionIds) &&
+    selectedModule.sectionIds.length > 0
+) {
+    try {
+        const notificationResult = await notifySectionStudents({
+            db,
+            auth,
+            sectionIds: selectedModule.sectionIds,
+            contentType: "lesson",
+            contentId: created.id,
+            contentTitle: titleValue,
+            teacherName:
+                currentUser.displayName ||
+                currentUser.email ||
+                "Your teacher"
+        });
+
+        console.info(
+            "LESSON NOTIFICATIONS:",
+            notificationResult
+        );
+
+    } catch (notificationError) {
+        console.error(
+            "LESSON NOTIFICATION ERROR:",
+            notificationError
+        );
+    }
+}
 
       lessons.unshift({
         id: created.id,

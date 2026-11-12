@@ -1,133 +1,153 @@
+
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#635bff">
+  <title>Take Quiz | EqualLearn</title>
 
-<meta charset="UTF-8">
+  <link rel="manifest" href="../manifest.webmanifest">
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/equallearn.css">
 
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#635bff">
+  <style>
+    * { box-sizing: border-box; }
 
-<title>Quiz Result</title>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #f3f3ff;
+      color: #24243a;
+      font-family: inherit;
+    }
 
-<link rel="stylesheet"
-href="../assets/css/style.css">
+    .quiz-shell {
+      max-width: 850px;
+      margin: auto;
+      padding: 24px 16px 60px;
+    }
 
-<style>
+    .quiz-header, .quiz-card {
+      background: white;
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 18px;
+      box-shadow: 0 8px 28px rgba(30,30,70,.07);
+    }
 
-body{
+    .quiz-header h1 { margin: 0 0 8px; }
+    .muted { color: #77778b; }
 
-background:#ECECFF;
-display:flex;
-justify-content:center;
+    .progress-track {
+      height: 9px;
+      background: #ededf7;
+      border-radius: 20px;
+      overflow: hidden;
+      margin-top: 18px;
+    }
 
-}
+    #progressBar {
+      height: 100%;
+      width: 0;
+      background: #6c63ff;
+      transition: width .25s;
+    }
 
-.phone{
+    .choice {
+      display: block;
+      width: 100%;
+      text-align: left;
+      border: 1px solid #e4e4f0;
+      background: #fafaff;
+      border-radius: 12px;
+      padding: 15px;
+      margin: 10px 0;
+      cursor: pointer;
+      font: inherit;
+    }
 
-width:100%;
-max-width:430px;
-min-height:100vh;
-background:white;
-padding:25px;
-text-align:center;
+    .choice.selected {
+      border: 2px solid #6c63ff;
+      background: #f0efff;
+    }
 
-}
+    .choice:disabled { cursor: default; }
 
-.score{
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 24px;
+    }
 
-font-size:65px;
-font-weight:700;
-color:#6C63FF;
-margin-top:30px;
+    button.primary {
+      background: #6c63ff;
+      color: white;
+      border: 0;
+      border-radius: 12px;
+      padding: 13px 22px;
+      font-weight: 700;
+      cursor: pointer;
+    }
 
-}
+    button.secondary {
+      background: #ededf7;
+      color: #444;
+      border: 0;
+      border-radius: 12px;
+      padding: 13px 22px;
+      cursor: pointer;
+    }
 
-.title{
+    button:disabled { opacity: .5; cursor: not-allowed; }
 
-font-size:25px;
-font-weight:700;
-margin-top:20px;
+    #message {
+      padding: 14px;
+      border-radius: 12px;
+      background: #fff3cd;
+      color: #765b00;
+      display: none;
+      margin-bottom: 15px;
+    }
 
-}
-
-.desc{
-
-margin-top:15px;
-color:#666;
-
-}
-
-.btn{
-
-display:block;
-margin-top:35px;
-padding:15px;
-background:#6C63FF;
-color:white;
-text-decoration:none;
-border-radius:15px;
-font-weight:600;
-
-}
-
-</style>
-
-
-<link rel="manifest" href="../manifest.webmanifest">
-<link rel="stylesheet" href="../assets/css/equallearn.css">
-<link rel="icon" href="../assets/icons/icon-192.png"></head>
+    @media(max-width: 600px) {
+      .quiz-header, .quiz-card { padding: 18px; }
+      .actions { flex-direction: column; }
+      .actions button { width: 100%; }
+    }
+  </style>
+</head>
 
 <body>
+  <main class="quiz-shell">
+    <header class="quiz-header">
+      <p class="muted">EQUALLEARN · ASSESSMENT</p>
+      <h1 id="quizTitle">Loading quiz...</h1>
+      <p id="quizDescription" class="muted"></p>
 
-<div class="phone">
+      <div class="progress-track">
+        <div id="progressBar"></div>
+      </div>
+      <p id="questionProgress" class="muted">Preparing questions...</p>
+      <p id="timer" class="muted"></p>
+    </header>
 
-<div class="score"
-id="score">
+    <div id="message"></div>
 
-0/0
+    <section class="quiz-card" id="quizCard">
+      <p>Loading your quiz...</p>
+    </section>
 
-</div>
+    <div class="actions">
+      <button class="secondary" id="exitBtn" type="button">Back to Classwork</button>
+      <button class="primary" id="nextBtn" type="button" disabled>
+        Next Question
+      </button>
+    </div>
+  </main>
 
-<div class="title">
-
-Quiz Finished 🎉
-
-</div>
-
-<div class="desc">
-
-Congratulations!
-
-</div>
-
-<a
-
-href="dashboard.html"
-
-class="btn">
-
-Return to Dashboard
-
-</a>
-
-</div>
-
-<script>
-
-const params=new URLSearchParams(window.location.search);
-
-const score=params.get("score");
-
-const total=params.get("total");
-
-document.getElementById("score").innerHTML=`${score}/${total}`;
-
-</script>
-
-<script type="module" src="../assets/js/ui-shell.js"></script>
-<script type="module" src="../assets/js/pwa.js"></script>
-<script type="module" src="../assets/js/theme.js"></script></body>
-
+  <script type="module" src="../assets/js/quiz.js"></script>
+  <script type="module" src="../assets/js/pwa.js"></script>
+</body>
 </html>
