@@ -14,19 +14,22 @@ const role = path.includes('/admin/')
   : null;
 
 const labels = {
-  admin: {
-    title: 'Administrator',
-    nav: [
-      ['dashboard.html', 'home', 'Dashboard'],
-      ['students.html', 'users', 'Students'],
-      ['manage-teachers.html', 'teacher', 'Teachers'],
-      ['register-teacher.html', 'userPlus', 'Register Teacher'],
-      ['class-assignments.html', 'classes', 'Class Assignments'],
-      ['reports.html', 'chart', 'Reports'],
-      ['live.html', 'video', 'Live'],
-      ['settings.html', 'settings', 'Settings']
-    ]
-  },
+ 
+admin: {
+  title: 'Administrator',
+  nav: [
+    ['dashboard.html', 'home', 'Dashboard'],
+    ['students.html', 'users', 'Students'],
+    ['manage-teachers.html', 'teacher', 'Teachers'],
+    ['register-teacher.html', 'userPlus', 'Register Teacher'],
+    ['class-assignments.html', 'classes', 'Class Assignments'],
+    ['check-content.html', 'lesson', 'Check Lessons & Modules'],
+    ['reports.html', 'chart', 'Reports'],
+    ['live.html', 'video', 'Live'],
+    ['settings.html', 'settings', 'Settings']
+  ]
+},
+
 
   teacher: {
     title: 'Teacher',
