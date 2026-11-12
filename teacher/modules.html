@@ -1208,7 +1208,44 @@ button:disabled {
     <div id="selectedFile"></div>
     <div id="existingFile"></div>
 
-    <div id="resourceLinksList" class="resource-links-list"></div>
+   
+<div id="resourceLinksList" class="resource-links-list"></div>
+
+<!-- MANUAL RESOURCE LINK FALLBACK -->
+<div class="youtube-input-wrap">
+
+  <h3>Manual Resource Link</h3>
+
+  <p class="help">
+    If the resource buttons or pop-ups are unavailable,
+    manually paste your resource link here.
+  </p>
+
+  <div class="form-group">
+    <label for="resourceNameInput">Resource Name</label>
+    <input
+      type="text"
+      id="resourceNameInput"
+      maxlength="100"
+      placeholder="Example: Google Drive, Canva, Learning Website">
+  </div>
+
+  <div class="form-group">
+    <label for="resourceUrlInput">Resource URL</label>
+    <input
+      type="url"
+      id="resourceUrlInput"
+      placeholder="https://example.com/resource">
+  </div>
+
+  <button
+    type="button"
+    id="addResourceLinkBtn"
+    class="btn btn-primary">
+    ＋ Add Resource Link
+  </button>
+
+</div>
 
     <div class="help">
       Google Drive, Docs, Forms, Drawings, Sheets and Slides resources

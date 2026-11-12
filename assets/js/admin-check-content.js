@@ -12,6 +12,7 @@ import {
   getDocs,
   onSnapshot,
   updateDoc,
+  deleteDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
@@ -178,251 +179,319 @@ function showError(message, error) {
   `;
 }
 
+
 // =====================================================
 // PREVIEW MODAL
-// Creates the modal if it is not already in HTML.
+// FIXED: Works with both existing HTML modal and
+// dynamically-created modal.
 // =====================================================
 
 function ensurePreviewModal() {
-  if ($("contentPreviewModal")) return;
+  let modal = $("contentPreviewModal");
 
-  const style = document.createElement("style");
+  // Create modal only if it does not exist in HTML.
+  if (!modal) {
+    const style = document.createElement("style");
 
-  style.textContent = `
-    .preview-modal {
-      display:none;
-      position:fixed;
-      inset:0;
-      z-index:100000;
-      padding:18px;
-      background:rgba(10,11,20,.75);
-      overflow-y:auto;
-      align-items:center;
-      justify-content:center;
-    }
+    style.id = "adminPreviewModalStyles";
 
-    .preview-modal.show {
-      display:flex;
-    }
-
-    .preview-dialog {
-      width:100%;
-      max-width:850px;
-      max-height:92vh;
-      overflow-y:auto;
-      border:1px solid var(--border);
-      border-radius:20px;
-      background:var(--surface);
-      color:var(--text);
-      box-shadow:0 20px 70px rgba(0,0,0,.3);
-    }
-
-    .preview-header {
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:15px;
-      padding:20px;
-      border-bottom:1px solid var(--border);
-      position:sticky;
-      top:0;
-      z-index:2;
-      background:var(--surface);
-    }
-
-    .preview-header h2 {
-      margin:8px 0 0;
-      font-size:21px;
-      overflow-wrap:anywhere;
-    }
-
-    .preview-label {
-      font-size:10px;
-      font-weight:800;
-      letter-spacing:1px;
-      color:var(--purple);
-    }
-
-    .preview-close {
-      width:38px;
-      height:38px;
-      border:1px solid var(--border);
-      border-radius:50%;
-      background:var(--surface-soft);
-      color:var(--text);
-      font-size:23px;
-      cursor:pointer;
-    }
-
-    .preview-body {
-      padding:22px;
-    }
-
-    .preview-section {
-      margin-bottom:22px;
-    }
-
-    .preview-section h3 {
-      margin:0 0 10px;
-      font-size:13px;
-      color:var(--purple);
-    }
-
-    .preview-section p {
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.8;
-      white-space:pre-wrap;
-      overflow-wrap:anywhere;
-    }
-
-    .preview-meta {
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-bottom:20px;
-    }
-
-    .preview-chip {
-      padding:8px 11px;
-      border:1px solid var(--border);
-      border-radius:9px;
-      background:var(--surface-soft);
-      color:var(--muted);
-      font-size:11px;
-    }
-
-    .preview-file {
-      display:block;
-      padding:13px;
-      margin-top:10px;
-      border:1px solid var(--border);
-      border-radius:11px;
-      color:var(--purple);
-      overflow-wrap:anywhere;
-      font-size:12px;
-    }
-
-    .preview-media {
-      width:100%;
-      max-height:450px;
-      margin-top:12px;
-      border:1px solid var(--border);
-      border-radius:12px;
-      background:#111;
-      object-fit:contain;
-    }
-
-    .preview-video {
-      width:100%;
-      aspect-ratio:16/9;
-      border:0;
-      border-radius:12px;
-      margin-top:12px;
-    }
-
-    .preview-footer {
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      padding:16px 20px;
-      border-top:1px solid var(--border);
-      color:var(--muted);
-      font-size:11px;
-    }
-
-    .preview-footer button {
-      padding:10px 16px;
-      border:0;
-      border-radius:9px;
-      background:var(--purple);
-      color:white;
-      font-weight:700;
-      cursor:pointer;
-    }
-
-    @media(max-width:600px) {
-      .preview-modal { padding:8px; }
-      .preview-dialog { max-height:95vh; }
-      .preview-body { padding:15px; }
-    }
-
-    @keyframes adminToastIn {
-      from {
-        opacity:0;
-        transform:translateY(-12px);
+    style.textContent = `
+      .preview-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 100000;
+        padding: 18px;
+        background: rgba(10, 11, 20, .75);
+        overflow-y: auto;
+        align-items: center;
+        justify-content: center;
       }
-      to {
-        opacity:1;
-        transform:translateY(0);
+
+      .preview-modal.show {
+        display: flex;
       }
+
+      .preview-dialog {
+        width: 100%;
+        max-width: 850px;
+        max-height: 92vh;
+        overflow-y: auto;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        background: var(--surface);
+        color: var(--text);
+        box-shadow: 0 20px 70px rgba(0, 0, 0, .3);
+      }
+
+      .preview-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 15px;
+        padding: 20px;
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: var(--surface);
+      }
+
+      .preview-header h2 {
+        margin: 8px 0 0;
+        font-size: 21px;
+        overflow-wrap: anywhere;
+      }
+
+      .preview-label {
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        color: var(--purple);
+      }
+
+      .preview-close {
+        width: 38px;
+        height: 38px;
+        border: 1px solid var(--border);
+        border-radius: 50%;
+        background: var(--surface-soft);
+        color: var(--text);
+        font-size: 23px;
+        cursor: pointer;
+      }
+
+      .preview-body {
+        padding: 22px;
+      }
+
+      .preview-section {
+        margin-bottom: 22px;
+      }
+
+      .preview-section h3 {
+        margin: 0 0 10px;
+        font-size: 13px;
+        color: var(--purple);
+      }
+
+      .preview-section p {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.8;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+
+      .preview-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 20px;
+      }
+
+      .preview-chip {
+        padding: 8px 11px;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        background: var(--surface-soft);
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .preview-file {
+        display: block;
+        padding: 13px;
+        margin-top: 10px;
+        border: 1px solid var(--border);
+        border-radius: 11px;
+        color: var(--purple);
+        overflow-wrap: anywhere;
+        font-size: 12px;
+      }
+
+      .preview-media {
+        width: 100%;
+        max-height: 450px;
+        margin-top: 12px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: #111;
+        object-fit: contain;
+      }
+
+      .preview-video {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        border: 0;
+        border-radius: 12px;
+        margin-top: 12px;
+      }
+
+      .preview-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 20px;
+        border-top: 1px solid var(--border);
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .preview-footer button {
+        padding: 10px 16px;
+        border: 0;
+        border-radius: 9px;
+        background: var(--purple);
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      @media (max-width: 600px) {
+        .preview-modal {
+          padding: 8px;
+        }
+
+        .preview-dialog {
+          max-height: 95vh;
+        }
+
+        .preview-body {
+          padding: 15px;
+        }
+      }
+    `;
+
+    if (!document.getElementById("adminPreviewModalStyles")) {
+      document.head.appendChild(style);
     }
-  `;
 
-  document.head.appendChild(style);
+    modal = document.createElement("div");
 
-  const modal = document.createElement("div");
+    modal.id = "contentPreviewModal";
+    modal.className = "preview-modal";
 
-  modal.id = "contentPreviewModal";
-  modal.className = "preview-modal";
+    modal.innerHTML = `
+      <div class="preview-dialog">
 
-  modal.innerHTML = `
-    <div class="preview-dialog">
+        <div class="preview-header">
+          <div>
+            <span class="preview-label" id="previewType">
+              CONTENT PREVIEW
+            </span>
 
-      <div class="preview-header">
-        <div>
-          <span class="preview-label" id="previewType">
-            CONTENT PREVIEW
-          </span>
-          <h2 id="previewTitle">Content Title</h2>
+            <h2 id="previewTitle">Content Title</h2>
+          </div>
+
+          <button
+            type="button"
+            id="closePreview"
+            class="preview-close"
+            aria-label="Close preview">
+            &times;
+          </button>
         </div>
 
-        <button
-          type="button"
-          id="closePreview"
-          class="preview-close">
-          &times;
-        </button>
+        <div class="preview-body" id="previewBody">
+          Loading...
+        </div>
+
+        <div class="preview-footer">
+          <span id="previewTeacher"></span>
+
+          <button
+            type="button"
+            id="closePreviewBottom">
+            Close Preview
+          </button>
+        </div>
+
       </div>
+    `;
 
-      <div class="preview-body" id="previewBody">
-        Loading...
-      </div>
+    document.body.appendChild(modal);
+  }
 
-      <div class="preview-footer">
-        <span id="previewTeacher"></span>
-        <button type="button" id="closePreviewBottom">
-          Close Preview
-        </button>
-      </div>
+  // IMPORTANT:
+  // Do not return early when the modal already exists.
+  // Always make sure its close events are attached.
 
-    </div>
-  `;
+  if (modal.dataset.closeEventsAttached === "true") {
+    return modal;
+  }
 
-  document.body.appendChild(modal);
-
-  $("closePreview").addEventListener(
-    "click",
-    closeContentPreview
-  );
-
-  $("closePreviewBottom").addEventListener(
-    "click",
-    closeContentPreview
-  );
-
+  // Close when clicking the X or Close Preview button.
   modal.addEventListener("click", (event) => {
+    const closeButton = event.target.closest(
+      "#closePreview, #closePreviewBottom"
+    );
+
+    if (closeButton) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      closeContentPreview();
+      return;
+    }
+
+    // Close when clicking the dark overlay.
     if (event.target === modal) {
       closeContentPreview();
     }
   });
+
+  modal.dataset.closeEventsAttached = "true";
+
+  return modal;
 }
 
+
+// =====================================================
+// CLOSE CONTENT PREVIEW
+// =====================================================
+
 function closeContentPreview() {
-  $("contentPreviewModal")?.classList.remove("show");
+  const modal = $("contentPreviewModal");
+
+  if (!modal) return;
+
+  // Hide modal.
+  modal.classList.remove("show");
+
+  // Restore page scrolling.
   document.body.style.overflow = "";
+  document.documentElement.style.overflow = "";
+
+  // Stop embedded videos and PDF previews.
+  modal.querySelectorAll("iframe").forEach((iframe) => {
+    iframe.src = "about:blank";
+  });
+
+  modal.querySelectorAll("video").forEach((video) => {
+    video.pause();
+    video.removeAttribute("src");
+    video.load();
+  });
 }
+
+
+// =====================================================
+// KEYBOARD SUPPORT
+// =====================================================
+
+document.addEventListener("keydown", (event) => {
+  const modal = $("contentPreviewModal");
+
+  if (
+    event.key === "Escape" &&
+    modal?.classList.contains("show")
+  ) {
+    closeContentPreview();
+  }
+});
+
 
 // =====================================================
 // YOUTUBE EMBED
@@ -1353,6 +1422,7 @@ function createContentCard(item) {
   return card;
 }
 
+
 // =====================================================
 // ADMIN ACTIONS
 // =====================================================
@@ -1431,10 +1501,10 @@ contentList?.addEventListener("click", async (event) => {
     };
   }
 
-  // REMOVE
+  // PERMANENT REMOVE
   else if (action === "remove") {
     const reason = prompt(
-      `Why are you removing "${contentTitle}"?\n\nEnter the reason:`
+      `Why are you permanently deleting "${contentTitle}"?\n\nEnter the reason:`
     );
 
     if (reason === null) return;
@@ -1445,18 +1515,10 @@ contentList?.addEventListener("click", async (event) => {
     }
 
     const confirmed = confirm(
-      `Remove "${contentTitle}"?\n\nThis records a removal status. It does not permanently delete the document.`
+      `PERMANENT DELETE\n\n"${contentTitle}" will be permanently deleted from Firestore.\n\nIt will no longer appear in the teacher and student content lists.\n\nThis action cannot be undone.\n\nContinue?`
     );
 
     if (!confirmed) return;
-
-    updatePayload = {
-      moderationStatus: "removed",
-      removalReason: reason.trim(),
-      removedBy: currentUser.uid,
-      removedAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    };
   } else {
     return;
   }
@@ -1465,25 +1527,58 @@ contentList?.addEventListener("click", async (event) => {
     isProcessing = true;
     button.disabled = true;
 
-    await updateDoc(
-      doc(db, collectionName, id),
-      updatePayload
+    const contentRef = doc(
+      db,
+      collectionName,
+      id
     );
 
-    if (action === "keep") {
-      alert("Content marked as kept.");
-    } else if (action === "flag") {
-      alert("Content successfully flagged.");
+    if (action === "remove") {
+      // Permanently delete the Firestore document.
+      await deleteDoc(contentRef);
+
+      // Immediately remove from the local admin list.
+      allContent = allContent.filter(
+        (content) =>
+          !(
+            content.id === id &&
+            content.type === type
+          )
+      );
+
+      updateStatistics();
+      renderContent();
+
+      // Close preview if the deleted item is currently open.
+      closeContentPreview();
+
+      alert(
+        `"${contentTitle}" has been permanently deleted from Firestore.`
+      );
+
     } else {
-      alert("Content marked as removed.");
+      // Keep and Flag remain moderation updates.
+      await updateDoc(
+        contentRef,
+        updatePayload
+      );
+
+      if (action === "keep") {
+        alert("Content marked as kept.");
+      } else if (action === "flag") {
+        alert("Content successfully flagged.");
+      }
     }
 
   } catch (error) {
     console.error("Content moderation error:", error);
 
     alert(
-      "Unable to update content.\n\n" +
-      (error.message || "Check Firestore permissions.")
+      action === "remove"
+        ? "Unable to permanently delete content.\n\n" +
+          (error.message || "Check Firestore delete permissions.")
+        : "Unable to update content.\n\n" +
+          (error.message || "Check Firestore permissions.")
     );
 
   } finally {
@@ -1491,6 +1586,7 @@ contentList?.addEventListener("click", async (event) => {
     button.disabled = false;
   }
 });
+
 
 // =====================================================
 // KEYBOARD SUPPORT

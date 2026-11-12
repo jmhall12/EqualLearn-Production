@@ -71,6 +71,10 @@ const videoUrl = $("videoUrl");
 const resourceLinksList = $("resourceLinksList");
 const resourceToolbar = $("resourceToolbar");
 
+const resourceNameInput = $("resourceNameInput");
+const resourceUrlInput = $("resourceUrlInput");
+const addResourceLinkBtn = $("addResourceLinkBtn");
+
 const cameraPhotoInput = $("cameraPhotoInput");
 const pickPhotoInput = $("pickPhotoInput");
 const recordVideoInput = $("recordVideoInput");
@@ -420,7 +424,8 @@ function openResourceWebsite(type) {
 
 }
 
-function confirmAndAttachResource(type, url) {
+
+function confirmAndAttachResource(type, url, customLabel = "") {
 
   try {
 
@@ -429,14 +434,20 @@ function confirmAndAttachResource(type, url) {
     );
 
     if (!["https:", "http:"].includes(parsed.protocol)) {
-      throw new Error("Invalid URL.");
+      throw new Error("Only valid HTTP or HTTPS links are allowed.");
     }
 
     const label =
-      RESOURCE_LABELS[type] || "Resource";
+      String(customLabel || "").trim() ||
+      RESOURCE_LABELS[type] ||
+      "Resource";
+
+    if (resourceLinks.some(item => item.url === parsed.href)) {
+      throw new Error("This resource link has already been added.");
+    }
 
     const confirmed = confirm(
-      `Confirm this ${label} resource?\n\n${parsed.href}\n\nAttach it to this module?`
+      `Confirm this resource?\n\n${label}\n${parsed.href}\n\nAttach it to this module?`
     );
 
     if (!confirmed) return;
@@ -448,6 +459,9 @@ function confirmAndAttachResource(type, url) {
     });
 
     renderResourceLinks();
+
+    if (resourceNameInput) resourceNameInput.value = "";
+    if (resourceUrlInput) resourceUrlInput.value = "";
 
     showMessage(
       `${label} attached successfully.`,
@@ -465,6 +479,7 @@ function confirmAndAttachResource(type, url) {
 
 }
 
+
 function requestResourceLink(type) {
 
   const label =
@@ -479,6 +494,33 @@ function requestResourceLink(type) {
   confirmAndAttachResource(type, url);
 
 }
+
+
+/* =====================================================
+   MANUAL RESOURCE LINK FALLBACK
+===================================================== */
+
+addResourceLinkBtn?.addEventListener("click", () => {
+
+  const name = resourceNameInput?.value.trim() || "";
+  const url = resourceUrlInput?.value.trim() || "";
+
+  if (!name) {
+    showMessage("Please enter a resource name.", "error");
+    resourceNameInput?.focus();
+    return;
+  }
+
+  if (!url) {
+    showMessage("Please paste the resource URL.", "error");
+    resourceUrlInput?.focus();
+    return;
+  }
+
+  confirmAndAttachResource("link", url, name);
+
+});
+
 
 /* =====================================================
    RESOURCE TOOLBAR EVENTS
@@ -3006,6 +3048,16 @@ function resetForm() {
     selectedFile.style.display = "none";
     selectedFile.innerHTML = "";
   }
+
+if (resourceNameInput) {
+  resourceNameInput.value = "";
+}
+
+if (resourceUrlInput) {
+  resourceUrlInput.value = "";
+}
+
+renderResourceLinks();
 
   renderResourceLinks();
 
