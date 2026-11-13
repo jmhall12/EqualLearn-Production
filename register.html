@@ -12,7 +12,7 @@
     <meta name="application-name" content="EqualLearn">
 
     <link rel="manifest" href="manifest.webmanifest">
-    <link rel="icon" href="assets/icons/icon-192.png">
+    <link rel="icon" href="assets/icons/equallearn-logo.png">
 
     <link rel="stylesheet" href="assets/css/loading-screen.css">
     <link rel="stylesheet" href="assets/css/equallearn.css">
@@ -669,6 +669,236 @@
                 animation-iteration-count: 1 !important;
             }
         }
+
+/* =========================================
+   EQUALLEARN REGISTER — SYSTEM DARK MODE
+========================================= */
+
+:root {
+  color-scheme: light;
+
+  --page: #f0f1f8;
+  --surface: #f7f7fc;
+  --text: #292940;
+  --muted: #77788f;
+  --purple: #7668df;
+  --purple-dark: #5d51c4;
+  --shadow-dark: #d5d5e2;
+  --shadow-light: #ffffff;
+}
+
+/* AUTOMATIC DARK MODE */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --page: #0b1020;
+    --surface: #151f33;
+    --text: #edf0fa;
+    --muted: #a2aec5;
+    --purple: #9588ff;
+    --purple-dark: #aa9fff;
+    --shadow-dark: #080d19;
+    --shadow-light: #202b40;
+  }
+
+  html,
+  body {
+    background: var(--page) !important;
+    color: var(--text) !important;
+  }
+
+  body {
+    background:
+      radial-gradient(
+        circle at 12% 12%,
+        rgba(111, 97, 210, .09),
+        transparent 32%
+      ),
+      var(--page) !important;
+  }
+
+  .el-auth-panel {
+    background: transparent !important;
+  }
+
+  /* CARD — REMOVE HARSH WHITE GLOW */
+  .el-auth-card {
+    background: #151f33 !important;
+    border: 1px solid #2d3b56 !important;
+
+    box-shadow:
+      0 18px 45px rgba(0, 0, 0, .28),
+      0 2px 8px rgba(0, 0, 0, .16) !important;
+  }
+
+  /* TEXT */
+  .el-back {
+    color: #aab5cc !important;
+  }
+
+  .el-back:hover {
+    color: #b5aaff !important;
+  }
+
+  .el-auth-heading h2 {
+    color: #f0f2fb !important;
+  }
+
+  .el-auth-heading p {
+    color: #a4b0c8 !important;
+  }
+
+  /* ICON */
+  .el-heading-mark {
+    background: #26334c !important;
+    color: #a99cff !important;
+
+    box-shadow:
+      0 5px 14px rgba(0, 0, 0, .22) !important;
+  }
+
+  /* FORM LABELS */
+  .el-field label {
+    color: #cbd3e6 !important;
+  }
+
+  /* INPUTS — NO WHITE INSET GLOW */
+  .el-field input {
+    background: #202c43 !important;
+    color: #f1f3fc !important;
+
+    border: 1px solid #394967 !important;
+
+    box-shadow:
+      inset 0 2px 5px rgba(0, 0, 0, .16) !important;
+  }
+
+  .el-field input::placeholder {
+    color: #8f9cb6 !important;
+  }
+
+  .el-field input:focus {
+    background: #25334d !important;
+    border-color: #887af0 !important;
+
+    box-shadow:
+      0 0 0 3px rgba(136, 122, 240, .15) !important;
+  }
+
+  .el-field input:disabled {
+    opacity: .65;
+  }
+
+  /* PASSWORD HINT */
+  .el-password-hint {
+    color: #929fba !important;
+  }
+
+  /* REGISTER BUTTON */
+  .el-register-btn {
+    color: #ffffff !important;
+
+    background: linear-gradient(
+      120deg,
+      #786ce0,
+      #6558c6
+    ) !important;
+
+    border: 1px solid rgba(183, 174, 255, .22) !important;
+
+    box-shadow:
+      0 7px 18px rgba(89, 72, 190, .20) !important;
+  }
+
+  .el-register-btn:hover {
+    background: linear-gradient(
+      120deg,
+      #897cf0,
+      #7467d8
+    ) !important;
+  }
+
+  /* DIVIDER */
+  .auth-divider {
+    color: #a0abc2 !important;
+  }
+
+  .auth-divider::before,
+  .auth-divider::after {
+    background: #35435e !important;
+    box-shadow: none !important;
+  }
+
+  /* GOOGLE BUTTON — SOFT DARK SURFACE */
+  .google-btn {
+    background: #202c43 !important;
+    color: #edf0fa !important;
+
+    border: 1px solid #394967 !important;
+
+    box-shadow:
+      0 5px 14px rgba(0, 0, 0, .18) !important;
+  }
+
+  .google-btn:hover {
+    background: #293751 !important;
+
+    box-shadow:
+      0 8px 18px rgba(0, 0, 0, .23) !important;
+  }
+
+  .google-btn:active {
+    box-shadow:
+      inset 0 2px 5px rgba(0, 0, 0, .20) !important;
+  }
+
+  /* NOTES */
+  .auth-note {
+    color: #929fba !important;
+  }
+
+  /* FOOTER */
+  .el-auth-footer {
+    color: #a2aec5 !important;
+    border-top-color: #35435e !important;
+  }
+
+  .el-auth-footer a {
+    color: #aa9fff !important;
+  }
+
+  /* ALERTS */
+  #message {
+    background: #202c43 !important;
+    color: #edf0fa !important;
+    box-shadow: none !important;
+  }
+
+  #message.error {
+    color: #ffabb2 !important;
+    background: rgba(184, 60, 78, .13) !important;
+    border-color: rgba(255, 120, 135, .25) !important;
+  }
+
+  #message.success {
+    color: #83e0b8 !important;
+    background: rgba(49, 139, 105, .13) !important;
+    border-color: rgba(83, 209, 156, .24) !important;
+  }
+
+  /* BROWSER AUTOFILL */
+  .el-field input:-webkit-autofill,
+  .el-field input:-webkit-autofill:hover,
+  .el-field input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #f1f3fc !important;
+
+    box-shadow:
+      0 0 0 1000px #202c43 inset !important;
+  }
+}
+
+
     </style>
 </head>
 
@@ -683,7 +913,7 @@
         <a class="el-brand" href="index.html">
             <img
                 class="el-brand-logo"
-                src="assets/icons/icon-192.png"
+                src="assets/icons/equallearn-logo.png"
                 width="44"
                 height="44"
                 alt="EqualLearn logo"
