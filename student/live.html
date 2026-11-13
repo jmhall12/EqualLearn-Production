@@ -509,6 +509,196 @@
         transition: none;
       }
     }
+
+
+/* ==========================================
+   EQUALLEARN LIVE — AUTOMATIC SYSTEM THEME
+========================================== */
+
+:root {
+  color-scheme: light;
+
+  --live-bg: #f4f5fa;
+  --live-card: #ffffff;
+  --live-text: #20243a;
+  --live-muted: #747b91;
+  --live-primary: #635bdb;
+  --live-border: #e3e6ef;
+
+  --live-surface: #f8f9fc;
+  --live-button-bg: #ffffff;
+  --live-button-text: #252941;
+  --live-shadow: 0 8px 28px rgba(20, 25, 50, .06);
+}
+
+/* DARK MODE — follows device settings */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --live-bg: #0b1020;
+    --live-card: #151d30;
+    --live-text: #e8ecf8;
+    --live-muted: #9ba8c2;
+    --live-primary: #887bff;
+    --live-border: #293650;
+
+    --live-surface: #10192b;
+    --live-button-bg: #202b40;
+    --live-button-text: #e8ecf8;
+    --live-shadow: 0 12px 35px rgba(0, 0, 0, .22);
+  }
+}
+
+/* PAGE */
+html,
+body {
+  background: var(--live-bg) !important;
+  color: var(--live-text);
+  transition: background .2s ease, color .2s ease;
+}
+
+.live-page {
+  background: transparent;
+  color: var(--live-text);
+}
+
+.live-heading h1,
+.live-card-header h2,
+.student-live-card h3 {
+  color: var(--live-text);
+}
+
+.live-heading p,
+.live-card-header p,
+.student-live-card p {
+  color: var(--live-muted);
+}
+
+/* MAIN CARD */
+.live-card {
+  background: var(--live-card) !important;
+  border: 1px solid var(--live-border) !important;
+  box-shadow: var(--live-shadow) !important;
+  color: var(--live-text);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* LIVE SESSION CARDS */
+.student-live-card {
+  background: var(--live-surface) !important;
+  border: 1px solid var(--live-border) !important;
+  box-shadow: var(--live-shadow) !important;
+  color: var(--live-text);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* REFRESH / DASHBOARD BUTTON */
+.live-refresh {
+  background: var(--live-button-bg) !important;
+  color: var(--live-button-text) !important;
+  border: 1px solid var(--live-border) !important;
+}
+
+.live-refresh:hover {
+  border-color: var(--live-primary) !important;
+  color: var(--live-primary) !important;
+}
+
+/* SESSION COUNT */
+.live-count {
+  background: rgba(99, 91, 219, .14);
+  color: var(--live-primary);
+}
+
+/* EMPTY STATE */
+.live-empty {
+  background: var(--live-surface);
+  border-color: var(--live-border);
+  color: var(--live-muted);
+}
+
+/* SESSION STATUS */
+.student-live-status {
+  background: rgba(217, 137, 65, .14);
+  color: #d99a57;
+}
+
+.student-live-status.is-live {
+  background: rgba(32, 190, 112, .14);
+  color: #35d68a;
+}
+
+/* JOIN BUTTON */
+.student-join-btn {
+  background: var(--live-primary);
+  color: #ffffff;
+}
+
+/* FORM ELEMENTS */
+input,
+textarea,
+select {
+  color-scheme: inherit;
+}
+
+/* LIVE MEETING — always comfortable dark theme */
+#studentMeetingScreen {
+  background: #0b1020;
+  color: #edf1fb;
+}
+
+.meeting-topbar,
+.meeting-controls {
+  background: #111a2c;
+  border-color: #293650;
+}
+
+.meeting-sidebar {
+  background: #121c30;
+  border-color: #293650;
+}
+
+.meeting-sidebar-section {
+  border-color: #293650;
+}
+
+.meeting-tile {
+  background: #202b40;
+  border-color: #35435e;
+}
+
+.meeting-chat-form input {
+  background: #202b40;
+  color: #edf1fb;
+  border-color: #35435e;
+}
+
+.meeting-chat-form input::placeholder {
+  color: #8e9bb5;
+}
+
+.meeting-controls button {
+  background: #26334b;
+  color: #edf1fb;
+  border-color: #3a4965;
+}
+
+.meeting-controls .leave-button {
+  background: #c83e53;
+  border-color: #c83e53;
+}
+
+/* ACCESSIBILITY */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--live-primary);
+  outline-offset: 3px;
+}
+
   </style>
 </head>
 
