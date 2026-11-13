@@ -397,6 +397,132 @@ select:focus-visible {
     transition-duration:.01ms!important;
   }
 }
+
+
+/* =========================================
+   STUDENT REPORTS — DARK MODE
+   ========================================= */
+
+body[data-theme="dark"] {
+    --report-text: #eef0fa;
+    --report-muted: #a5abc0;
+    --report-page: #151722;
+    --report-surface: #202435;
+
+    color: var(--report-text) !important;
+    background: #151722 !important;
+}
+
+body[data-theme="dark"] .reports-container {
+    color: var(--report-text);
+    background: #202331 !important;
+    border-color: #353a4d !important;
+    box-shadow: 0 12px 35px rgba(0,0,0,.22) !important;
+}
+
+body[data-theme="dark"] .reports-header h1,
+body[data-theme="dark"] .table-heading strong {
+    color: #eef0fa !important;
+}
+
+body[data-theme="dark"] .reports-header p,
+body[data-theme="dark"] .updated-label {
+    color: #a5abc0 !important;
+}
+
+body[data-theme="dark"] .summary-card,
+body[data-theme="dark"] .filter-card,
+body[data-theme="dark"] .table-card {
+    background: #292e40 !important;
+    border: 1px solid #3a4055 !important;
+    box-shadow: 0 8px 22px rgba(0,0,0,.18) !important;
+}
+
+body[data-theme="dark"] .summary-card span {
+    color: #aeb4ca !important;
+}
+
+body[data-theme="dark"] .summary-card strong {
+    color: #f0f1fa !important;
+}
+
+body[data-theme="dark"] .progress-note {
+    color: #c0c5d9 !important;
+    background: #252a3b !important;
+    border-color: #3a4055 !important;
+}
+
+body[data-theme="dark"] .progress-note strong {
+    color: #c2b5ff !important;
+}
+
+body[data-theme="dark"] .filter-card input,
+body[data-theme="dark"] .filter-card select {
+    color: #eef0fa !important;
+    background: #191e2d !important;
+    border: 1px solid #41475d !important;
+    box-shadow: none !important;
+}
+
+body[data-theme="dark"] .filter-card input::placeholder {
+    color: #858da7 !important;
+}
+
+body[data-theme="dark"] .table-heading {
+    border-color: #3a4055 !important;
+}
+
+body[data-theme="dark"] .table-heading span {
+    color: #a5abc0 !important;
+}
+
+body[data-theme="dark"] .table-wrapper table {
+    color: #eef0fa !important;
+}
+
+body[data-theme="dark"] .table-wrapper thead th {
+    color: #c7c0f5 !important;
+    background: #30364b !important;
+    border-color: #41475d !important;
+}
+
+body[data-theme="dark"] .table-wrapper tbody td {
+    color: #dce0ef !important;
+    background: #252a3b !important;
+    border-color: #363c50 !important;
+}
+
+body[data-theme="dark"] .table-wrapper tbody tr:hover td {
+    background: #30364b !important;
+}
+
+body[data-theme="dark"] .student-name,
+body[data-theme="dark"] .grade {
+    color: #f0f1fa !important;
+}
+
+body[data-theme="dark"] .student-email,
+body[data-theme="dark"] .last-activity {
+    color: #a5abc0 !important;
+}
+
+body[data-theme="dark"] .back-btn {
+    color: #c2b5ff !important;
+    background: #30344a !important;
+    border-color: #41475d !important;
+    box-shadow: none !important;
+}
+
+body[data-theme="dark"] .empty,
+body[data-theme="dark"] .loading {
+    color: #a5abc0 !important;
+}
+
+body[data-theme="dark"] .badge-inactive {
+    color: #c3c8d9 !important;
+    background: #3a4052 !important;
+}
+
 </style>
 </head>
 

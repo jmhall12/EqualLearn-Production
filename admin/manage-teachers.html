@@ -424,6 +424,192 @@
                 background: rgba(20,24,48,.7);
             }
         }
+
+
+/* =====================================================
+   MANAGE TEACHERS — PREMIUM DARK MODE
+   ===================================================== */
+
+html[data-theme="dark"],
+body[data-theme="dark"] {
+    color-scheme: dark;
+
+    --teacher-text: #eef0fa;
+    --teacher-muted: #a5abc0;
+    --teacher-glass: #202331;
+    --teacher-border: #383e53;
+    --teacher-shadow: 0 12px 35px rgba(0,0,0,.22);
+}
+
+html[data-theme="dark"] {
+    background: #151722 !important;
+}
+
+body[data-theme="dark"] {
+    color: var(--teacher-text) !important;
+    background: #151722 !important;
+}
+
+/* Main container */
+body[data-theme="dark"] .container {
+    color: var(--teacher-text) !important;
+    background: #202331 !important;
+    border: 1px solid #383e53 !important;
+    box-shadow: var(--teacher-shadow) !important;
+}
+
+/* Page title */
+body[data-theme="dark"] .container h1 {
+    color: #f1f2fa !important;
+}
+
+/* Teacher list wrapper */
+body[data-theme="dark"] #teacherList {
+    color: var(--teacher-muted) !important;
+    background: #252a3b !important;
+    border: 1px solid #383e53 !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.025) !important;
+}
+
+/* Teacher cards */
+body[data-theme="dark"] .teacher-card {
+    color: var(--teacher-text) !important;
+    background: #303548 !important;
+    border: 1px solid #41475e !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,.18) !important;
+}
+
+body[data-theme="dark"] .teacher-card:hover {
+    background: #363c51 !important;
+    border-color: #7165bc !important;
+    box-shadow: 0 13px 30px rgba(0,0,0,.25) !important;
+}
+
+body[data-theme="dark"] .teacher-card h3 {
+    color: #f1f2fa !important;
+}
+
+body[data-theme="dark"] .teacher-card p {
+    color: #b0b6ca !important;
+}
+
+/* Teacher status */
+body[data-theme="dark"] .status.active {
+    color: #79dcb0 !important;
+    background: rgba(40,145,100,.17) !important;
+}
+
+body[data-theme="dark"] .status.inactive {
+    color: #ff929f !important;
+    background: rgba(190,55,75,.17) !important;
+}
+
+/* Edit and Delete */
+body[data-theme="dark"] .teacher-actions .edit-btn {
+    color: #c3b6ff !important;
+    background: #393552 !important;
+    border: 1px solid #514873 !important;
+}
+
+body[data-theme="dark"] .teacher-actions .edit-btn:hover {
+    color: white !important;
+    background: #6555bd !important;
+}
+
+body[data-theme="dark"] .teacher-actions .delete-btn {
+    color: #ff9ba5 !important;
+    background: #482d3a !important;
+    border: 1px solid #64404e !important;
+}
+
+body[data-theme="dark"] .teacher-actions .delete-btn:hover {
+    color: white !important;
+    background: #a83e52 !important;
+}
+
+/* Add Teacher button */
+body[data-theme="dark"] #openModal {
+    color: white !important;
+    background: linear-gradient(135deg, #7568df, #5548c6) !important;
+}
+
+/* Back button */
+body[data-theme="dark"] .back-btn {
+    color: #c3b6ff !important;
+    background: #30354a !important;
+    border: 1px solid #41475d !important;
+}
+
+/* Loading and empty states */
+body[data-theme="dark"] #teacherList .loading,
+body[data-theme="dark"] #teacherList .empty {
+    color: #a5abc0 !important;
+    background: #303548 !important;
+}
+
+/* Modal backdrop */
+body[data-theme="dark"] .modal {
+    background: rgba(5,7,17,.76) !important;
+}
+
+/* Modal */
+body[data-theme="dark"] .modal-content {
+    color: #eef0fa !important;
+    background: #252a3c !important;
+    border: 1px solid #41475d !important;
+    box-shadow: 0 25px 80px rgba(0,0,0,.45) !important;
+}
+
+body[data-theme="dark"] .modal-content h2 {
+    color: #f1f2fa !important;
+}
+
+/* Modal inputs */
+body[data-theme="dark"] .modal-content input {
+    color: #eef0fa !important;
+    background: #191e2d !important;
+    border: 1px solid #41475d !important;
+}
+
+body[data-theme="dark"] .modal-content input::placeholder {
+    color: #858da7 !important;
+}
+
+body[data-theme="dark"] .modal-content input:focus {
+    background: #202638 !important;
+    border-color: #9482ed !important;
+    box-shadow: 0 0 0 4px rgba(148,130,237,.13) !important;
+}
+
+/* Modal buttons */
+body[data-theme="dark"] #cancel {
+    color: #c2c8dc !important;
+    background: #363b50 !important;
+    border: 1px solid #484f67 !important;
+}
+
+body[data-theme="dark"] #cancel:hover {
+    background: #41475e !important;
+}
+
+body[data-theme="dark"] #saveTeacher {
+    color: white !important;
+    background: linear-gradient(135deg, #7568df, #5548c6) !important;
+}
+
+/* Smooth transitions */
+body[data-theme="dark"] .container,
+body[data-theme="dark"] .teacher-card,
+body[data-theme="dark"] #teacherList,
+body[data-theme="dark"] .modal-content,
+body[data-theme="dark"] .modal-content input {
+    transition:
+        background .25s ease,
+        color .25s ease,
+        border-color .25s ease,
+        box-shadow .25s ease;
+}
+
     </style>
 </head>
 

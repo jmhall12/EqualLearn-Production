@@ -25,7 +25,8 @@ const labels = {
       ['check-content.html', 'lesson', 'Check Lessons & Modules'],
       ['reports.html', 'chart', 'Reports'],
       ['live.html', 'video', 'Live'],
-      ['settings.html', 'settings', 'Settings']
+      ['settings.html', 'settings', 'Settings'],
+      ['create-content.html','create modules','Modules']
     ]
   },
 

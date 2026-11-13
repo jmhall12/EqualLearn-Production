@@ -399,6 +399,170 @@
                 background: rgba(255,255,255,.95);
             }
         }
+
+
+/* =====================================================
+   EQUALLEARN — ADMIN SETTINGS DARK MODE
+   ===================================================== */
+
+html[data-theme="dark"],
+body[data-theme="dark"] {
+    color-scheme: dark;
+
+    --settings-text: #eef0fa;
+    --settings-muted: #a5abc0;
+    --settings-glass: #202331;
+    --settings-border: #383e53;
+    --settings-shadow: 0 12px 35px rgba(0,0,0,.22);
+}
+
+html[data-theme="dark"] {
+    background: #151722 !important;
+}
+
+body[data-theme="dark"] {
+    color: #eef0fa !important;
+    background: #151722 !important;
+}
+
+/* Main settings container */
+body[data-theme="dark"] .settings-container {
+    color: #eef0fa !important;
+    background: #202331 !important;
+    border: 1px solid #383e53 !important;
+    box-shadow: 0 12px 35px rgba(0,0,0,.22) !important;
+}
+
+/* Header */
+body[data-theme="dark"] .settings-header h1 {
+    color: #f1f2fa !important;
+}
+
+body[data-theme="dark"] .settings-header p {
+    color: #a5abc0 !important;
+}
+
+/* Back button */
+body[data-theme="dark"] .back-btn {
+    color: #c3b6ff !important;
+    background: #30354a !important;
+    border: 1px solid #41475d !important;
+    box-shadow: none !important;
+}
+
+body[data-theme="dark"] .back-btn:hover {
+    color: #fff !important;
+    background: #403b60 !important;
+}
+
+/* Settings cards */
+body[data-theme="dark"] .settings-card {
+    color: #eef0fa !important;
+    background: #292e40 !important;
+    border: 1px solid #3a4055 !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,.2) !important;
+}
+
+body[data-theme="dark"] .settings-card:hover {
+    box-shadow: 0 13px 30px rgba(0,0,0,.28) !important;
+}
+
+/* Card headings and descriptions */
+body[data-theme="dark"] .settings-card h2 {
+    color: #eef0fa !important;
+}
+
+body[data-theme="dark"] .settings-card > p {
+    color: #a5abc0 !important;
+}
+
+/* Form labels */
+body[data-theme="dark"] .form-group label {
+    color: #dce0ef !important;
+}
+
+/* All form fields */
+body[data-theme="dark"] .form-group input {
+    color: #eef0fa !important;
+    background: #191e2d !important;
+    border: 1px solid #41475d !important;
+}
+
+body[data-theme="dark"] .form-group input::placeholder {
+    color: #858da7 !important;
+}
+
+body[data-theme="dark"] .form-group input:hover:not(:disabled) {
+    background: #202638 !important;
+    border-color: #7568c8 !important;
+}
+
+body[data-theme="dark"] .form-group input:focus {
+    color: #fff !important;
+    background: #22283a !important;
+    border-color: #9482ed !important;
+    box-shadow: 0 0 0 4px rgba(148,130,237,.13) !important;
+}
+
+/* Disabled email and role fields */
+body[data-theme="dark"] .form-group input:disabled {
+    color: #a5abc0 !important;
+    background: #252a3a !important;
+    border-color: #363d52 !important;
+    opacity: 1 !important;
+}
+
+/* Primary buttons */
+body[data-theme="dark"] .save-btn {
+    color: #fff !important;
+    background: linear-gradient(110deg, #7568df, #5548c6) !important;
+    border-color: transparent !important;
+    box-shadow: 0 6px 16px rgba(99,91,219,.22) !important;
+}
+
+body[data-theme="dark"] .save-btn:hover:not(:disabled) {
+    box-shadow: 0 10px 22px rgba(99,91,219,.32) !important;
+}
+
+/* Reset password button */
+body[data-theme="dark"] .reset-btn {
+    color: #c3b6ff !important;
+    background: #30354a !important;
+    border: 1px solid #484365 !important;
+}
+
+body[data-theme="dark"] .reset-btn:hover:not(:disabled) {
+    color: #fff !important;
+    background: #403b60 !important;
+}
+
+/* Security messages */
+body[data-theme="dark"] #securityMessage {
+    color: #c3c8dc !important;
+}
+
+body[data-theme="dark"] #securityMessage:empty {
+    display: none;
+}
+
+/* Disabled buttons */
+body[data-theme="dark"] button:disabled {
+    opacity: .45;
+}
+
+/* Smooth theme transition */
+body[data-theme="dark"] .settings-container,
+body[data-theme="dark"] .settings-card,
+body[data-theme="dark"] .form-group input,
+body[data-theme="dark"] .back-btn,
+body[data-theme="dark"] .reset-btn {
+    transition:
+        background .25s ease,
+        color .25s ease,
+        border-color .25s ease,
+        box-shadow .25s ease;
+}
+
     </style>
 
 </head>
