@@ -844,6 +844,136 @@ button:disabled {
     min-height: 78px;
   }
 }
+
+
+/* ADMIN MODULE REVIEW */
+
+.review-panel {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 18px;
+  padding: 21px;
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+
+.review-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 17px;
+}
+
+.review-heading h2 {
+  margin: 0;
+  font-size: 18px;
+  color: #fff !important;
+}
+
+.review-heading p {
+  color: var(--muted) !important;
+  font-size: 13px;
+  margin: 5px 0 0;
+}
+
+.review-count {
+  padding: 7px 12px;
+  border-radius: 30px;
+  background: #453719 !important;
+  color: #fcd879 !important;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.review-card {
+  padding: 18px;
+  border: 1px solid #65532b !important;
+  border-radius: 14px;
+  background: #252719 !important;
+  margin-bottom: 12px;
+}
+
+.review-card h3 {
+  color: #fff !important;
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.review-card p {
+  color: #d4d8c5 !important;
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 7px 0;
+}
+
+.review-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.review-meta span {
+  padding: 6px 9px;
+  border-radius: 8px;
+  background: #353a2b !important;
+  color: #e4e8d6 !important;
+  font-size: 11px;
+}
+
+.review-actions {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.review-actions button {
+  flex: 1;
+  min-width: 110px;
+  padding: 11px 14px;
+  border: 0;
+  border-radius: 9px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.review-approve {
+  background: #166344 !important;
+  color: #bbf7d0 !important;
+}
+
+.review-reject {
+  background: #572a35 !important;
+  color: #fecdd3 !important;
+}
+
+.review-actions button:hover {
+  filter: brightness(1.15);
+}
+
+.review-empty {
+  padding: 25px;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  text-align: center;
+  color: var(--muted) !important;
+  font-size: 13px;
+}
+
+@media(max-width:480px) {
+  .review-actions {
+    flex-direction: column;
+  }
+
+  .review-actions button {
+    width: 100%;
+  }
+}
+
 </style>
 </head>
 
@@ -874,6 +1004,34 @@ button:disabled {
     </button>
   </div>
 </header>
+
+
+<!-- ADMIN MODULE REVIEW -->
+
+<section class="review-panel" id="adminReviewPanel">
+
+  <div class="review-heading">
+    <div>
+      <h2>📋 Admin Module Review</h2>
+      <p>
+        Review learning modules submitted by the administrator
+        before editing and publishing them to your students.
+      </p>
+    </div>
+
+    <span class="review-count" id="pendingReviewCount">
+      0 Pending
+    </span>
+  </div>
+
+  <div id="adminReviewList">
+    <div class="review-empty">
+      Loading admin-submitted modules...
+    </div>
+  </div>
+
+</section>
+
 
 <!-- STATISTICS -->
 <section class="stats">
