@@ -1038,44 +1038,53 @@ import {
      USER NAME SYNC
   ------------------------------------------------------- */
 
-  function setupUserNameSync() {
-    const selectors = [
-      "#adminName",
-      "#teacherName",
-      "#studentName",
-      "#sidebarName",
-      "#userName",
-      "[data-user-name]"
-    ].join(",");
+ 
+function setupUserNameSync() {
+  const selectors = [
+    "#adminName",
+    "#teacherName",
+    "#studentName",
+    "#sidebarName",
+    "#userName",
+    "[data-user-name]"
+  ].join(",");
 
-    const shellName = topbar.querySelector("[data-el-user-name]");
+  const shellName = topbar.querySelector("[data-el-user-name]");
 
-    const updateName = () => {
-      const source = document.querySelector(selectors);
+  if (!shellName) return;
 
-      if (!source || shellName.contains(source)) return;
+  const updateName = () => {
+    const source = document.querySelector(selectors);
 
-      const value = (source.textContent || "").trim();
+    if (!source || shellName.contains(source)) return;
 
-      if (
-        value &&
-        !value.toLowerCase().includes("loading") &&
-        value.length < 100
-      ) {
-        shellName.textContent = value;
-      }
-    };
+    const value = (source.textContent || "").trim();
 
+    if (
+      value &&
+      !value.toLowerCase().includes("loading") &&
+      value.length < 100 &&
+      shellName.textContent.trim() !== value
+    ) {
+      // Update only when the name actually changes.
+      // Prevents an infinite MutationObserver loop.
+      shellName.textContent = value;
+    }
+  };
+
+  updateName();
+
+  profileObserver = new MutationObserver(() => {
     updateName();
+  });
 
-    profileObserver = new MutationObserver(updateName);
+  profileObserver.observe(document.body, {
+    childList: true,
+    subtree: true,
+    characterData: true
+  });
+}
 
-    profileObserver.observe(document.body, {
-      childList: true,
-      subtree: true,
-      characterData: true
-    });
-  }
 
   /* -------------------------------------------------------
      ROUTE LOADING
