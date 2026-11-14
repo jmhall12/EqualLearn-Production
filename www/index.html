@@ -1,32 +1,2315 @@
+
 <!DOCTYPE html>
-<html lang="en"><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#5b5cf0">
-<title>EqualLearn — Learn anywhere</title>
-<meta name="description" content="EqualLearn is a responsive learning platform for students, teachers, and administrators, available on the web and Android.">
-<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="assets/icons/icon-192.png"><link rel="stylesheet" href="assets/css/equallearn.css">
-</head><body>
-<header class="el-site-header">
-  <a class="el-wordmark" href="index.html" aria-label="EqualLearn home"><span class="el-wordmark-mark"><img src="assets/icons/icon-192.png" alt=""></span><span class="el-wordmark-text">EqualLearn</span></a>
-  <nav class="el-site-nav"><a href="#features">Features</a><a href="#android">Android app</a><a class="el-btn el-btn-ghost" href="login.html">Sign in</a><a class="el-btn el-btn-primary" href="register.html">Get started</a></nav>
-</header>
-<main>
-<section class="el-home-hero">
-  <div class="el-home-copy">
-    <div class="el-eyebrow"><span data-icon="zap"></span> Web + Android learning platform</div>
-    <h1>Learning that is <span>clear, visual, and ready anywhere.</span></h1>
-    <p>EqualLearn gives students a focused learning space, teachers simple content tools, and administrators a clear view of the platform—all from one responsive system.</p>
-    <div class="el-home-actions"><a class="el-btn el-btn-primary el-btn-lg" href="login.html">Sign in <span data-icon="arrowRight"></span></a><a class="el-btn el-btn-secondary el-btn-lg" href="#android"><span data-icon="smartphone"></span> See Android app</a></div>
-    <div class="el-trust-row"><span><i data-icon="shield"></i> Firebase accounts</span><span><i data-icon="zap"></i> Fast responsive UI</span><span><i data-icon="globe"></i> Web + mobile</span></div>
-  </div>
-  <div class="el-device-stage" aria-label="EqualLearn dashboard preview">
-    <div class="el-browser-mock"><div class="el-browser-bar"><span></span><span></span><span></span><b>EqualLearn</b></div><div class="el-browser-body"><div class="el-preview-sidebar"><div></div><i></i><i></i><i></i><i></i></div><div class="el-preview-main"><small>STUDENT DASHBOARD</small><h3>Welcome back 👋</h3><div class="el-preview-stats"><i></i><i></i><i></i></div><div class="el-preview-chart"><span style="height:38%"></span><span style="height:58%"></span><span style="height:49%"></span><span style="height:78%"></span><span style="height:65%"></span><span style="height:88%"></span></div></div></div></div>
-    <div class="el-phone-mock"><div class="el-phone-notch"></div><div class="el-phone-screen"><div class="el-mini-brand"><img src="assets/icons/icon-192.png" alt=""><b>EqualLearn</b></div><small>YOUR PROGRESS</small><strong>72%</strong><div class="el-progress"><span style="width:72%"></span></div><div class="el-phone-card"></div><div class="el-phone-card short"></div></div></div>
-  </div>
-</section>
-<section id="features" class="el-home-section"><div class="el-section-head"><div><span class="el-section-kicker">Built for every role</span><h2>One platform, three focused workspaces.</h2></div><p>Every page adapts from desktop to phone without sacrificing the tools each user needs.</p></div><div class="el-feature-cards"><article><span class="el-feature-icon" data-icon="profile"></span><h3>Students</h3><p>Learn from modules, take quizzes, review results, and see progress clearly.</p></article><article><span class="el-feature-icon" data-icon="teacher"></span><h3>Teachers</h3><p>Create lessons and modules, build quizzes, and manage assigned learners.</p></article><article><span class="el-feature-icon" data-icon="chart"></span><h3>Administrators</h3><p>Manage users, classes, reports, settings, and platform activity in one place.</p></article></div></section>
-<section id="android" class="el-apk-section"><div class="el-apk-copy"><span class="el-section-kicker">EqualLearn for Android</span><h2>Take the same learning experience to your phone.</h2><p>The Android APK connects to the same EqualLearn website and Firebase backend. Accounts, lessons, quizzes, and progress stay together across desktop and mobile.</p><div class="el-apk-points"><span><i data-icon="check"></i> Same login and database</span><span><i data-icon="check"></i> Responsive mobile interface</span><span><i data-icon="check"></i> Built automatically with GitHub Actions</span></div><div class="el-home-actions"><a class="el-btn el-btn-primary el-btn-lg" href="https://github.com/Jardeleza0921/equallearn/actions" target="_blank" rel="noopener"><span data-icon="download"></span> View APK builds</a><a class="el-btn el-btn-secondary el-btn-lg" href="MOBILE_APP.md">How the app works</a></div></div><div class="el-apk-visual"><div class="el-app-icon-large"><img src="assets/icons/icon-512.png" alt="EqualLearn app icon"><span>EqualLearn</span></div><div class="el-apk-badge"><span data-icon="smartphone"></span><div><small>ANDROID APP</small><b>EqualLearn APK</b></div></div></div></section>
-<section class="el-cta"><div><span class="el-section-kicker">Ready to learn?</span><h2>Open your EqualLearn workspace.</h2></div><div class="el-home-actions"><a class="el-btn el-btn-primary el-btn-lg" href="login.html">Sign in</a><a class="el-btn el-btn-secondary el-btn-lg" href="register.html">Create student account</a></div></section>
-</main>
-<footer class="el-site-footer"><a class="el-wordmark" href="index.html"><span class="el-wordmark-mark"><img src="assets/icons/icon-192.png" alt=""></span><span class="el-wordmark-text">EqualLearn</span></a><p>Responsive learning for web and Android.</p></footer>
-<script type="module" src="assets/js/theme.js"></script><script type="module">import {hydrateIcons} from './assets/js/icons.js'; hydrateIcons();</script><script type="module" src="assets/js/pwa.js"></script>
-</body></html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#edf0fa">
+
+  <title>EqualLearn — Learning Without Limits</title>
+  <meta name="description" content="EqualLearn is a modern learning platform connecting students, teachers, and administrators through one seamless digital learning experience.">
+  <meta name="application-name" content="EqualLearn">
+
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="assets/css/equallearn.css">
+
+<style> 
+
+/* =====================================================
+   EQUALLEARN — MINIMAL SOFT UI
+   Clean • Elegant • Subtle Claymorphism
+===================================================== */
+
+:root {
+  --bg: #f2f3f8;
+  --surface: #ffffff;
+  --surface-soft: #f7f7fc;
+
+  --text: #292b45;
+  --muted: #85899e;
+
+  --purple: #7968ce;
+  --purple-dark: #6252b5;
+  --purple-light: #eeeaff;
+
+  --green: #43a789;
+  --border: #e9eaf2;
+
+  --shadow:
+    0 3px 12px rgba(39, 43, 75, .045);
+
+  --shadow-hover:
+    0 6px 18px rgba(39, 43, 75, .075);
+
+  --radius: 18px;
+
+  --font-heading: "Plus Jakarta Sans", sans-serif;
+  --font-body: "DM Sans", sans-serif;
+}
+
+/* =====================================================
+   BASE
+===================================================== */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 100px;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  font-family: var(--font-body);
+
+  background: var(--bg);
+  overflow-x: hidden;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.premium-container {
+  width: min(1160px, calc(100% - 48px));
+  margin-inline: auto;
+}
+
+/* =====================================================
+   HEADER
+===================================================== */
+
+.premium-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  background: rgba(242, 243, 248, .96);
+  border-bottom: 1px solid var(--border);
+}
+
+.premium-nav {
+  min-height: 76px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 24px;
+}
+
+.premium-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+
+  flex-shrink: 0;
+
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -.8px;
+}
+
+.brand-icon {
+  width: 40px;
+  height: 40px;
+
+  display: block;
+  object-fit: cover;
+
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.premium-links {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.premium-links > a:not(.premium-btn) {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 650;
+  transition: color .2s ease;
+}
+
+.premium-links > a:not(.premium-btn):hover {
+  color: var(--purple);
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* =====================================================
+   BUTTONS
+===================================================== */
+
+.premium-btn {
+  min-height: 44px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  padding: 0 20px;
+
+  border: 1px solid transparent;
+  border-radius: 12px;
+
+  cursor: pointer;
+
+  font-size: 13px;
+  font-weight: 750;
+
+  transition:
+    background .2s ease,
+    color .2s ease,
+    border-color .2s ease,
+    transform .2s ease;
+}
+
+.premium-btn:hover {
+  transform: translateY(-1px);
+}
+
+.premium-btn:active {
+  transform: translateY(0);
+}
+
+.premium-btn-primary {
+  color: #fff;
+  background: var(--purple);
+}
+
+.premium-btn-primary:hover {
+  background: var(--purple-dark);
+}
+
+.premium-btn-ghost {
+  color: var(--purple-dark);
+  background: #fff;
+  border-color: var(--border);
+}
+
+.premium-btn-ghost:hover {
+  background: var(--purple-light);
+  border-color: #ded7ff;
+}
+
+/* =====================================================
+   MOBILE MENU
+===================================================== */
+
+.mobile-menu-button {
+  width: 43px;
+  height: 43px;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid var(--border);
+  border-radius: 12px;
+
+  color: var(--purple);
+  background: #fff;
+
+  cursor: pointer;
+  font-size: 21px;
+}
+
+/* =====================================================
+   HERO
+===================================================== */
+
+.premium-hero {
+  min-height: 620px;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  align-items: center;
+  gap: 55px;
+
+  padding-top: 70px;
+  padding-bottom: 75px;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+
+  padding: 9px 13px;
+  margin-bottom: 23px;
+
+  border: 1px solid #e4defe;
+  border-radius: 30px;
+
+  color: var(--purple-dark);
+  background: var(--purple-light);
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+}
+
+.hero-badge-dot {
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+  background: var(--green);
+}
+
+.hero-title {
+  max-width: 610px;
+
+  margin: 0;
+
+  font-family: var(--font-heading);
+  font-size: clamp(42px, 5.3vw, 66px);
+
+  line-height: 1.1;
+  letter-spacing: -3.5px;
+  font-weight: 800;
+}
+
+.hero-title .highlight {
+  color: var(--purple);
+}
+
+.hero-description {
+  max-width: 500px;
+
+  margin: 24px 0 29px;
+
+  color: var(--muted);
+
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.hero-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  margin-top: 25px;
+
+  color: var(--muted);
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.hero-note-icon {
+  width: 27px;
+  height: 27px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 9px;
+
+  color: var(--green);
+  background: #e5f4ed;
+}
+
+/* =====================================================
+   DASHBOARD PREVIEW
+===================================================== */
+
+.hero-visual {
+  position: relative;
+  min-width: 0;
+}
+
+.visual-glow {
+  position: absolute;
+
+  width: 280px;
+  height: 280px;
+
+  top: 50%;
+  left: 50%;
+
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+
+  background: rgba(139, 121, 222, .09);
+  filter: blur(55px);
+
+  pointer-events: none;
+}
+
+.dashboard-preview {
+  position: relative;
+  z-index: 1;
+
+  padding: 23px;
+
+  border: 1px solid #e5e6ef;
+  border-radius: 23px;
+
+  background: #fff;
+
+  box-shadow: var(--shadow);
+
+  transform: none;
+}
+
+.preview-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.preview-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.preview-brand-icon {
+  width: 31px;
+  height: 31px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 9px;
+
+  color: #fff;
+  background: var(--purple);
+}
+
+.preview-avatar {
+  width: 34px;
+  height: 34px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  color: white;
+  background: #7e9fd4;
+
+  font-size: 11px;
+  font-weight: 800;
+}
+
+/* Welcome */
+
+.preview-welcome {
+  padding: 18px;
+  margin-bottom: 17px;
+
+  border-radius: 16px;
+
+  background: linear-gradient(
+    120deg,
+    #8170d5,
+    #6c5bc2
+  );
+
+  color: white;
+  box-shadow: none;
+}
+
+.preview-welcome small {
+  opacity: .85;
+  font-size: 10px;
+}
+
+.preview-welcome h3 {
+  margin: 7px 0 5px;
+
+  font-family: var(--font-heading);
+  font-size: 18px;
+}
+
+.preview-welcome p {
+  margin: 0;
+  font-size: 10px;
+  opacity: .85;
+}
+
+.preview-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin: 20px 0 12px;
+
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.preview-section-title span:last-child {
+  color: var(--purple);
+  font-size: 10px;
+}
+
+/* Courses */
+
+.preview-course {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 12px;
+  margin-bottom: 9px;
+
+  border: 1px solid var(--border);
+  border-radius: 14px;
+
+  background: #fff;
+
+  transition:
+    border-color .2s ease,
+    background .2s ease;
+}
+
+.preview-course:hover {
+  border-color: #d8d0fa;
+  background: #fcfbff;
+}
+
+.course-icon {
+  width: 40px;
+  height: 40px;
+
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+
+  border-radius: 12px;
+
+  font-size: 16px;
+}
+
+.course-icon.purple {
+  color: #7763d9;
+  background: #eeeaff;
+}
+
+.course-icon.cyan {
+  color: #3b9dac;
+  background: #e5f3f5;
+}
+
+.course-icon.orange {
+  color: #c48a4d;
+  background: #f8eee2;
+}
+
+.course-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.course-info strong {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 11px;
+}
+
+.course-info small {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.course-progress {
+  height: 5px;
+
+  margin-top: 8px;
+
+  overflow: hidden;
+  border-radius: 10px;
+
+  background: #ececf3;
+}
+
+.course-progress span {
+  display: block;
+  height: 100%;
+
+  border-radius: inherit;
+  background: var(--purple);
+}
+
+.course-percent {
+  color: var(--purple);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+/* Stats */
+
+.preview-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+
+  gap: 11px;
+  margin-top: 16px;
+}
+
+.preview-stat {
+  padding: 13px;
+
+  border: 1px solid var(--border);
+  border-radius: 14px;
+
+  background: #fff;
+}
+
+.preview-stat small {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.preview-stat strong {
+  display: block;
+
+  margin-top: 5px;
+
+  font-family: var(--font-heading);
+  font-size: 19px;
+}
+
+/* Floating note */
+
+.floating-note {
+  position: absolute;
+  z-index: 2;
+
+  right: -16px;
+  bottom: 45px;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 12px 15px;
+
+  border: 1px solid var(--border);
+  border-radius: 14px;
+
+  background: #fff;
+
+  box-shadow: var(--shadow);
+}
+
+.floating-note-icon {
+  width: 32px;
+  height: 32px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 10px;
+
+  color: white;
+  background: var(--green);
+}
+
+.floating-note strong {
+  display: block;
+  font-size: 10px;
+}
+
+.floating-note small {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+/* =====================================================
+   SECTIONS
+===================================================== */
+
+.premium-section {
+  padding: 90px 0;
+}
+
+.section-heading {
+  max-width: 650px;
+
+  margin: 0 auto 48px;
+
+  text-align: center;
+}
+
+.section-kicker {
+  display: inline-block;
+
+  padding: 8px 13px;
+  margin-bottom: 16px;
+
+  border-radius: 30px;
+
+  color: var(--purple-dark);
+  background: var(--purple-light);
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+}
+
+.section-heading h2 {
+  margin: 0;
+
+  font-family: var(--font-heading);
+  font-size: clamp(30px, 4vw, 42px);
+
+  line-height: 1.2;
+  letter-spacing: -1.7px;
+}
+
+.section-heading p {
+  margin: 16px auto 0;
+
+  color: var(--muted);
+
+  font-size: 13px;
+  line-height: 1.9;
+}
+
+/* =====================================================
+   FEATURES
+===================================================== */
+
+#features {
+  background: #ececf4;
+
+  border-top: 1px solid #e5e6ef;
+  border-bottom: 1px solid #e5e6ef;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.feature-card {
+  min-height: 260px;
+
+  padding: 28px;
+
+  border: 1px solid var(--border);
+  border-radius: 19px;
+
+  background: #fff;
+
+  box-shadow: none;
+
+  transition:
+    transform .2s ease,
+    border-color .2s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  border-color: #d7cff9;
+}
+
+.feature-icon {
+  width: 53px;
+  height: 53px;
+
+  display: grid;
+  place-items: center;
+
+  margin-bottom: 23px;
+
+  border-radius: 15px;
+
+  color: var(--purple);
+  background: var(--purple-light);
+
+  font-size: 22px;
+}
+
+.feature-card h3 {
+  margin: 0 0 11px;
+
+  font-family: var(--font-heading);
+  font-size: 17px;
+}
+
+.feature-card p {
+  margin: 0;
+
+  color: var(--muted);
+
+  font-size: 12px;
+  line-height: 1.85;
+}
+
+/* =====================================================
+   ANDROID
+===================================================== */
+
+#android {
+  padding-top: 85px;
+  padding-bottom: 85px;
+}
+
+.android-section {
+  display: grid;
+  grid-template-columns: 1fr .8fr;
+
+  align-items: center;
+  gap: 45px;
+
+  padding: 48px;
+
+  border: 1px solid var(--border);
+  border-radius: 25px;
+
+  background: #fff;
+
+  box-shadow: var(--shadow);
+}
+
+.android-content h2 {
+  margin: 0;
+
+  font-family: var(--font-heading);
+  font-size: clamp(30px, 4vw, 42px);
+
+  line-height: 1.2;
+  letter-spacing: -1.5px;
+}
+
+.android-content p {
+  max-width: 530px;
+
+  margin: 17px 0 23px;
+
+  color: var(--muted);
+
+  font-size: 13px;
+  line-height: 1.9;
+}
+
+.android-points {
+  display: grid;
+  gap: 12px;
+
+  margin-bottom: 25px;
+}
+
+.android-point {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  color: #626986;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.android-point span {
+  width: 22px;
+  height: 22px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  color: var(--green);
+  background: #e5f4ed;
+
+  font-size: 10px;
+}
+
+/* Phone */
+
+.phone-visual {
+  min-height: 320px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.phone-frame {
+  width: 185px;
+  height: 320px;
+
+  padding: 10px;
+
+  border: 1px solid #dedfeb;
+  border-radius: 29px;
+
+  background: #fff;
+
+  box-shadow: 0 7px 20px rgba(39, 43, 75, .09);
+
+  transform: rotate(3deg);
+}
+
+.phone-screen {
+  height: 100%;
+
+  padding: 17px 12px;
+
+  overflow: hidden;
+
+  border-radius: 21px;
+
+  background: #f3f3f9;
+}
+
+.phone-notch {
+  width: 58px;
+  height: 5px;
+
+  margin: 0 auto 22px;
+
+  border-radius: 10px;
+  background: #d8d9e5;
+}
+
+.phone-logo {
+  width: 37px;
+  height: 37px;
+
+  display: grid;
+  place-items: center;
+
+  margin: 0 auto 12px;
+
+  border-radius: 12px;
+
+  color: white;
+  background: var(--purple);
+
+  font-weight: 800;
+}
+
+.phone-screen h4 {
+  margin: 0;
+
+  text-align: center;
+
+  font-family: var(--font-heading);
+  font-size: 12px;
+}
+
+.phone-screen > p {
+  margin: 6px 0 17px;
+
+  text-align: center;
+
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.phone-mini-card {
+  padding: 11px;
+  margin-bottom: 9px;
+
+  border: 1px solid var(--border);
+  border-radius: 12px;
+
+  background: #fff;
+}
+
+.phone-mini-card strong {
+  display: block;
+  font-size: 9px;
+}
+
+.phone-mini-card small {
+  display: block;
+
+  margin-top: 5px;
+
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.phone-mini-bar {
+  height: 5px;
+
+  margin-top: 8px;
+
+  overflow: hidden;
+  border-radius: 10px;
+
+  background: #e9e9f1;
+}
+
+.phone-mini-bar span {
+  display: block;
+  height: 100%;
+
+  border-radius: inherit;
+  background: var(--purple);
+}
+
+/* =====================================================
+   ABOUT
+===================================================== */
+
+#about {
+  background: #ececf4;
+
+  border-top: 1px solid #e5e6ef;
+  border-bottom: 1px solid #e5e6ef;
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.about-card {
+  padding: 27px;
+
+  border: 1px solid var(--border);
+  border-radius: 19px;
+
+  background: #fff;
+
+  text-align: center;
+}
+
+.about-card-icon {
+  width: 50px;
+  height: 50px;
+
+  display: grid;
+  place-items: center;
+
+  margin: 0 auto 16px;
+
+  border-radius: 15px;
+
+  color: var(--purple);
+  background: var(--purple-light);
+
+  font-size: 21px;
+}
+
+.about-card h3 {
+  margin: 0 0 9px;
+
+  font-family: var(--font-heading);
+  font-size: 15px;
+}
+
+.about-card p {
+  margin: 0;
+
+  color: var(--muted);
+
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+/* =====================================================
+   CALL TO ACTION
+===================================================== */
+
+.cta-wrap {
+  padding-top: 85px;
+  padding-bottom: 85px;
+}
+
+.premium-cta {
+  padding: 58px 30px;
+
+  border-radius: 25px;
+
+  color: white;
+
+  background: linear-gradient(
+    120deg,
+    #8170d5,
+    #6756b9
+  );
+
+  text-align: center;
+}
+
+.premium-cta .section-kicker {
+  color: white;
+  background: rgba(255, 255, 255, .15);
+}
+
+.premium-cta h2 {
+  max-width: 650px;
+
+  margin: 0 auto;
+
+  font-family: var(--font-heading);
+  font-size: clamp(30px, 4vw, 42px);
+
+  line-height: 1.2;
+  letter-spacing: -1.5px;
+}
+
+.premium-cta p {
+  max-width: 530px;
+
+  margin: 16px auto 25px;
+
+  color: rgba(255, 255, 255, .83);
+
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.premium-cta .premium-btn {
+  color: var(--purple-dark);
+  background: #fff;
+}
+
+/* =====================================================
+   FOOTER
+===================================================== */
+
+.premium-footer {
+  padding: 42px 0 24px;
+
+  border-top: 1px solid var(--border);
+
+  background: #e9eaf2;
+}
+
+.footer-main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 35px;
+  padding-bottom: 32px;
+}
+
+.footer-description {
+  max-width: 340px;
+
+  margin: 13px 0 0;
+
+  color: var(--muted);
+
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 23px;
+}
+
+.footer-links a {
+  color: var(--muted);
+
+  font-size: 12px;
+  font-weight: 700;
+
+  transition: color .2s ease;
+}
+
+.footer-links a:hover {
+  color: var(--purple);
+}
+
+.footer-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 15px;
+  padding-top: 20px;
+
+  border-top: 1px solid #dedfea;
+
+  color: var(--muted);
+  font-size: 11px;
+}
+
+/* =====================================================
+   REVEAL
+===================================================== */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+
+  transition:
+    opacity .6s ease,
+    transform .6s ease;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width: 950px) {
+  .premium-links {
+    gap: 18px;
+  }
+
+  .premium-hero {
+    gap: 35px;
+  }
+
+  .android-section {
+    gap: 25px;
+    padding: 38px;
+  }
+}
+
+@media (max-width: 760px) {
+  .premium-container {
+    width: min(100% - 36px, 580px);
+  }
+
+  .premium-nav {
+    min-height: 70px;
+  }
+
+  .mobile-menu-button {
+    display: inline-flex;
+  }
+
+  .premium-links {
+    position: absolute;
+
+    top: calc(100% + 6px);
+    left: 18px;
+    right: 18px;
+
+    display: none;
+    align-items: stretch;
+    flex-direction: column;
+
+    gap: 6px;
+    padding: 16px;
+
+    border: 1px solid var(--border);
+    border-radius: 17px;
+
+    background: #fff;
+
+    box-shadow: var(--shadow);
+  }
+
+  .premium-links.open {
+    display: flex;
+  }
+
+  .premium-links > a:not(.premium-btn) {
+    padding: 12px 10px;
+    border-radius: 9px;
+  }
+
+  .premium-links .nav-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    margin-top: 8px;
+  }
+
+  .premium-links .premium-btn {
+    width: 100%;
+    padding-inline: 10px;
+  }
+
+  .premium-hero {
+    min-height: auto;
+
+    grid-template-columns: 1fr;
+    gap: 45px;
+
+    padding-top: 58px;
+    padding-bottom: 65px;
+  }
+
+  .hero-content {
+    text-align: center;
+  }
+
+  .hero-title {
+    max-width: 600px;
+
+    margin-inline: auto;
+
+    font-size: clamp(40px, 9vw, 58px);
+    letter-spacing: -2.5px;
+  }
+
+  .hero-description {
+    margin-inline: auto;
+  }
+
+  .hero-actions,
+  .hero-note {
+    justify-content: center;
+  }
+
+  .hero-visual {
+    width: min(100%, 500px);
+    margin-inline: auto;
+  }
+
+  .feature-grid,
+  .about-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .feature-card {
+    min-height: auto;
+  }
+
+  .premium-section {
+    padding: 72px 0;
+  }
+
+  .android-section {
+    grid-template-columns: 1fr;
+    padding: 30px 24px;
+  }
+
+  .android-content {
+    text-align: center;
+  }
+
+  .android-points {
+    width: fit-content;
+    margin-inline: auto;
+    text-align: left;
+  }
+
+  .phone-visual {
+    min-height: 320px;
+  }
+
+  .footer-main {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .premium-container {
+    width: calc(100% - 30px);
+  }
+
+  .premium-brand {
+    font-size: 18px;
+  }
+
+  .premium-hero {
+    padding-top: 45px;
+  }
+
+  .hero-title {
+    font-size: 40px;
+    letter-spacing: -2px;
+  }
+
+  .hero-description {
+    font-size: 13px;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero-actions .premium-btn {
+    width: 100%;
+  }
+
+  .dashboard-preview {
+    padding: 16px;
+    border-radius: 19px;
+  }
+
+  .floating-note {
+    right: -3px;
+    bottom: 20px;
+    padding: 10px;
+  }
+
+  .premium-section {
+    padding: 60px 0;
+  }
+
+  .section-heading {
+    margin-bottom: 32px;
+  }
+
+  .section-heading h2 {
+    font-size: 30px;
+  }
+
+  .feature-card {
+    padding: 24px;
+  }
+
+  .android-section {
+    padding: 26px 18px;
+    border-radius: 20px;
+  }
+
+  .premium-cta {
+    padding: 48px 20px;
+    border-radius: 20px;
+  }
+
+  .premium-cta h2 {
+    font-size: 30px;
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* =====================================================
+   ACCESSIBILITY
+===================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+
+/* =====================================================
+   EQUALLEARN — ADAPTIVE MINIMAL CLAYMORPHISM
+   System Light / Dark Mode
+===================================================== */
+
+/* LIGHT MODE */
+
+:root {
+  color-scheme: light;
+
+  --bg: #e9eaf2;
+  --surface: #e5e6ef;
+  --surface-card: #e9eaf2;
+  --surface-soft: #dfe1eb;
+  --surface-hover: #dedfee;
+
+  --text: #292b45;
+  --muted: #777d96;
+
+  --purple: #7968ce;
+  --purple-dark: #6252b5;
+  --purple-light: #ded9f7;
+
+  --border: rgba(128, 132, 163, .17);
+
+  --shadow:
+    0 3px 10px rgba(48, 51, 83, .055);
+
+  --shadow-hover:
+    0 5px 14px rgba(48, 51, 83, .09);
+
+  --input-bg: #e2e3ed;
+  --input-border: #d4d6e4;
+
+  --section-bg: #e2e4ed;
+  --footer-bg: #e2e4ed;
+
+  --green-bg: #dcefe7;
+  --cyan-bg: #dcecf0;
+  --orange-bg: #f0e4d7;
+}
+
+/* SYSTEM DARK MODE */
+
+@media (prefers-color-scheme: dark) {
+
+  :root {
+    color-scheme: dark;
+
+    --bg: #171923;
+    --surface: #202231;
+    --surface-card: #222434;
+    --surface-soft: #292b3d;
+    --surface-hover: #2b2e42;
+
+    --text: #e9e9f3;
+    --muted: #a0a4bb;
+
+    --purple: #a193ed;
+    --purple-dark: #b0a4f3;
+    --purple-light: #34304e;
+
+    --border: rgba(184, 180, 225, .12);
+
+    --shadow:
+      0 3px 12px rgba(0, 0, 0, .16);
+
+    --shadow-hover:
+      0 6px 16px rgba(0, 0, 0, .23);
+
+    --input-bg: #1c1e2c;
+    --input-border: #383a50;
+
+    --section-bg: #1c1e2b;
+    --footer-bg: #1c1e2b;
+
+    --green-bg: #203b35;
+    --cyan-bg: #203741;
+    --orange-bg: #3a3028;
+  }
+
+}
+
+/* =====================================================
+   GLOBAL BACKGROUNDS
+===================================================== */
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.premium-header {
+  background: var(--bg);
+  border-color: var(--border);
+}
+
+#features,
+#about {
+  background: var(--section-bg);
+  border-color: var(--border);
+}
+
+.premium-footer {
+  background: var(--footer-bg);
+  border-color: var(--border);
+}
+
+.footer-bottom {
+  border-color: var(--border);
+}
+
+/* =====================================================
+   CARDS — NEVER FORCE WHITE
+===================================================== */
+
+.dashboard-preview,
+.preview-course,
+.preview-stat,
+.feature-card,
+.about-card,
+.android-section,
+.phone-frame,
+.phone-mini-card,
+.floating-note {
+  color: var(--text);
+  background: var(--surface-card);
+  border-color: var(--border);
+  box-shadow: var(--shadow);
+}
+
+.preview-course:hover,
+.feature-card:hover {
+  background: var(--surface-hover);
+  border-color: var(--border);
+  box-shadow: var(--shadow-hover);
+}
+
+.preview-stat,
+.phone-mini-card {
+  background: var(--surface-soft);
+}
+
+/* =====================================================
+   NAVIGATION
+===================================================== */
+
+.premium-links {
+  color: var(--text);
+}
+
+.premium-links > a:not(.premium-btn) {
+  color: var(--muted);
+}
+
+.premium-links > a:not(.premium-btn):hover {
+  color: var(--purple);
+}
+
+.mobile-menu-button {
+  color: var(--purple);
+  background: var(--surface-card);
+  border-color: var(--border);
+}
+
+/* =====================================================
+   BUTTONS
+===================================================== */
+
+.premium-btn-ghost {
+  color: var(--purple-dark);
+  background: var(--surface-card);
+  border-color: var(--border);
+}
+
+.premium-btn-ghost:hover {
+  background: var(--surface-hover);
+  border-color: var(--purple);
+}
+
+.premium-btn-primary {
+  color: #fff;
+  background: var(--purple);
+}
+
+/* =====================================================
+   BADGES AND ICONS
+===================================================== */
+
+.hero-badge,
+.section-kicker {
+  color: var(--purple-dark);
+  background: var(--purple-light);
+}
+
+.hero-note-icon {
+  color: var(--green);
+  background: var(--green-bg);
+}
+
+.feature-icon,
+.about-card-icon {
+  color: var(--purple);
+  background: var(--purple-light);
+}
+
+.course-icon.purple {
+  color: var(--purple);
+  background: var(--purple-light);
+}
+
+.course-icon.cyan {
+  color: #55a9ba;
+  background: var(--cyan-bg);
+}
+
+.course-icon.orange {
+  color: #d39a5e;
+  background: var(--orange-bg);
+}
+
+/* =====================================================
+   PREVIEW ELEMENTS
+===================================================== */
+
+.preview-brand-icon,
+.phone-logo {
+  color: #fff;
+  background: var(--purple);
+}
+
+.preview-avatar {
+  color: #fff;
+}
+
+.course-progress,
+.phone-mini-bar {
+  background: var(--surface-soft);
+}
+
+.preview-welcome {
+  color: #fff;
+  background: linear-gradient(
+    120deg,
+    #8170d5,
+    #6251b7
+  );
+}
+
+/* =====================================================
+   PHONE MOCKUP
+===================================================== */
+
+.phone-frame {
+  background: var(--surface-card);
+  border-color: var(--border);
+}
+
+.phone-screen {
+  background: var(--surface-soft);
+}
+
+.phone-notch {
+  background: var(--surface-hover);
+}
+
+/* =====================================================
+   INPUTS AND FORM ELEMENTS
+===================================================== */
+
+input,
+select,
+textarea {
+  color: var(--text);
+  background: var(--input-bg);
+  border-color: var(--input-border);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--purple);
+  outline-color: var(--purple);
+}
+
+/* =====================================================
+   CTA
+===================================================== */
+
+.premium-cta {
+  color: #fff;
+  background: linear-gradient(
+    120deg,
+    #8170d5,
+    #6251b7
+  );
+}
+
+.premium-cta .premium-btn {
+  color: var(--purple-dark);
+  background: var(--surface-card);
+}
+
+/* =====================================================
+   TEXT
+===================================================== */
+
+.hero-description,
+.section-heading p,
+.feature-card p,
+.about-card p,
+.android-content p,
+.footer-description {
+  color: var(--muted);
+}
+
+/* =====================================================
+   DARK MODE DETAILS
+===================================================== */
+
+@media (prefers-color-scheme: dark) {
+
+  .premium-header {
+    border-bottom-color: var(--border);
+  }
+
+  .premium-cta .premium-btn {
+    color: #29243f;
+    background: #efedff;
+  }
+
+  .floating-note-icon {
+    color: #fff;
+    background: #389b7b;
+  }
+
+  .course-percent {
+    color: var(--purple);
+  }
+
+  .course-progress span,
+  .phone-mini-bar span {
+    background: var(--purple);
+  }
+
+  .hero-badge-dot {
+    box-shadow: 0 0 0 4px rgba(69, 170, 140, .15);
+  }
+
+  ::selection {
+    color: #fff;
+    background: #6556b4;
+  }
+
+}
+
+/* =====================================================
+   ACCESSIBILITY
+===================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: .01ms !important;
+  }
+}
+
+</style>
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <header class="premium-header">
+    <div class="premium-container premium-nav">
+
+      <a class="premium-brand" href="index.html" aria-label="EqualLearn home">
+  <img
+    class="brand-icon"
+    src="assets/icons/equallearn-logo.png"
+    alt="EqualLearn"
+  >
+  <span class="brand-name">Equal<span>Learn</span></span>
+</a>
+
+      <button
+        class="mobile-menu-button"
+        id="mobileMenuButton"
+        type="button"
+        aria-label="Toggle navigation"
+        aria-expanded="false"
+        aria-controls="mainNavigation"
+      >
+        <span id="menuIcon">☰</span>
+      </button>
+
+      <nav class="premium-links" id="mainNavigation" aria-label="Main navigation">
+        <a href="#features">Features</a>
+        <a href="#android">Android App</a>
+        <a href="#about">About</a>
+
+        <div class="nav-actions">
+          <a class="premium-btn premium-btn-ghost" href="login.html">Sign in</a>
+          <a class="premium-btn premium-btn-primary" href="register.html">Get started ↗</a>
+        </div>
+      </nav>
+
+    </div>
+  </header>
+
+  <main>
+
+    <!-- HERO -->
+    <section class="premium-container premium-hero">
+
+      <div class="hero-content reveal">
+
+        <div class="hero-badge">
+          <span class="hero-badge-dot"></span>
+          A smarter way to learn
+        </div>
+
+        <h1 class="hero-title">
+          Learning without
+          <span class="highlight">limits</span>
+          or barriers.
+        </h1>
+
+        <p class="hero-description">
+          A connected learning experience designed to bring students,
+          educators, and administrators together. Learn, collaborate,
+          and grow in one inclusive digital space.
+        </p>
+
+        <div class="hero-actions">
+          <a class="premium-btn premium-btn-primary" href="register.html">
+            Get started <span>↗</span>
+          </a>
+
+          <a class="premium-btn premium-btn-ghost" href="#features">
+            Explore platform <span>→</span>
+          </a>
+        </div>
+
+        <div class="hero-note">
+          <span class="hero-note-icon">✓</span>
+          <span>Designed for accessible and inclusive education</span>
+        </div>
+
+      </div>
+
+      <!-- Dashboard preview -->
+      <div class="hero-visual reveal">
+
+        <div class="visual-glow"></div>
+
+        <div class="dashboard-preview">
+
+          <div class="preview-topbar">
+            <div class="preview-brand">
+              <span class="preview-brand-icon">E</span>
+              EqualLearn
+            </div>
+            <div class="preview-avatar">S</div>
+          </div>
+
+          <div class="preview-welcome">
+            <small>YOUR LEARNING SPACE</small>
+            <h3>Welcome back, Student!</h3>
+            <p>Keep moving forward. Every lesson counts.</p>
+          </div>
+
+          <div class="preview-section-title">
+            <span>Continue learning</span>
+            <span>View all →</span>
+          </div>
+
+          <div class="preview-course">
+            <div class="course-icon purple">✦</div>
+            <div class="course-info">
+              <strong>Gender Equality</strong>
+              <small>Learning module</small>
+              <div class="course-progress">
+                <span style="width:75%"></span>
+              </div>
+            </div>
+            <span class="course-percent">75%</span>
+          </div>
+
+          <div class="preview-course">
+            <div class="course-icon cyan">◎</div>
+            <div class="course-info">
+              <strong>Social Awareness</strong>
+              <small>Learning module</small>
+              <div class="course-progress">
+                <span style="width:48%"></span>
+              </div>
+            </div>
+            <span class="course-percent">48%</span>
+          </div>
+
+          <div class="preview-course">
+            <div class="course-icon orange">◇</div>
+            <div class="course-info">
+              <strong>Respect & Inclusion</strong>
+              <small>Learning module</small>
+              <div class="course-progress">
+                <span style="width:30%"></span>
+              </div>
+            </div>
+            <span class="course-percent">30%</span>
+          </div>
+
+          <div class="preview-stats">
+            <div class="preview-stat">
+              <small>Learning progress</small>
+              <strong>68%</strong>
+            </div>
+            <div class="preview-stat">
+              <small>Lessons completed</small>
+              <strong>12</strong>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="floating-note">
+          <div class="floating-note-icon">✓</div>
+          <div>
+            <strong>Keep it up!</strong>
+            <small>Progress matters</small>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="premium-section" id="features">
+      <div class="premium-container">
+
+        <div class="section-heading reveal">
+          <span class="section-kicker">One connected platform</span>
+          <h2>Everything you need to <span style="color:var(--purple)">learn and grow.</span></h2>
+          <p>
+            A learning environment that supports the different roles
+            in education through one organized digital experience.
+          </p>
+        </div>
+
+        <div class="feature-grid">
+
+          <article class="feature-card reveal">
+            <div class="feature-icon">✧</div>
+            <h3>For Students</h3>
+            <p>
+              Access learning materials, explore educational content,
+              participate in activities, and track your learning progress.
+            </p>
+          </article>
+
+          <article class="feature-card reveal">
+            <div class="feature-icon">▤</div>
+            <h3>For Teachers</h3>
+            <p>
+              Support learning activities, organize educational resources,
+              and guide students through their learning journey.
+            </p>
+          </article>
+
+          <article class="feature-card reveal">
+            <div class="feature-icon">⌘</div>
+            <h3>For Administrators</h3>
+            <p>
+              Manage the learning environment and help maintain an organized
+              platform for the academic community.
+            </p>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ANDROID APP -->
+    <section class="premium-container" id="android">
+
+      <div class="android-section reveal">
+
+        <div class="android-content">
+
+          <span class="section-kicker">Learn beyond the desktop</span>
+
+          <h2>Your learning space, <span style="color:var(--purple)">on the go.</span></h2>
+
+          <p>
+            EqualLearn is designed with a mobile learning experience in mind.
+            Access your educational platform through a convenient mobile interface.
+          </p>
+
+          <div class="android-points">
+            <div class="android-point">
+              <span>✓</span>
+              Mobile-friendly learning experience
+            </div>
+            <div class="android-point">
+              <span>✓</span>
+              Convenient access to learning resources
+            </div>
+            <div class="android-point">
+              <span>✓</span>
+              Designed for everyday use
+            </div>
+          </div>
+
+          <a class="premium-btn premium-btn-primary" href="MOBILE_APP.md">
+            Explore mobile app information ↗
+          </a>
+
+        </div>
+
+        <div class="phone-visual" aria-label="Illustration of the EqualLearn mobile interface">
+
+          <div class="phone-frame">
+            <div class="phone-screen">
+
+              <div class="phone-notch"></div>
+
+              <div class="phone-logo">E</div>
+              <h4>EqualLearn</h4>
+              <p>Your learning journey starts here</p>
+
+              <div class="phone-mini-card">
+                <strong>Gender Equality</strong>
+                <small>Continue your lesson</small>
+                <div class="phone-mini-bar">
+                  <span style="width:75%"></span>
+                </div>
+              </div>
+
+              <div class="phone-mini-card">
+                <strong>Social Awareness</strong>
+                <small>Learning module</small>
+                <div class="phone-mini-bar">
+                  <span style="width:48%"></span>
+                </div>
+              </div>
+
+              <div class="phone-mini-card">
+                <strong>Respect & Inclusion</strong>
+                <small>Learning module</small>
+                <div class="phone-mini-bar">
+                  <span style="width:30%"></span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section class="premium-section" id="about">
+      <div class="premium-container">
+
+        <div class="section-heading reveal">
+          <span class="section-kicker">Designed for education</span>
+          <h2>Learning should be <span style="color:var(--purple)">for everyone.</span></h2>
+          <p>
+            EqualLearn promotes a learning environment where access,
+            awareness, and participation matter.
+          </p>
+        </div>
+
+        <div class="about-grid">
+
+          <article class="about-card reveal">
+            <div class="about-card-icon">◎</div>
+            <h3>Inclusive Learning</h3>
+            <p>
+              Encourage an educational environment where everyone
+              can participate and learn.
+            </p>
+          </article>
+
+          <article class="about-card reveal">
+            <div class="about-card-icon">✦</div>
+            <h3>Awareness & Education</h3>
+            <p>
+              Support understanding through organized learning
+              materials and educational activities.
+            </p>
+          </article>
+
+          <article class="about-card reveal">
+            <div class="about-card-icon">↗</div>
+            <h3>Continuous Growth</h3>
+            <p>
+              Make learning a continuous journey through accessible
+              digital learning experiences.
+            </p>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- CALL TO ACTION -->
+    <section class="premium-container cta-wrap">
+
+      <div class="premium-cta reveal">
+
+        <span class="section-kicker">Your next step starts here</span>
+
+        <h2>Make every learning opportunity count.</h2>
+
+        <p>
+          Be part of a connected learning environment.
+          Start exploring EqualLearn today.
+        </p>
+
+        <a class="premium-btn" href="register.html">
+          Get started with EqualLearn ↗
+        </a>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="premium-footer">
+    <div class="premium-container">
+
+      <div class="footer-main">
+
+        <div>
+          <a class="premium-brand" href="index.html">
+            <span class="brand-icon">E</span>
+            <span class="brand-name">Equal<span>Learn</span></span>
+          </a>
+
+          <p class="footer-description">
+            A connected digital learning experience designed
+            to support inclusive education and awareness.
+          </p>
+        </div>
+
+        <nav class="footer-links" aria-label="Footer navigation">
+          <a href="#features">Features</a>
+          <a href="#android">Android</a>
+          <a href="#about">About</a>
+          <a href="login.html">Sign in</a>
+          <a href="register.html">Register</a>
+        </nav>
+
+      </div>
+
+      <div class="footer-bottom">
+        <span>© <span id="currentYear"></span> EqualLearn. All rights reserved.</span>
+        <span>Learning without limits or barriers.</span>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- EXISTING PROJECT SCRIPTS -->
+  <script type="module" src="assets/js/theme.js"></script>
+
+  <script type="module">
+    import { hydrateIcons } from "./assets/js/icons.js";
+
+    if (typeof hydrateIcons === "function") {
+      hydrateIcons();
+    }
+  </script>
+
+  <script type="module" src="assets/js/pwa.js"></script>
+
+  <script>
+    // Mobile navigation
+    const menuButton = document.getElementById("mobileMenuButton");
+    const navigation = document.getElementById("mainNavigation");
+    const menuIcon = document.getElementById("menuIcon");
+
+    if (menuButton && navigation) {
+      menuButton.addEventListener("click", () => {
+        const isOpen = navigation.classList.toggle("open");
+
+        menuButton.setAttribute("aria-expanded", String(isOpen));
+
+        if (menuIcon) {
+          menuIcon.textContent = isOpen ? "✕" : "☰";
+        }
+      });
+
+      navigation.querySelectorAll("a").forEach(link => {
+        link.addEventListener("click", () => {
+          navigation.classList.remove("open");
+          menuButton.setAttribute("aria-expanded", "false");
+
+          if (menuIcon) {
+            menuIcon.textContent = "☰";
+          }
+        });
+      });
+
+      document.addEventListener("click", event => {
+        if (
+          navigation.classList.contains("open") &&
+          !navigation.contains(event.target) &&
+          !menuButton.contains(event.target)
+        ) {
+          navigation.classList.remove("open");
+          menuButton.setAttribute("aria-expanded", "false");
+
+          if (menuIcon) {
+            menuIcon.textContent = "☰";
+          }
+        }
+      });
+    }
+
+    // Reveal animation
+    const revealElements = document.querySelectorAll(".reveal");
+
+    if ("IntersectionObserver" in window) {
+      const revealObserver = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+            revealObserver.unobserve(entry.target);
+          }
+        });
+      }, {
+        threshold: 0.12
+      });
+
+      revealElements.forEach(element => {
+        revealObserver.observe(element);
+      });
+    } else {
+      revealElements.forEach(element => {
+        element.classList.add("visible");
+      });
+    }
+
+    // Footer year
+    const yearElement = document.getElementById("currentYear");
+
+    if (yearElement) {
+      yearElement.textContent = new Date().getFullYear();
+    }
+  </script>
+
+</body>
+</html>

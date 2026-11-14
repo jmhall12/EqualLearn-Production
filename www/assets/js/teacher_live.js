@@ -1,10 +1,11 @@
 
 import { auth, db } from "./firebase-config.js";
+import { notifySectionStudents } from "./notification-service.js";
 import { requireRole } from "./session.js";
 
 import {
   collection, query, where, getDocs, doc, setDoc,
-  updateDoc, serverTimestamp
+updateDoc, deleteDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
 import {
@@ -43,22 +44,64 @@ const sessionTeacher = document.getElementById("sessionTeacher");
 const sessionState = document.getElementById("sessionState");
 
 // Meeting elements
-const meetingScreen = document.getElementById("meetingScreen");
-const meetingTitle = document.getElementById("meetingTitle");
-const participantGrid = document.getElementById("participantGrid");
-const meetingNotice = document.getElementById("meetingNotice");
-const meetingParticipants = document.getElementById("meetingParticipants");
-const meetingSidebar = document.getElementById("meetingSidebar");
-const sidebarTitle = document.getElementById("sidebarTitle");
-const meetingChatMessages = document.getElementById("meetingChatMessages");
-const meetingChatForm = document.getElementById("meetingChatForm");
-const meetingChatInput = document.getElementById("meetingChatInput");
+// ========================================
+// LEAVE MEETING CHOICES
+// ========================================
 
-const meetingMicBtn = document.getElementById("meetingMicBtn");
-const meetingCameraBtn = document.getElementById("meetingCameraBtn");
-const screenShareBtn = document.getElementById("screenShareBtn");
-const meetingEndBtn = document.getElementById("meetingEndBtn");
-const meetingLeaveBtn = document.getElementById("meetingLeaveBtn");
+const leaveChoiceModal = document.getElementById("leaveChoiceModal");
+const leaveOnlyChoice = document.getElementById("leaveOnlyChoice");
+const endEveryoneChoice = document.getElementById("endEveryoneChoice");
+const cancelLeaveChoice = document.getElementById("cancelLeaveChoice");
+
+function openLeaveChoices() {
+  if (!currentRoom || busy) return;
+
+  leaveChoiceModal?.classList.add("open");
+}
+
+function closeLeaveChoices() {
+  leaveChoiceModal?.classList.remove("open");
+}
+
+// Open the choices when teacher clicks Leave
+meetingLeaveBtn?.addEventListener("click", openLeaveChoices);
+
+// Teacher leaves without ending the session
+leaveOnlyChoice?.addEventListener("click", async () => {
+  closeLeaveChoices();
+
+  if (busy) return;
+
+  await leaveMeeting();
+});
+
+// Teacher ends the meeting for everyone
+endEveryoneChoice?.addEventListener("click", async () => {
+  closeLeaveChoices();
+
+  if (busy) return;
+
+  await endLiveClass(true);
+});
+
+// Cancel popup
+cancelLeaveChoice?.addEventListener("click", closeLeaveChoices);
+
+// Close when clicking outside the dialog
+leaveChoiceModal?.addEventListener("click", event => {
+  if (event.target === leaveChoiceModal) {
+    closeLeaveChoices();
+  }
+});
+
+// Close popup using Escape
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") {
+    closeLeaveChoices();
+  }
+});
+
+
 
 let currentUser = null;
 let currentSessionId = null;
@@ -416,6 +459,23 @@ async function createLiveClass() {
 
     await setDoc(doc(db, "liveSessions", roomId), sessionData);
 
+    try {
+      const targetSectionIds = [section.id];
+      const notificationResult = await notifySectionStudents({
+        db,
+        auth,
+        sectionIds: targetSectionIds,
+        contentType: "live",
+        contentId: roomId,
+        contentTitle: title,
+        teacherName: teacherName
+      });
+
+      console.info("LIVE SESSION NOTIFICATIONS:", notificationResult);
+    } catch (notificationError) {
+      console.warn("Live session notification failed:", notificationError);
+    }
+
     currentSessionId = roomId;
     currentSession = { ...sessionData, id: roomId };
 
@@ -491,12 +551,19 @@ async function startLiveClass() {
   showMessage(connectionMessage, "Connecting to LiveKit...");
   setStatus("Connecting", "#d97706");
 
+    const previousStatus = currentSession?.status || "scheduled";
+
   try {
     await updateDoc(doc(db, "liveSessions", currentSessionId), {
       status: "live",
       startedAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
+
+    currentSession = {
+      ...currentSession,
+      status: "live"
+    };
 
     const access = await requestLiveKitToken(currentSessionId);
 
@@ -586,26 +653,49 @@ async function startLiveClass() {
     cameraBtn.disabled = false;
     endBtn.disabled = false;
 
-  } catch (error) {
+    } catch (error) {
     console.error("START LIVE ERROR:", error);
 
     if (currentRoom) {
-      try { await currentRoom.disconnect(); } catch {}
+      try {
+        await currentRoom.disconnect();
+      } catch (disconnectError) {
+        console.warn("LiveKit disconnect error:", disconnectError);
+      }
+
       currentRoom = null;
     }
 
     try {
       await updateDoc(doc(db, "liveSessions", currentSessionId), {
-        status: "scheduled",
+        status: previousStatus,
         updatedAt: serverTimestamp()
       });
+
+      currentSession = {
+        ...currentSession,
+        status: previousStatus
+      };
     } catch (updateError) {
-      console.error("Unable to restore scheduled state:", updateError);
+      console.error("Unable to restore previous session state:", updateError);
     }
 
-    showMessage(connectionMessage, error.message || "Unable to start session.", true);
-    setStatus("Connection failed", "#dc2626");
-    if (sessionState) sessionState.textContent = "Scheduled";
+    showMessage(
+      connectionMessage,
+      error.message || "Unable to start session.",
+      true
+    );
+
+    setStatus(
+      previousStatus === "ended" ? "Ended — Ready to restart" : "Connection failed",
+      "#dc2626"
+    );
+
+    if (sessionState) {
+      sessionState.textContent =
+        previousStatus === "ended" ? "Ended — Ready to restart" : "Scheduled";
+    }
+
     startBtn.disabled = false;
 
   } finally {
@@ -766,43 +856,120 @@ async function leaveMeeting() {
   showMessage(connectionMessage, "You left the meeting. The session remains live.");
 }
 
-async function endLiveClass() {
-  if (!currentSessionId || !currentRoom) return;
+async function endLiveClass(skipConfirmation = false) {
+  if (!currentSessionId || !currentRoom || busy) return;
 
-  if (!confirm("End this session for everyone? This cannot be undone.")) return;
+  const isOneOnOne =
+    currentSession?.meetingType === "one_on_one";
+
+  const confirmMessage = isOneOnOne
+    ? "End this private meeting? The session record will be deleted."
+    : "End this meeting for everyone? The session will remain available so you can restart it.";
+
+  if (!skipConfirmation && !confirm(confirmMessage)) return;
 
   busy = true;
   meetingEndBtn.disabled = true;
 
+  const endingSessionId = currentSessionId;
+  const endingSession = currentSession;
+
   try {
+    // First, ask the authenticated Worker to terminate the LiveKit room.
+    const user = auth.currentUser;
+    if (!user) throw new Error("Please sign in again.");
+
+    const idToken = await user.getIdToken();
+
+    const response = await fetch(
+      "https://equallearn-live-token.jommelhallig655.workers.dev/end",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`
+        },
+        body: JSON.stringify({ roomId: endingSessionId })
+      }
+    );
+
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok || !result.success) {
+      throw new Error(result.error || "Unable to end the LiveKit room.");
+    }
+
+    // Disconnect the teacher's local LiveKit connection.
     await currentRoom.disconnect();
     currentRoom = null;
 
-    await updateDoc(doc(db, "liveSessions", currentSessionId), {
-      status: "ended",
-      endedAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    });
+   if (isOneOnOne) {
+  const sessionRef = doc(db, "liveSessions", endingSessionId);
+
+  await updateDoc(sessionRef, {
+    status: "ended",
+    endedAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  });
+
+  await deleteDoc(sessionRef);
+
+      currentSessionId = null;
+      currentSession = null;
+
+      if (sessionState) sessionState.textContent = "Deleted";
+      setStatus("Private session deleted");
+      showMessage(
+        connectionMessage,
+        "The one-on-one meeting has ended and its session record was deleted."
+      );
+
+      startBtn.disabled = true;
+      createBtn.disabled = false;
+    } else {
+      // Batch and livestream sessions remain available for restart.
+      await updateDoc(doc(db, "liveSessions", endingSessionId), {
+        status: "ended",
+        endedAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+
+      currentSession = {
+        ...endingSession,
+        status: "ended"
+      };
+
+      if (sessionState) sessionState.textContent = "Ended — Ready to restart";
+      setStatus("Ended — Ready to restart");
+      showMessage(
+        connectionMessage,
+        "The meeting ended for everyone. You can restart this same session."
+      );
+
+      // Keep currentSessionId and currentSession.
+      // Do not create another liveSessions document.
+      startBtn.disabled = false;
+      createBtn.disabled = true;
+    }
 
     hideMeeting();
+    clearPreview(
+      isOneOnOne
+        ? "The private classroom has ended."
+        : "The classroom has ended. You can restart this session."
+    );
 
-    if (sessionState) sessionState.textContent = "Ended";
-    setStatus("Ended");
-    clearPreview("This live classroom has ended.");
-    showMessage(connectionMessage, "Live session successfully ended.");
-
-    currentSessionId = null;
-    currentSession = null;
-
-    startBtn.disabled = true;
     endBtn.disabled = true;
     micBtn.disabled = true;
     cameraBtn.disabled = true;
-    createBtn.disabled = false;
 
   } catch (error) {
     console.error("END SESSION ERROR:", error);
-    showMessage(connectionMessage, error.message || "Unable to end session.", true);
+    showMessage(
+      connectionMessage,
+      error.message || "Unable to end the session.",
+      true
+    );
     meetingEndBtn.disabled = false;
   } finally {
     busy = false;
@@ -842,7 +1009,8 @@ endBtn?.addEventListener("click", endLiveClass);
 meetingMicBtn?.addEventListener("click", toggleMicrophone);
 meetingCameraBtn?.addEventListener("click", toggleCamera);
 screenShareBtn?.addEventListener("click", toggleScreenShare);
-meetingLeaveBtn?.addEventListener("click", leaveMeeting);
+
+// Leave button is already connected to openLeaveChoices().
 meetingEndBtn?.addEventListener("click", endLiveClass);
 
 document.getElementById("participantsToggle")

@@ -228,7 +228,7 @@ function createLessonCard(lesson) {
   quizLink.className = "btn quiz";
 
   quizLink.href =
-    `quiz.html?lesson=${encodeURIComponent(lesson.id)}`;
+    `quizzes.html?lesson=${encodeURIComponent(lesson.id)}`;
 
   quizLink.textContent = "📝 Take Quiz";
 

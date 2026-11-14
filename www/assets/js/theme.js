@@ -1,15 +1,34 @@
-import { icon, hydrateIcons } from './icons.js';
-const key = "equallearn-theme";
-const saved = localStorage.getItem(key);
-const preferredDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-document.body.dataset.theme = saved || (preferredDark ? 'dark' : 'light');
-function iconName(){ return document.body.dataset.theme === 'dark' ? 'sun' : 'moon'; }
-function repaint(){ document.querySelectorAll('[data-el-theme-toggle]').forEach(b => b.innerHTML = icon(iconName(),18)); }
-function toggle(){ document.body.dataset.theme = document.body.dataset.theme === 'dark' ? 'light' : 'dark'; localStorage.setItem(key, document.body.dataset.theme); repaint(); }
-function place(){
-  if(document.querySelector('[data-el-theme-toggle]')) return;
-  const b=document.createElement('button'); b.type='button'; b.className='el-theme-toggle'; b.dataset.elThemeToggle=''; b.innerHTML=icon(iconName(),18); b.title='Switch theme'; b.setAttribute('aria-label','Switch light and dark theme'); b.addEventListener('click',toggle);
-  const actions=document.querySelector('.el-topbar-actions');
-  if(actions) actions.prepend(b); else { const wrap=document.createElement('div');wrap.className='el-theme-fab';wrap.append(b);document.body.append(wrap); }
+
+import { hydrateIcons } from './icons.js';
+
+const themeMedia = window.matchMedia('(prefers-color-scheme: dark)');
+
+function applyDeviceTheme() {
+  const theme = themeMedia.matches ? 'dark' : 'light';
+
+  document.documentElement.dataset.theme = theme;
+  document.body.dataset.theme = theme;
+
+  const themeColor = document.querySelector('meta[name="theme-color"]');
+
+  if (themeColor) {
+    themeColor.setAttribute(
+      'content',
+      theme === 'dark' ? '#171821' : '#e3e4ec'
+    );
+  }
 }
-hydrateIcons(); place(); setTimeout(()=>{hydrateIcons();place()},120); setTimeout(()=>{hydrateIcons();place()},500);
+
+// Initial theme
+applyDeviceTheme();
+
+// Automatically update when the device theme changes
+if (typeof themeMedia.addEventListener === 'function') {
+  themeMedia.addEventListener('change', applyDeviceTheme);
+} else {
+  // Older browser support
+  themeMedia.addListener(applyDeviceTheme);
+}
+
+// Keep existing application icons working
+hydrateIcons();

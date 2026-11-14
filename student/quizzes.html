@@ -393,6 +393,144 @@
         transition-duration: .01ms !important;
       }
     }
+
+    /* =====================================
+       QUIZ LIST
+    ===================================== */
+
+    .quiz-toolbar {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .quiz-toolbar input {
+      flex: 1 1 220px;
+      min-height: 47px;
+      padding: 12px 15px;
+      color: var(--quiz-text);
+      background: rgba(255,255,255,.05);
+      border: 1px solid var(--quiz-border);
+      border-radius: 12px;
+      font: inherit;
+      font-size: 13px;
+    }
+
+    .quiz-toolbar input:focus {
+      border-color: var(--quiz-purple-light);
+      outline: none;
+    }
+
+    .quiz-total {
+      color: var(--quiz-muted);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .quiz-list {
+      display: grid;
+      gap: 13px;
+    }
+
+    .quiz-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 19px 20px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--quiz-border);
+      border-radius: 15px;
+    }
+
+    .quiz-item-main { min-width: 0; }
+
+    .quiz-item-top {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-bottom: 7px;
+    }
+
+    .quiz-item .quiz-eyebrow { margin: 0; }
+
+    .quiz-item h3 {
+      margin: 0 0 7px;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 800;
+      line-height: 1.45;
+    }
+
+    .quiz-item p {
+      margin: 0;
+      color: var(--quiz-muted);
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .quiz-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 10px;
+      color: var(--quiz-muted);
+      font-size: 11px;
+    }
+
+    .quiz-status {
+      padding: 4px 9px;
+      border-radius: 30px;
+      font-size: 10px;
+      font-weight: 850;
+      letter-spacing: .7px;
+      text-transform: uppercase;
+    }
+
+    .quiz-status.open { color: #6ee7b7; background: rgba(16,185,129,.16); }
+    .quiz-status.upcoming { color: #fcd34d; background: rgba(245,158,11,.16); }
+    .quiz-status.closed { color: #fca5a5; background: rgba(239,68,68,.16); }
+
+    .quiz-open {
+      flex: 0 0 auto;
+      padding: 11px 17px;
+      color: #fff;
+      background: linear-gradient(120deg, #8068f4, #684fe0);
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 800;
+      text-decoration: none;
+      white-space: nowrap;
+      box-shadow: 0 8px 20px rgba(117,92,240,.22);
+    }
+
+    .quiz-open.is-disabled {
+      color: var(--quiz-muted);
+      background: rgba(255,255,255,.06);
+      box-shadow: none;
+      font-weight: 700;
+    }
+
+    .quiz-message {
+      padding: 26px 18px;
+      color: var(--quiz-muted);
+      background: rgba(255,255,255,.04);
+      border: 1px dashed var(--quiz-border);
+      border-radius: 15px;
+      text-align: center;
+    }
+
+    .quiz-message strong { display: block; color: #fff; margin-bottom: 7px; }
+    .quiz-message p { margin: 0; font-size: 13px; }
+
+    @media (max-width: 700px) {
+      .quiz-item { flex-direction: column; align-items: stretch; }
+      .quiz-open, .quiz-open.is-disabled { text-align: center; }
+    }
   </style>
 </head>
 
@@ -446,19 +584,27 @@
 
         <div class="quiz-card-content">
 
-          <div id="quizContainer" aria-live="polite">
-            Loading...
+          <div class="quiz-toolbar">
+            <input
+              id="quizSearch"
+              type="search"
+              placeholder="Search quizzes…"
+              aria-label="Search quizzes">
+            <span class="quiz-total" id="quizCount">—</span>
           </div>
 
-          <div class="quiz-actions">
+          <div id="quizList" class="quiz-list" aria-live="polite">
+            <div class="quiz-item">
+              <div class="quiz-item-main">
+                <h3>Loading quizzes…</h3>
+                <p>Retrieving the assessments assigned to your section.</p>
+              </div>
+            </div>
+          </div>
 
-            <button
-              type="button"
-              id="nextBtn">
-              Next
-              <span aria-hidden="true">→</span>
-            </button>
-
+          <div class="quiz-message" id="quizEmpty" style="display:none">
+            <strong>No quizzes available yet.</strong>
+            <p>Published assessments for your section will appear here.</p>
           </div>
 
         </div>
@@ -485,8 +631,8 @@
       new Date().getFullYear();
   </script>
 
-  <!-- Existing quiz logic -->
-  <script type="module" src="../assets/js/quiz.js"></script>
+  <!-- Quiz list logic -->
+  <script type="module" src="../assets/js/student-quizzes.js"></script>
 
   <!-- Global application shell -->
   <script type="module" src="../assets/js/ui-shell.js"></script>

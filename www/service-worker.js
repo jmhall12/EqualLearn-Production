@@ -1,5 +1,5 @@
 
-const CACHE = "equallearn-shell-v7";
+const CACHE = "equallearn-shell-v8";
 
 const CORE = [
     "./",
@@ -14,13 +14,47 @@ const CORE = [
     "./assets/js/icons.js",
     "./assets/js/theme.js",
     "./assets/js/password-toggle.js",
-    "./assets/js/loading-screen.js",
-
-    "./assets/icons/icon-192.png",
-    "./assets/icons/icon-512.png"
+    "./assets/js/loading-screen.js"
 ];
 
-const OFFLINE_PAGE = "./index.html";
+const OFFLINE_MESSAGE = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>EqualLearn - Offline</title>
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            background: #f5f7fb;
+            color: #243047;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        main { padding: 30px; }
+        button {
+            padding: 12px 22px;
+            border: 0;
+            border-radius: 8px;
+            background: #3157d5;
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <h2>You're currently offline</h2>
+        <p>EqualLearn needs an internet connection to load this page.</p>
+        <button onclick="location.reload()">Try again</button>
+    </main>
+</body>
+</html>
+`;
 
 
 // ============================================
@@ -32,17 +66,16 @@ self.addEventListener("install", event => {
         (async () => {
             const cache = await caches.open(CACHE);
 
-            // Cache files individually.
-            // A missing optional file will not cancel installation.
             await Promise.all(
                 CORE.map(async path => {
                     try {
-                        await cache.add(path);
+                        const response = await fetch(path);
+
+                        if (response.ok) {
+                            await cache.put(path, response);
+                        }
                     } catch (error) {
-                        console.warn(
-                            "Cache skipped:",
-                            path
-                        );
+                        console.warn("Cache skipped:", path);
                     }
                 })
             );
@@ -88,16 +121,67 @@ self.addEventListener("fetch", event => {
 
     const url = new URL(request.url);
 
-    // Only handle same-origin requests.
     if (url.origin !== self.location.origin) return;
 
 
     // ========================================
-    // PAGE NAVIGATION
+    // PAGE NAVIGATION - NETWORK FIRST
     // ========================================
 
     if (request.mode === "navigate") {
+        event.respondWith(
+            (async () => {
+                try {
+                    const response = await fetch(request);
 
+                    if (response.ok) {
+                        const cache = await caches.open(CACHE);
+
+                        await cache.put(
+                            request,
+                            response.clone()
+                        );
+                    }
+
+                    // Return the actual server response.
+                    // Do not replace HTTP errors with index.html.
+                    return response;
+
+                } catch (error) {
+                    const cached = await caches.match(request);
+
+                    if (cached) return cached;
+
+                    return new Response(OFFLINE_MESSAGE, {
+                        status: 503,
+                        headers: {
+                            "Content-Type": "text/html; charset=utf-8"
+                        }
+                    });
+                }
+            })()
+        );
+
+        return;
+    }
+
+
+    // ========================================
+    // STATIC ASSETS - NETWORK FIRST
+    // ========================================
+
+    const isStaticAsset = [
+        "style",
+        "script",
+        "image",
+        "font",
+        "manifest"
+    ].includes(request.destination);
+
+    const isManifest =
+        url.pathname.endsWith("/manifest.webmanifest");
+
+    if (isStaticAsset || isManifest) {
         event.respondWith(
             (async () => {
                 try {
@@ -115,93 +199,16 @@ self.addEventListener("fetch", event => {
                     return response;
 
                 } catch (error) {
-
                     const cached = await caches.match(request);
 
                     if (cached) return cached;
 
-                    const offline = await caches.match(OFFLINE_PAGE);
-
-                    if (offline) return offline;
-
-                    return new Response(
-                        "EqualLearn is currently offline.",
-                        {
-                            status: 503,
-                            headers: {
-                                "Content-Type": "text/plain"
-                            }
+                    return new Response("Asset unavailable.", {
+                        status: 503,
+                        headers: {
+                            "Content-Type": "text/plain"
                         }
-                    );
-                }
-            })()
-        );
-
-        return;
-    }
-
-
-    // ========================================
-    // STATIC ASSETS AND MANIFEST
-    // ========================================
-
-    const isStaticAsset = [
-        "style",
-        "script",
-        "image",
-        "font",
-        "manifest"
-    ].includes(request.destination);
-
-    const isManifest =
-        url.pathname.endsWith("/manifest.webmanifest");
-
-    if (isStaticAsset || isManifest) {
-
-        const networkRequest = fetch(request)
-            .then(async response => {
-
-                if (response.ok) {
-                    const cache = await caches.open(CACHE);
-
-                    await cache.put(
-                        request,
-                        response.clone()
-                    );
-                }
-
-                return response;
-            });
-
-        // Background refresh.
-        // Network failure is expected when offline or server is unavailable.
-        event.waitUntil(
-            networkRequest.catch(() => undefined)
-        );
-
-        event.respondWith(
-            (async () => {
-
-                const cached = await caches.match(request);
-
-                // Return cached asset immediately.
-                if (cached) return cached;
-
-                // No cached copy: try network.
-                try {
-                    return await networkRequest;
-
-                } catch (error) {
-
-                    return new Response(
-                        "Asset unavailable.",
-                        {
-                            status: 503,
-                            headers: {
-                                "Content-Type": "text/plain"
-                            }
-                        }
-                    );
+                    });
                 }
             })()
         );
@@ -216,26 +223,20 @@ self.addEventListener("fetch", event => {
 
     event.respondWith(
         (async () => {
-
             try {
                 return await fetch(request);
 
             } catch (error) {
-
                 const cached = await caches.match(request);
 
                 if (cached) return cached;
 
-                return new Response(
-                    "Resource unavailable.",
-                    {
-                        status: 503,
-                        statusText: "Service Unavailable",
-                        headers: {
-                            "Content-Type": "text/plain"
-                        }
+                return new Response("Resource unavailable.", {
+                    status: 503,
+                    headers: {
+                        "Content-Type": "text/plain"
                     }
-                );
+                });
             }
         })()
     );
