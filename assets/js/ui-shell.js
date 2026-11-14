@@ -121,6 +121,8 @@ import {
     return currentPage === file.toLowerCase();
   }
 
+  
+  
   /* -------------------------------------------------------
      REMOVE ONLY LEGACY SHELL ELEMENTS
      Do not remove page content or Firebase scripts.
@@ -129,26 +131,29 @@ import {
   function isLegacyNavigation(element) {
     if (!(element instanceof HTMLElement)) return false;
 
+    // Never remove actual application content.
+    if (
+      element.matches(
+        ".el-dashboard, .el-page-content, .el-app-main, .el-app-shell, main"
+      ) ||
+      element.querySelector(
+        ".el-dashboard, .el-page-content, .el-app-main"
+      )
+    ) {
+      return false;
+    }
+
+    // Only detect old navigation containers.
     const links = [...element.querySelectorAll("a[href]")];
 
     if (links.length < 3) return false;
-
-    const hrefs = links.map(link => {
-      try {
-        return new URL(link.href, location.href)
-          .pathname
-          .split("/")
-          .pop()
-          .toLowerCase();
-      } catch {
-        return "";
-      }
-    });
 
     const knownPages = [
       "dashboard.html",
       "classwork.html",
       "modules.html",
+      "lessons.html",
+      "students.html",
       "assignments.html",
       "assigments.html",
       "quizzes.html",
@@ -156,12 +161,26 @@ import {
       "logout.html"
     ];
 
-    const matches = hrefs.filter(href =>
-      knownPages.includes(href)
-    ).length;
+    const matches = links.filter(link => {
+      try {
+        const page = new URL(
+          link.getAttribute("href"),
+          window.location.href
+        ).pathname.split("/").pop().toLowerCase();
+
+        return knownPages.includes(page);
+      } catch {
+        return false;
+      }
+    }).length;
 
     return matches >= 3;
   }
+
+  /* -------------------------------------------------------
+     LEGACY LOGO DETECTION
+  ------------------------------------------------------- */
+
 
   function isLegacyLogoOnly(element) {
     if (!(element instanceof HTMLElement)) return false;
