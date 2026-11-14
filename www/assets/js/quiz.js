@@ -1,466 +1,247 @@
 import { auth, db } from "./firebase-config.js";
 
 import {
-    onAuthStateChanged
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
 
 import {
-    collection,
-    query,
-    where,
-    getDocs,
-    doc,
-    setDoc,
-    serverTimestamp
+  doc,
+  getDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
+const $ = id => document.getElementById(id);
 
-// ======================================================
-// ELEMENTS
-// ======================================================
+const quizCard = $("quizCard");
+const nextBtn = $("nextBtn");
+const message = $("message");
 
-const container =
-    document.getElementById("quizContainer");
-
-const nextBtn =
-    document.getElementById("nextBtn");
-
-
-// ======================================================
-// GET LESSON ID
-// ======================================================
-
-const params =
-    new URLSearchParams(
-        window.location.search
-    );
-
-const lessonId =
-    params.get("lesson");
-
-
-// ======================================================
-// VARIABLES
-// ======================================================
-
-let questions = [];
-
-let current = 0;
-
-let score = 0;
-
-let selected = null;
+const quizId = new URLSearchParams(location.search).get("id");
 
 let currentUser = null;
+let quiz = null;
+let questions = [];
+let currentIndex = 0;
+let answers = {};
+let submitting = false;
 
-
-// ======================================================
-// CHECK LOGIN + LOAD QUESTIONS
-// ======================================================
-
-onAuthStateChanged(auth, async (user) => {
-
-    if (!user) {
-
-        window.location.href =
-            "../login.html";
-
-        return;
-
-    }
-
-
-    currentUser = user;
-
-
-    try {
-
-        if (!lessonId) {
-
-            container.innerHTML =
-                "No lesson selected.";
-
-            nextBtn.disabled = true;
-
-            return;
-
-        }
-
-
-        const q = query(
-            collection(db, "questions"),
-            where("lessonId", "==", lessonId)
-        );
-
-
-        const snapshot =
-            await getDocs(q);
-
-
-        questions = [];
-
-
-        snapshot.forEach((item) => {
-
-            questions.push({
-
-                id: item.id,
-
-                ...item.data()
-
-            });
-
-        });
-
-
-        if (questions.length === 0) {
-
-            container.innerHTML =
-                "No questions found.";
-
-            nextBtn.disabled = true;
-
-            return;
-
-        }
-
-
-        showQuestion();
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Loading quiz error:",
-            error
-        );
-
-        container.innerHTML =
-            "Failed to load quiz.";
-
-    }
-
+$("exitBtn").addEventListener("click", () => {
+  location.href = "dashboard.html";
 });
 
-
-// ======================================================
-// SHOW QUESTION
-// ======================================================
-
-function showQuestion() {
-
-    if (current >= questions.length) {
-
-        finishQuiz();
-
-        return;
-
-    }
-
-
-    const q =
-        questions[current];
-
-
-    container.innerHTML = `
-
-        <div class="question-number">
-
-            Question ${current + 1}
-            of ${questions.length}
-
-        </div>
-
-
-        <div class="question">
-
-            <h3>
-                ${escapeHTML(q.question || "")}
-            </h3>
-
-        </div>
-
-
-        <div class="choices">
-
-            <button
-                type="button"
-                class="choice"
-                onclick="choose('A')">
-
-                A. ${escapeHTML(q.choiceA || "")}
-
-            </button>
-
-
-            <button
-                type="button"
-                class="choice"
-                onclick="choose('B')">
-
-                B. ${escapeHTML(q.choiceB || "")}
-
-            </button>
-
-
-            <button
-                type="button"
-                class="choice"
-                onclick="choose('C')">
-
-                C. ${escapeHTML(q.choiceC || "")}
-
-            </button>
-
-
-            <button
-                type="button"
-                class="choice"
-                onclick="choose('D')">
-
-                D. ${escapeHTML(q.choiceD || "")}
-
-            </button>
-
-        </div>
-
-    `;
-
-
-    selected = null;
-
+function showMessage(text) {
+  message.textContent = text;
+  message.style.display = "block";
 }
 
+function hideMessage() {
+  message.style.display = "none";
+}
 
-// ======================================================
-// CHOOSE ANSWER
-// ======================================================
+onAuthStateChanged(auth, async user => {
+  if (!user) {
+    location.href = "../login.html";
+    return;
+  }
 
-window.choose = function(answer) {
+  currentUser = user;
 
-    selected = answer;
+  try {
+    await loadQuiz();
+  } catch (error) {
+    console.error("Quiz loading error:", error);
+    showMessage("Unable to load this quiz. " + error.message);
+    quizCard.textContent = "Quiz unavailable.";
+    nextBtn.disabled = true;
+  }
+});
 
+async function loadQuiz() {
+  if (!quizId) throw new Error("Missing quiz ID.");
 
-    const choices =
-        document.querySelectorAll(
-            ".choice"
-        );
+  const profileSnap = await getDoc(doc(db, "users", currentUser.uid));
 
+  if (!profileSnap.exists()) throw new Error("Student profile not found.");
 
-    choices.forEach((button) => {
+  const profile = profileSnap.data();
 
-        button.classList.remove(
-            "selected"
-        );
+  if (
+    String(profile.role).toLowerCase() !== "student" ||
+    profile.status !== "active"
+  ) {
+    throw new Error("An active student account is required.");
+  }
 
+  // Quizzes created with the Teacher Quiz Builder live in "quizzes".
+  // The Classwork hub also lists section-scoped "quizzesV2" records, so
+  // fall back to that collection before reporting a missing quiz.
+  let quizSnap = await getDoc(doc(db, "quizzes", quizId));
+
+  if (!quizSnap.exists()) {
+    quizSnap = await getDoc(doc(db, "quizzesV2", quizId));
+  }
+
+  if (!quizSnap.exists()) throw new Error("Quiz not found.");
+
+  quiz = { id: quizSnap.id, ...quizSnap.data() };
+
+  if (!["active", "published"].includes(String(quiz.status || "").toLowerCase())) {
+    throw new Error("This quiz is not currently published.");
+  }
+
+  // Enforce the stored section restriction when the record has one.
+  const quizSections = Array.isArray(quiz.sectionIds)
+    ? quiz.sectionIds.map(String)
+    : quiz.sectionId
+    ? [String(quiz.sectionId)]
+    : [];
+
+  if (quizSections.length && !quizSections.includes(String(profile.sectionId))) {
+    throw new Error("This quiz is not assigned to your section.");
+  }
+
+  const now = Date.now();
+  const availableAt = quiz.availableAt?.toDate?.()?.getTime();
+  const dueDate = quiz.dueDate?.toDate?.()?.getTime();
+
+  if (availableAt && now < availableAt) {
+    throw new Error("This quiz is not available yet.");
+  }
+
+  if (dueDate && now > dueDate) {
+    throw new Error("The deadline for this quiz has passed.");
+  }
+
+  $("quizTitle").textContent = quiz.title || "Untitled Quiz";
+  $("quizDescription").textContent = quiz.description || "";
+
+  const questionQuery = query(
+    collection(db, "quizQuestions"),
+    where("quizId", "==", quizId)
+  );
+
+  const snapshot = await getDocs(questionQuery);
+
+  questions = snapshot.docs.map(item => ({
+    id: item.id,
+    ...item.data()
+  }));
+
+  questions.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+  if (!questions.length) {
+    throw new Error("This quiz has no questions.");
+  }
+
+  renderQuestion();
+}
+
+function renderQuestion() {
+  hideMessage();
+
+  const question = questions[currentIndex];
+
+  $("questionProgress").textContent =
+    `Question ${currentIndex + 1} of ${questions.length}`;
+
+  $("progressBar").style.width =
+    `${((currentIndex + 1) / questions.length) * 100}%`;
+
+  quizCard.replaceChildren();
+
+  const heading = document.createElement("h2");
+  heading.textContent = question.question || "Untitled question";
+
+  const choices = document.createElement("div");
+
+  ["A", "B", "C", "D"].forEach(letter => {
+    const value = question["choice" + letter];
+
+    if (!value) return;
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "choice";
+    button.textContent = `${letter}. ${value}`;
+
+    if (answers[question.id] === letter) {
+      button.classList.add("selected");
+    }
+
+    button.addEventListener("click", () => {
+      answers[question.id] = letter;
+
+      choices.querySelectorAll(".choice").forEach(item =>
+        item.classList.remove("selected")
+      );
+
+      button.classList.add("selected");
+      nextBtn.disabled = false;
     });
 
+    choices.appendChild(button);
+  });
 
-    const selectedButton =
-        Array.from(choices)
-            .find((button) => {
+  quizCard.append(heading, choices);
 
-                return button.textContent
-                    .trim()
-                    .startsWith(answer + ".");
+  nextBtn.textContent =
+    currentIndex === questions.length - 1
+      ? "Submit Quiz"
+      : "Next Question";
 
-            });
-
-
-    if (selectedButton) {
-
-        selectedButton.classList.add(
-            "selected"
-        );
-
-    }
-
-};
-
-
-// ======================================================
-// NEXT QUESTION
-// ======================================================
-
-nextBtn.onclick = function() {
-
-    if (selected === null) {
-
-        alert(
-            "Please select an answer."
-        );
-
-        return;
-
-    }
-
-
-    const question =
-        questions[current];
-
-
-    if (
-        selected ===
-        question.correctAnswer
-    ) {
-
-        score++;
-
-    }
-
-
-    current++;
-
-
-    showQuestion();
-
-};
-
-
-// ======================================================
-// FINISH QUIZ
-// ======================================================
-
-async function finishQuiz() {
-
-    nextBtn.disabled = true;
-
-
-    const total =
-        questions.length;
-
-
-    const percentage =
-        total > 0
-            ? Math.round(
-                (score / total) * 100
-            )
-            : 0;
-
-
-    // Passing mark = 75%
-    const result =
-        percentage >= 75
-            ? "passing"
-            : "failing";
-
-
-    try {
-
-        // ------------------------------------------
-        // FIRESTORE DOCUMENT ID
-        // One latest result per student per lesson
-        // ------------------------------------------
-
-        const progressId =
-            `${currentUser.uid}_${lessonId}`;
-
-
-        const progressRef =
-            doc(
-                db,
-                "progress",
-                progressId
-            );
-
-
-        // ------------------------------------------
-        // SAVE QUIZ RESULT
-        // ------------------------------------------
-
-        await setDoc(
-
-            progressRef,
-
-            {
-
-                userId:
-                    currentUser.uid,
-
-                lessonId:
-                    lessonId,
-
-                score:
-                    score,
-
-                total:
-                    total,
-
-                percentage:
-                    percentage,
-
-                result:
-                    result,
-
-                completed:
-                    true,
-
-                completedAt:
-                    serverTimestamp()
-
-            },
-
-            {
-                merge: true
-            }
-
-        );
-
-
-        console.log(
-            "Quiz result saved:",
-            {
-                score,
-                total,
-                percentage,
-                result
-            }
-        );
-
-
-        // ------------------------------------------
-        // GO TO RESULT PAGE
-        // ------------------------------------------
-
-        window.location.href =
-            `result.html?score=${score}&total=${total}&percentage=${percentage}&result=${result}`;
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Saving quiz result error:",
-            error
-        );
-
-
-        nextBtn.disabled = false;
-
-
-        alert(
-            "Your quiz was completed, but the result could not be saved.\n\n" +
-            error.message
-        );
-
-    }
-
+  nextBtn.disabled = !answers[question.id];
 }
 
+nextBtn.addEventListener("click", async () => {
+  if (submitting) return;
 
-// ======================================================
-// ESCAPE HTML
-// ======================================================
+  const question = questions[currentIndex];
 
-function escapeHTML(value) {
+  if (!answers[question.id]) {
+    showMessage("Please select an answer before continuing.");
+    return;
+  }
 
-    const div =
-        document.createElement("div");
+  if (currentIndex < questions.length - 1) {
+    currentIndex++;
+    renderQuestion();
+    return;
+  }
 
-    div.textContent =
-        value;
+  await submitQuiz();
+});
 
-    return div.innerHTML;
+async function submitQuiz() {
+  submitting = true;
+  nextBtn.disabled = true;
+  nextBtn.textContent = "Submitting...";
 
+  try {
+    // This stores submitted answers without exposing answer keys.
+    // Secure automatic grading will be handled by a trusted backend.
+    const attempt = await addDoc(collection(db, "quizAttempts"), {
+      quizId,
+      userId: currentUser.uid,
+      answers,
+      status: "submitted",
+      score: null,
+      total: questions.length,
+      submittedAt: serverTimestamp()
+    });
+
+    location.href =
+      `quiz-result.html?attempt=${encodeURIComponent(attempt.id)}`;
+
+  } catch (error) {
+    console.error("Quiz submission error:", error);
+    showMessage("Unable to submit your quiz. " + error.message);
+    submitting = false;
+    nextBtn.disabled = false;
+    nextBtn.textContent = "Submit Quiz";
+  }
 }

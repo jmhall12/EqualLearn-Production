@@ -1,1472 +1,1697 @@
-﻿import { auth, db, storage } from "./firebase-config.js";
-import { notifySectionStudents } from "./notification-service.js";
 
-import {
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
+import { auth, db } from "./firebase-config.js";
+
+import { onAuthStateChanged } from
+  "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
 
 import {
   collection,
-  addDoc,
+  query,
+  where,
   getDocs,
   getDoc,
-  deleteDoc,
   doc,
+  setDoc,
   updateDoc,
-  serverTimestamp,
-  query,
-  orderBy,
-  where
+  deleteDoc,
+  onSnapshot,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
 import {
+  getStorage,
   ref,
-  uploadBytesResumable,
+  uploadBytes,
   getDownloadURL,
   deleteObject
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-storage.js";
 
-const $ = (id) => document.getElementById(id);
+// ======================================================
+// EQUALLEARN TEACHER ACTIVITY BUILDER
+// Compatible with the uploaded modules.html
+// ======================================================
 
-const moduleList = $("moduleList");
-const modal = $("moduleModal");
-const openModal = $("openModal");
-const closeModal = $("closeModal");
-const cancelEdit = $("cancelEdit");
-const saveModule = $("saveModule");
-const backToDashboard = $("backToDashboard");
+const $ = id => document.getElementById(id);
 
-const title = $("title");
-const description = $("description");
-const moduleOrder = $("moduleOrder");
-const moduleStatus = $("moduleStatus");
+const storage = getStorage();
 
-const moduleFile = $("moduleFile");
-const existingFile = $("existingFile");
-const selectedFile = $("selectedFile");
-
-const modalTitle = $("modalTitle");
-const message = $("message");
-
-const uploadProgress = $("uploadProgress");
-const progressBar = $("progressBar");
-const progressText = $("progressText");
-
-const learningObjectives = $("learningObjectives");
-const estimatedDuration = $("estimatedDuration");
-const academicYearSelect = $("academicYearSelect");
-const programSelect = $("programSelect");
-const yearLevelSelect = $("yearLevelSelect");
-const classSource = $("classSource");
-const sectionSelect = $("sectionSelect");
-const assignmentSummary = $("assignmentSummary");
-
-const availableAt = $("availableAt");
-const dueDate = $("dueDate");
-const videoUrl = $("videoUrl");
-const resourceUrl = $("resourceUrl");
-const resourceUrlInput = $("resourceUrlInput") || resourceUrl;
-
-const resourceLinksList = $("resourceLinksList");
-const resourceToolbar = $("resourceToolbar");
-const resourceNameInput = $("resourceNameInput");
-const addResourceLinkBtn = $("addResourceLinkBtn");
-
-const cameraPhotoInput = $("cameraPhotoInput");
-const pickPhotoInput = $("pickPhotoInput");
-const recordVideoInput = $("recordVideoInput");
-
-const moduleSearch = $("moduleSearch");
-const statusFilter = $("statusFilter");
-const sortFilter = $("sortFilter");
-
-const statTotal = $("totalModules");
-const statActive = $("activeModules");
-const statDraft = $("draftModules");
-const statArchived = $("archivedModules");
-
-const MAX_FILE_SIZE = 20 * 1024 * 1024;
-const MODULE_CACHE_PREFIX = "equallearn:teacher:modules:v3:";
-
-const RESOURCE_DESTINATIONS = {
-  drive: "https://drive.google.com/",
-  forms: "https://forms.google.com/",
-  drawings: "https://docs.google.com/drawings/",
-  sheets: "https://sheets.google.com/",
-  slides: "https://slides.google.com/",
-  docs: "https://docs.google.com/"
+const COLLECTIONS = {
+  users: "users",
+  sections: "sections",
+  modules: "modulesV2",
+  activities: "teacherActivitiesV2"
 };
 
-const RESOURCE_LABELS = {
-  drive: "Google Drive",
-  forms: "Google Forms",
-  drawings: "Google Drawings",
-  sheets: "Google Sheets",
-  slides: "Google Slides",
-  docs: "Google Docs",
-  youtube: "YouTube",
-  link: "External Link"
-};
+const MAX_FILE_SIZE = 100 * 1024 * 1024;
 
 let currentUser = null;
-let currentRole = "";
-let moduleCacheKey = "";
-const moduleCache = new Map();
-let availableSections = [];
-let resourceLinks = [];
-let editingId = null;
-let currentFileURL = "";
-let currentFilePath = "";
-let currentFileName = "";
-let activeUploadTask = null;
-let uploadStartedAt = 0;
-let lastProgressBytes = 0;
-let lastProgressTime = 0;
-let openedResourceType = null;
-let editorInitialSnapshot = "";
-let editorSaving = false;
-let navigationPending = false;
+let profile = null;
+let sections = [];
+let items = [];
+let editing = null;
 
-const cancelUpload = document.createElement("button");
-cancelUpload.type = "button";
-cancelUpload.className = "el-upload-cancel";
-cancelUpload.textContent = "Cancel upload";
-cancelUpload.hidden = true;
-uploadProgress?.appendChild(cancelUpload);
+let unsubscribeModules = null;
+let unsubscribeActivities = null;
 
-cancelUpload.addEventListener("click", () => {
-  if (!activeUploadTask) return;
-  if (confirm("Cancel the current upload?")) {
-    activeUploadTask.cancel();
-  }
+let saving = false;
+let activityTypeControl = null;
+let typeFields = null;
+
+// ======================================================
+// INITIALIZATION
+// ======================================================
+
+document.addEventListener("DOMContentLoaded", init);
+
+function init() {
+  bindEvents();
+  listenAuth();
+}
+
+// ======================================================
+// EVENTS
+// ======================================================
+
+function bindEvents() {
+  $("createBtn")?.addEventListener("click", () => openEditor());
+
+  $("closeEditor")?.addEventListener("click", closeEditor);
+  $("cancelEditor")?.addEventListener("click", closeEditor);
+
+  $("activityForm")?.addEventListener("submit", event => {
+    event.preventDefault();
+    saveActivity("published");
+  });
+
+  $("saveDraftBtn")?.addEventListener("click", () => {
+    saveActivity("draft");
+  });
+
+  $("addResource")?.addEventListener("click", () => {
+    addResource();
+  });
+
+  $("publishBtn")?.addEventListener("click", event => {
+  event.preventDefault();
+  saveActivity("published");
 });
 
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    window.location.href = "../login.html";
-    return;
-  }
+  $("searchInput")?.addEventListener("input", renderItems);
+  $("statusFilter")?.addEventListener("change", renderItems);
+  $("typeFilter")?.addEventListener("change", renderItems);
+  $("sectionFilter")?.addEventListener("change", renderItems);
 
-  try {
-    const profileSnap = await getDoc(doc(db, "users", user.uid));
-    if (!profileSnap.exists()) {
-      throw new Error("User profile not found.");
+  $("editorModal")?.addEventListener("click", event => {
+    if (event.target === $("editorModal")) {
+      closeEditor();
     }
+  });
 
-    const role = String(profileSnap.data().role || "").trim().toLowerCase();
-    if (!["teacher", "admin"].includes(role)) {
-      alert("Access denied. This page is for teachers and administrators only.");
-      window.location.href = role === "student" ? "../student/dashboard.html" : "../login.html";
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape") {
+      closeEditor();
+      closePreview();
+    }
+  });
+}
+
+// ======================================================
+// AUTHENTICATION
+// ======================================================
+
+function listenAuth() {
+  onAuthStateChanged(auth, async user => {
+    stopListeners();
+
+    if (!user) {
+      location.replace("../login.html");
       return;
     }
 
     currentUser = user;
-    currentRole = role;
-    moduleCacheKey = `${MODULE_CACHE_PREFIX}${user.uid}`;
 
-    await loadAvailableSections();
-    renderCachedModules();
-    await loadModules();
-  } catch (error) {
-    console.error("Module page access error:", error);
-    if (moduleList) {
-      moduleList.innerHTML = `
-        <div class="empty">
-          Unable to verify your account permissions.
-          <br>
-          <small>${escapeHTML(error.message || "Unknown error")}</small>
-        </div>
-      `;
-    }
-  }
-});
+    try {
+      const snap = await getDoc(
+        doc(db, COLLECTIONS.users, user.uid)
+      );
 
-openModal?.addEventListener("click", () => {
-  if (editorSaving) return;
-  resetForm();
-  editingId = null;
-  modalTitle.textContent = "Create Module";
-  modal?.classList.add("show");
-  editorInitialSnapshot = getEditorSnapshot();
-  requestAnimationFrame(() => title?.focus());
-});
+      if (!snap.exists()) {
+        throw new Error("Teacher profile not found.");
+      }
 
-[moduleSearch, statusFilter, sortFilter].forEach((control) => {
-  control?.addEventListener("input", applyModuleView);
-  control?.addEventListener("change", applyModuleView);
-});
+      profile = snap.data();
 
-sectionSelect?.addEventListener("change", updateAssignmentSummary);
-academicYearSelect?.addEventListener("change", updateAssignmentSummary);
-programSelect?.addEventListener("change", updateAssignmentSummary);
-yearLevelSelect?.addEventListener("change", updateAssignmentSummary);
+      const role = String(profile.role || "").toLowerCase();
+      const status = String(profile.status || "").toLowerCase();
 
-closeModal?.addEventListener("click", () => closeEditor("close"));
-cancelEdit?.addEventListener("click", () => closeEditor("back"));
-modal?.addEventListener("click", (event) => {
-  if (event.target === modal) {
-    closeEditor("outside");
-  }
-});
-
-document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && modal?.classList.contains("show")) {
-    event.preventDefault();
-    closeEditor("escape");
-  }
-});
-
-backToDashboard?.addEventListener("click", async () => {
-  if (navigationPending) return;
-  navigationPending = true;
-
-  try {
-    if (modal?.classList.contains("show")) {
-      const saved = await saveDraftBeforeLeaving();
-      if (!saved) {
-        navigationPending = false;
+      if (!["teacher", "admin"].includes(role)) {
+        location.replace("../login.html");
         return;
       }
-    }
-    window.location.href = "dashboard.html";
-  } catch (error) {
-    console.error(error);
-    navigationPending = false;
-    alert("Unable to save your draft. Please try again before leaving.");
-  }
-});
 
-moduleFile?.addEventListener("change", () => {
-  const file = moduleFile.files?.[0];
-  if (!file) {
-    if (selectedFile) {
-      selectedFile.style.display = "none";
-      selectedFile.innerHTML = "";
+      if (role === "teacher" && status !== "active") {
+        throw new Error("Your teacher account is not active.");
+      }
+
+      updateTeacherInformation();
+
+      await loadSections();
+
+      listenItems();
+
+    } catch (error) {
+      console.error("Teacher Activity Builder:", error);
+
+      showNotice(errorMessage(error), "error");
+
+      showEmpty(
+        "Unable to load workspace",
+        errorMessage(error)
+      );
     }
-    return;
+  });
+}
+
+function stopListeners() {
+  if (unsubscribeModules) {
+    unsubscribeModules();
+    unsubscribeModules = null;
+  }
+
+  if (unsubscribeActivities) {
+    unsubscribeActivities();
+    unsubscribeActivities = null;
+  }
+}
+
+function updateTeacherInformation() {
+  const name =
+    profile.fullName ||
+    profile.name ||
+    currentUser.displayName ||
+    currentUser.email ||
+    "Teacher";
+
+  if ($("teacherName")) {
+    $("teacherName").textContent = name;
+  }
+
+  if ($("avatar")) {
+    $("avatar").textContent = name.charAt(0).toUpperCase();
+  }
+
+  if ($("teacherRole")) {
+    $("teacherRole").textContent =
+      String(profile.role || "teacher").toUpperCase();
+  }
+}
+
+// ======================================================
+// SECTIONS
+// ======================================================
+
+
+ 
+async function loadSections() {
+  const sectionList = $("sectionList");
+
+  sections = [];
+
+  if (sectionList) {
+    sectionList.textContent = "Loading sections...";
   }
 
   try {
-    validateFile(file);
-    if (selectedFile) {
-      selectedFile.style.display = "block";
-      selectedFile.innerHTML = `
-        <strong>${escapeHTML(file.name)}</strong>
-        <br>
-        <small>${formatFileSize(file.size)} • ready to upload</small>
-      `;
+    if (!currentUser?.uid) {
+      throw new Error("Teacher is not authenticated.");
     }
-    showMessage("File ready. It will upload when you save the module.", "info");
-  } catch (error) {
-    moduleFile.value = "";
-    if (selectedFile) {
-      selectedFile.style.display = "none";
-      selectedFile.innerHTML = "";
-    }
-    showMessage(error.message || "Invalid file.", "error");
-  }
-});
 
-resourceToolbar?.addEventListener("click", (event) => {
-  const tile = event.target.closest("[data-resource]");
-  if (!tile) return;
+    console.log("Loading sections for UID:", currentUser.uid);
 
-  const type = tile.dataset.resource;
+    const sectionRef = collection(db, "sections");
+    const role = String(profile?.role || "").toLowerCase();
 
-  if (RESOURCE_DESTINATIONS[type]) {
-    if (openedResourceType === type) {
-      requestResourceLink(type);
-      openedResourceType = null;
+    const found = new Map();
+
+    if (role === "admin") {
+      const snapshot = await getDocs(sectionRef);
+
+      snapshot.forEach(d => {
+        found.set(d.id, {
+          id: d.id,
+          ...d.data()
+        });
+      });
     } else {
-      openResourceWebsite(type);
+      // Query using teacherId
+      const teacherQuery = await getDocs(
+        query(
+          sectionRef,
+          where("teacherId", "==", currentUser.uid)
+        )
+      );
+
+      teacherQuery.forEach(d => {
+        found.set(d.id, {
+          id: d.id,
+          ...d.data()
+        });
+      });
+
+      // Query using teacherIds
+      const teacherArrayQuery = await getDocs(
+        query(
+          sectionRef,
+          where("teacherIds", "array-contains", currentUser.uid)
+        )
+      );
+
+      teacherArrayQuery.forEach(d => {
+        found.set(d.id, {
+          id: d.id,
+          ...d.data()
+        });
+      });
+
+      // Known BSIT-4L section: verify directly if not found
+      const knownSectionId = "6VwLg5Brx8Biw5Qmeb4F";
+
+      if (!found.has(knownSectionId)) {
+        const knownSection = await getDoc(
+          doc(db, "sections", knownSectionId)
+        );
+
+        if (knownSection.exists()) {
+          const data = knownSection.data();
+
+          const assigned =
+            data.teacherId === currentUser.uid ||
+            (
+              Array.isArray(data.teacherIds) &&
+              data.teacherIds.includes(currentUser.uid)
+            );
+
+          if (assigned) {
+            found.set(knownSection.id, {
+              id: knownSection.id,
+              ...data
+            });
+          }
+        }
+      }
     }
-    return;
-  }
 
-  if (type === "youtube") {
-    const url = prompt("Paste the YouTube video link:");
-    if (url === null || !url.trim()) return;
-    confirmAndAttachResource("youtube", url);
-    return;
-  }
+    sections = [...found.values()];
 
-  if (type === "link") {
-    const url = prompt("Enter the website or resource URL:");
-    if (url === null || !url.trim()) return;
-    confirmAndAttachResource("link", url);
-    return;
-  }
+    sections.sort((a, b) =>
+      sectionName(a).localeCompare(sectionName(b))
+    );
 
-  if (type === "pdf") {
-    if (moduleFile) {
-      moduleFile.accept = ".pdf,application/pdf";
-      moduleFile.dataset.resourceMode = "pdf";
-      moduleFile.click();
+    renderSections();
+
+    console.log("Sections successfully loaded:", sections);
+
+    if ($("sectionCount")) {
+      $("sectionCount").textContent = sections.length;
     }
-    return;
-  }
 
-  if (type === "upload") {
-    if (moduleFile) {
-      moduleFile.accept = ".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.png,.jpg,.jpeg,.webp,.mp4,.webm,.mov";
-      moduleFile.dataset.resourceMode = "upload";
-      moduleFile.click();
+    if (!sections.length) {
+      sectionList.textContent =
+        "No assigned sections found. Check your teacher assignment and Firestore permissions.";
     }
-    return;
+
+  } catch (error) {
+    console.error("LOAD SECTIONS ERROR:", error);
+
+    if (sectionList) {
+      sectionList.textContent =
+        "Section loading failed: " + error.message;
+    }
+
+    showNotice(
+      "Unable to load sections: " + error.message,
+      "error"
+    );
+  }
+}
+
+
+
+function sectionName(section) {
+  const course =
+    section.program ||
+    section.course ||
+    section.programName ||
+    section.courseName ||
+    "";
+
+  const year =
+    section.yearLevel ||
+    section.year ||
+    "";
+
+  const name =
+    section.sectionName ||
+    section.name ||
+    section.code ||
+    section.section ||
+    "";
+
+  return [
+    course,
+    year ? `Year ${year}` : "",
+    name
+  ].filter(Boolean).join(" • ") || section.id;
+}
+
+function renderSections(selected = []) {
+  const list = $("sectionList");
+  const filter = $("sectionFilter");
+
+  if (!list) return;
+
+  list.replaceChildren();
+
+  if (!sections.length) {
+    const message = document.createElement("span");
+    message.textContent = "No assigned sections found.";
+    list.appendChild(message);
+
+  } else {
+    sections.forEach(section => {
+      const label = document.createElement("label");
+      const checkbox = document.createElement("input");
+
+      checkbox.type = "checkbox";
+      checkbox.name = "sectionIds";
+      checkbox.value = section.id;
+      checkbox.checked = selected.includes(section.id);
+
+      const text = document.createElement("span");
+      text.textContent = sectionName(section);
+
+      label.append(checkbox, text);
+      list.appendChild(label);
+    });
   }
 
-  if (type === "camera") {
-    cameraPhotoInput?.click();
-    return;
+  if (filter) {
+    const oldValue = filter.value || "all";
+
+    filter.replaceChildren();
+    filter.add(new Option("All sections", "all"));
+
+    sections.forEach(section => {
+      filter.add(
+        new Option(sectionName(section), section.id)
+      );
+    });
+
+    filter.value = sections.some(s => s.id === oldValue)
+      ? oldValue
+      : "all";
   }
 
-  if (type === "photo") {
-    pickPhotoInput?.click();
-    return;
+  if ($("sectionCount")) {
+    $("sectionCount").textContent = sections.length;
   }
+}
 
-  if (type === "record") {
-    recordVideoInput?.click();
-  }
-});
+function selectedSections() {
+  return [
+    ...document.querySelectorAll(
+      '#sectionList input[name="sectionIds"]:checked'
+    )
+  ].map(input => input.value);
+}
 
-addResourceLinkBtn?.addEventListener("click", () => {
-  const name = resourceNameInput?.value.trim() || "";
-  const url = (resourceUrlInput?.value || resourceUrl?.value || "").trim();
+// ======================================================
+// FIRESTORE LISTENERS
+// ======================================================
 
-  if (!name) {
-    showMessage("Please enter a resource name.", "error");
-    resourceNameInput?.focus();
-    return;
-  }
+function listenItems() {
+  const role = String(profile.role || "").toLowerCase();
 
-  if (!url) {
-    showMessage("Please paste the resource URL.", "error");
-    (resourceUrlInput || resourceUrl)?.focus();
-    return;
-  }
+  const moduleQuery = role === "admin"
+    ? query(collection(db, COLLECTIONS.modules))
+    : query(
+        collection(db, COLLECTIONS.modules),
+        where("createdBy", "==", currentUser.uid)
+      );
 
-  confirmAndAttachResource("link", url, name);
-});
+  const activityQuery = role === "admin"
+    ? query(collection(db, COLLECTIONS.activities))
+    : query(
+        collection(db, COLLECTIONS.activities),
+        where("createdBy", "==", currentUser.uid)
+      );
 
-cameraPhotoInput?.addEventListener("change", () => {
-  const file = cameraPhotoInput.files?.[0];
-  attachChosenFile(file, "camera");
-  cameraPhotoInput.value = "";
-});
+  let moduleItems = [];
+  let activityItems = [];
 
-pickPhotoInput?.addEventListener("change", () => {
-  const file = pickPhotoInput.files?.[0];
-  attachChosenFile(file, "photo");
-  pickPhotoInput.value = "";
-});
+  const refresh = () => {
+    items = [...moduleItems, ...activityItems];
 
-recordVideoInput?.addEventListener("change", () => {
-  const file = recordVideoInput.files?.[0];
-  attachChosenFile(file, "record");
-  recordVideoInput.value = "";
-});
+    items.sort((a, b) =>
+      dateValue(b.updatedAt || b.createdAt) -
+      dateValue(a.updatedAt || a.createdAt)
+    );
 
-saveModule?.addEventListener("click", async () => {
-  if (editorSaving) return;
-  await saveModuleRecord("active");
-});
+    updateStatistics();
+    renderItems();
+  };
 
-function openResourceWebsite(type) {
-  const destination = RESOURCE_DESTINATIONS[type];
-  if (!destination) return;
+  unsubscribeModules = onSnapshot(
+    moduleQuery,
+    snapshot => {
+      moduleItems = snapshot.docs.map(d => ({
+        id: d.id,
+        collectionName: COLLECTIONS.modules,
+        type: "module",
+        ...d.data()
+      }));
 
-  const opened = window.open(destination, "_blank", "noopener,noreferrer");
-  if (!opened) {
-    showMessage("Popup blocked. Please allow popups for EqualLearn.", "error");
-    return;
-  }
+      refresh();
+    },
+    error => {
+      console.error("Module listener:", error);
+      showNotice(errorMessage(error), "error");
+    }
+  );
 
-  openedResourceType = type;
-  showMessage(
-    `${RESOURCE_LABELS[type]} opened in a new tab. Copy your resource link and add it to this module.`,
-    "info"
+  unsubscribeActivities = onSnapshot(
+    activityQuery,
+    snapshot => {
+      activityItems = snapshot.docs.map(d => ({
+        id: d.id,
+        collectionName: COLLECTIONS.activities,
+        ...d.data()
+      }));
+
+      refresh();
+    },
+    error => {
+      console.error("Activity listener:", error);
+      showNotice(errorMessage(error), "error");
+    }
   );
 }
 
-function confirmAndAttachResource(type, url, customLabel = "") {
-  try {
-    const parsed = new URL(String(url || "").trim());
-
-    if (!["https:", "http:"].includes(parsed.protocol)) {
-      throw new Error("Only valid HTTP or HTTPS links are allowed.");
-    }
-
-    if (type === "youtube" && !["youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be"].includes(parsed.hostname.toLowerCase())) {
-      throw new Error("Please enter a valid YouTube URL.");
-    }
-
-    const label = String(customLabel || "").trim() || RESOURCE_LABELS[type] || "External Link";
-    if (resourceLinks.some((item) => item.url === parsed.href)) {
-      throw new Error("This resource link has already been added.");
-    }
-
-    const confirmed = confirm(`Confirm this ${label} resource?\n\n${parsed.href}\n\nAttach it to this module?`);
-    if (!confirmed) return;
-
-    if (type === "youtube") {
-      if (videoUrl) videoUrl.value = parsed.href;
-    } else if (type === "link") {
-      if (resourceUrlInput) resourceUrlInput.value = parsed.href;
-      if (resourceUrl) resourceUrl.value = parsed.href;
-    } else {
-      resourceLinks.push({ type, label, url: parsed.href });
-      renderResourceLinks();
-    }
-
-    showMessage(`${label} attached successfully.`, "success");
-  } catch (error) {
-    showMessage(error.message || "Please enter a valid URL.", "error");
-  }
-}
-
-function requestResourceLink(type) {
-  const label = RESOURCE_LABELS[type] || "Resource";
-  const url = prompt(`Paste the ${label} share link here:`);
-  if (url === null || !url.trim()) return;
-  confirmAndAttachResource(type, url);
-}
-
-function attachChosenFile(file) {
-  if (!file) return;
-
-  try {
-    validateFile(file);
-    const confirmed = confirm(`Selected file:\n\n${file.name}\n${formatFileSize(file.size)}\n\nAttach this file to your module?`);
-    if (!confirmed) return;
-
-    const transfer = new DataTransfer();
-    transfer.items.add(file);
-
-    if (moduleFile) {
-      moduleFile.files = transfer.files;
-      moduleFile.dispatchEvent(new Event("change", { bubbles: true }));
-    }
-
-    showMessage(`${file.name} confirmed. It will upload when you save the module.`, "success");
-  } catch (error) {
-    showMessage(error.message || "Invalid file.", "error");
-  }
-}
-
-function showMessage(text, type = "info") {
-  if (!message) return;
-  message.textContent = text;
-  message.className = `message ${type}`;
-}
-
-function validateOptionalURL(value, label) {
-  const raw = String(value || "").trim();
-  if (!raw) return "";
-
-  try {
-    const parsed = new URL(raw);
-    if (!["https:", "http:"].includes(parsed.protocol)) throw new Error();
-
-    if (label === "YouTube video" && !["youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be"].includes(parsed.hostname.toLowerCase())) {
-      showMessage("Please enter a valid YouTube URL.", "error");
-      return false;
-    }
-
-    return parsed.href;
-  } catch (_) {
-    showMessage(`${label} URL must be a valid http:// or https:// link.`, "error");
-    return false;
-  }
-}
-
-function validateFile(file) {
-  if (file.size > MAX_FILE_SIZE) {
-    throw new Error("File is too large. Maximum size is 20 MB.");
-  }
-
-  const allowed = new Set([
-    "application/pdf",
-    "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "application/vnd.ms-powerpoint",
-    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-    "application/vnd.ms-excel",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "text/plain",
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-    "video/mp4",
-    "video/webm",
-    "video/quicktime"
-  ]);
-
-  const ext = file.name.split(".").pop()?.toLowerCase();
-  const allowedExt = new Set(["pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx", "txt", "jpg", "jpeg", "png", "webp", "mp4", "webm", "mov"]);
-
-  if (file.type && !allowed.has(file.type) && !file.type.startsWith("video/") && !allowedExt.has(ext)) {
-    throw new Error("This file type is not supported.");
-  }
-}
-
-function formatFileSize(bytes) {
-  if (!bytes) return "0 B";
-  const units = ["B", "KB", "MB", "GB"];
-  const i = Math.min(units.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)));
-  return `${(bytes / 1024 ** i).toFixed(i ? 1 : 0)} ${units[i]}`;
-}
-
-function formatRate(bytesPerSecond) {
-  return bytesPerSecond > 0 ? `${formatFileSize(bytesPerSecond)}/s` : "starting…";
-}
-
-function formatEta(seconds) {
-  const s = Math.max(1, Math.round(seconds));
-  return s < 60 ? `${s}s` : `${Math.ceil(s / 60)}m`;
-}
-
-function escapeHTML(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function escapeAttribute(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;");
-}
-
-function timestampValue(value) {
-  if (!value) return 0;
-  if (typeof value.toMillis === "function") return value.toMillis();
-  if (typeof value.seconds === "number") return value.seconds * 1000;
-  const parsed = new Date(value).getTime();
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function formatDateTime(value) {
-  if (!value) return "";
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
-}
-
-function sortModules(a, b) {
-  return (Number(a.order) || 0) - (Number(b.order) || 0);
-}
-
-async function loadAvailableSections() {
-  if (!sectionSelect || !currentUser) return;
-
-  try {
-    const sectionsRef = collection(db, "sections");
-    const sectionsQuery = currentRole === "admin"
-      ? sectionsRef
-      : query(sectionsRef, where("teacherIds", "array-contains", currentUser.uid));
-
-    const snap = await getDocs(sectionsQuery);
-    availableSections = snap.docs.map((item) => ({ id: item.id, ...item.data() }));
-
-    const currentValue = sectionSelect.value;
-    sectionSelect.replaceChildren();
-
-    availableSections.forEach((section) => {
-      const option = document.createElement("option");
-      option.value = section.id;
-      option.textContent = getSectionLabel(section);
-      option.dataset.course = section.program || section.course || section.programName || section.courseName || "";
-      option.dataset.year = String(section.yearLevel || section.year || section.level || "");
-      option.dataset.academicYear = section.academicYear || section.schoolYear || "";
-      sectionSelect.appendChild(option);
-    });
-
-    if (currentValue) sectionSelect.value = currentValue;
-    populateAcademicYears();
-    updateAssignmentSummary();
-  } catch (error) {
-    console.warn("Section list unavailable:", error);
-    if (assignmentSummary) {
-      assignmentSummary.textContent = "Section list could not be loaded. Check the sections Firestore rules and teacher assignment.";
-    }
-  }
-}
-
-function populateAcademicYears() {
-  if (!academicYearSelect) return;
-  const existing = academicYearSelect.value;
-  const values = [...new Set(availableSections.map((section) => String(section.academicYear || section.schoolYear || "").trim()).filter(Boolean))].sort();
-
-  academicYearSelect.replaceChildren(new Option("Select academic year", ""));
-  values.forEach((value) => academicYearSelect.add(new Option(value, value)));
-  if (values.includes(existing)) academicYearSelect.value = existing;
-}
-
-function getSectionLabel(section) {
-  const course = section.program || section.course || section.programName || section.courseName || "";
-  const year = section.yearLevel || section.year || section.level || "";
-  const sectionName = section.sectionName || section.name || section.code || section.section || "";
-  const parts = [];
-
-  if (course) parts.push(String(course));
-  if (year) parts.push(String(year).toLowerCase().includes("year") ? String(year) : `Year ${year}`);
-  if (sectionName) parts.push(String(sectionName));
-
-  return parts.length ? parts.join(" • ") : `Section ${section.id?.slice(0, 6) || ""}`;
-}
-
-function getSelectedSectionRecords() {
-  const selectedIds = new Set([...(sectionSelect?.selectedOptions || [])].map((option) => option.value));
-  return availableSections.filter((section) => selectedIds.has(section.id));
-}
-
-function updateAssignmentSummary() {
-  if (!assignmentSummary) return;
-  const selected = getSelectedSectionRecords();
-
-  if (!selected.length) {
-    assignmentSummary.textContent = "No class sections selected yet.";
-    return;
-  }
-
-  const labels = selected.map((section) => {
-    const course = section.program || section.course || section.programName || section.courseName || "";
-    const year = section.yearLevel || section.year || section.level || "";
-    const sectionName = section.sectionName || section.name || section.code || section.section || "";
-    return [course, year ? `Year ${year}` : "", sectionName].filter(Boolean).join(" ");
-  });
-
-  assignmentSummary.textContent = `${selected.length} section(s): ${[...new Set(labels)].join(" | ")}`;
-}
-
-function getSelectedSectionIds() {
-  return [...(sectionSelect?.selectedOptions || [])].map((option) => option.value).filter(Boolean);
-}
-
-function getFilteredModules(items) {
-  const term = (moduleSearch?.value || "").trim().toLowerCase();
-  const status = statusFilter?.value || "all";
-  const sort = sortFilter?.value || "order";
-
-  const filtered = items.filter((item) => {
-    const itemStatus = item.status || "draft";
-    const matchesStatus = status === "all" || itemStatus === status;
-    const sectionText = getModuleSectionText(item);
-    const haystack = [item.title, item.description, item.academicYear, sectionText].join(" ").toLowerCase();
-    return matchesStatus && (!term || haystack.includes(term));
-  });
-
-  filtered.sort((a, b) => {
-    if (sort === "newest") return timestampValue(b.createdAt) - timestampValue(a.createdAt);
-    if (sort === "oldest") return timestampValue(a.createdAt) - timestampValue(b.createdAt);
-    if (sort === "title") return String(a.title || "").localeCompare(String(b.title || ""));
-    return sortModules(a, b);
-  });
-
-  return filtered;
-}
-
-function getModuleSectionText(data) {
-  const ids = data.sectionIds || [];
-  return ids.map((id) => {
-    const section = availableSections.find((item) => item.id === id);
-    return section ? getSectionLabel(section) : id;
-  }).join(" ");
-}
-
-function applyModuleView() {
-  renderModules([...moduleCache.values()]);
-}
-
-function updateModuleStats(items) {
-  if (statTotal) statTotal.textContent = items.length;
-  if (statActive) statActive.textContent = items.filter((item) => item.status === "active").length;
-  if (statDraft) statDraft.textContent = items.filter((item) => item.status === "draft" || !item.status).length;
-  if (statArchived) statArchived.textContent = items.filter((item) => item.status === "archived").length;
-}
-
-async function loadModules({ quiet = false } = {}) {
-  if (!currentUser || !currentRole) return;
-
-  if (!quiet && moduleCache.size === 0 && moduleList) {
-    moduleList.innerHTML = `
-      <div class="loading">
-        <span class="el-inline-spinner"></span>
-        <strong>Loading modules…</strong>
-        <small>Syncing the latest content</small>
-      </div>
-    `;
-  }
-
-  try {
-    const modulesQuery = currentRole === "admin"
-      ? query(collection(db, "modules"), orderBy("order", "asc"))
-      : query(collection(db, "modules"), where("createdBy", "==", currentUser.uid), orderBy("order", "asc"));
-
-    const snapshot = await getDocs(modulesQuery);
-    moduleCache.clear();
-
-    snapshot.forEach((item) => {
-      moduleCache.set(item.id, { id: item.id, ...item.data() });
-    });
-
-    saveModuleCache();
-    renderModules([...moduleCache.values()]);
-  } catch (error) {
-    console.error("Load modules error:", error);
-    if (moduleCache.size === 0 && moduleList) {
-      moduleList.innerHTML = `
-        <div class="empty">
-          Unable to load modules.
-          <br>
-          <small>${escapeHTML(error.message || "Unknown error")}</small>
-        </div>
-      `;
-    }
-  }
-}
-
-function renderCachedModules() {
-  if (!moduleCacheKey) return;
-
-  try {
-    const cached = JSON.parse(localStorage.getItem(moduleCacheKey) || "[]");
-    if (!Array.isArray(cached) || !cached.length) return;
-
-    cached.forEach((item) => {
-      if (item?.id) moduleCache.set(item.id, item);
-    });
-
-    renderModules([...moduleCache.values()].sort(sortModules), true);
-  } catch (_) {}
-}
-
-function saveModuleCache() {
-  if (!moduleCacheKey) return;
-
-  try {
-    const safe = [...moduleCache.values()].map((item) => ({
-      id: item.id,
-      title: item.title || "",
-      description: item.description || "",
-      order: item.order || 1,
-      status: item.status || "draft",
-      fileURL: item.fileURL || "",
-      filePath: item.filePath || "",
-      fileName: item.fileName || "",
-      createdBy: item.createdBy || "",
-      learningObjectives: item.learningObjectives || "",
-      estimatedDuration: item.estimatedDuration || "",
-      academicYear: item.academicYear || "",
-      program: item.program || "",
-      yearLevel: item.yearLevel || "",
-      sectionIds: Array.isArray(item.sectionIds) ? item.sectionIds : [],
-      classSource: item.classSource || "all",
-      availableAt: item.availableAt || "",
-      dueDate: item.dueDate || "",
-      videoUrl: item.videoUrl || "",
-      resourceUrl: item.resourceUrl || "",
-      resourceLinks: Array.isArray(item.resourceLinks) ? item.resourceLinks : []
-    }));
-
-    localStorage.setItem(moduleCacheKey, JSON.stringify(safe));
-  } catch (_) {}
-}
-
-function renderModules(items, fromCache = false) {
-  const allItems = [...items];
-  updateModuleStats(allItems);
-  const sorted = getFilteredModules(allItems);
-
-  if (!sorted.length) {
-    if (moduleList) {
-      moduleList.innerHTML = `
-        <div class="empty">
-          <strong>No modules yet.</strong>
-          <br>
-          <small>${allItems.length ? "No modules match your current search or filters." : "Click + Create Module to add learning content."}</small>
-        </div>
-      `;
-    }
-    return;
-  }
-
-  const fragment = document.createDocumentFragment();
-
-  sorted.forEach((data) => {
-    const card = document.createElement("article");
-    card.className = "module-card";
-    card.dataset.id = data.id;
-
-    const status = data.status || "draft";
-    const sectionText = getModuleSectionText(data);
-    const fileLabel = data.fileName ? escapeHTML(data.fileName) : "No attachment";
-
-    const fileHTML = data.fileURL ? `
-      <a class="file-link" href="${escapeAttribute(data.fileURL)}" target="_blank" rel="noopener noreferrer">
-        <span class="file-icon">↗</span>
-        <span>
-          <strong>${escapeHTML(data.fileName || "Open Module File")}</strong>
-          <br>
-          <small>Open attachment</small>
-        </span>
-      </a>
-    ` : "";
-
-    const resourceHTML = Array.isArray(data.resourceLinks) && data.resourceLinks.length ? data.resourceLinks.map((item) => `
-      <a class="file-link" href="${escapeAttribute(item.url)}" target="_blank" rel="noopener noreferrer">
-        ${resourceIcon(item.type)} ${escapeHTML(item.label || "Open resource")}
-      </a>
-    `).join("") : "";
-
-    card.innerHTML = `
-      <div class="module-top">
-        <h3 class="module-title">${escapeHTML(data.title || "Untitled Module")}</h3>
-        <span class="status ${escapeAttribute(status)}">${escapeHTML(status)}</span>
-      </div>
-
-      <p class="module-description">${escapeHTML(data.description || "No description.")}</p>
-
-      <div class="module-meta-chips">
-        ${data.program ? `<span>${escapeHTML(data.program)}</span>` : ""}
-        ${data.yearLevel ? `<span>Year ${escapeHTML(data.yearLevel)}</span>` : ""}
-        ${Array.isArray(data.sectionIds) && data.sectionIds.length ? `<span>${data.sectionIds.length} section(s)</span>` : ""}
-        ${data.estimatedDuration ? `<span>${escapeHTML(data.estimatedDuration)} min</span>` : ""}
-      </div>
-
-      ${data.dueDate ? `<p class="module-deadline">Due: ${escapeHTML(formatDateTime(data.dueDate))}</p>` : ""}
-
-      <div class="module-card-meta">
-        <span><strong>Sections:</strong> ${escapeHTML(sectionText || "Not assigned")}</span>
-        <span><strong>Attachment:</strong> ${fileLabel}</span>
-      </div>
-
-      ${fileHTML}
-      ${resourceHTML}
-      ${data.videoUrl ? `<a class="file-link" href="${escapeAttribute(data.videoUrl)}" target="_blank" rel="noopener noreferrer">▶ Open YouTube video</a>` : ""}
-      ${data.resourceUrl ? `<a class="file-link" href="${escapeAttribute(data.resourceUrl)}" target="_blank" rel="noopener noreferrer">↗ Open external resource</a>` : ""}
-
-      <div class="module-info">
-        Display order
-        <strong>${Number(data.order) || "-"}</strong>
-        ${fromCache ? '<span class="el-cache-label">cached</span>' : ""}
-      </div>
-
-      <div class="module-actions">
-        <button type="button" class="edit-btn" data-action="edit" data-id="${escapeAttribute(data.id)}">Edit</button>
-        <button type="button" class="delete-btn" data-action="delete" data-id="${escapeAttribute(data.id)}">Delete</button>
-      </div>
-    `;
-
-    fragment.appendChild(card);
-  });
-
-  moduleList.replaceChildren(fragment);
-}
-
-function resourceIcon(type) {
-  const icons = {
-    drive: "🔺",
-    youtube: "▶",
-    link: "↗",
-    forms: "▤",
-    drawings: "✎",
-    sheets: "▦",
-    slides: "▣",
-    docs: "▤",
-    pdf: "PDF"
-  };
-  return icons[type] || "↗";
-}
-
-moduleList?.addEventListener("click", (event) => {
-  const button = event.target.closest("button[data-action]");
-  if (!button) return;
-  const card = button.closest(".module-card");
-  const id = card?.dataset.id || button.dataset.id;
-  if (!id) return;
-
-  if (button.dataset.action === "edit") {
-    editModule(id);
-  }
-
-  if (button.dataset.action === "delete") {
-    deleteModule(id);
-  }
-});
-
-async function editModule(id) {
-  try {
-    if (!currentUser || !["teacher", "admin"].includes(currentRole)) {
-      throw new Error("You are not authorized to edit modules.");
-    }
-
-    let selectedData = moduleCache.get(id);
-    if (!selectedData) {
-      const snap = await getDoc(doc(db, "modules", id));
-      if (!snap.exists()) throw new Error("Module not found.");
-      selectedData = { id: snap.id, ...snap.data() };
-      moduleCache.set(id, selectedData);
-    }
-
-    if (currentRole !== "admin" && selectedData.createdBy !== currentUser.uid) {
-      throw new Error("You can edit only modules you created.");
-    }
-
-    editingId = id;
-
-    title.value = selectedData.title || "";
-    description.value = selectedData.description || "";
-    moduleOrder.value = selectedData.order || "";
-    moduleStatus.value = selectedData.status || "draft";
-
-    if (learningObjectives) learningObjectives.value = selectedData.learningObjectives || "";
-    if (estimatedDuration) estimatedDuration.value = selectedData.estimatedDuration || "";
-    if (academicYearSelect) academicYearSelect.value = selectedData.academicYear || "";
-    if (programSelect) programSelect.value = selectedData.program || "";
-    if (yearLevelSelect) yearLevelSelect.value = selectedData.yearLevel || "";
-    if (classSource) classSource.value = selectedData.classSource || "all";
-    if (availableAt) availableAt.value = selectedData.availableAt ? toDateTimeLocalValue(selectedData.availableAt) : "";
-    if (dueDate) dueDate.value = selectedData.dueDate ? toDateTimeLocalValue(selectedData.dueDate) : "";
-    if (videoUrl) videoUrl.value = selectedData.videoUrl || "";
-    if (resourceUrlInput) resourceUrlInput.value = selectedData.resourceUrl || "";
-    if (resourceUrl) resourceUrl.value = selectedData.resourceUrl || "";
-
-    resourceLinks = Array.isArray(selectedData.resourceLinks)
-      ? selectedData.resourceLinks.filter((item) => item && typeof item.url === "string").map((item) => {
-          try {
-            const parsed = new URL(item.url);
-            if (!["https:", "http:"].includes(parsed.protocol)) return null;
-            return {
-              type: String(item.type || "link"),
-              label: String(item.label || "Resource link"),
-              url: parsed.href
-            };
-          } catch (_) {
-            return null;
-          }
-        }).filter(Boolean)
-      : [];
-
-    renderResourceLinks();
-
-    if (sectionSelect) {
-      const selectedIds = new Set(selectedData.sectionIds || []);
-      [...sectionSelect.options].forEach((option) => {
-        option.selected = selectedIds.has(option.value);
-      });
-    }
-
-    updateAssignmentSummary();
-    currentFileURL = selectedData.fileURL || "";
-    currentFilePath = selectedData.filePath || "";
-    currentFileName = selectedData.fileName || "";
-
-    if (selectedFile) {
-      selectedFile.style.display = "none";
-      selectedFile.innerHTML = "";
-    }
-
-    if (existingFile) {
-      existingFile.style.display = currentFileURL ? "block" : "none";
-      existingFile.innerHTML = currentFileURL ? `
-        <strong>Current attachment</strong>
-        <br>
-        ${escapeHTML(currentFileName || "Attached file")}
-        <br>
-        <a href="${escapeAttribute(currentFileURL)}" target="_blank" rel="noopener noreferrer">Open file →</a>
-        <br>
-        <small>Select a new file only if you want to replace it.</small>
-      ` : "";
-    }
-
-    modalTitle.textContent = "Edit Module";
-    modal?.classList.add("show");
-    editorInitialSnapshot = getEditorSnapshot();
-    requestAnimationFrame(() => title?.focus());
-  } catch (error) {
-    console.error(error);
-    alert(error.message || "Unable to load module.");
-  }
-}
-
-window.editModule = editModule;
-
-async function deleteModule(id) {
-  if (!currentUser || !["teacher", "admin"].includes(currentRole)) {
-    alert("You are not authorized to delete modules.");
-    return;
-  }
-
-  const data = moduleCache.get(id);
-  if (!confirm(`Delete "${data?.title || "this module"}"?`)) return;
-
-  try {
-    let target = data;
-    if (!target) {
-      const snap = await getDoc(doc(db, "modules", id));
-      target = snap.exists() ? { id: snap.id, ...snap.data() } : null;
-    }
-
-    if (!target) throw new Error("Module not found.");
-    if (currentRole !== "admin" && target.createdBy !== currentUser.uid) {
-      throw new Error("You can delete only modules you created.");
-    }
-
-    await deleteDoc(doc(db, "modules", id));
-    moduleCache.delete(id);
-    saveModuleCache();
-    renderModules([...moduleCache.values()]);
-
-    if (target?.filePath) {
-      deleteObject(ref(storage, target.filePath)).catch((error) => {
-        console.warn("Storage cleanup skipped:", error);
-      });
-    }
-  } catch (error) {
-    console.error("Delete module error:", error);
-    alert(error.message || "Unable to delete module.");
-  }
-}
-
-window.deleteModule = deleteModule;
-
-function renderResourceLinks() {
-  if (!resourceLinksList) return;
-  resourceLinksList.replaceChildren();
-
-  resourceLinks.forEach((item, index) => {
-    const row = document.createElement("div");
-    row.className = "resource-link-row";
-
-    const info = document.createElement("span");
-    info.textContent = `${item.label}: ${item.url}`;
-
-    const remove = document.createElement("button");
-    remove.type = "button";
-    remove.textContent = "Remove";
-    remove.addEventListener("click", () => {
-      resourceLinks.splice(index, 1);
-      renderResourceLinks();
-    });
-
-    row.append(info, remove);
-    resourceLinksList.appendChild(row);
-  });
-}
-
-function toDateTimeLocalValue(value) {
-  if (!value) return "";
-  const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  const offset = date.getTimezoneOffset();
-  const local = new Date(date.getTime() - offset * 60000);
-  return local.toISOString().slice(0, 16);
-}
-
-function getEditorSnapshot() {
-  const selectedSections = [...(sectionSelect?.selectedOptions || [])].map((option) => option.value);
-  return JSON.stringify({
-    title: title?.value || "",
-    description: description?.value || "",
-    order: moduleOrder?.value || "",
-    objectives: learningObjectives?.value || "",
-    duration: estimatedDuration?.value || "",
-    sections: selectedSections,
-    availableAt: availableAt?.value || "",
-    dueDate: dueDate?.value || "",
-    videoUrl: videoUrl?.value || "",
-    resourceUrl: (resourceUrlInput?.value || resourceUrl?.value || "").trim(),
-    resources: resourceLinks,
-    selectedFile: moduleFile?.files?.[0]?.name || "",
-    selectedFileSize: moduleFile?.files?.[0]?.size || 0,
-    currentFileURL,
-    currentFilePath
-  });
-}
-
-function hasEditorChanges() {
-  return getEditorSnapshot() !== editorInitialSnapshot;
-}
-
-async function saveDraftBeforeLeaving() {
-  if (!hasEditorChanges()) return true;
-
-  const shouldSave = confirm("You have unsaved changes. Save them as a draft before leaving?");
-  if (!shouldSave) {
-    const discard = confirm("Discard your unsaved changes?");
-    return discard;
-  }
-
-  try {
-    await saveModuleRecord("draft");
-    showMessage("Draft saved successfully.", "success");
-    return true;
-  } catch (error) {
-    console.error(error);
-    alert(error.message || "Unable to save draft.");
-    return false;
-  }
-}
-
-async function closeEditor(reason = "close") {
-  if (!modal?.classList.contains("show")) return;
-  if (editorSaving) return;
-
-  if (reason !== "saved") {
-    const saved = await saveDraftBeforeLeaving();
-    if (!saved) return;
-  }
-
-  modal.classList.remove("show");
-  resetForm();
-  editingId = null;
-  editorInitialSnapshot = "";
-}
-
-function resetForm() {
-  editingId = null;
-  currentFileURL = "";
-  currentFilePath = "";
-  currentFileName = "";
-
-  if (title) title.value = "";
-  if (description) description.value = "";
-  if (moduleOrder) moduleOrder.value = "";
-  if (moduleStatus) moduleStatus.value = "draft";
-
-  if (learningObjectives) learningObjectives.value = "";
-  if (estimatedDuration) estimatedDuration.value = "";
-  if (academicYearSelect) academicYearSelect.value = "";
-  if (programSelect) programSelect.value = "";
-  if (yearLevelSelect) yearLevelSelect.value = "";
-  if (classSource) classSource.value = "all";
-  if (availableAt) availableAt.value = "";
-  if (dueDate) dueDate.value = "";
-  if (videoUrl) videoUrl.value = "";
-  if (resourceUrl) resourceUrl.value = "";
-  if (resourceUrlInput) resourceUrlInput.value = "";
-  if (resourceNameInput) resourceNameInput.value = "";
-
-  resourceLinks = [];
-  renderResourceLinks();
-
-  if (sectionSelect) {
-    [...sectionSelect.options].forEach((option) => {
-      option.selected = false;
-    });
-  }
-
-  updateAssignmentSummary();
-
-  if (moduleFile) {
-    moduleFile.value = "";
-    moduleFile.disabled = false;
-    moduleFile.accept = ".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.png,.jpg,.jpeg,.webp,.mp4,.webm,.mov";
-  }
-
-  if (existingFile) {
-    existingFile.style.display = "none";
-    existingFile.innerHTML = "";
-  }
-
-  if (selectedFile) {
-    selectedFile.style.display = "none";
-    selectedFile.innerHTML = "";
-  }
-
-  if (cameraPhotoInput) cameraPhotoInput.value = "";
-  if (pickPhotoInput) pickPhotoInput.value = "";
-  if (recordVideoInput) recordVideoInput.value = "";
-
-  if (progressBar) progressBar.style.width = "0%";
-  if (progressText) progressText.textContent = "Ready to upload";
-  showUploadPanel(false);
-
-  if (message) {
-    message.textContent = "";
-    message.className = "message";
-  }
-
-  activeUploadTask = null;
-  editorInitialSnapshot = "";
-  setEditorBusy(false);
-}
-
-function setEditorBusy(busy, label = "Saving…") {
-  if (saveModule) {
-    saveModule.disabled = busy;
-    saveModule.textContent = busy ? label : "Publish Module";
-  }
-
-  if (moduleFile) moduleFile.disabled = busy;
-  if (title) title.disabled = busy;
-  if (description) description.disabled = busy;
-  if (moduleOrder) moduleOrder.disabled = busy;
-  if (moduleStatus) moduleStatus.disabled = busy;
-  if (closeModal) closeModal.disabled = busy;
-  if (cancelEdit) cancelEdit.disabled = busy;
-
-  modal?.classList.toggle("is-busy", busy);
-}
-
-function showUploadPanel(show) {
-  if (uploadProgress) uploadProgress.style.display = show ? "block" : "none";
-  if (cancelUpload) cancelUpload.hidden = !show;
-}
-
-function updateUploadProgress(bytes, total) {
-  const now = performance.now();
-  const percent = total ? Math.min(100, (bytes / total) * 100) : 0;
-  const totalSeconds = Math.max((now - uploadStartedAt) / 1000, 0.25);
-  const averageRate = bytes / totalSeconds;
-  const intervalSeconds = Math.max((now - lastProgressTime) / 1000, 0.05);
-  const instantRate = (bytes - lastProgressBytes) / intervalSeconds;
-  const rate = instantRate > 0 ? averageRate * 0.55 + instantRate * 0.45 : averageRate;
-  const remaining = Math.max(total - bytes, 0);
-  const eta = rate > 0 ? remaining / rate : 0;
-
-  if (progressBar) progressBar.style.width = `${percent.toFixed(1)}%`;
-  if (progressText) {
-    progressText.textContent = `${Math.round(percent)}% • ${formatFileSize(bytes)} of ${formatFileSize(total)} • ${formatRate(rate)}${eta > 1 ? ` • ${formatEta(eta)} left` : ""}`;
-  }
-  if (saveModule) {
-    saveModule.textContent = percent < 100 ? `Uploading ${Math.round(percent)}%` : "Saving module…";
-  }
-
-  lastProgressBytes = bytes;
-  lastProgressTime = now;
-}
-
-async function uploadModuleFile(file) {
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-  const path = `modules/${auth.currentUser.uid}/${Date.now()}_${safeName}`;
-  const storageRef = ref(storage, path);
-  const task = uploadBytesResumable(storageRef, file, {
-    contentType: file.type || "application/octet-stream",
-    customMetadata: { originalName: file.name }
-  });
-
-  activeUploadTask = task;
-  uploadStartedAt = performance.now();
-  lastProgressTime = uploadStartedAt;
-  lastProgressBytes = 0;
-  showUploadPanel(true);
-
-  return new Promise((resolve, reject) => {
-    task.on(
-      "state_changed",
-      (snapshot) => {
-        updateUploadProgress(snapshot.bytesTransferred, snapshot.totalBytes);
-      },
-      reject,
-      async () => {
-        try {
-          if (progressBar) progressBar.style.width = "100%";
-          if (progressText) progressText.textContent = "Upload complete. Saving module…";
-          const url = await getDownloadURL(task.snapshot.ref);
-          resolve({ url, path });
-        } catch (error) {
-          reject(error);
-        }
-      }
+// ======================================================
+// ACTIVITY FORM CONTROLS
+// ======================================================
+
+function prepareActivityControls() {
+  activityTypeControl = $("activityType");
+  typeFields = $("typeFields");
+
+  if (!activityTypeControl || !typeFields) {
+    throw new Error(
+      "Missing activityType or typeFields in modules.html."
     );
-  });
+  }
+
+  if (!activityTypeControl.dataset.bound) {
+    activityTypeControl.addEventListener("change", () => {
+      renderTypeFields();
+      updateEditorLabels();
+    });
+
+    activityTypeControl.dataset.bound = "true";
+  }
+
+  return true;
 }
 
-async function saveModuleRecord(status) {
-  if (!currentUser) {
-    showMessage("Please sign in first.", "error");
-    return false;
-  }
+// ======================================================
+// OPEN EDITOR
+// ======================================================
 
-  if (editorSaving) return false;
-
-  const moduleTitle = title?.value.trim() || "";
-  const moduleDescription = description?.value.trim() || "";
-  const order = Number(moduleOrder?.value);
-  const file = moduleFile?.files?.[0] || null;
-
-  if (moduleTitle.length < 3) {
-    showMessage("Please enter a module title with at least 3 characters.", "error");
-    title?.focus();
-    return false;
-  }
-
-  if (!moduleDescription) {
-    showMessage("Please enter a description.", "error");
-    description?.focus();
-    return false;
-  }
-
-  if (!Number.isFinite(order) || order < 1) {
-    showMessage("Please enter a valid display order.", "error");
-    moduleOrder?.focus();
-    return false;
-  }
-
-  if (file) {
-    try {
-      validateFile(file);
-    } catch (error) {
-      showMessage(error.message || "Invalid file.", "error");
-      return false;
-    }
-  }
-
-  const safeVideoUrl = validateOptionalURL(videoUrl?.value, "YouTube video");
-  if (safeVideoUrl === false) return false;
-
-  const safeResourceUrl = validateOptionalURL((resourceUrlInput?.value || resourceUrl?.value || ""), "Resource");
-  if (safeResourceUrl === false) return false;
-
-  const availableValue = availableAt?.value || "";
-  const dueValue = dueDate?.value || "";
-  if (availableValue && dueValue && new Date(dueValue) < new Date(availableValue)) {
-    showMessage("Due date must be later than the availability date.", "error");
-    return false;
-  }
-
-  const selectedSectionIds = getSelectedSectionIds();
-  if (!selectedSectionIds.length) {
-    showMessage("Please assign this module to at least one section.", "error");
-    sectionSelect?.focus();
-    return false;
-  }
-
-  editorSaving = true;
-  setEditorBusy(true, file ? "Preparing upload…" : status === "active" ? "Publishing…" : "Saving draft…");
-
-  const oldFilePath = currentFilePath;
-
+function openEditor(item = null) {
   try {
-    let fileURL = currentFileURL;
-    let filePath = currentFilePath;
-    let fileName = currentFileName;
+    prepareActivityControls();
+
+    editing = item;
+
+    $("activityForm")?.reset();
+
+    $("editorTitle").textContent = item
+      ? "Edit Activity"
+      : "Create Activity";
+
+    activityTypeControl.value = item?.type || "module";
+
+    $("activityTitle").value = item?.title || "";
+    $("activityCategory").value = item?.category || "Lesson";
+    $("activityDescription").value = item?.description || "";
+
+    renderSections(
+      item?.sectionIds ||
+      (sections.length === 1 ? [sections[0].id] : [])
+    );
+
+    renderTypeFields(item?.activityData || {});
+    updateEditorLabels();
+
+    $("resourceEditor")?.replaceChildren();
+
+    (item?.resources || []).forEach(resource => {
+      addResource(resource);
+    });
+
+    const noticeBox = $("formNotice");
+
+    if (noticeBox) {
+      noticeBox.className = "tm-notice";
+      noticeBox.textContent = "";
+    }
+
+    // Modal opens even when no section is assigned.
+    $("editorModal").classList.add("show");
+
+    document.body.style.overflow = "hidden";
+
+    if (!sections.length) {
+      showFormNotice(
+        "No assigned sections are available yet. Check your teacher section assignment before publishing.",
+        "error"
+      );
+    }
+
+  } catch (error) {
+    console.error("Open editor:", error);
+
+    showNotice(
+      error.message || "Unable to open activity form.",
+      "error"
+    );
+  }
+}
+
+function closeEditor() {
+  if (saving) return;
+
+  $("editorModal")?.classList.remove("show");
+
+  document.body.style.overflow = "";
+
+  editing = null;
+}
+
+function updateEditorLabels() {
+  const type = activityTypeControl?.value || "module";
+
+  const title = $("editorTitle");
+  const publish = $("publishBtn");
+  const draft = $("saveDraftBtn");
+
+  if (title) {
+    title.textContent = editing
+      ? `Edit ${typeLabel(type)}`
+      : `Create ${typeLabel(type)}`;
+  }
+
+  if (publish) {
+    publish.textContent = `Publish ${typeLabel(type)}`;
+  }
+
+  if (draft) {
+    draft.textContent = "Save as Draft";
+  }
+
+  const categoryLabel =
+    document.querySelector('label[for="activityCategory"]');
+
+  if (categoryLabel) {
+    categoryLabel.textContent =
+      type === "module" ? "Category *" : "Category";
+  }
+}
+
+// ======================================================
+// ACTIVITY TYPE FIELDS
+// ======================================================
+
+function renderTypeFields(data = {}) {
+  const type = activityTypeControl?.value || "module";
+
+  if (!typeFields) return;
+
+  typeFields.replaceChildren();
+
+  const resourceArea = $("resourceArea");
+
+  if (resourceArea) {
+    resourceArea.style.display =
+      type === "module" ? "block" : "none";
+  }
+
+  if (type === "module") {
+    typeFields.innerHTML = `
+      <div class="tm-field">
+        <strong>Learning Module</strong>
+        <p style="color:#aaa;font-size:12px;margin-top:8px">
+          Upload PDFs, documents, videos, or add external resource links.
+        </p>
+      </div>
+    `;
+    return;
+  }
+
+  if (type === "quiz") {
+    typeFields.innerHTML = `
+      <div class="tm-field">
+        <label>Time Limit (minutes, 0 = no limit)</label>
+        <input id="quizTime" type="number" min="0"
+          value="${Number(data.timeLimit || 0)}">
+      </div>
+
+      <div class="tm-field">
+        <label>Passing Score (%)</label>
+        <input id="passingScore" type="number"
+          min="0" max="100"
+          value="${Number(data.passingScore ?? 60)}">
+      </div>
+
+      <div class="tm-field">
+        <label>Quiz Questions</label>
+        <div id="quizQuestions"></div>
+
+        <button class="tm-secondary" id="addQuestion"
+          type="button" style="margin-top:10px">
+          ＋ Add Question
+        </button>
+      </div>
+    `;
+
+    (data.questions || []).forEach(question => {
+      addQuestion(question);
+    });
+
+    $("addQuestion")?.addEventListener("click", () => {
+      addQuestion();
+    });
+
+    if (!data.questions?.length) {
+      addQuestion();
+    }
+
+    return;
+  }
+
+  if (type === "assignment") {
+    typeFields.innerHTML = `
+      <div class="tm-field">
+        <label>Due Date *</label>
+        <input id="dueDate" type="datetime-local"
+          value="${escapeAttr(data.dueDate || "")}" required>
+      </div>
+
+      <div class="tm-field">
+        <label>Total Points *</label>
+        <input id="totalPoints" type="number" min="1"
+          value="${Number(data.totalPoints || 100)}">
+      </div>
+
+      <div class="tm-field">
+        <label>Submission Type</label>
+        <select id="submissionType">
+          <option value="file">File Upload</option>
+          <option value="text">Text Response</option>
+          <option value="both">File or Text</option>
+        </select>
+      </div>
+    `;
+
+    $("submissionType").value =
+      data.submissionType || "file";
+
+    return;
+  }
+
+  if (type === "discussion") {
+    typeFields.innerHTML = `
+      <div class="tm-field">
+        <label>Discussion Question / Prompt *</label>
+        <textarea id="discussionPrompt"
+          placeholder="What would you like students to discuss?">${escapeHTML(data.prompt || "")}</textarea>
+      </div>
+
+      <div class="tm-field">
+        <label>Response Instructions</label>
+        <textarea id="discussionInstructions"
+          placeholder="Example: Reply in at least 100 words and respond to one classmate.">${escapeHTML(data.instructions || "")}</textarea>
+      </div>
+    `;
+  }
+}
+
+// ======================================================
+// QUIZ QUESTIONS
+// ======================================================
+
+function addQuestion(question = {}) {
+  const container = $("quizQuestions");
+  if (!container) return;
+
+  const card = document.createElement("div");
+
+  card.className = "tm-question";
+
+  card.style.cssText = `
+    padding:14px;
+    margin-bottom:12px;
+    background:#191a25;
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:10px;
+  `;
+
+  card.innerHTML = `
+    <div class="tm-field">
+      <label>Question</label>
+      <textarea class="q-text"
+        placeholder="Enter your question">${escapeHTML(question.text || "")}</textarea>
+    </div>
+
+    <div class="tm-field">
+      <label>Question Type</label>
+      <select class="q-type">
+        <option value="multiple_choice">Multiple Choice</option>
+        <option value="true_false">True or False</option>
+        <option value="identification">Identification</option>
+        <option value="essay">Essay</option>
+      </select>
+    </div>
+
+    <div class="tm-field q-options-wrap">
+      <label>Choices (one per line)</label>
+      <textarea class="q-options"
+        placeholder="Choice A&#10;Choice B&#10;Choice C&#10;Choice D">${escapeHTML((question.options || []).join("\n"))}</textarea>
+    </div>
+
+    <div class="tm-field q-answer-wrap">
+      <label>Correct Answer</label>
+      <input class="q-answer"
+        value="${escapeAttr(question.answer || "")}"
+        placeholder="Enter correct answer">
+    </div>
+
+    <div class="tm-field">
+      <label>Points</label>
+      <input class="q-points" type="number" min="1"
+        value="${Number(question.points || 1)}">
+    </div>
+
+    <button type="button" class="tm-secondary remove-question">
+      Remove Question
+    </button>
+  `;
+
+  card.querySelector(".q-type").value =
+    question.type || "multiple_choice";
+
+  card.querySelector(".q-type").addEventListener("change", () => {
+    updateQuestionVisibility(card);
+  });
+
+  card.querySelector(".remove-question").addEventListener("click", () => {
+    card.remove();
+  });
+
+  container.appendChild(card);
+
+  updateQuestionVisibility(card);
+}
+
+function updateQuestionVisibility(card) {
+  const type = card.querySelector(".q-type").value;
+
+  const options = card.querySelector(".q-options-wrap");
+  const answer = card.querySelector(".q-answer-wrap");
+
+  options.style.display =
+    ["multiple_choice", "true_false"].includes(type)
+      ? "block"
+      : "none";
+
+  answer.style.display =
+    type === "essay" ? "none" : "block";
+
+  if (type === "true_false") {
+    card.querySelector(".q-options").value = "True\nFalse";
+  }
+}
+
+// ======================================================
+// RESOURCES
+// ======================================================
+
+function addResource(resource = {}) {
+  const container = $("resourceEditor");
+  if (!container) return;
+
+  const card = document.createElement("div");
+
+  card.className = "tm-resource";
+
+  card.dataset.storagePath = resource.storagePath || "";
+  card.dataset.existingUrl = resource.url || "";
+  card.dataset.existingType = resource.type || "";
+
+  const label = document.createElement("input");
+
+  label.className = "resource-label";
+  label.placeholder = "Resource name";
+  label.value = resource.label || "";
+
+  const url = document.createElement("input");
+
+  url.className = "resource-url";
+  url.type = "url";
+  url.placeholder = "External link (optional)";
+
+  url.value = resource.type === "link"
+    ? resource.url || ""
+    : "";
+
+  const file = document.createElement("input");
+
+  file.className = "resource-file";
+  file.type = "file";
+
+  file.accept =
+    ".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.csv,.jpg,.jpeg,.png,.webp,.mp4,.webm,.mov,.zip";
+
+  const remove = document.createElement("button");
+
+  remove.type = "button";
+  remove.className = "tm-danger";
+  remove.textContent = "Remove";
+  remove.title = "Remove resource";
+
+  remove.addEventListener("click", () => {
+    card.remove();
+  });
+
+  card.append(label, url, remove, file);
+
+  container.appendChild(card);
+}
+
+async function collectResources(documentId) {
+  const resources = [];
+
+  const cards = [
+    ...document.querySelectorAll("#resourceEditor .tm-resource")
+  ];
+
+  for (const card of cards) {
+    const label =
+      card.querySelector(".resource-label").value.trim();
+
+    const urlValue =
+      card.querySelector(".resource-url").value.trim();
+
+    const file =
+      card.querySelector(".resource-file").files[0];
+
+    if (!label && !urlValue && !file) continue;
+
+    if (!label) {
+      throw new Error("Enter a name for each resource.");
+    }
 
     if (file) {
-      const uploaded = await uploadModuleFile(file);
-      fileURL = uploaded.url;
-      filePath = uploaded.path;
-      fileName = file.name;
+      if (file.size > MAX_FILE_SIZE) {
+        throw new Error("Maximum file size is 100 MB.");
+      }
+
+      const path =
+        `modulesV2/${currentUser.uid}/${documentId}/${Date.now()}_${safeName(file.name)}`;
+
+      const fileRef = ref(storage, path);
+
+      await uploadBytes(fileRef, file, {
+        contentType: file.type || "application/octet-stream"
+      });
+
+      resources.push({
+        label,
+        fileName: file.name,
+        type: file.type || "file",
+        url: await getDownloadURL(fileRef),
+        storagePath: path,
+        size: file.size
+      });
+
+    } else if (urlValue) {
+      let parsed;
+
+      try {
+        parsed = new URL(urlValue);
+
+        if (!["https:", "http:"].includes(parsed.protocol)) {
+          throw new Error();
+        }
+
+      } catch {
+        throw new Error(`Invalid resource URL for "${label}".`);
+      }
+
+      resources.push({
+        label,
+        type: "link",
+        url: parsed.href,
+        storagePath: card.dataset.storagePath || ""
+      });
+
+    } else if (
+      card.dataset.storagePath ||
+      card.dataset.existingUrl
+    ) {
+      resources.push({
+        label,
+        type: card.dataset.existingType || "file",
+        url: card.dataset.existingUrl || "",
+        storagePath: card.dataset.storagePath || ""
+      });
+    }
+  }
+
+  return resources;
+}
+
+// ======================================================
+// COLLECT ACTIVITY DATA
+// ======================================================
+
+function collectActivityData(type) {
+  if (type === "module") return {};
+
+  if (type === "quiz") {
+    const questions = [
+      ...document.querySelectorAll(".tm-question")
+    ].map(card => ({
+      text: card.querySelector(".q-text").value.trim(),
+      type: card.querySelector(".q-type").value,
+
+      options: card.querySelector(".q-options").value
+        .split("\n")
+        .map(value => value.trim())
+        .filter(Boolean),
+
+      answer: card.querySelector(".q-answer").value.trim(),
+
+      points: Number(
+        card.querySelector(".q-points").value || 1
+      )
+    }));
+
+    if (!questions.length) {
+      throw new Error("Add at least one quiz question.");
+    }
+
+    for (const question of questions) {
+      if (!question.text) {
+        throw new Error("Complete every quiz question.");
+      }
+
+      if (
+        question.type !== "essay" &&
+        !question.answer
+      ) {
+        throw new Error(
+          "Add the correct answer for each objective question."
+        );
+      }
+
+      if (
+        question.type === "multiple_choice" &&
+        question.options.length < 2
+      ) {
+        throw new Error(
+          "Multiple-choice questions need at least two choices."
+        );
+      }
+    }
+
+    return {
+      timeLimit: Number($("quizTime").value || 0),
+      passingScore: Number($("passingScore").value || 60),
+      questions
+    };
+  }
+
+  if (type === "assignment") {
+    const dueDate = $("dueDate").value;
+
+    const totalPoints = Number(
+      $("totalPoints").value || 0
+    );
+
+    if (!dueDate) {
+      throw new Error("Set an assignment due date.");
+    }
+
+    if (totalPoints < 1) {
+      throw new Error("Total points must be at least 1.");
+    }
+
+    return {
+      dueDate,
+      totalPoints,
+      submissionType: $("submissionType").value
+    };
+  }
+
+  if (type === "discussion") {
+    const prompt =
+      $("discussionPrompt").value.trim();
+
+    if (!prompt) {
+      throw new Error("Enter a discussion prompt.");
+    }
+
+    return {
+      prompt,
+      instructions:
+        $("discussionInstructions").value.trim()
+    };
+  }
+
+  return {};
+}
+
+// ======================================================
+// SAVE ACTIVITY
+// ======================================================
+
+async function saveActivity(status) {
+  if (saving) return;
+
+  const type = activityTypeControl?.value || "module";
+
+  const title = $("activityTitle").value.trim();
+  const description = $("activityDescription").value.trim();
+  const category = $("activityCategory").value;
+  const icon = "📘";
+
+  const sectionIds = selectedSections();
+
+  if (!title || !description) {
+    showFormNotice(
+      "Complete the title and description.",
+      "error"
+    );
+    return;
+  }
+
+  if (!sectionIds.length) {
+    showFormNotice(
+      "Select at least one class section.",
+      "error"
+    );
+    return;
+  }
+
+  let activityData;
+
+  try {
+    activityData = collectActivityData(type);
+  } catch (error) {
+    showFormNotice(error.message, "error");
+    return;
+  }
+
+  const isModule = type === "module";
+
+  const collectionName = isModule
+    ? COLLECTIONS.modules
+    : COLLECTIONS.activities;
+
+  const existing =
+    editing && editing.collectionName === collectionName
+      ? editing
+      : null;
+
+  const documentRef = existing
+    ? doc(db, collectionName, existing.id)
+    : doc(collection(db, collectionName));
+
+  const selected = sections.filter(section =>
+    sectionIds.includes(section.id)
+  );
+
+  const teacherName =
+    profile.fullName ||
+    profile.name ||
+    currentUser.displayName ||
+    currentUser.email ||
+    "Teacher";
+
+  saving = true;
+  setSavingState(true);
+
+  try {
+    let resources = existing?.resources || [];
+
+    if (isModule) {
+      resources = await collectResources(documentRef.id);
     }
 
     const payload = {
-      title: moduleTitle,
-      description: moduleDescription,
-      order,
+      type,
+      title,
+      description,
+      category,
+      icon,
       status,
-      fileURL: fileURL || "",
-      filePath: filePath || "",
-      fileName: fileName || "",
-      learningObjectives: learningObjectives?.value.trim() || "",
-      estimatedDuration: estimatedDuration?.value || "",
-      academicYear: academicYearSelect?.value || "",
-      program: programSelect?.value || "",
-      yearLevel: yearLevelSelect?.value || "",
-      sectionIds: selectedSectionIds,
-      classSource: classSource?.value || "all",
-      availableAt: availableValue ? new Date(availableValue) : null,
-      dueDate: dueValue ? new Date(dueValue) : null,
-      videoUrl: safeVideoUrl || "",
-      resourceUrl: safeResourceUrl || "",
-      resourceLinks: Array.isArray(resourceLinks) ? resourceLinks.map((item) => ({ ...item })) : [],
+
+      sectionIds,
+
+      sectionId:
+        sectionIds.length === 1
+          ? sectionIds[0]
+          : null,
+
+      sectionNames: selected.map(sectionName),
+
+      activityData,
+      resources,
+
+      createdBy: existing?.createdBy || currentUser.uid,
+      teacherId: currentUser.uid,
+      teacherName,
+      createdByRole: profile.role || "teacher",
+
       updatedAt: serverTimestamp()
     };
 
-    let savedId = editingId;
-    let previousData = {};
+    if (!existing) {
+      payload.createdAt = serverTimestamp();
+    }
 
-    if (editingId) {
-      const moduleRef = doc(db, "modules", editingId);
-      const existingSnap = await getDoc(moduleRef);
-      if (!existingSnap.exists()) throw new Error("Module not found.");
+    if (status === "published") {
+      payload.publishedAt = serverTimestamp();
+    }
 
-      previousData = existingSnap.data();
-      if (currentRole !== "admin" && previousData.createdBy !== currentUser.uid) {
-        throw new Error("You can edit only your own modules.");
-      }
-
-      await updateDoc(moduleRef, payload);
+    if (existing) {
+      await updateDoc(documentRef, payload);
     } else {
-      const created = await addDoc(collection(db, "modules"), {
-        ...payload,
-        createdBy: currentUser.uid,
-        createdByRole: currentRole,
-        status,
-        createdAt: serverTimestamp()
-      });
-      savedId = created.id;
+      await setDoc(documentRef, payload);
     }
 
-    const cachePrevious = moduleCache.get(savedId) || previousData || {};
-    moduleCache.set(savedId, {
-      ...cachePrevious,
-      id: savedId,
-      ...payload,
-      createdBy: cachePrevious.createdBy || currentUser.uid,
-      createdByRole: cachePrevious.createdByRole || currentRole,
-      updatedAt: Date.now()
-    });
+    showNotice(
+      `${typeLabel(type)} ${
+        status === "published"
+          ? "published"
+          : "saved as draft"
+      } successfully.`,
+      "success"
+    );
 
-    saveModuleCache();
+    closeEditor();
 
-    if (file && oldFilePath && oldFilePath !== filePath) {
-      deleteObject(ref(storage, oldFilePath)).catch((error) => {
-        console.warn("Old file cleanup skipped:", error);
-      });
-    }
-
-    if (status === "active") {
-      try {
-        const notificationResult = await notifySectionStudents({
-          db,
-          auth,
-          sectionIds: selectedSectionIds,
-          contentType: "module",
-          contentId: savedId,
-          contentTitle: moduleTitle,
-          teacherName: currentUser.displayName || currentUser.email || "Your teacher"
-        });
-
-        console.info("MODULE NOTIFICATIONS:", notificationResult);
-      } catch (error) {
-        console.warn("Module notification failed:", error);
-      }
-    }
-
-    showMessage(status === "active" ? "Module published successfully." : "Draft saved successfully.", "success");
-    modal?.classList.remove("show");
-    resetForm();
-    await loadModules({ quiet: true });
-    return true;
   } catch (error) {
-    console.error("Save module error:", error);
-    showMessage(readableUploadError(error), "error");
-    return false;
+    console.error("Save activity error:", error);
+
+    showFormNotice(
+      errorMessage(error),
+      "error"
+    );
+
   } finally {
-    activeUploadTask = null;
-    editorSaving = false;
-    setEditorBusy(false);
+    saving = false;
+    setSavingState(false);
   }
 }
 
-function readableUploadError(error) {
-  if (error?.code === "storage/canceled") return "Upload canceled. Your module was not changed.";
-  if (error?.code === "storage/unauthorized") return "Upload permission denied. Check Firebase Storage rules.";
-  if (error?.code === "storage/retry-limit-exceeded") return "The connection timed out. Please try the upload again.";
-  if (error?.code === "permission-denied") return "Firestore permission denied. Check your Firestore Security Rules.";
-  return error?.message || "Unable to save the module.";
+function setSavingState(value) {
+  [
+    "publishBtn",
+    "saveDraftBtn",
+    "cancelEditor",
+    "closeEditor",
+    "addResource"
+  ].forEach(id => {
+    if ($(id)) {
+      $(id).disabled = value;
+    }
+  });
+
+  if ($("publishBtn")) {
+    $("publishBtn").textContent = value
+      ? "Saving..."
+      : `Publish ${typeLabel(activityTypeControl?.value || "module")}`;
+  }
 }
 
-window.saveModule = saveModuleRecord;
-window.moduleCache = moduleCache;
-window.renderModules = renderModules;
-window.editModule = editModule;
-window.deleteModule = deleteModule;
-window.loadModules = loadModules;
+// ======================================================
+// RENDER ACTIVITIES
+// ======================================================
+
+function renderItems() {
+  const grid = $("moduleGrid");
+  if (!grid) return;
+
+  const search =
+    $("searchInput")?.value.trim().toLowerCase() || "";
+
+  const status =
+    $("statusFilter")?.value || "all";
+
+  const section =
+    $("sectionFilter")?.value || "all";
+
+  const type =
+    $("typeFilter")?.value || "all";
+
+  const filtered = items.filter(item => {
+    const text =
+      `${item.title || ""} ${item.description || ""}`.toLowerCase();
+
+    return text.includes(search)
+      && (status === "all" || item.status === status)
+      && (type === "all" || (item.type || "module") === type)
+      && (
+        section === "all" ||
+        (item.sectionIds || []).includes(section)
+      );
+  });
+
+  grid.replaceChildren();
+
+  if (!filtered.length) {
+    showEmpty(
+      "No activities found",
+      "Create a new activity or change your filters."
+    );
+    return;
+  }
+
+  filtered.forEach(item => {
+    grid.appendChild(createCard(item));
+  });
+}
+
+function createCard(item) {
+  const card = document.createElement("article");
+  card.className = "tm-card";
+
+  const icons = {
+    module: item.icon || "📚",
+    quiz: "📝",
+    assignment: "📄",
+    discussion: "💬"
+  };
+
+  const cover = document.createElement("div");
+  cover.className = "tm-card-cover";
+
+  cover.textContent = icons[item.type] || "📚";
+
+  const body = document.createElement("div");
+  body.className = "tm-card-body";
+
+  const meta = document.createElement("div");
+  meta.className = "tm-meta";
+
+  const category = document.createElement("span");
+  category.textContent =
+    item.category || typeLabel(item.type);
+
+  const status = document.createElement("span");
+  status.textContent =
+    (item.status || "draft").toUpperCase();
+
+  meta.append(category, status);
+
+  const title = document.createElement("h3");
+  title.textContent = item.title || "Untitled";
+
+  const description = document.createElement("p");
+  description.textContent = item.description || "";
+
+  const resourceCount = document.createElement("p");
+  resourceCount.textContent =
+    `${(item.sectionNames || []).length} section(s) • ${(item.resources || []).length} resource(s)`;
+
+  const actions = document.createElement("div");
+  actions.className = "tm-actions";
+
+  actions.append(
+    actionButton("Preview", () => previewItem(item)),
+    actionButton("Edit", () => openEditor(item)),
+    actionButton(
+      item.status === "published" ? "Archive" : "Publish",
+      () => changeStatus(item)
+    )
+  );
+
+  if (item.status === "archived") {
+    actions.append(
+      actionButton(
+        "Restore",
+        () => changeStatus(item, "draft")
+      )
+    );
+  } else {
+    actions.append(
+      actionButton(
+        "Delete",
+        () => deleteActivity(item),
+        true
+      )
+    );
+  }
+
+  body.append(
+    meta,
+    title,
+    description,
+    resourceCount,
+    actions
+  );
+
+  card.append(cover, body);
+
+  return card;
+}
+
+function actionButton(label, callback, danger = false) {
+  const button = document.createElement("button");
+
+  button.type = "button";
+
+  button.className = danger
+    ? "tm-danger"
+    : "tm-small";
+
+  button.textContent = label;
+
+  button.addEventListener("click", callback);
+
+  return button;
+}
+
+// ======================================================
+// PREVIEW
+// ======================================================
+
+function createPreviewModal() {
+  const modal = document.createElement("div");
+
+  modal.id = "previewModal";
+  modal.className = "tm-modal";
+
+  modal.setAttribute("role", "dialog");
+  modal.setAttribute("aria-modal", "true");
+
+  modal.innerHTML = `
+    <div class="tm-panel">
+      <div class="tm-modal-head">
+        <h2 id="previewTitle">Activity Preview</h2>
+
+        <button class="tm-close"
+          id="closePreview"
+          type="button"
+          aria-label="Close">×</button>
+      </div>
+
+      <p id="previewDescription"></p>
+
+      <div id="previewResources" class="tm-resources"></div>
+    </div>
+  `;
+
+  modal.addEventListener("click", event => {
+    if (event.target === modal) {
+      closePreview();
+    }
+  });
+
+  document.body.appendChild(modal);
+
+  $("closePreview")?.addEventListener(
+    "click",
+    closePreview
+  );
+}
+
+function previewItem(item) {
+  if (!$("previewModal")) {
+    createPreviewModal();
+  }
+
+  $("previewTitle").textContent =
+    item.title || "Preview";
+
+  $("previewDescription").textContent =
+    item.description || "";
+
+  const resources = $("previewResources");
+
+  resources.replaceChildren();
+
+  (item.resources || []).forEach(resource => {
+    if (!resource.url) return;
+
+    const link = document.createElement("a");
+
+    link.href = resource.url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+
+    link.textContent =
+      `${resource.label || "Open Resource"} ↗`;
+
+    resources.appendChild(link);
+  });
+
+  if (item.type !== "module") {
+    const info = document.createElement("p");
+
+    info.textContent =
+      `${typeLabel(item.type)} activity. Student activity details are stored in the activity record.`;
+
+    resources.prepend(info);
+  }
+
+  $("previewModal").classList.add("show");
+
+  document.body.style.overflow = "hidden";
+}
+
+function closePreview() {
+  $("previewModal")?.classList.remove("show");
+
+  if (!$("editorModal")?.classList.contains("show")) {
+    document.body.style.overflow = "";
+  }
+}
+
+// ======================================================
+// STATUS / DELETE
+// ======================================================
+
+async function changeStatus(item, forcedStatus) {
+  const status = forcedStatus ||
+    (item.status === "published" ? "archived" : "published");
+
+  if (!confirm(`Change "${item.title}" to ${status}?`)) {
+    return;
+  }
+
+  try {
+    await updateDoc(
+      doc(db, item.collectionName, item.id),
+      {
+        status,
+        updatedAt: serverTimestamp()
+      }
+    );
+
+    showNotice(`Activity ${status}.`, "success");
+
+  } catch (error) {
+    showNotice(errorMessage(error), "error");
+  }
+}
+
+async function deleteActivity(item) {
+  if (!confirm(`Permanently delete "${item.title}"?`)) {
+    return;
+  }
+
+  try {
+    await deleteDoc(
+      doc(db, item.collectionName, item.id)
+    );
+
+    for (const resource of item.resources || []) {
+      if (!resource.storagePath) continue;
+
+      try {
+        await deleteObject(
+          ref(storage, resource.storagePath)
+        );
+      } catch (error) {
+        console.warn("Storage cleanup:", error);
+      }
+    }
+
+    showNotice("Activity deleted.", "success");
+
+  } catch (error) {
+    showNotice(errorMessage(error), "error");
+  }
+}
+
+// ======================================================
+// STATISTICS
+// ======================================================
+
+function updateStatistics() {
+  if ($("totalCount")) {
+    $("totalCount").textContent = items.length;
+  }
+
+  if ($("publishedCount")) {
+    $("publishedCount").textContent =
+      items.filter(item => item.status === "published").length;
+  }
+
+  if ($("draftCount")) {
+    $("draftCount").textContent =
+      items.filter(item => item.status === "draft").length;
+  }
+}
+
+// ======================================================
+// EMPTY STATE
+// ======================================================
+
+function showEmpty(title, message) {
+  const grid = $("moduleGrid");
+  if (!grid) return;
+
+  grid.replaceChildren();
+
+  const box = document.createElement("div");
+  box.className = "tm-state";
+
+  const heading = document.createElement("h3");
+  heading.textContent = title;
+
+  const text = document.createElement("p");
+  text.textContent = message;
+
+  box.append(heading, text);
+
+  grid.appendChild(box);
+}
+
+// ======================================================
+// NOTIFICATIONS
+// ======================================================
+
+function showNotice(message, type = "success") {
+  const box = $("notice");
+
+  if (!box) {
+    console[type === "error" ? "error" : "log"](message);
+    return;
+  }
+
+  box.className = `tm-notice show ${type}`;
+  box.textContent = message;
+
+  if (type === "success") {
+    setTimeout(() => {
+      box.className = "tm-notice";
+      box.textContent = "";
+    }, 4500);
+  }
+}
+
+function showFormNotice(message, type = "error") {
+  const box = $("formNotice");
+
+  if (!box) {
+    showNotice(message, type);
+    return;
+  }
+
+  box.className = `tm-notice show ${type}`;
+  box.textContent = message;
+}
+
+// ======================================================
+// HELPERS
+// ======================================================
+
+function typeLabel(type) {
+  return ({
+    module: "Learning Module",
+    quiz: "Quiz",
+    assignment: "Assignment",
+    discussion: "Discussion"
+  })[type] || "Activity";
+}
+
+function dateValue(value) {
+  if (!value) return 0;
+
+  if (typeof value.toMillis === "function") {
+    return value.toMillis();
+  }
+
+  if (typeof value.toDate === "function") {
+    return value.toDate().getTime();
+  }
+
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime())
+    ? 0
+    : date.getTime();
+}
+
+function safeName(name) {
+  return name
+    .replace(/[^\w.-]/g, "_")
+    .slice(-140);
+}
+
+function escapeHTML(value) {
+  return String(value || "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[char]);
+}
+
+function escapeAttr(value) {
+  return escapeHTML(value);
+}
+
+function errorMessage(error) {
+  if (error?.code === "permission-denied") {
+    return "Permission denied. Check your Firestore rules.";
+  }
+
+  if (error?.code === "storage/unauthorized") {
+    return "Storage upload denied. Check Firebase Storage rules.";
+  }
+
+  return error?.message ||
+    "An unexpected error occurred.";
+}
+
+// ======================================================
+// CLEANUP
+// ======================================================
+
+window.addEventListener("beforeunload", stopListeners);

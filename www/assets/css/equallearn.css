@@ -313,3 +313,83 @@ body.el-sidebar-collapsed .el-nav a[title]:hover::after {
         justify-content: flex-start !important;
     }
 }
+/* =========================================
+   FIX: GLOBAL SHELL CONTENT ALIGNMENT
+========================================= */
+
+.el-app-shell {
+  display: grid !important;
+  grid-template-columns: 258px minmax(0, 1fr) !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: clip !important;
+}
+
+.el-app-main {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  position: relative !important;
+  left: auto !important;
+  transform: none !important;
+  overflow-x: clip !important;
+}
+
+.el-topbar {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  flex-shrink: 0 !important;
+}
+
+.el-page-content {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: clip !important;
+}
+
+.el-page-content > main.quiz-page {
+  display: block !important;
+  position: relative !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  left: auto !important;
+  transform: none !important;
+}
+
+.quiz-wrapper {
+  width: 100% !important;
+  max-width: 1050px !important;
+  margin-inline: auto !important;
+}
+
+.quiz-main-card {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+
+#nextBtn {
+  max-width: 100% !important;
+}
+
+@media (max-width: 900px) {
+  .el-app-shell {
+    display: block !important;
+  }
+
+  .el-app-main {
+    width: 100% !important;
+  }
+}

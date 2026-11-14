@@ -1,0 +1,647 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#171821">
+
+  <title>Quizzes | EqualLearn</title>
+
+  <!-- Existing global styles -->
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/equallearn.css">
+
+  <!-- PWA -->
+  <link rel="manifest" href="../manifest.webmanifest">
+  <link rel="icon" href="../assets/icons/icon-192.png">
+
+  <!-- Premium Quiz Page Styling -->
+  <style>
+    :root {
+      --quiz-purple: #8068f4;
+      --quiz-purple-light: #a99af0;
+      --quiz-bg: #171821;
+      --quiz-card: #222330;
+      --quiz-border: rgba(255,255,255,.08);
+      --quiz-text: #f5f3ff;
+      --quiz-muted: #a5a3b8;
+      --quiz-radius: 20px;
+    }
+
+    /* =====================================
+       PAGE
+    ===================================== */
+
+    .quiz-page {
+      width: 100%;
+      min-height: 100%;
+      padding: 30px clamp(16px, 4vw, 48px) 50px;
+      color: var(--quiz-text);
+      background:
+        radial-gradient(
+          circle at 85% 0%,
+          rgba(117,92,240,.10),
+          transparent 32%
+        ),
+        var(--quiz-bg);
+    }
+
+    .quiz-wrapper {
+      width: 100%;
+      max-width: 1050px;
+      margin: 0 auto;
+    }
+
+    /* =====================================
+       BREADCRUMB
+    ===================================== */
+
+    .quiz-breadcrumb {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-bottom: 26px;
+      color: var(--quiz-muted);
+      font-size: 12px;
+    }
+
+    .quiz-breadcrumb a {
+      color: var(--quiz-purple-light);
+      text-decoration: none;
+    }
+
+    .quiz-breadcrumb a:hover {
+      color: white;
+    }
+
+    .quiz-breadcrumb .separator {
+      color: #666477;
+    }
+
+    .quiz-breadcrumb .current {
+      color: white;
+      font-weight: 700;
+    }
+
+    /* =====================================
+       PAGE INTRO
+    ===================================== */
+
+    .quiz-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 26px;
+    }
+
+    .quiz-heading-text {
+      min-width: 0;
+    }
+
+    .quiz-eyebrow {
+      margin-bottom: 8px;
+      color: var(--quiz-purple-light);
+      font-size: 10px;
+      font-weight: 850;
+      letter-spacing: 1.7px;
+      text-transform: uppercase;
+    }
+
+    .quiz-heading h1 {
+      margin: 0;
+      color: white;
+      font-size: clamp(25px, 4vw, 34px);
+      font-weight: 850;
+      letter-spacing: -1px;
+    }
+
+    .quiz-heading p {
+      margin: 9px 0 0;
+      color: var(--quiz-muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .quiz-heading-icon {
+      display: grid;
+      place-items: center;
+      flex: 0 0 58px;
+      width: 58px;
+      height: 58px;
+      color: #c5b8ff;
+      background: linear-gradient(
+        145deg,
+        rgba(128,104,244,.25),
+        rgba(128,104,244,.08)
+      );
+      border: 1px solid rgba(169,154,240,.2);
+      border-radius: 18px;
+      font-size: 26px;
+    }
+
+    /* =====================================
+       QUIZ MAIN CARD
+    ===================================== */
+
+    .quiz-main-card {
+      position: relative;
+      overflow: hidden;
+      padding: clamp(20px, 4vw, 36px);
+      background: linear-gradient(
+        145deg,
+        #252538,
+        #20212e 70%
+      );
+      border: 1px solid var(--quiz-border);
+      border-radius: var(--quiz-radius);
+      box-shadow: 0 18px 50px rgba(0,0,0,.16);
+    }
+
+    .quiz-main-card::before {
+      content: "";
+      position: absolute;
+      top: -130px;
+      right: -100px;
+      width: 280px;
+      height: 280px;
+      border: 1px solid rgba(169,154,240,.08);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .quiz-main-card::after {
+      content: "";
+      position: absolute;
+      top: -85px;
+      right: -55px;
+      width: 190px;
+      height: 190px;
+      border: 1px solid rgba(169,154,240,.07);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .quiz-card-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* =====================================
+       QUIZ CONTAINER
+    ===================================== */
+
+    #quizContainer {
+      min-height: 180px;
+      color: var(--quiz-text);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    #quizContainer:empty::before {
+      content: "Preparing your quiz...";
+      display: block;
+      padding: 35px 10px;
+      color: var(--quiz-muted);
+      text-align: center;
+    }
+
+    /* Question */
+    #quizContainer .question {
+      margin: 22px 0;
+      color: white;
+      font-size: clamp(17px, 2vw, 21px);
+      font-weight: 750;
+      line-height: 1.6;
+    }
+
+    /* Choice */
+    #quizContainer .choice {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      min-height: 55px;
+      padding: 15px 18px;
+      margin-bottom: 12px;
+
+      color: #d9d7e8;
+      background: rgba(255,255,255,.045);
+
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 13px;
+
+      font-size: 14px;
+      font-weight: 600;
+      text-align: left;
+
+      cursor: pointer;
+
+      transition:
+        background .2s ease,
+        border-color .2s ease,
+        color .2s ease,
+        transform .2s ease;
+    }
+
+    #quizContainer .choice:hover {
+      color: white;
+      background: rgba(128,104,244,.14);
+      border-color: rgba(169,154,240,.4);
+      transform: translateY(-1px);
+    }
+
+    #quizContainer .choice.selected,
+    #quizContainer .choice.active,
+    #quizContainer .choice:focus {
+      color: white;
+      background: rgba(128,104,244,.2);
+      border-color: var(--quiz-purple-light);
+      outline: none;
+    }
+
+    /* Support labels */
+    #quizContainer label {
+      color: var(--quiz-text);
+    }
+
+    #quizContainer input[type="radio"],
+    #quizContainer input[type="checkbox"] {
+      accent-color: var(--quiz-purple);
+    }
+
+    /* =====================================
+       BUTTONS
+    ===================================== */
+
+    .quiz-actions {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 12px;
+      margin-top: 30px;
+      padding-top: 22px;
+      border-top: 1px solid var(--quiz-border);
+    }
+
+    #nextBtn {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+
+      min-width: 155px;
+      min-height: 49px;
+      padding: 13px 24px;
+
+      color: white;
+      background: linear-gradient(
+        120deg,
+        #8068f4,
+        #684fe0
+      );
+
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 13px;
+
+      font-size: 13px;
+      font-weight: 800;
+
+      cursor: pointer;
+
+      box-shadow: 0 8px 22px rgba(117,92,240,.22);
+
+      transition:
+        transform .2s ease,
+        box-shadow .2s ease,
+        opacity .2s ease;
+    }
+
+    #nextBtn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(117,92,240,.3);
+    }
+
+    #nextBtn:active {
+      transform: scale(.98);
+    }
+
+    #nextBtn:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* =====================================
+       FOOTER
+    ===================================== */
+
+    .quiz-footer {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 7px;
+      padding: 28px 10px 0;
+      color: var(--quiz-muted);
+      font-size: 11px;
+      text-align: center;
+    }
+
+    .quiz-footer span {
+      color: var(--quiz-purple-light);
+    }
+
+    /* =====================================
+       RESPONSIVE
+    ===================================== */
+
+    @media (max-width: 700px) {
+      .quiz-page {
+        padding: 22px 15px 35px;
+      }
+
+      .quiz-heading {
+        align-items: flex-start;
+      }
+
+      .quiz-heading-icon {
+        flex-basis: 48px;
+        width: 48px;
+        height: 48px;
+        border-radius: 15px;
+      }
+
+      .quiz-main-card {
+        padding: 20px 16px;
+      }
+
+      .quiz-actions {
+        flex-direction: column;
+      }
+
+      #nextBtn {
+        width: 100%;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+      }
+    }
+
+    /* =====================================
+       QUIZ LIST
+    ===================================== */
+
+    .quiz-toolbar {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .quiz-toolbar input {
+      flex: 1 1 220px;
+      min-height: 47px;
+      padding: 12px 15px;
+      color: var(--quiz-text);
+      background: rgba(255,255,255,.05);
+      border: 1px solid var(--quiz-border);
+      border-radius: 12px;
+      font: inherit;
+      font-size: 13px;
+    }
+
+    .quiz-toolbar input:focus {
+      border-color: var(--quiz-purple-light);
+      outline: none;
+    }
+
+    .quiz-total {
+      color: var(--quiz-muted);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .quiz-list {
+      display: grid;
+      gap: 13px;
+    }
+
+    .quiz-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 19px 20px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--quiz-border);
+      border-radius: 15px;
+    }
+
+    .quiz-item-main { min-width: 0; }
+
+    .quiz-item-top {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-bottom: 7px;
+    }
+
+    .quiz-item .quiz-eyebrow { margin: 0; }
+
+    .quiz-item h3 {
+      margin: 0 0 7px;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 800;
+      line-height: 1.45;
+    }
+
+    .quiz-item p {
+      margin: 0;
+      color: var(--quiz-muted);
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .quiz-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 10px;
+      color: var(--quiz-muted);
+      font-size: 11px;
+    }
+
+    .quiz-status {
+      padding: 4px 9px;
+      border-radius: 30px;
+      font-size: 10px;
+      font-weight: 850;
+      letter-spacing: .7px;
+      text-transform: uppercase;
+    }
+
+    .quiz-status.open { color: #6ee7b7; background: rgba(16,185,129,.16); }
+    .quiz-status.upcoming { color: #fcd34d; background: rgba(245,158,11,.16); }
+    .quiz-status.closed { color: #fca5a5; background: rgba(239,68,68,.16); }
+
+    .quiz-open {
+      flex: 0 0 auto;
+      padding: 11px 17px;
+      color: #fff;
+      background: linear-gradient(120deg, #8068f4, #684fe0);
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 800;
+      text-decoration: none;
+      white-space: nowrap;
+      box-shadow: 0 8px 20px rgba(117,92,240,.22);
+    }
+
+    .quiz-open.is-disabled {
+      color: var(--quiz-muted);
+      background: rgba(255,255,255,.06);
+      box-shadow: none;
+      font-weight: 700;
+    }
+
+    .quiz-message {
+      padding: 26px 18px;
+      color: var(--quiz-muted);
+      background: rgba(255,255,255,.04);
+      border: 1px dashed var(--quiz-border);
+      border-radius: 15px;
+      text-align: center;
+    }
+
+    .quiz-message strong { display: block; color: #fff; margin-bottom: 7px; }
+    .quiz-message p { margin: 0; font-size: 13px; }
+
+    @media (max-width: 700px) {
+      .quiz-item { flex-direction: column; align-items: stretch; }
+      .quiz-open, .quiz-open.is-disabled { text-align: center; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- =====================================
+       QUIZ PAGE CONTENT
+       ui-shell.js will place this inside
+       the global EqualLearn application shell.
+  ====================================== -->
+
+  <main class="quiz-page">
+
+    <div class="quiz-wrapper">
+
+      <!-- Breadcrumb -->
+      <nav class="quiz-breadcrumb" aria-label="Breadcrumb">
+        <a href="dashboard.html">Learning Space</a>
+        <span class="separator">/</span>
+        <a href="classwork.html">Classwork</a>
+        <span class="separator">/</span>
+        <span class="current">Quizzes</span>
+      </nav>
+
+      <!-- Page Heading -->
+      <header class="quiz-heading">
+
+        <div class="quiz-heading-text">
+
+          <div class="quiz-eyebrow">
+            Student Learning Space
+          </div>
+
+          <h1>Quizzes</h1>
+
+          <p>
+            Test your knowledge, challenge yourself,
+            and track your learning progress.
+          </p>
+
+        </div>
+
+        <div class="quiz-heading-icon" aria-hidden="true">
+          ✎
+        </div>
+
+      </header>
+
+      <!-- Quiz Card -->
+      <section class="quiz-main-card">
+
+        <div class="quiz-card-content">
+
+          <div class="quiz-toolbar">
+            <input
+              id="quizSearch"
+              type="search"
+              placeholder="Search quizzes…"
+              aria-label="Search quizzes">
+            <span class="quiz-total" id="quizCount">—</span>
+          </div>
+
+          <div id="quizList" class="quiz-list" aria-live="polite">
+            <div class="quiz-item">
+              <div class="quiz-item-main">
+                <h3>Loading quizzes…</h3>
+                <p>Retrieving the assessments assigned to your section.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="quiz-message" id="quizEmpty" style="display:none">
+            <strong>No quizzes available yet.</strong>
+            <p>Published assessments for your section will appear here.</p>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- Footer -->
+      <footer class="quiz-footer">
+        <span>✦</span>
+        © <span id="currentYear"></span>
+        EqualLearn. Learn without limits.
+      </footer>
+
+    </div>
+
+  </main>
+
+  <!-- =====================================
+       APPLICATION SCRIPTS
+  ====================================== -->
+
+  <script>
+    document.getElementById("currentYear").textContent =
+      new Date().getFullYear();
+  </script>
+
+  <!-- Quiz list logic -->
+  <script type="module" src="../assets/js/student-quizzes.js"></script>
+
+  <!-- Global application shell -->
+  <script type="module" src="../assets/js/ui-shell.js"></script>
+
+  <!-- PWA -->
+  <script type="module" src="../assets/js/pwa.js"></script>
+
+  <!-- Theme -->
+  <script type="module" src="../assets/js/theme.js"></script>
+
+</body>
+</html>

@@ -61,8 +61,9 @@ import {
       subtitle: "Student workspace",
       links: [
         ["dashboard.html", "home", "Dashboard"],
-       ["classwork.html", "classwork", "Classwork"],
-        ["live.html", "video", "Live"],
+        ["classwork.html", "modules", "Classwork"],
+        ["quizzes.html", "quiz", "Quizzes"],
+        ["live.html", "zap", "Live"],
         ["profile.html", "profile", "Profile"]
       ]
     }
