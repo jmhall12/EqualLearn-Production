@@ -1,5 +1,6 @@
 
 import { auth, db } from "./firebase-config.js";
+import { notifySectionStudents } from "./notification-service.js";
 import { requireRole } from "./session.js";
 
 import {
@@ -457,6 +458,23 @@ async function createLiveClass() {
     };
 
     await setDoc(doc(db, "liveSessions", roomId), sessionData);
+
+    try {
+      const targetSectionIds = [section.id];
+      const notificationResult = await notifySectionStudents({
+        db,
+        auth,
+        sectionIds: targetSectionIds,
+        contentType: "live",
+        contentId: roomId,
+        contentTitle: title,
+        teacherName: teacherName
+      });
+
+      console.info("LIVE SESSION NOTIFICATIONS:", notificationResult);
+    } catch (notificationError) {
+      console.warn("Live session notification failed:", notificationError);
+    }
 
     currentSessionId = roomId;
     currentSession = { ...sessionData, id: roomId };

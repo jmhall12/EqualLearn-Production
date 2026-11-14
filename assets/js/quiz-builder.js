@@ -1,1057 +1,804 @@
-
 import { auth, db } from "./firebase-config.js";
-
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
 import {
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
-
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  query,
-  where,
-  writeBatch,
-  serverTimestamp
+  collection, doc, getDoc, getDocs, query, where,
+  addDoc, updateDoc, deleteDoc, writeBatch, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
-// =====================================================
-// DOM ELEMENTS
-// =====================================================
+const $ = id => document.getElementById(id);
+const panel = $("integratedQuizPanel");
+const normalPanel = document.querySelector("main.wrap > .panel");
+const editor = $("eqQuizEditor");
+const list = $("eqQuizList");
+const form = $("eqQuizForm");
 
-const $ = (id) => document.getElementById(id);
+let user = null, profile = {}, role = "teacher";
+let sections = [], lessons = [], quizzes = [], staged = [], editingQuizId = null;
+let currentTab = "modules";
 
-const quizTitle = $("quizTitle");
-const quizDescription = $("quizDescription");
-const lessonSelect = $("lessonSelect");
-const quizMode = $("quizMode");
-
-const externalFields = $("externalFields");
-const externalQuizUrl = $("externalQuizUrl");
-
-const sectionList = $("sectionList");
-const selectedSectionCount = $("selectedSectionCount");
-
-const passingScore = $("passingScore");
-const timeLimit = $("timeLimit");
-const attemptLimit = $("attemptLimit");
-const availableAt = $("availableAt");
-const dueDate = $("dueDate");
-
-const shuffleQuestions = $("shuffleQuestions");
-const shuffleChoices = $("shuffleChoices");
-
-const questionEditor = $("questionEditor");
-const questionType = $("questionType");
-const multipleChoiceFields = $("multipleChoiceFields");
-
-const questionInput = $("question");
-const choiceA = $("choiceA");
-const choiceB = $("choiceB");
-const choiceC = $("choiceC");
-const choiceD = $("choiceD");
-const correctAnswer = $("correctAnswer");
-const questionPoints = $("questionPoints");
-
-const addQuestionButton = $("addQuestion");
-const questionCount = $("questionCount");
-const questionList = $("questionList");
-
-const previewQuizButton = $("previewQuiz");
-const saveDraftButton = $("saveDraft");
-const publishQuizButton = $("publishQuiz");
-
-const builderMessage = $("builderMessage");
-const myQuizzes = $("myQuizzes");
-
-const backBtn = $("backBtn");
-
-// =====================================================
-// APPLICATION STATE
-// =====================================================
-
-let currentUser = null;
-let currentProfile = null;
-let currentRole = "";
-
-let lessons = [];
-let sections = [];
-let stagedQuestions = [];
-
-let isSaving = false;
-
-// =====================================================
-// AUTHENTICATION
-// =====================================================
-
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    window.location.href = "../login.html";
-    return;
-  }
+onAuthStateChanged(auth, async signedInUser => {
+  if (!signedInUser) return;
+  user = signedInUser;
 
   try {
-    currentUser = user;
+    const snap = await getDoc(doc(db, "users", user.uid));
+    if (!snap.exists()) throw new Error("User profile was not found.");
 
-    const profileSnapshot = await getDoc(
-      doc(db, "users", user.uid)
-    );
+    profile = snap.data();
+    role = String(profile.role || "").toLowerCase();
 
-    if (!profileSnapshot.exists()) {
-      throw new Error("User profile not found.");
-    }
+    if (!["teacher", "admin"].includes(role)) return;
 
-    currentProfile = profileSnapshot.data();
-
-    currentRole = String(currentProfile.role || "")
-      .trim()
-      .toLowerCase();
-
-    if (!["teacher", "admin"].includes(currentRole)) {
-      alert("Only teachers and administrators can access Quiz Builder.");
-
-      window.location.href =
-        currentRole === "student"
-          ? "../student/dashboard.html"
-          : "../login.html";
-
-      return;
-    }
-
-    await Promise.all([
-      loadLessons(),
-      loadSections()
-    ]);
-
-    await loadMyQuizzes();
-
-    updateQuizMode();
-    updateQuestionType();
+    await Promise.all([loadSections(), loadLessons(), loadQuizzes()]);
+    renderQuizList();
 
   } catch (error) {
-    console.error("Quiz Builder initialization error:", error);
-    showMessage(error.message, "error");
+    console.error("[EQUALLEARN QUIZ] Initialization failed", error);
+    list.innerHTML = `<div class="empty">Unable to load quiz builder: ${escapeHTML(error.message)}</div>`;
   }
 });
 
-// =====================================================
-// NAVIGATION
-// =====================================================
+// The original content manager remains responsible for all non-quiz tabs.
+document.querySelectorAll("[data-type]").forEach(tab => {
+  tab.addEventListener("click", () => {
+    currentTab = tab.dataset.type;
+    const isQuiz = currentTab === "quizzes";
 
-backBtn?.addEventListener("click", () => {
-  window.history.back();
-});
+    if (normalPanel) normalPanel.hidden = isQuiz;
+    panel.hidden = !isQuiz;
 
-// =====================================================
-// LOAD LESSONS
-// =====================================================
-
-async function loadLessons() {
-  if (!lessonSelect) return;
-
-  lessonSelect.innerHTML =
-    `<option value="">Loading lessons...</option>`;
-
-  try {
-    const snapshot = await getDocs(
-      collection(db, "lessons")
-    );
-
-    lessons = snapshot.docs.map((item) => ({
-      id: item.id,
-      ...item.data()
-    }));
-
-    lessons.sort((a, b) =>
-      String(a.title || "").localeCompare(
-        String(b.title || "")
-      )
-    );
-
-    lessonSelect.innerHTML =
-      `<option value="">Select a lesson</option>`;
-
-    lessons.forEach((lesson) => {
-      const option = document.createElement("option");
-
-      option.value = lesson.id;
-      option.textContent = lesson.title || "Untitled Lesson";
-
-      lessonSelect.appendChild(option);
-    });
-
-  } catch (error) {
-    console.error("Lesson loading error:", error);
-
-    lessonSelect.innerHTML =
-      `<option value="">Unable to load lessons</option>`;
-
-    throw error;
-  }
-}
-
-// =====================================================
-// LOAD SECTIONS
-// =====================================================
-
-
-async function loadSections() {
-  if (!sectionList || !currentUser) return;
-
-  sectionList.innerHTML = "<p>Loading assigned sections...</p>";
-
-  try {
-    const sectionsRef = collection(db, "sections");
-    let sectionDocuments = [];
-
-    if (currentRole === "admin") {
-      // Admin can load all sections.
-      const snapshot = await getDocs(sectionsRef);
-      sectionDocuments = snapshot.docs;
-
+    if (isQuiz) {
+      $("createBtn").hidden = true;
+      renderQuizList();
     } else {
-      // Teachers can only load sections assigned to them.
-      const [multipleTeacher, singleTeacher] = await Promise.all([
-        getDocs(
-          query(
-            sectionsRef,
-            where("teacherIds", "array-contains", currentUser.uid)
-          )
-        ),
-
-        getDocs(
-          query(
-            sectionsRef,
-            where("teacherId", "==", currentUser.uid)
-          )
-        )
-      ]);
-
-      // Merge results and remove duplicate sections.
-      const uniqueSections = new Map();
-
-      [...multipleTeacher.docs, ...singleTeacher.docs].forEach((item) => {
-        uniqueSections.set(item.id, item);
-      });
-
-      sectionDocuments = [...uniqueSections.values()];
+      $("createBtn").hidden = false;
+      closeQuizEditor();
     }
-
-    sections = sectionDocuments.map((item) => ({
-      id: item.id,
-      ...item.data()
-    }));
-
-    sections.sort((a, b) =>
-      getSectionName(a).localeCompare(getSectionName(b))
-    );
-
-    renderSections();
-
-    if (!sections.length) {
-      sectionList.innerHTML =
-        "<p>No sections are currently assigned to your account.</p>";
-    }
-
-  } catch (error) {
-    console.error("Section loading error:", error);
-
-    sectionList.innerHTML =
-      `<p>Unable to load sections: ${error.message}</p>`;
-
-    throw error;
-  }
-}
-
-
-function getSectionName(section) {
-  return (
-    section.sectionName ||
-    section.name ||
-    section.title ||
-    section.section ||
-    "Unnamed Section"
-  );
-}
-
-function renderSections() {
-  if (!sectionList) return;
-
-  sectionList.innerHTML = "";
-
-  if (!sections.length) {
-    sectionList.innerHTML =
-      "<p>No available sections assigned to your account.</p>";
-
-    updateSelectedSectionCount();
-    return;
-  }
-
-  sections.forEach((section) => {
-    const wrapper = document.createElement("label");
-
-    wrapper.className = "section-option";
-
-    const checkbox = document.createElement("input");
-
-    checkbox.type = "checkbox";
-    checkbox.value = section.id;
-    checkbox.name = "quizSections";
-
-    checkbox.addEventListener("change", updateSelectedSectionCount);
-
-    const name = document.createElement("span");
-
-    name.textContent = getSectionName(section);
-
-    wrapper.append(checkbox, name);
-    sectionList.appendChild(wrapper);
   });
-
-  updateSelectedSectionCount();
-}
-
-function getSelectedSectionIds() {
-  return Array.from(
-    sectionList?.querySelectorAll(
-      'input[name="quizSections"]:checked'
-    ) || []
-  ).map((checkbox) => checkbox.value);
-}
-
-function updateSelectedSectionCount() {
-  if (!selectedSectionCount) return;
-
-  selectedSectionCount.textContent =
-    `${getSelectedSectionIds().length} section(s) selected`;
-}
-
-// =====================================================
-// QUIZ MODE
-// =====================================================
-
-quizMode?.addEventListener("change", updateQuizMode);
-
-function updateQuizMode() {
-  const mode = quizMode?.value || "native";
-
-  if (externalFields) {
-    externalFields.style.display =
-      mode === "external" ? "block" : "none";
-  }
-
-  if (questionEditor) {
-    questionEditor.style.display =
-      mode === "native" ? "block" : "none";
-  }
-}
-
-// =====================================================
-// QUESTION TYPE
-// =====================================================
-
-questionType?.addEventListener("change", updateQuestionType);
-
-function updateQuestionType() {
-  const type = questionType?.value || "multiple_choice";
-
-  if (multipleChoiceFields) {
-    multipleChoiceFields.style.display =
-      type === "multiple_choice" ? "block" : "none";
-  }
-
-  if (correctAnswer) {
-    if (type === "true_false") {
-      correctAnswer.innerHTML = `
-        <option value="">Select correct answer</option>
-        <option value="A">True</option>
-        <option value="B">False</option>
-      `;
-    } else {
-      correctAnswer.innerHTML = `
-        <option value="">Select correct answer</option>
-        <option value="A">Choice A</option>
-        <option value="B">Choice B</option>
-        <option value="C">Choice C</option>
-        <option value="D">Choice D</option>
-      `;
-    }
-  }
-}
-
-// =====================================================
-// ADD QUESTION TO QUIZ
-// =====================================================
-
-addQuestionButton?.addEventListener("click", addQuestion);
-
-function addQuestion() {
-  const type = questionType?.value || "multiple_choice";
-
-  const question = questionInput?.value.trim() || "";
-
-  if (!question) {
-    showMessage("Enter a question first.", "error");
-    return;
-  }
-
-  const points = Number(questionPoints?.value || 1);
-
-  if (!Number.isFinite(points) || points <= 0) {
-    showMessage("Question points must be greater than zero.", "error");
-    return;
-  }
-
-  let choices = {};
-  let answer = correctAnswer?.value || "";
-
-  if (type === "multiple_choice") {
-    choices = {
-      A: choiceA?.value.trim() || "",
-      B: choiceB?.value.trim() || "",
-      C: choiceC?.value.trim() || "",
-      D: choiceD?.value.trim() || ""
-    };
-
-    if (Object.values(choices).some((value) => !value)) {
-      showMessage("Complete all four choices.", "error");
-      return;
-    }
-
-  } else {
-    choices = {
-      A: "True",
-      B: "False"
-    };
-  }
-
-  const validAnswers = type === "true_false"
-    ? ["A", "B"]
-    : ["A", "B", "C", "D"];
-
-  if (!validAnswers.includes(answer)) {
-    showMessage("Select the correct answer.", "error");
-    return;
-  }
-
-  stagedQuestions.push({
-    order: stagedQuestions.length + 1,
-    type,
-    question,
-    choices,
-    correctAnswer: answer,
-    points
-  });
-
-  resetQuestionFields();
-  renderStagedQuestions();
-
-  showMessage("Question added to your quiz.", "success");
-}
-
-function resetQuestionFields() {
-  if (questionInput) questionInput.value = "";
-
-  if (choiceA) choiceA.value = "";
-  if (choiceB) choiceB.value = "";
-  if (choiceC) choiceC.value = "";
-  if (choiceD) choiceD.value = "";
-
-  if (correctAnswer) correctAnswer.value = "";
-
-  if (questionPoints) questionPoints.value = "1";
-}
-
-// =====================================================
-// RENDER STAGED QUESTIONS
-// =====================================================
-
-function renderStagedQuestions() {
-  if (!questionList) return;
-
-  questionList.innerHTML = "";
-
-  if (questionCount) {
-    questionCount.textContent = stagedQuestions.length;
-  }
-
-  if (!stagedQuestions.length) {
-    questionList.innerHTML =
-      "<p>No questions added yet.</p>";
-
-    return;
-  }
-
-  stagedQuestions.forEach((item, index) => {
-    const card = document.createElement("div");
-
-    card.className = "question-card";
-
-    const heading = document.createElement("h4");
-
-    heading.textContent =
-      `${index + 1}. ${item.question}`;
-
-    const type = document.createElement("p");
-
-    type.textContent =
-      `${item.type === "true_false" ? "True or False" : "Multiple Choice"} · ${item.points} point(s)`;
-
-    const choices = document.createElement("div");
-
-    Object.entries(item.choices).forEach(([letter, value]) => {
-      const line = document.createElement("p");
-
-      line.textContent = `${letter}. ${value}`;
-
-      choices.appendChild(line);
-    });
-
-    const answer = document.createElement("p");
-
-    answer.textContent =
-      `Correct answer: ${item.correctAnswer}`;
-
-    const remove = document.createElement("button");
-
-    remove.type = "button";
-    remove.textContent = "Remove";
-    remove.className = "delete-question";
-
-    remove.addEventListener("click", () => {
-      stagedQuestions.splice(index, 1);
-
-      stagedQuestions.forEach((question, i) => {
-        question.order = i + 1;
-      });
-
-      renderStagedQuestions();
-    });
-
-    card.append(heading, type, choices, answer, remove);
-
-    questionList.appendChild(card);
-  });
-}
-
-// =====================================================
-// PREVIEW QUIZ
-// =====================================================
-
-previewQuizButton?.addEventListener("click", () => {
-  const title = quizTitle?.value.trim() || "Untitled Quiz";
-
-  if (quizMode?.value === "external") {
-    showMessage(
-      "External quiz preview: " + title,
-      "info"
-    );
-    return;
-  }
-
-  if (!stagedQuestions.length) {
-    showMessage("Add at least one question to preview.", "error");
-    return;
-  }
-
-  const preview = stagedQuestions
-    .map((item, index) => {
-      const choices = Object.entries(item.choices)
-        .map(([letter, value]) => `${letter}. ${value}`)
-        .join("\n");
-
-      return `${index + 1}. ${item.question}\n${choices}`;
-    })
-    .join("\n\n");
-
-  alert(`${title}\n\n${preview}`);
 });
 
-// =====================================================
-// SAVE DRAFT / PUBLISH
-// =====================================================
+$("eqNewQuiz").addEventListener("click", () => openQuizEditor());
+$("eqCancel").addEventListener("click", closeQuizEditor);
+$("eqAddQuestion").addEventListener("click", () => addQuestion());
+$("eqMode").addEventListener("change", updateMode);
+$("eqSaveDraft").addEventListener("click", () => saveQuiz("draft"));
 
-saveDraftButton?.addEventListener("click", () => {
-  saveQuiz("draft");
-});
-
-publishQuizButton?.addEventListener("click", () => {
+form.addEventListener("submit", event => {
+  event.preventDefault();
   saveQuiz("active");
 });
 
-async function saveQuiz(status) {
-  if (isSaving) return;
+async function loadSections() {
+  const ref = collection(db, "sections");
+  let docs = [];
 
-  if (!currentUser) {
-    showMessage("Your session has expired. Please log in again.", "error");
+  if (role === "admin") {
+    const s = await getDocs(ref);
+    docs = s.docs;
+  } else {
+    const results = await Promise.allSettled([
+      getDocs(query(ref, where("teacherIds", "array-contains", user.uid))),
+      getDocs(query(ref, where("teacherId", "==", user.uid)))
+    ]);
+
+    const unique = new Map();
+
+    results.forEach(r => {
+      if (r.status === "fulfilled") {
+        r.value.docs.forEach(d => unique.set(d.id, d));
+      }
+    });
+
+    docs = [...unique.values()];
+  }
+
+  sections = docs.map(d => ({ id: d.id, ...d.data() }));
+  renderSectionChoices([]);
+}
+
+async function loadLessons() {
+  const ref = collection(db, "lessons");
+  let docs = [];
+
+  if (role === "admin") {
+    const s = await getDocs(ref);
+    docs = s.docs;
+  } else {
+    const results = await Promise.allSettled([
+      getDocs(query(ref, where("createdBy", "==", user.uid))),
+      getDocs(query(ref, where("teacherId", "==", user.uid)))
+    ]);
+
+    const unique = new Map();
+
+    results.forEach(r => {
+      if (r.status === "fulfilled") {
+        r.value.docs.forEach(d => unique.set(d.id, d));
+      }
+    });
+
+    docs = [...unique.values()];
+  }
+
+  lessons = docs.map(d => ({ id: d.id, ...d.data() }));
+
+  const select = $("eqLesson");
+  select.replaceChildren(new Option("No linked lesson", ""));
+
+  lessons
+    .sort((a, b) => (a.title || "").localeCompare(b.title || ""))
+    .forEach(item => {
+      select.add(new Option(item.title || "Untitled lesson", item.id));
+    });
+}
+
+async function loadQuizzes() {
+  const ref = collection(db, "quizzes");
+  let docs = [];
+
+  if (role === "admin") {
+    const s = await getDocs(ref);
+    docs = s.docs;
+  } else {
+    const results = await Promise.allSettled([
+      getDocs(query(ref, where("createdBy", "==", user.uid))),
+      getDocs(query(ref, where("teacherId", "==", user.uid)))
+    ]);
+
+    const unique = new Map();
+
+    results.forEach(r => {
+      if (r.status === "fulfilled") {
+        r.value.docs.forEach(d => unique.set(d.id, d));
+      }
+    });
+
+    docs = [...unique.values()];
+  }
+
+  quizzes = docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => dateValue(b.createdAt) - dateValue(a.createdAt));
+}
+
+function renderSectionChoices(selected = []) {
+  const wrap = $("eqSections");
+  wrap.replaceChildren();
+
+  if (!sections.length) {
+    wrap.innerHTML = '<span class="hint">No assigned sections found. Ask an administrator to assign your section.</span>';
     return;
   }
 
-  const title = quizTitle?.value.trim() || "";
-  const description = quizDescription?.value.trim() || "";
-  const lessonId = lessonSelect?.value || "";
-  const mode = quizMode?.value || "native";
+  sections.forEach(section => {
+    const label = document.createElement("label");
+    label.className = "eq-section-option";
 
-  const sectionIds = getSelectedSectionIds();
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.value = section.id;
+    input.checked = selected.includes(section.id);
 
-  if (!title) {
-    showMessage("Enter a quiz title.", "error");
+    const text = document.createElement("span");
+    text.textContent = sectionLabel(section);
+
+    label.append(input, text);
+    wrap.append(label);
+  });
+}
+
+function renderQuizList() {
+  if (!list) return;
+
+  if (!quizzes.length) {
+    list.innerHTML = '<div class="empty">No quizzes yet. Click “Create Quiz” to build your first quiz.</div>';
     return;
   }
 
-  if (!lessonId) {
-    showMessage("Select a lesson.", "error");
-    return;
+  list.replaceChildren();
+
+  quizzes.forEach(quiz => {
+    const card = document.createElement("article");
+    card.className = "item";
+
+    const info = document.createElement("div");
+    info.style.flex = "1";
+
+    const title = document.createElement("h3");
+    title.textContent = quiz.title || "Untitled quiz";
+
+    const desc = document.createElement("p");
+    desc.textContent = quiz.description ||
+      (quiz.type === "external" ? quiz.quizUrl || "External quiz" : "Native quiz");
+
+    const meta = document.createElement("div");
+    meta.className = "meta";
+
+    pill(meta, String(quiz.status || "draft").toUpperCase());
+    pill(meta, quiz.type === "external"
+      ? "EXTERNAL"
+      : `${Number(quiz.totalQuestions) || 0} QUESTIONS`);
+    pill(meta, `${(quiz.sectionIds || []).length} SECTION(S)`);
+
+    info.append(title, desc, meta);
+
+    const actions = document.createElement("div");
+    actions.className = "eq-list-actions";
+
+    actions.append(
+      actionButton("Edit", () => editQuiz(quiz)),
+      actionButton(
+        quiz.status === "archived" ? "Restore" : "Archive",
+        () => setQuizStatus(
+          quiz,
+          quiz.status === "archived" ? "draft" : "archived"
+        )
+      ),
+      actionButton("Delete", () => deleteQuiz(quiz), "danger")
+    );
+
+    card.append(info, actions);
+    list.append(card);
+  });
+}
+
+function openQuizEditor(quiz = null) {
+  editingQuizId = quiz?.id || null;
+  staged = [];
+
+  form.reset();
+
+  $("eqTitle").value = quiz?.title || "";
+  $("eqDescription").value = quiz?.description || "";
+  $("eqLesson").value = quiz?.lessonId || "";
+  $("eqMode").value = quiz?.type === "external" ? "external" : "native";
+  $("eqExternalUrl").value = quiz?.quizUrl || "";
+  $("eqPassing").value = quiz?.passingScore ?? 60;
+  $("eqTime").value = quiz?.timeLimit ?? 0;
+  $("eqAttempts").value = quiz?.attemptLimit ?? 1;
+  $("eqAvailable").value = dateInput(quiz?.availableAt);
+  $("eqDue").value = dateInput(quiz?.dueDate);
+
+  $("eqShuffleQ").checked = !!quiz?.shuffleQuestions;
+  $("eqShuffleC").checked = !!quiz?.shuffleChoices;
+
+  renderSectionChoices(quiz?.sectionIds || []);
+
+  $("eqMessage").textContent = "";
+  $("eqMessage").className = "";
+
+  if (quiz?.id && quiz.type !== "external") {
+    loadQuizQuestions(quiz.id);
   }
 
-  if (!sectionIds.length) {
-    showMessage("Select at least one section.", "error");
-    return;
+  renderQuestions();
+  updateMode();
+
+  editor.hidden = false;
+  editor.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+async function editQuiz(quiz) {
+  openQuizEditor(quiz);
+}
+
+async function loadQuizQuestions(quizId) {
+  try {
+    const qs = await getDocs(
+      query(collection(db, "quizQuestions"), where("quizId", "==", quizId))
+    );
+
+    const keys = await getDocs(
+      query(collection(db, "quizAnswerKeys"), where("quizId", "==", quizId))
+    );
+
+    const keyMap = new Map(
+      keys.docs.map(d => [d.data().questionId, d.data().correctAnswer])
+    );
+
+    staged = qs.docs
+      .map(d => ({
+        id: d.id,
+        ...d.data(),
+        correctAnswer: keyMap.get(d.id) ?? "A"
+      }))
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+    renderQuestions();
+
+  } catch (error) {
+    console.error(error);
+    message("Could not load quiz questions: " + error.message, "error");
+  }
+}
+
+function addQuestion(data = {}) {
+  if (staged.length >= 200) {
+    return message("Maximum of 200 questions per quiz.", "error");
   }
 
-  if (mode === "native" && !stagedQuestions.length) {
-    showMessage("Add at least one question.", "error");
-    return;
-  }
+  staged.push({
+    type: data.type || "multiple-choice",
+    question: data.question || "",
+    choices: data.choices || ["", "", "", ""],
+    correctAnswer: data.correctAnswer || "A",
+    points: Number(data.points) || 1
+  });
 
-  const lesson = lessons.find((item) => item.id === lessonId);
+  renderQuestions();
+}
 
-  if (!lesson) {
-    showMessage("The selected lesson could not be found.", "error");
-    return;
-  }
+function renderQuestions() {
+  const wrap = $("eqQuestions");
+  wrap.replaceChildren();
 
-  let externalUrl = "";
+  staged.forEach((q, index) => {
+    const card = document.createElement("div");
+    card.className = "eq-q-card";
 
-  if (mode === "external") {
-    externalUrl = externalQuizUrl?.value.trim() || "";
+    const top = document.createElement("div");
+    top.className = "eq-q-top";
 
-    if (!externalUrl) {
-      showMessage("Enter the external quiz URL.", "error");
-      return;
-    }
+    const label = document.createElement("span");
+    label.textContent = `Question ${index + 1}`;
 
-    try {
-      const parsed = new URL(externalUrl);
+    const remove = actionButton(
+      "Remove",
+      () => {
+        staged.splice(index, 1);
+        renderQuestions();
+      },
+      "danger"
+    );
 
-      if (!["http:", "https:"].includes(parsed.protocol)) {
-        throw new Error();
+    top.append(label, remove);
+
+    const fields = document.createElement("div");
+    fields.className = "eq-q-fields";
+
+    const type = document.createElement("select");
+    type.innerHTML = `
+      <option value="multiple-choice">Multiple Choice</option>
+      <option value="true-false">True / False</option>
+    `;
+    type.value = q.type;
+
+    const points = document.createElement("input");
+    points.type = "number";
+    points.min = "1";
+    points.max = "1000";
+    points.value = q.points || 1;
+    points.setAttribute("aria-label", "Question points");
+
+    const question = document.createElement("textarea");
+    question.rows = 2;
+    question.placeholder = "Enter your question...";
+    question.value = q.question || "";
+
+    type.addEventListener("change", () => {
+      q.type = type.value;
+
+      if (q.type === "true-false") {
+        q.choices = ["True", "False"];
+        q.correctAnswer = ["True", "False"].includes(q.correctAnswer)
+          ? q.correctAnswer
+          : "True";
+      } else {
+        q.choices = q.choices?.length === 4
+          ? q.choices
+          : ["", "", "", ""];
+
+        q.correctAnswer = ["A", "B", "C", "D"].includes(q.correctAnswer)
+          ? q.correctAnswer
+          : "A";
       }
 
-      externalUrl = parsed.href;
+      renderQuestions();
+    });
 
-    } catch {
-      showMessage("Enter a valid HTTP or HTTPS quiz URL.", "error");
-      return;
+    points.addEventListener("input", () => {
+      q.points = Math.max(1, Number(points.value) || 1);
+    });
+
+    question.addEventListener("input", () => {
+      q.question = question.value;
+    });
+
+    fields.append(type, points);
+    card.append(top, fields, question);
+
+    if (q.type === "true-false") {
+      const correct = document.createElement("select");
+      correct.setAttribute("aria-label", "Correct answer");
+
+      correct.add(new Option("True is correct", "True"));
+      correct.add(new Option("False is correct", "False"));
+
+      correct.value = q.correctAnswer || "True";
+
+      correct.addEventListener("change", () => {
+        q.correctAnswer = correct.value;
+      });
+
+      card.append(correct);
+
+    } else {
+      const choices = document.createElement("div");
+      choices.className = "eq-choice-grid";
+
+      ["A", "B", "C", "D"].forEach((letter, i) => {
+        const input = document.createElement("input");
+        input.placeholder = `Choice ${letter}`;
+        input.value = q.choices?.[i] || "";
+
+        input.addEventListener("input", () => {
+          q.choices[i] = input.value;
+        });
+
+        choices.append(input);
+      });
+
+      const correct = document.createElement("select");
+      correct.setAttribute("aria-label", "Correct answer");
+
+      ["A", "B", "C", "D"].forEach(v => {
+        correct.add(new Option(`Correct answer: ${v}`, v));
+      });
+
+      correct.value = q.correctAnswer || "A";
+
+      correct.addEventListener("change", () => {
+        q.correctAnswer = correct.value;
+      });
+
+      card.append(choices, correct);
+    }
+
+    wrap.append(card);
+  });
+}
+
+function updateMode() {
+  const external = $("eqMode").value === "external";
+
+  $("eqExternalWrap").hidden = !external;
+  $("eqQuestionArea").hidden = external;
+}
+
+async function saveQuiz(status) {
+  const title = $("eqTitle").value.trim();
+  const description = $("eqDescription").value.trim();
+
+  const sectionIds = [
+    ...$("eqSections").querySelectorAll("input:checked")
+  ].map(x => x.value);
+
+  const type = $("eqMode").value;
+  const quizUrl = type === "external"
+    ? validUrl($("eqExternalUrl").value)
+    : "";
+
+  if (!title) return message("Quiz title is required.", "error");
+  if (!sectionIds.length) return message("Select at least one section.", "error");
+
+  if (type === "external" && !quizUrl) {
+    return message("Enter a valid external quiz URL.", "error");
+  }
+
+  if (type === "native" && status === "active" && !staged.length) {
+    return message("Add at least one question before publishing.", "error");
+  }
+
+  if (type === "native") {
+    for (let i = 0; i < staged.length; i++) {
+      const q = staged[i];
+
+      if (!q.question?.trim()) {
+        return message(`Question ${i + 1} is empty.`, "error");
+      }
+
+      if (
+        q.type === "multiple-choice" &&
+        (q.choices || []).some(c => !String(c).trim())
+      ) {
+        return message(
+          `Complete all four choices in Question ${i + 1}.`,
+          "error"
+        );
+      }
     }
   }
 
-  const passing = Number(passingScore?.value || 60);
-  const time = Number(timeLimit?.value || 0);
-  const attempts = Number(attemptLimit?.value || 1);
+  const availableAt = parseDate($("eqAvailable").value);
+  const dueDate = parseDate($("eqDue").value);
 
-  if (!Number.isFinite(passing) || passing < 0 || passing > 100) {
-    showMessage("Passing score must be between 0 and 100.", "error");
-    return;
+  if (availableAt && dueDate && dueDate < availableAt) {
+    return message(
+      "Due date cannot be earlier than the availability date.",
+      "error"
+    );
   }
 
-  if (!Number.isFinite(time) || time < 0) {
-    showMessage("Time limit cannot be negative.", "error");
-    return;
-  }
+  const lesson = lessons.find(l => l.id === $("eqLesson").value);
 
-  if (!Number.isInteger(attempts) || attempts < 1) {
-    showMessage("Attempt limit must be at least 1.", "error");
-    return;
-  }
-
-  const available = availableAt?.value || "";
-  const due = dueDate?.value || "";
-
-  if (available && due && new Date(due) <= new Date(available)) {
-    showMessage("The due date must be later than the availability date.", "error");
-    return;
-  }
-
-  const totalPoints = mode === "native"
-    ? stagedQuestions.reduce((sum, item) => sum + item.points, 0)
+  const totalPoints = type === "native"
+    ? staged.reduce((n, q) => n + (Number(q.points) || 1), 0)
     : 0;
 
-  isSaving = true;
+  const selected = sections.filter(s => sectionIds.includes(s.id));
 
-  const saveButton = status === "draft"
-    ? saveDraftButton
-    : publishQuizButton;
+  const payload = {
+    title,
+    description,
+    lessonId: lesson?.id || "",
+    lessonName: lesson?.title || "",
+    sectionIds,
+    sectionId: sectionIds.length === 1 ? sectionIds[0] : null,
+    sectionNames: selected.map(sectionLabel),
+    type,
+    status,
+    quizUrl: type === "external" ? quizUrl : "",
+    passingScore: clamp($("eqPassing").value, 0, 100, 60),
+    timeLimit: clamp($("eqTime").value, 0, 600, 0),
+    attemptLimit: clamp($("eqAttempts").value, 1, 20, 1),
+    availableAt,
+    dueDate,
+    shuffleQuestions: $("eqShuffleQ").checked,
+    shuffleChoices: $("eqShuffleC").checked,
+    totalQuestions: type === "native" ? staged.length : 0,
+    totalPoints,
+    createdBy: user.uid,
+    createdByRole: role,
+    teacherId: user.uid,
+    teacherName:
+      profile.fullName ||
+      profile.name ||
+      user.displayName ||
+      user.email ||
+      "Teacher",
+    updatedAt: serverTimestamp()
+  };
 
-  const originalText = saveButton?.textContent;
+  const buttons = [$("eqSaveDraft"), $("eqPublish")];
+  buttons.forEach(b => b.disabled = true);
 
-  if (saveDraftButton) saveDraftButton.disabled = true;
-  if (publishQuizButton) publishQuizButton.disabled = true;
-
-  if (saveButton) {
-    saveButton.textContent = "Saving...";
-  }
+  message("Saving quiz…");
 
   try {
-    const batch = writeBatch(db);
+    let quizId = editingQuizId;
 
-    const quizRef = doc(collection(db, "quizzes"));
+    if (quizId) {
+      const old = quizzes.find(q => q.id === quizId);
 
-    const quizData = {
-      title,
-      description,
-      lessonId,
-      lessonName: lesson.title || "Untitled Lesson",
+      payload.createdBy = old?.createdBy || user.uid;
+      payload.createdAt = old?.createdAt || serverTimestamp();
 
-      sectionIds,
+      await updateDoc(doc(db, "quizzes", quizId), payload);
 
-      type: mode,
-      status,
+    } else {
+      payload.createdAt = serverTimestamp();
 
-      quizUrl: mode === "external" ? externalUrl : "",
-
-      passingScore: passing,
-      timeLimit: time,
-      attemptLimit: attempts,
-
-      availableAt: available || null,
-      dueDate: due || null,
-
-      shuffleQuestions: Boolean(shuffleQuestions?.checked),
-      shuffleChoices: Boolean(shuffleChoices?.checked),
-
-      totalQuestions: mode === "native" ? stagedQuestions.length : 0,
-      totalPoints,
-
-      createdBy: currentUser.uid,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    };
-
-    batch.set(quizRef, quizData);
-
-    // Save native questions and answer keys separately.
-    if (mode === "native") {
-      stagedQuestions.forEach((item, index) => {
-        const questionRef = doc(
-          collection(db, "quizQuestions")
-        );
-
-        const answerKeyRef = doc(
-          collection(db, "quizAnswerKeys")
-        );
-
-        batch.set(questionRef, {
-          quizId: quizRef.id,
-          order: index + 1,
-          type: item.type,
-          question: item.question,
-          choices: item.choices,
-          points: item.points,
-          createdAt: serverTimestamp()
-        });
-
-        batch.set(answerKeyRef, {
-          quizId: quizRef.id,
-          questionId: questionRef.id,
-          correctAnswer: item.correctAnswer,
-          createdAt: serverTimestamp()
-        });
-      });
+      const ref = await addDoc(collection(db, "quizzes"), payload);
+      quizId = ref.id;
     }
 
-    await batch.commit();
+    if (type === "native") {
+      await replaceQuizQuestions(quizId, staged);
+    } else {
+      await replaceQuizQuestions(quizId, []);
+    }
 
-    showMessage(
+    await loadQuizzes();
+    renderQuizList();
+
+    message(
       status === "active"
         ? "Quiz published successfully."
-        : "Quiz saved as draft.",
+        : "Quiz draft saved successfully.",
       "success"
     );
 
-    resetBuilder();
-
-    await loadMyQuizzes();
+    setTimeout(closeQuizEditor, 500);
 
   } catch (error) {
-    console.error("Quiz save error:", error);
-
-    showMessage(
-      "Unable to save quiz: " + error.message,
-      "error"
-    );
+    console.error("[EQUALLEARN QUIZ] Save failed", error);
+    message(error.message || "Unable to save quiz.", "error");
 
   } finally {
-    isSaving = false;
-
-    if (saveDraftButton) saveDraftButton.disabled = false;
-    if (publishQuizButton) publishQuizButton.disabled = false;
-
-    if (saveButton) {
-      saveButton.textContent = originalText || "Save";
-    }
+    buttons.forEach(b => b.disabled = false);
   }
 }
 
-// =====================================================
-// LOAD CREATED QUIZZES
-// =====================================================
+async function replaceQuizQuestions(quizId, questions) {
+  const oldQ = await getDocs(
+    query(collection(db, "quizQuestions"), where("quizId", "==", quizId))
+  );
 
-async function loadMyQuizzes() {
-  if (!myQuizzes || !currentUser) return;
+  const oldA = await getDocs(
+    query(collection(db, "quizAnswerKeys"), where("quizId", "==", quizId))
+  );
 
-  myQuizzes.innerHTML = "<p>Loading quizzes...</p>";
-
-  try {
-    let snapshot;
-
-    if (currentRole === "admin") {
-      // Admin can list all quizzes.
-      snapshot = await getDocs(
-        collection(db, "quizzes")
-      );
-    } else {
-      // Teachers can only list quizzes they created.
-      snapshot = await getDocs(
-        query(
-          collection(db, "quizzes"),
-          where("createdBy", "==", currentUser.uid)
-        )
-      );
-    }
-
-    const quizDocuments = snapshot.docs.map((item) => ({
-      id: item.id,
-      ...item.data()
-    }));
-
-    quizDocuments.sort((a, b) => {
-      const dateA = a.createdAt?.seconds || 0;
-      const dateB = b.createdAt?.seconds || 0;
-
-      return dateB - dateA;
-    });
-
-    myQuizzes.innerHTML = "";
-
-    if (!quizDocuments.length) {
-      myQuizzes.innerHTML = "<p>No quizzes created yet.</p>";
-      return;
-    }
-
-    quizDocuments.forEach((quiz) => {
-      const card = document.createElement("div");
-      card.className = "quiz-card";
-
-      const heading = document.createElement("h3");
-      heading.textContent = quiz.title || "Untitled Quiz";
-
-      const lesson = document.createElement("p");
-      lesson.textContent =
-        "Lesson: " + (quiz.lessonName || "Unknown Lesson");
-
-      const type = document.createElement("p");
-      type.textContent =
-        "Type: " + (quiz.type || "native").toUpperCase();
-
-      const status = document.createElement("p");
-      status.textContent =
-        "Status: " + (quiz.status || "draft").toUpperCase();
-
-      const sectionsText = document.createElement("p");
-
-      const assignedNames = (quiz.sectionIds || []).map((id) => {
-        const section = sections.find((item) => item.id === id);
-        return section ? getSectionName(section) : id;
-      });
-
-      sectionsText.textContent =
-        "Sections: " + (assignedNames.join(", ") || "None");
-
-      const count = document.createElement("p");
-      count.textContent =
-        "Questions: " + (quiz.totalQuestions || 0);
-
-      const remove = document.createElement("button");
-      remove.type = "button";
-      remove.textContent = "Delete Quiz";
-      remove.className = "delete-quiz";
-
-      remove.addEventListener("click", () => {
-        deleteQuiz(quiz.id, quiz.createdBy);
-      });
-
-      card.append(
-        heading,
-        lesson,
-        type,
-        status,
-        sectionsText,
-        count,
-        remove
-      );
-
-      myQuizzes.appendChild(card);
-    });
-
-  } catch (error) {
-    console.error("Quiz listing error:", error);
-
-    myQuizzes.innerHTML =
-      "<p>Unable to load quizzes. Check Firestore permissions.</p>";
-  }
-}
-
-// =====================================================
-// DELETE QUIZ
-// =====================================================
-
-async function deleteQuiz(quizId, createdBy) {
-  if (
-    currentRole !== "admin" &&
-    createdBy !== currentUser?.uid
-  ) {
-    showMessage("You can only delete quizzes you created.", "error");
-    return;
-  }
-
-  if (!confirm("Delete this quiz and its questions?")) {
-    return;
-  }
-
-  try {
-    const [questionsSnapshot, keysSnapshot] = await Promise.all([
-      getDocs(
-        query(
-          collection(db, "quizQuestions"),
-          where("quizId", "==", quizId)
-        )
-      ),
-      getDocs(
-        query(
-          collection(db, "quizAnswerKeys"),
-          where("quizId", "==", quizId)
-        )
-      )
-    ]);
-
-    const documents = [
-      ...questionsSnapshot.docs,
-      ...keysSnapshot.docs
-    ];
-
-    // Firestore batches support up to 500 operations.
-    for (let i = 0; i < documents.length; i += 450) {
-      const batch = writeBatch(db);
-
-      documents.slice(i, i + 450).forEach((item) => {
-        batch.delete(item.ref);
-      });
-
-      await batch.commit();
-    }
-
-    const quizBatch = writeBatch(db);
-
-    quizBatch.delete(doc(db, "quizzes", quizId));
-
-    await quizBatch.commit();
-
-    showMessage("Quiz deleted successfully.", "success");
-
-    await loadMyQuizzes();
-
-  } catch (error) {
-    console.error("Quiz deletion error:", error);
-
-    showMessage(
-      "Unable to delete quiz: " + error.message,
-      "error"
-    );
-  }
-}
-
-// =====================================================
-// RESET BUILDER
-// =====================================================
-
-function resetBuilder() {
-  const fields = [
-    "quizTitle",
-    "quizDescription",
-    "externalQuizUrl",
-    "availableAt",
-    "dueDate"
+  const deletions = [
+    ...oldQ.docs.map(d => d.ref),
+    ...oldA.docs.map(d => d.ref)
   ];
 
-  fields.forEach((id) => {
-    const field = $(id);
-    if (field) field.value = "";
-  });
+  for (let i = 0; i < deletions.length; i += 450) {
+    const batch = writeBatch(db);
 
-  if (lessonSelect) lessonSelect.value = "";
+    deletions
+      .slice(i, i + 450)
+      .forEach(ref => batch.delete(ref));
 
-  if (passingScore) passingScore.value = "60";
-  if (timeLimit) timeLimit.value = "0";
-  if (attemptLimit) attemptLimit.value = "1";
+    await batch.commit();
+  }
 
-  if (shuffleQuestions) shuffleQuestions.checked = false;
-  if (shuffleChoices) shuffleChoices.checked = false;
+  for (let i = 0; i < questions.length; i += 200) {
+    const batch = writeBatch(db);
 
-  if (sectionList) {
-    sectionList
-      .querySelectorAll('input[name="quizSections"]')
-      .forEach((checkbox) => {
-        checkbox.checked = false;
+    questions.slice(i, i + 200).forEach((q, offset) => {
+      const order = i + offset + 1;
+      const qRef = doc(collection(db, "quizQuestions"));
+
+      const choices = q.type === "true-false"
+        ? ["True", "False"]
+        : q.choices.map(String);
+
+      batch.set(qRef, {
+        quizId,
+        order,
+        type: q.type,
+        question: q.question.trim(),
+        choices,
+        points: Math.max(1, Number(q.points) || 1),
+        createdAt: serverTimestamp()
       });
-  }
 
-  stagedQuestions = [];
+      batch.set(doc(collection(db, "quizAnswerKeys")), {
+        quizId,
+        questionId: qRef.id,
+        correctAnswer: q.correctAnswer,
+        createdAt: serverTimestamp()
+      });
+    });
 
-  resetQuestionFields();
-  renderStagedQuestions();
-  updateSelectedSectionCount();
-
-  if (quizMode) {
-    quizMode.value = "native";
-    updateQuizMode();
-  }
-
-  if (questionType) {
-    questionType.value = "multiple_choice";
-    updateQuestionType();
+    await batch.commit();
   }
 }
 
-// =====================================================
-// MESSAGES
-// =====================================================
-
-function showMessage(message, type = "info") {
-  console.log(`[Quiz Builder] ${message}`);
-
-  if (!builderMessage) {
-    if (type === "error") {
-      alert(message);
-    }
+async function setQuizStatus(quiz, status) {
+  if (!confirm(`${status === "archived" ? "Archive" : "Restore"} “${quiz.title}”?`)) {
     return;
   }
 
-  builderMessage.textContent = message;
-  builderMessage.className = `builder-message ${type}`;
-  builderMessage.style.display = "block";
+  try {
+    await updateDoc(doc(db, "quizzes", quiz.id), {
+      status,
+      updatedAt: serverTimestamp()
+    });
 
-  builderMessage.scrollIntoView({
-    behavior: "smooth",
-    block: "nearest"
-  });
+    await loadQuizzes();
+    renderQuizList();
+
+  } catch (e) {
+    alert(e.message || "Could not update quiz.");
+  }
 }
 
-// =====================================================
-// INITIAL UI
-// =====================================================
+async function deleteQuiz(quiz) {
+  if (!confirm(`Permanently delete “${quiz.title}” and its questions? This cannot be undone.`)) {
+    return;
+  }
 
-renderStagedQuestions();
-updateQuestionType();
-updateQuizMode();
+  try {
+    await replaceQuizQuestions(quiz.id, []);
+    await deleteDoc(doc(db, "quizzes", quiz.id));
+
+    await loadQuizzes();
+    renderQuizList();
+
+  } catch (e) {
+    alert(e.message || "Could not delete quiz.");
+  }
+}
+
+function closeQuizEditor() {
+  editor.hidden = true;
+  editingQuizId = null;
+  staged = [];
+  form.reset();
+  $("eqQuestions").replaceChildren();
+}
+
+function message(text, type = "") {
+  const el = $("eqMessage");
+  el.textContent = text;
+  el.className = type;
+}
+
+function sectionLabel(s) {
+  const course = s.program || s.course || s.programName || s.courseName || "";
+  const year = s.yearLevel || s.year || s.level || "";
+  const name = s.sectionName || s.name || s.code || s.section || "";
+
+  return [
+    course,
+    year ? `Year ${year}` : "",
+    name
+  ].filter(Boolean).join(" • ") || `Section ${s.id}`;
+}
+
+function pill(parent, text) {
+  const span = document.createElement("span");
+  span.className = "pill";
+  span.textContent = text;
+  parent.append(span);
+}
+
+function actionButton(text, handler, cls = "light") {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = cls;
+  b.textContent = text;
+  b.addEventListener("click", handler);
+  return b;
+}
+
+function validUrl(value) {
+  try {
+    const u = new URL(String(value || "").trim());
+    return ["http:", "https:"].includes(u.protocol) ? u.href : "";
+  } catch {
+    return "";
+  }
+}
+
+function parseDate(value) {
+  if (!value) return null;
+
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function dateInput(value) {
+  if (!value) return "";
+
+  const d = typeof value.toDate === "function"
+    ? value.toDate()
+    : new Date(value);
+
+  if (Number.isNaN(d.getTime())) return "";
+
+  return new Date(
+    d.getTime() - d.getTimezoneOffset() * 60000
+  ).toISOString().slice(0, 16);
+}
+
+function dateValue(value) {
+  if (!value) return 0;
+
+  if (typeof value.toMillis === "function") {
+    return value.toMillis();
+  }
+
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? 0 : d.getTime();
+}
+
+function clamp(value, min, max, fallback) {
+  const n = Number(value);
+
+  return Number.isFinite(n)
+    ? Math.min(max, Math.max(min, n))
+    : fallback;
+}
+
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, c => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[c]));
+}

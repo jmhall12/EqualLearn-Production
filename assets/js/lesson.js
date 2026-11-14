@@ -94,13 +94,9 @@ async function loadLessons() {
       moduleId
     );
 
-    // Do not filter by status == active here.
-    // The current Add Lesson code does not create
-    // a status field for newly added lessons.
-
     const q = query(
       collection(db, "lessons"),
-      where("moduleId", "==", moduleId)
+      where("status", "==", "active")
     );
 
     const snapshot = await getDocs(q);
@@ -110,7 +106,14 @@ async function loadLessons() {
       snapshot.size
     );
 
-    if (snapshot.empty) {
+    const lessonItems = snapshot.docs
+      .map((item) => ({
+        id: item.id,
+        ...item.data()
+      }))
+      .filter((lesson) => lesson.moduleId === moduleId);
+
+    if (!lessonItems.length) {
       container.innerHTML = `
         <div class="lesson-empty">
           <h3>No Lessons Available</h3>
@@ -119,11 +122,6 @@ async function loadLessons() {
       `;
       return;
     }
-
-    const lessonItems = snapshot.docs.map((item) => ({
-      id: item.id,
-      ...item.data()
-    }));
 
     lessonItems.sort((a, b) => {
       return (

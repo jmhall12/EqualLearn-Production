@@ -758,6 +758,12 @@ saveLesson?.addEventListener("click", async () => {
       fileSize,
 
       videoUrl: youtube,
+      status: "active",
+      reviewStatus: "approved",
+      sectionIds: Array.isArray(selectedModule.sectionIds) ? selectedModule.sectionIds : [],
+      createdBy: currentUser.uid,
+      createdByRole: currentRole,
+      createdByName: currentUser.displayName || currentUser.email || "Teacher",
       updatedAt: serverTimestamp()
     };
 
@@ -808,46 +814,34 @@ saveLesson?.addEventListener("click", async () => {
         collection(db, "lessons"),
         {
           ...payload,
-          createdBy: currentUser.uid,
           createdAt: serverTimestamp()
         }
       );
 
-      // ========================================
-// NOTIFY STUDENTS ABOUT NEW LESSON
-// ========================================
+      const targetSectionIds = Array.isArray(selectedModule.sectionIds)
+        ? selectedModule.sectionIds
+        : [];
 
-if (
-    selectedModule.status === "active" &&
-    Array.isArray(selectedModule.sectionIds) &&
-    selectedModule.sectionIds.length > 0
-) {
-    try {
-        const notificationResult = await notifySectionStudents({
+      if (targetSectionIds.length > 0) {
+        try {
+          const notificationResult = await notifySectionStudents({
             db,
             auth,
-            sectionIds: selectedModule.sectionIds,
+            sectionIds: targetSectionIds,
             contentType: "lesson",
             contentId: created.id,
             contentTitle: titleValue,
-            teacherName:
-                currentUser.displayName ||
-                currentUser.email ||
-                "Your teacher"
-        });
+            teacherName: currentUser.displayName || currentUser.email || "Your teacher",
+            targetUrl: selectedModule?.id
+              ? `lesson.html?module=${encodeURIComponent(selectedModule.id)}`
+              : "modules.html"
+          });
 
-        console.info(
-            "LESSON NOTIFICATIONS:",
-            notificationResult
-        );
-
-    } catch (notificationError) {
-        console.error(
-            "LESSON NOTIFICATION ERROR:",
-            notificationError
-        );
-    }
-}
+          console.info("LESSON NOTIFICATIONS:", notificationResult);
+        } catch (notificationError) {
+          console.error("LESSON NOTIFICATION ERROR:", notificationError);
+        }
+      }
 
       lessons.unshift({
         id: created.id,

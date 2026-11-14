@@ -187,9 +187,7 @@ async function findTeacherAssignment(student) {
                 `${classGroupId}_${yearLevel}`
             );
 
-            const assignmentSnapshot = await getDoc(
-                assignmentRef
-            );
+            const assignmentSnapshot = await getDoc(assignmentRef);
 
             if (assignmentSnapshot.exists()) {
                 assignment = assignmentSnapshot.data();
@@ -208,7 +206,6 @@ async function findTeacherAssignment(student) {
             `${course}-${yearLevel}`;
 
         setText(studentSection, section);
-
         setText(
             studentTeacher,
             assignment.teacherName || "Not yet assigned"
@@ -361,11 +358,15 @@ function listenToNotifications(uid) {
 
                 snapshot.docChanges().forEach(change => {
 
-                    if (change.type === "added") {
-                        showNewNotificationToast({
+                    if (change.type === "added" || change.type === "modified") {
+                        const data = {
                             id: change.doc.id,
                             ...change.doc.data()
-                        });
+                        };
+
+                        if (data.read !== true) {
+                            showNewNotificationToast(data);
+                        }
                     }
 
                 });
@@ -472,10 +473,8 @@ function renderNotifications(notifications) {
 
         notification.append(title, message, time);
 
-        if (data.read !== true) {
-
-            notification.addEventListener("click", async () => {
-
+        notification.addEventListener("click", async () => {
+            if (data.read !== true) {
                 notification.disabled = true;
 
                 try {
@@ -495,16 +494,56 @@ function renderNotifications(notifications) {
                         "MARK NOTIFICATION READ ERROR:",
                         error
                     );
+                    return;
                 }
+            }
 
-            });
-
-        }
+            redirectToNotification(data);
+        });
 
         fragment.appendChild(notification);
     });
 
     notificationList.appendChild(fragment);
+}
+
+function redirectToNotification(data) {
+    const targetUrl =
+        typeof data?.targetUrl === "string" && data.targetUrl.trim()
+            ? data.targetUrl.trim()
+            : buildNotificationTargetUrl(data);
+
+    if (!targetUrl) return;
+
+    try {
+        const parsed = new URL(targetUrl, window.location.href);
+        window.location.assign(parsed.href);
+    } catch (error) {
+        console.warn("Notification navigation failed:", error);
+    }
+}
+
+function buildNotificationTargetUrl(data) {
+    const contentType = data?.contentType;
+    const contentId = data?.contentId;
+
+    if (!contentType) return "";
+
+    const safeId = String(contentId || "").trim();
+
+    if (contentType === "module") {
+        return safeId ? `lesson.html?module=${encodeURIComponent(safeId)}` : "modules.html";
+    }
+
+    if (contentType === "lesson") {
+        return safeId ? `modules.html?openLesson=${encodeURIComponent(safeId)}` : "modules.html";
+    }
+
+    if (contentType === "live") {
+        return "live.html";
+    }
+
+    return "modules.html";
 }
 
 // ======================================================
@@ -561,6 +600,10 @@ function showNewNotificationToast(data) {
     time.style.opacity = ".65";
 
     toast.append(heading, message, time);
+
+    toast.addEventListener("click", () => {
+        redirectToNotification(data);
+    });
 
     document.body.appendChild(toast);
 

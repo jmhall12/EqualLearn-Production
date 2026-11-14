@@ -2,1468 +2,242 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#0b1020">
-
-<title>EqualLearn | Module Management</title>
-
-<link rel="manifest" href="../manifest.webmanifest">
-<link rel="stylesheet" href="../assets/css/style.css">
-<link rel="stylesheet" href="../assets/css/equallearn.css">
-<link rel="icon" href="../assets/icons/equallearn-logo.png">
-
-<style>
-:root {
-  --primary: #756bff;
-  --primary-dark: #635bff;
-  --bg: #0b1020;
-  --surface: #111a2e;
-  --surface-2: #18243b;
-  --input-bg: #0b1427;
-  --text: #f8fafc;
-  --muted: #aab7d0;
-  --border: #263550;
-  --purple-bg: #25204d;
-  --purple-text: #c5beff;
-  --green: #86efac;
-  --orange: #fcd879;
-  --red: #ffb7c0;
-  --shadow: 0 8px 30px rgba(0,0,0,.18);
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  background: var(--bg) !important;
-  color: var(--text) !important;
-  font-family: inherit;
-}
-
-button,
-input,
-select,
-textarea {
-  font: inherit;
-}
-
-button {
-  cursor: pointer;
-}
-
-.page {
-  min-height: 100vh;
-  padding: 28px 22px 60px;
-  background: transparent;
-}
-
-.container {
-  max-width: 1250px;
-  margin: auto;
-}
-
-/* HEADER */
-
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 26px;
-}
-
-.header-left h1 {
-  font-size: 30px;
-  margin: 0;
-  font-weight: 800;
-  color: #ffffff !important;
-}
-
-.header-left p {
-  color: var(--muted) !important;
-  margin: 7px 0 0;
-}
-
-.header-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.btn {
-  border: 0;
-  border-radius: 11px;
-  padding: 12px 17px;
-  font-weight: 700;
-  transition: .2s;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #635bff, #8b5cf6) !important;
-  color: #fff !important;
-}
-
-.btn-primary:hover {
-  filter: brightness(1.12);
-  transform: translateY(-1px);
-}
-
-.btn-light {
-  background: var(--surface-2) !important;
-  color: #e5eaff !important;
-  border: 1px solid var(--border) !important;
-}
-
-/* STATISTICS */
-
-.stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.stat-card {
-  background: var(--surface) !important;
-  color: var(--text) !important;
-  padding: 20px;
-  border-radius: 17px;
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border) !important;
-}
-
-.stat-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #dce5f5 !important;
-}
-
-.stat-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 13px;
-  display: grid;
-  place-items: center;
-  font-size: 20px;
-  background: var(--purple-bg) !important;
-  color: var(--purple-text) !important;
-}
-
-.stat-number {
-  font-size: 28px;
-  font-weight: 800;
-  margin-top: 13px;
-  color: #ffffff !important;
-}
-
-.stat-label {
-  color: var(--muted) !important;
-  font-size: 13px;
-  margin-top: 4px;
-}
-
-/* MODULE PANEL */
-
-.panel {
-  background: var(--surface) !important;
-  color: var(--text) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: 18px;
-  padding: 21px;
-  box-shadow: var(--shadow);
-  margin-bottom: 20px;
-}
-
-.panel-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 17px;
-}
-
-.panel-heading h2 {
-  margin: 0;
-  font-size: 18px;
-  color: #ffffff !important;
-}
-
-.panel-heading p {
-  color: var(--muted) !important;
-  font-size: 13px;
-  margin: 5px 0 0;
-}
-
-/* SEARCH AND FILTERS */
-
-.toolbar {
-  display: grid;
-  grid-template-columns: minmax(220px,1fr) 180px 180px;
-  gap: 10px;
-  margin-bottom: 17px;
-}
-
-.toolbar input,
-.toolbar select {
-  min-height: 43px;
-  min-width: 0;
-  border: 1px solid #30415f !important;
-  border-radius: 10px;
-  padding: 10px 13px;
-  background: var(--input-bg) !important;
-  color: #f8fafc !important;
-}
-
-.toolbar input::placeholder {
-  color: #8291aa !important;
-}
-
-.toolbar select option {
-  background: var(--surface);
-  color: #ffffff;
-}
-
-.toolbar input:focus,
-.toolbar select:focus {
-  outline: none;
-  border-color: var(--primary) !important;
-  box-shadow: 0 0 0 3px rgba(99,91,255,.18);
-}
-
-/* MODULE CARDS */
-
-.module-card {
-  background: var(--surface-2) !important;
-  color: var(--text) !important;
-  border: 1px solid #30415f !important;
-  border-radius: 16px;
-  padding: 21px;
-  margin-bottom: 15px;
-  transition: .2s;
-}
-
-.module-card:hover {
-  border-color: #635bff !important;
-  box-shadow: var(--shadow);
-  transform: translateY(-2px);
-}
-
-.module-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 15px;
-}
-
-.module-title {
-  font-size: 19px;
-  font-weight: 800;
-  margin: 0;
-  color: #ffffff !important;
-}
-
-.module-description {
-  color: #cbd5e1 !important;
-  line-height: 1.6;
-  margin: 10px 0;
-}
-
-.status {
-  padding: 6px 11px;
-  border-radius: 30px;
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.status.active {
-  background: #163b35 !important;
-  color: #86efac !important;
-}
-
-.status.draft {
-  background: #453719 !important;
-  color: #fcd879 !important;
-}
-
-.status.archived {
-  background: #30394d !important;
-  color: #cbd5e1 !important;
-}
-
-.module-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 9px;
-  margin-top: 14px;
-}
-
-.meta-item {
-  background: #202b43 !important;
-  padding: 7px 11px;
-  border-radius: 8px;
-  font-size: 12px;
-  color: #cbd5e1 !important;
-  border: 1px solid #30415f;
-}
-
-.module-actions {
-  display: flex;
-  gap: 9px;
-  margin-top: 16px;
-}
-
-.module-actions button {
-  flex: 1;
-  padding: 10px;
-  border: 0;
-  border-radius: 9px;
-  font-weight: 700;
-}
-
-.edit-btn {
-  background: #25204d !important;
-  color: #c5beff !important;
-}
-
-.delete-btn {
-  background: #44202b !important;
-  color: #ffb7c0 !important;
-}
-
-.archive-btn {
-  background: #263550 !important;
-  color: #dce5f5 !important;
-}
-
-.module-actions button:hover {
-  filter: brightness(1.15);
-}
-
-.file-link {
-  display: block;
-  background: #202044 !important;
-  border: 1px solid #39336f;
-  border-radius: 11px;
-  padding: 13px;
-  margin-top: 13px;
-  color: #c5beff !important;
-  text-decoration: none;
-  overflow-wrap: anywhere;
-}
-
-/* EMPTY AND LOADING */
-
-.empty,
-.loading {
-  background: var(--surface-2) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: 15px;
-  padding: 35px;
-  text-align: center;
-  color: var(--muted) !important;
-}
-
-/* MODAL */
-
-.modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(3,7,18,.78);
-  z-index: 9999;
-  justify-content: center;
-  align-items: center;
-  padding: 16px;
-}
-
-.modal.show {
-  display: flex;
-}
-
-.modal-content {
-  width: 100%;
-  max-width: 760px;
-  max-height: 94vh;
-  overflow-y: auto;
-  background: var(--surface) !important;
-  color: var(--text) !important;
-  border: 1px solid #30415f !important;
-  border-radius: 20px;
-  padding: 25px;
-  box-shadow: 0 20px 70px rgba(0,0,0,.45);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 23px;
-}
-
-.modal-header h2 {
-  margin: 0;
-  font-size: 23px;
-  color: #ffffff !important;
-}
-
-.close-btn {
-  width: 38px;
-  height: 38px;
-  border: 0;
-  border-radius: 50%;
-  background: var(--purple-bg) !important;
-  color: #ffffff !important;
-  font-size: 22px;
-}
-
-.form-section {
-  padding: 18px 0;
-  border-top: 1px solid var(--border);
-}
-
-.form-section h3 {
-  font-size: 15px;
-  margin: 0 0 15px;
-  color: #ffffff !important;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-}
-
-.form-group {
-  margin-bottom: 15px;
-}
-
-.form-group label {
-  display: block;
-  color: #e5ecf8 !important;
-  font-weight: 700;
-  font-size: 13px;
-  margin-bottom: 7px;
-}
-
-.form-group input,
-.form-group textarea,
-.form-group select {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #30415f !important;
-  border-radius: 10px;
-  background: var(--input-bg) !important;
-  color: #f8fafc !important;
-  outline: none;
-}
-
-.form-group input::placeholder,
-.form-group textarea::placeholder {
-  color: #8291aa !important;
-}
-
-.form-group select option {
-  background: var(--surface);
-  color: #ffffff;
-}
-
-.form-group input:focus,
-.form-group textarea:focus,
-.form-group select:focus {
-  border-color: var(--primary) !important;
-  box-shadow: 0 0 0 3px rgba(99,91,255,.18);
-}
-
-.form-group textarea {
-  min-height: 90px;
-  resize: vertical;
-}
-
-.help {
-  font-size: 11px;
-  color: var(--muted) !important;
-  margin-top: 6px;
-  line-height: 1.5;
-}
-
-/* CLASS ASSIGNMENT */
-
-.assignment-box {
-  border: 1px solid var(--border) !important;
-  border-radius: 13px;
-  padding: 15px;
-  background: var(--surface-2) !important;
-}
-
-.assignment-note {
-  background: var(--purple-bg) !important;
-  color: var(--purple-text) !important;
-  padding: 11px;
-  border-radius: 9px;
-  font-size: 12px;
-  line-height: 1.5;
-  margin-bottom: 13px;
-}
-
-.class-selection {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.class-option {
-  display: flex;
-  gap: 9px;
-  align-items: center;
-  padding: 11px;
-  background: #202b43 !important;
-  border: 1px solid #30415f !important;
-  border-radius: 9px;
-  font-size: 13px;
-  color: #e5ecf8 !important;
-}
-
-.class-option input {
-  accent-color: var(--primary);
-}
-
-/* FILE UPLOAD */
-
-.file-help {
-  font-size: 12px;
-  color: var(--muted) !important;
-  margin-top: 7px;
-}
-
-#selectedFile,
-#existingFile {
-  display: none;
-  padding: 12px;
-  margin-top: 10px;
-  background: var(--purple-bg) !important;
-  color: #e5e1ff !important;
-  border-radius: 10px;
-  overflow-wrap: anywhere;
-}
-
-#existingFile a {
-  color: #a99fff !important;
-}
-
-#uploadProgress {
-  display: none;
-  margin-top: 15px;
-}
-
-.progress-container {
-  background: #263550;
-  height: 9px;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-#progressBar {
-  background: var(--primary);
-  width: 0%;
-  height: 100%;
-  transition: .2s;
-}
-
-#progressText {
-  font-size: 12px;
-  color: var(--muted) !important;
-}
-
-/* MESSAGE */
-
-#message {
-  margin-top: 13px;
-  font-size: 13px;
-  padding: 11px;
-  border-radius: 9px;
-}
-
-.message.success {
-  background: #163b35 !important;
-  color: #a7f3d0 !important;
-}
-
-.message.error {
-  background: #44202b !important;
-  color: #ffb7c0 !important;
-}
-
-/* MODAL FOOTER */
-
-.modal-footer {
-  display: flex;
-  gap: 10px;
-  margin-top: 18px;
-}
-
-.modal-footer button {
-  flex: 1;
-}
-
-.save-btn {
-  background: linear-gradient(135deg, #635bff, #8b5cf6) !important;
-  color: #fff !important;
-}
-
-.cancel-btn {
-  background: #263550 !important;
-  color: #e5ecf8 !important;
-}
-
-button:disabled {
-  opacity: .55;
-  cursor: not-allowed;
-}
-
-/* MODULE META CHIPS */
-
-.module-meta-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-  margin: 12px 0;
-}
-
-.module-meta-chips span {
-  display: inline-flex;
-  align-items: center;
-  padding: 5px 9px;
-  border: 1px solid #30415f !important;
-  border-radius: 999px;
-  background: #202b43 !important;
-  color: #cbd5e1 !important;
-  font-size: 12px;
-  font-weight: 650;
-}
-
-.module-deadline {
-  margin: 8px 0;
-  color: #fcd879 !important;
-  font-size: 13px;
-  font-weight: 650;
-}
-
-/* LEARNING RESOURCES */
-
-.resource-toolbar {
-  display: grid;
-  grid-template-columns: repeat(auto-fit,minmax(105px,1fr));
-  gap: 10px;
-  margin: 14px 0 12px;
-}
-
-.resource-tile {
-  display: flex;
-  min-height: 88px;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  border: 1px solid #30415f !important;
-  border-radius: 13px;
-  background: var(--surface-2) !important;
-  color: #e5ecf8 !important;
-  font-size: 12px;
-  font-weight: 700;
-  transition: .18s;
-}
-
-.resource-tile:hover {
-  border-color: var(--primary) !important;
-  background: #202044 !important;
-  transform: translateY(-2px);
-}
-
-.resource-icon {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  border-radius: 10px;
-  background: var(--purple-bg) !important;
-  color: var(--purple-text) !important;
-  font-size: 20px;
-  font-weight: 900;
-}
-
-.resource-icon.record {
-  background: #44202b !important;
-  color: #ffb7c0 !important;
-}
-
-.resource-icon.drive,
-.resource-icon.sheets {
-  background: #163b35 !important;
-  color: #86efac !important;
-}
-
-.resource-icon.forms {
-  background: #25204d !important;
-  color: #c5beff !important;
-}
-
-.resource-icon.drawings {
-  background: #453719 !important;
-  color: #fcd879 !important;
-}
-
-.resource-icon.slides {
-  background: #45321e !important;
-  color: #fdba74 !important;
-}
-
-.resource-icon.docs {
-  background: #1d3454 !important;
-  color: #93c5fd !important;
-}
-
-.resource-icon.pdf {
-  background: #44202b !important;
-  color: #ffb7c0 !important;
-  font-size: 11px;
-}
-
-.resource-icon.camera,
-.resource-icon.photo {
-  background: #263550 !important;
-  color: #dce5f5 !important;
-}
-
-.resource-links-list {
-  display: grid;
-  gap: 8px;
-  margin: 12px 0;
-}
-
-.resource-link-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 10px 12px;
-  background: #202b43 !important;
-  border: 1px solid #30415f !important;
-  border-radius: 10px;
-  font-size: 12px;
-  color: #e5ecf8 !important;
-  overflow-wrap: anywhere;
-}
-
-.resource-link-row button {
-  border: 0;
-  border-radius: 7px;
-  background: #44202b !important;
-  color: #ffb7c0 !important;
-  padding: 6px 9px;
-  font-weight: 700;
-}
-
-.youtube-input-wrap {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px dashed var(--border);
-}
-
-/* RESPONSIVE */
-
-@media(max-width:760px) {
-  .toolbar {
-    grid-template-columns: 1fr;
-  }
-
-  .stats {
-    grid-template-columns: repeat(2,minmax(0,1fr));
-  }
-}
-
-@media(max-width:750px) {
-  .header {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .header-actions {
-    width: 100%;
-  }
-
-  .header-actions button {
-    flex: 1;
-  }
-
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media(max-width:480px) {
-  .page {
-    padding: 18px 12px 40px;
-  }
-
-  .stats {
-    gap: 9px;
-  }
-
-  .stat-card {
-    padding: 14px;
-  }
-
-  .stat-number {
-    font-size: 23px;
-  }
-
-  .class-selection {
-    grid-template-columns: 1fr;
-  }
-
-  .module-actions {
-    flex-direction: column;
-  }
-
-  .modal-content {
-    padding: 18px;
-  }
-
-  .resource-toolbar {
-    grid-template-columns: repeat(3,minmax(0,1fr));
-  }
-
-  .resource-tile {
-    min-height: 78px;
-  }
-}
-
-
-/* ADMIN MODULE REVIEW */
-
-.review-panel {
-  background: var(--surface) !important;
-  color: var(--text) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: 18px;
-  padding: 21px;
-  box-shadow: var(--shadow);
-  margin-bottom: 20px;
-}
-
-.review-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 17px;
-}
-
-.review-heading h2 {
-  margin: 0;
-  font-size: 18px;
-  color: #fff !important;
-}
-
-.review-heading p {
-  color: var(--muted) !important;
-  font-size: 13px;
-  margin: 5px 0 0;
-}
-
-.review-count {
-  padding: 7px 12px;
-  border-radius: 30px;
-  background: #453719 !important;
-  color: #fcd879 !important;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.review-card {
-  padding: 18px;
-  border: 1px solid #65532b !important;
-  border-radius: 14px;
-  background: #252719 !important;
-  margin-bottom: 12px;
-}
-
-.review-card h3 {
-  color: #fff !important;
-  margin: 0 0 8px;
-  font-size: 16px;
-}
-
-.review-card p {
-  color: #d4d8c5 !important;
-  font-size: 13px;
-  line-height: 1.6;
-  margin: 7px 0;
-}
-
-.review-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.review-meta span {
-  padding: 6px 9px;
-  border-radius: 8px;
-  background: #353a2b !important;
-  color: #e4e8d6 !important;
-  font-size: 11px;
-}
-
-.review-actions {
-  display: flex;
-  gap: 9px;
-  flex-wrap: wrap;
-  margin-top: 16px;
-}
-
-.review-actions button {
-  flex: 1;
-  min-width: 110px;
-  padding: 11px 14px;
-  border: 0;
-  border-radius: 9px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.review-approve {
-  background: #166344 !important;
-  color: #bbf7d0 !important;
-}
-
-.review-reject {
-  background: #572a35 !important;
-  color: #fecdd3 !important;
-}
-
-.review-actions button:hover {
-  filter: brightness(1.15);
-}
-
-.review-empty {
-  padding: 25px;
-  border: 1px dashed var(--border);
-  border-radius: 12px;
-  text-align: center;
-  color: var(--muted) !important;
-  font-size: 13px;
-}
-
-@media(max-width:480px) {
-  .review-actions {
-    flex-direction: column;
-  }
-
-  .review-actions button {
-    width: 100%;
-  }
-}
-
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#171821">
+  <title>Teaching Workspace | EqualLearn</title>
+
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/equallearn.css">
+
+  <style>
+    :root {
+      --bg:#171821;--card:#222330;--border:rgba(255,255,255,.08);
+      --text:#f5f3ff;--muted:#a5a3b8;--purple:#8068f4;
+    }
+    .tm-page{min-height:100vh;padding:30px clamp(15px,3vw,40px);background:radial-gradient(circle at 90% 0%,#8068f41a,transparent 30%),var(--bg);color:var(--text)}
+    .tm-container{max-width:1300px;margin:auto}
+    .tm-hero{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:35px;margin-bottom:25px;background:linear-gradient(115deg,#30245e,#5140a5 58%,#7659e9);border-radius:22px}
+    .tm-hero h1{font-size:clamp(27px,4vw,40px);margin:0;color:white}
+    .tm-hero p{color:#e1dcf7;max-width:650px;font-size:13px;line-height:1.8}
+    .tm-hero-icon{font-size:55px}
+    .tm-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:25px 0}
+    .tm-stat,.tm-toolbar,.tm-card{background:var(--card);border:1px solid var(--border);border-radius:15px;padding:18px}
+    .tm-stat small{color:var(--muted)}
+    .tm-stat strong{display:block;font-size:25px;margin-top:7px}
+    .tm-action-row{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;margin:28px 0 18px}
+    .tm-action-row h2{margin:0;font-size:20px}
+    .tm-action-row p{color:var(--muted);font-size:12px}
+    .tm-primary,.tm-secondary,.tm-danger,.tm-small{border:0;border-radius:10px;padding:12px 17px;font-weight:800;cursor:pointer}
+    .tm-primary{background:linear-gradient(120deg,#8068f4,#684fe0);color:white}
+    .tm-secondary{background:#343447;color:#eee}
+    .tm-danger{background:#542d3b;color:#ffb3c0}
+    button:disabled{opacity:.55;cursor:not-allowed}
+    .tm-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:17px}
+    .tm-toolbar input,.tm-toolbar select{flex:1;min-width:160px}
+    input,select,textarea{font:inherit}
+    .tm-input,.tm-select,.tm-textarea{width:100%;padding:12px;color:white;background:#191a25;border:1px solid var(--border);border-radius:9px;outline:none}
+    .tm-input:focus,.tm-select:focus,.tm-textarea:focus{border-color:#9d8af8}
+    .tm-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+    .tm-card{padding:0;overflow:hidden}
+    .tm-card-cover{padding:22px;background:linear-gradient(135deg,#40347b,#7459d8);font-size:35px}
+    .tm-card-body{padding:18px}
+    .tm-card-body h3{margin:10px 0;font-size:16px}
+    .tm-card-body p{color:var(--muted);font-size:12px;line-height:1.7;white-space:pre-wrap}
+    .tm-meta{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;color:#b6a5ff;font-size:10px}
+    .tm-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:16px}
+    .tm-small{padding:8px 11px;background:#39334f;color:#e5dcff;font-size:11px}
+    .tm-state{grid-column:1/-1;padding:45px;text-align:center;color:var(--muted);background:var(--card);border:1px dashed var(--border);border-radius:15px}
+    .tm-notice{display:none;padding:12px;margin:12px 0;border-radius:9px;font-size:12px}
+    .tm-notice.show{display:block}
+    .tm-notice.error{background:#542d3b;color:#ffc0c8}
+    .tm-notice.success{background:#174b3b;color:#a7f3d0}
+    .tm-modal{display:none;position:fixed;inset:0;z-index:99999;align-items:center;justify-content:center;padding:15px;background:#05060fcc;backdrop-filter:blur(8px)}
+    .tm-modal.show{display:flex}
+    .tm-panel{width:100%;max-width:720px;max-height:92vh;overflow:auto;padding:24px;background:#222330;border:1px solid var(--border);border-radius:20px;color:white}
+    .tm-modal-head{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding-bottom:15px;margin-bottom:18px}
+    .tm-modal-head h2{margin:0;font-size:20px}
+    .tm-close{width:36px;height:36px;border:0;border-radius:9px;background:#39394b;color:white;font-size:22px;cursor:pointer}
+    .tm-field{margin-bottom:16px}
+    .tm-field label,.tm-label{display:block;margin-bottom:7px;font-size:12px;font-weight:800;color:#ddd7f2}
+    .tm-field input,.tm-field select,.tm-field textarea{width:100%;padding:12px;background:#191a25;color:white;border:1px solid var(--border);border-radius:9px}
+    .tm-field textarea{min-height:100px;resize:vertical}
+    .tm-sections{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:12px;background:#191a25;border-radius:10px;max-height:170px;overflow:auto}
+    .tm-sections label{display:flex;align-items:center;gap:8px;padding:9px;background:#292a39;border-radius:8px;font-size:11px}
+    .tm-activity-fields{padding:15px;border:1px solid var(--border);border-radius:12px;margin:15px 0}
+    .tm-question{padding:13px;margin:10px 0;background:#191a25;border-radius:10px}
+    .tm-modal-actions{display:flex;justify-content:flex-end;gap:9px;flex-wrap:wrap;margin-top:20px;padding-top:15px;border-top:1px solid var(--border)}
+    .tm-resources{display:grid;gap:9px}
+    .tm-resource{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin:10px 0}
+    .tm-resource input,.tm-resource select{min-width:0;padding:10px;background:#191a25;color:white;border:1px solid var(--border);border-radius:8px}
+    @media(max-width:1000px){.tm-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:650px){.tm-grid,.tm-stats{grid-template-columns:1fr 1fr}.tm-hero-icon{display:none}.tm-resource{grid-template-columns:1fr}.tm-sections{grid-template-columns:1fr}}
+    @media(max-width:450px){.tm-grid,.tm-stats{grid-template-columns:1fr}.tm-panel{padding:17px}}
+  </style>
 </head>
 
 <body>
-
-<div class="page">
-<div class="container">
-
-<header class="header">
-  <div class="header-left">
-    <h1>Learning Modules</h1>
-    <p>Manage learning content, class assignments and educational resources.</p>
-  </div>
-
-  <div class="header-actions">
-    <button
-      class="btn btn-light"
-      type="button"
-      id="backToDashboard">
-      ← Dashboard
-    </button>
-
-    <button
-      class="btn btn-primary"
-      type="button"
-      id="openModal">
-      ＋ Create Module
-    </button>
-  </div>
-</header>
-
-
-<!-- ADMIN MODULE REVIEW -->
-
-<section class="review-panel" id="adminReviewPanel">
-
-  <div class="review-heading">
-    <div>
-      <h2>📋 Admin Module Review</h2>
-      <p>
-        Review learning modules submitted by the administrator
-        before editing and publishing them to your students.
-      </p>
-    </div>
-
-    <span class="review-count" id="pendingReviewCount">
-      0 Pending
-    </span>
-  </div>
-
-  <div id="adminReviewList">
-    <div class="review-empty">
-      Loading admin-submitted modules...
-    </div>
-  </div>
-
-</section>
-
-
-<!-- STATISTICS -->
-<section class="stats">
-
-  <div class="stat-card">
-    <div class="stat-top">
-      <span>Total Modules</span>
-      <span class="stat-icon">📚</span>
-    </div>
-    <div class="stat-number" id="totalModules">—</div>
-    <div class="stat-label">Your learning modules</div>
-  </div>
-
-  <div class="stat-card">
-    <div class="stat-top">
-      <span>Published</span>
-      <span class="stat-icon">✓</span>
-    </div>
-    <div class="stat-number" id="activeModules">—</div>
-    <div class="stat-label">Published modules</div>
-  </div>
-
-  <div class="stat-card">
-    <div class="stat-top">
-      <span>Drafts</span>
-      <span class="stat-icon">✎</span>
-    </div>
-    <div class="stat-number" id="draftModules">—</div>
-    <div class="stat-label">Unpublished modules</div>
-  </div>
-
-  <div class="stat-card">
-    <div class="stat-top">
-      <span>Archived</span>
-      <span class="stat-icon">▣</span>
-    </div>
-    <div class="stat-number" id="archivedModules">—</div>
-    <div class="stat-label">Archived modules</div>
-  </div>
-
-</section>
-
-<!-- MODULE LIST -->
-<section class="panel">
-
-  <div class="panel-heading">
-    <div>
-      <h2>Your Classroom Modules</h2>
-      <p>Organize learning materials, outcomes, class sections and availability in one workspace.</p>
-    </div>
-  </div>
-
-  <div class="toolbar">
-    <input
-      type="search"
-      id="moduleSearch"
-      placeholder="Search title, description or section..."
-      aria-label="Search modules">
-
-    <select id="statusFilter">
-      <option value="all">All statuses</option>
-      <option value="active">Published</option>
-      <option value="draft">Draft</option>
-      <option value="archived">Archived</option>
-    </select>
-
-    <select id="sortFilter">
-      <option value="order">Display order</option>
-      <option value="newest">Newest first</option>
-      <option value="oldest">Oldest first</option>
-      <option value="title">Title A–Z</option>
-    </select>
-  </div>
-
-  <div id="moduleList">
-    <div class="loading">Loading modules...</div>
-  </div>
-
-</section>
-
-</div>
-</div>
-
-<!-- ADD / EDIT MODULE MODAL -->
-<div class="modal" id="moduleModal">
-
-<div class="modal-content">
-
-  <div class="modal-header">
-    <div>
-      <h2 id="modalTitle">Create Module</h2>
-      <p class="help">
-        Configure your educational content. Unfinished changes will be saved as a draft when you go back.
-      </p>
-    </div>
-
-    <button
-      type="button"
-      id="closeModal"
-      class="close-btn"
-      aria-label="Close">
-      ×
-    </button>
-  </div>
-
-  <!-- 01. BASIC INFORMATION -->
-  <section class="form-section">
-
-    <h3>01. Basic Information</h3>
-
-    <div class="form-group">
-      <label for="title">Module Title *</label>
-      <input
-        type="text"
-        id="title"
-        maxlength="150"
-        placeholder="Example: Introduction to Gender Equality">
-    </div>
-
-    <div class="form-group">
-      <label for="description">Module Description *</label>
-      <textarea
-        id="description"
-        maxlength="2000"
-        placeholder="Describe the learning module..."></textarea>
-    </div>
-
-    <div class="form-group">
-      <label for="moduleOrder">Display Order *</label>
-      <input
-        type="number"
-        id="moduleOrder"
-        min="1"
-        placeholder="1">
-    </div>
-
-  </section>
-
-  <!-- 02. LEARNING OBJECTIVES -->
-  <section class="form-section">
-
-    <h3>02. Learning Objectives</h3>
-
-    <div class="form-group">
-      <label for="learningObjectives">
-        Expected Learning Outcomes
-      </label>
-
-      <textarea
-        id="learningObjectives"
-        placeholder="Enter learning objectives, one per line..."></textarea>
-
-      <div class="help">
-        These describe what students should learn after completing the module.
+<main class="tm-page">
+  <div class="tm-container">
+    <div class="tm-hero">
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;margin-bottom:12px">EQUALLEARN • TEACHING WORKSPACE</div>
+        <h1>Teaching Activities</h1>
+        <p>Create and manage modules, quizzes, assignments, and class discussions for your assigned students.</p>
       </div>
+      <div class="tm-hero-icon">📚</div>
     </div>
 
-    <div class="form-group">
-      <label for="estimatedDuration">Estimated Learning Duration</label>
+    <section class="tm-stats">
+      <div class="tm-stat"><small>Total Created</small><strong id="totalCount">0</strong></div>
+      <div class="tm-stat"><small>Published</small><strong id="publishedCount">0</strong></div>
+      <div class="tm-stat"><small>Drafts</small><strong id="draftCount">0</strong></div>
+      <div class="tm-stat"><small>Assigned Sections</small><strong id="sectionCount">0</strong></div>
+    </section>
 
-      <select id="estimatedDuration">
-        <option value="">Not specified</option>
-        <option value="15">15 minutes</option>
-        <option value="30">30 minutes</option>
-        <option value="45">45 minutes</option>
-        <option value="60">1 hour</option>
-        <option value="90">1.5 hours</option>
-        <option value="120">2 hours</option>
-        <option value="180">3 hours</option>
+    <div class="tm-action-row">
+      <div><h2>My Learning Activities</h2><p>Manage the learning experience of your classes.</p></div>
+      <button class="tm-primary" id="createBtn" type="button">＋ Create Activity</button>
+    </div>
+
+    <div class="tm-notice" id="notice" role="status"></div>
+
+    <div class="tm-toolbar">
+      <input class="tm-input" id="searchInput" type="search" placeholder="Search activities...">
+      <select class="tm-select" id="statusFilter">
+        <option value="all">All statuses</option>
+        <option value="published">Published</option>
+        <option value="draft">Draft</option>
+        <option value="archived">Archived</option>
       </select>
+      <select class="tm-select" id="typeFilter">
+        <option value="all">All activity types</option>
+        <option value="module">Modules</option>
+        <option value="quiz">Quizzes</option>
+        <option value="assignment">Assignments</option>
+        <option value="discussion">Discussions</option>
+      </select>
+      <select class="tm-select" id="sectionFilter"><option value="all">All sections</option></select>
     </div>
 
-  </section>
-
-  <!-- 03. CLASS ASSIGNMENT -->
-  <section class="form-section">
-
-    <h3>03. Class & Section Assignment</h3>
-
-    <div class="assignment-box">
-
-      <div class="assignment-note">
-        Assign this module to specific classes or sections.
-        Course, year level and section information will be based on the selected section.
-      </div>
-
-      <div class="form-group">
-        <label for="sectionSelect">Available Sections</label>
-
-        <select id="sectionSelect" multiple size="5"></select>
-
-        <div class="help">
-          Hold Ctrl (Windows) or Command (Mac) to select multiple sections.
-          Example: BSIT 1 L — course, year level and section are included in the section record.
-        </div>
-      </div>
-
-      <div id="assignmentSummary" class="help">
-        No class assignment configured yet.
-      </div>
-
+    <div class="tm-grid" id="moduleGrid">
+      <div class="tm-state">Loading your activities...</div>
     </div>
-  </section>
-
-  <!-- 04. AVAILABILITY -->
-  <section class="form-section">
-
-    <h3>04. Availability & Due Dates</h3>
-
-    <div class="form-grid">
-
-      <div class="form-group">
-        <label for="availableAt">Available From</label>
-        <input type="datetime-local" id="availableAt">
-      </div>
-
-      <div class="form-group">
-        <label for="dueDate">Due Date</label>
-        <input type="datetime-local" id="dueDate">
-      </div>
-
-    </div>
-
-    <div class="help">
-      Leave availability or due date blank if no schedule is required.
-      Individual student extensions will be managed separately.
-    </div>
-
-  </section>
-
-  <!-- 05. LEARNING RESOURCES -->
-  <section class="form-section" id="learningResourcesSection">
-
-    <h3>05. Add Learning Resources</h3>
-
-    <p class="help">
-      Choose an app or attach media from your device.
-      YouTube video links can be added at the bottom of this section.
-    </p>
-
-    <div class="resource-toolbar" id="resourceToolbar">
-
-      <button type="button" class="resource-tile" data-resource="drive">
-        <span class="resource-icon drive">▲</span>
-        <span>Google Drive</span>
-      </button>
-
-      <button type="button" class="resource-tile" data-resource="forms">
-        <span class="resource-icon forms">▤</span>
-        <span>Forms</span>
-      </button>
-
-      <button type="button" class="resource-tile" data-resource="drawings">
-        <span class="resource-icon drawings">✎</span>
-        <span>Drawings</span>
-      </button>
-
-      <button type="button" class="resource-tile" data-resource="sheets">
-        <span class="resource-icon sheets">▦</span>
-        <span>Sheets</span>
-      </button>
-
-      <button type="button" class="resource-tile" data-resource="slides">
-        <span class="resource-icon slides">▣</span>
-        <span>Slides</span>
-      </button>
-
-      <button type="button" class="resource-tile" data-resource="docs">
-        <span class="resource-icon docs">▤</span>
-        <span>Docs</span>
-      </button>
-
-      <button type="button" class="resource-tile" data-resource="pdf">
-        <span class="resource-icon pdf">PDF</span>
-        <span>PDF</span>
-      </button>
-
-      <button type="button" class="resource-tile" data-resource="record">
-        <span class="resource-icon record">●</span>
-        <span>Record Video</span>
-      </button>
-
-      <button type="button" class="resource-tile" data-resource="camera">
-        <span class="resource-icon camera">📷</span>
-        <span>Take Photo</span>
-      </button>
-
-      <button type="button" class="resource-tile" data-resource="photo">
-        <span class="resource-icon photo">▧</span>
-        <span>Pick Photo</span>
-      </button>
-
-      <button type="button" class="resource-tile" data-resource="upload">
-        <span class="resource-icon upload">↑</span>
-        <span>Upload File</span>
-      </button>
-
-    </div>
-
-    <!-- FILE INPUTS -->
-    <input
-      type="file"
-      id="moduleFile"
-      hidden
-      accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.png,.jpg,.jpeg,.webp,.mp4,.webm,.mov">
-
-    <input
-      type="file"
-      id="cameraPhotoInput"
-      hidden
-      accept="image/*"
-      capture="environment">
-
-    <input
-      type="file"
-      id="pickPhotoInput"
-      hidden
-      accept="image/*">
-
-    <input
-      type="file"
-      id="recordVideoInput"
-      accept="video/*"
-      capture="environment"
-      hidden>
-
-    <div class="file-help">
-      Maximum file size: 20 MB. Recording and camera capture availability
-      depends on your browser and device.
-    </div>
-
-    <div id="selectedFile"></div>
-    <div id="existingFile"></div>
-
-   
-<div id="resourceLinksList" class="resource-links-list"></div>
-
-<!-- MANUAL RESOURCE LINK FALLBACK -->
-<div class="youtube-input-wrap">
-
-  <h3>Manual Resource Link</h3>
-
-  <p class="help">
-    If the resource buttons or pop-ups are unavailable,
-    manually paste your resource link here.
-  </p>
-
-  <div class="form-group">
-    <label for="resourceNameInput">Resource Name</label>
-    <input
-      type="text"
-      id="resourceNameInput"
-      maxlength="100"
-      placeholder="Example: Google Drive, Canva, Learning Website">
   </div>
+</main>
 
-  <div class="form-group">
-    <label for="resourceUrlInput">Resource URL</label>
-    <input
-      type="url"
-      id="resourceUrlInput"
-      placeholder="https://example.com/resource">
+<!-- CREATE ACTIVITY MODAL -->
+<div class="tm-modal" id="editorModal" role="dialog" aria-modal="true" aria-labelledby="editorTitle">
+  <div class="tm-panel">
+    <div class="tm-modal-head">
+      <h2 id="editorTitle">Create Activity</h2>
+      <button class="tm-close" id="closeEditor" type="button">×</button>
+    </div>
+
+    <div class="tm-notice" id="formNotice"></div>
+
+    <form id="activityForm">
+      <div class="tm-field">
+        <label for="activityType">Activity Type *</label>
+        <select id="activityType" required>
+          <option value="module">📚 Learning Module</option>
+          <option value="quiz">📝 Quiz</option>
+          <option value="assignment">📄 Assignment</option>
+          <option value="discussion">💬 Discussion</option>
+        </select>
+      </div>
+
+      <div class="tm-field">
+        <label for="activityTitle">Title *</label>
+        <input id="activityTitle" maxlength="150" required placeholder="Enter activity title">
+      </div>
+
+      <div class="tm-field">
+        <label for="activityCategory">Category</label>
+        <select id="activityCategory">
+          <option value="Lesson">Lesson</option>
+          <option value="Reading Material">Reading Material</option>
+          <option value="Practice">Practice</option>
+          <option value="Assessment">Assessment</option>
+          <option value="Performance Task">Performance Task</option>
+          <option value="General">General</option>
+        </select>
+      </div>
+
+      <div class="tm-field">
+        <label for="activityDescription" id="descriptionLabel">Description / Instructions *</label>
+        <textarea id="activityDescription" maxlength="10000" required placeholder="Explain the activity to your students..."></textarea>
+      </div>
+
+      <div class="tm-field">
+        <span class="tm-label">Assign to Sections *</span>
+        <div class="tm-sections" id="sectionList">Loading sections...</div>
+      </div>
+
+      <div id="typeFields" class="tm-activity-fields"></div>
+
+      <div id="resourceArea">
+        <div class="tm-label">Learning Resources</div>
+        <div id="resourceEditor" class="tm-resources"></div>
+        <button class="tm-secondary" id="addResource" type="button">＋ Add Resource</button>
+      </div>
+
+      <div class="tm-modal-actions">
+        <button class="tm-secondary" id="cancelEditor" type="button">Cancel</button>
+        <button class="tm-secondary" id="saveDraftBtn" type="button">Save Draft</button>
+        <button class="tm-primary" id="publishBtn" type="submit">Publish Activity</button>
+      </div>
+    </form>
   </div>
-
-  <button
-    type="button"
-    id="addResourceLinkBtn"
-    class="btn btn-primary">
-    ＋ Add Resource Link
-  </button>
-
 </div>
 
-    <div class="help">
-      Google Drive, Docs, Forms, Drawings, Sheets and Slides resources
-      are attached using their share links. Set the sharing permission
-      in Google so intended students can open them.
-    </div>
-
-    <div id="uploadProgress">
-      <div class="progress-container">
-        <div id="progressBar"></div>
-      </div>
-      <p id="progressText">Ready to upload</p>
-    </div>
-
-    <!-- YOUTUBE INPUT -->
-    <div class="youtube-input-wrap">
-      <div class="form-group">
-        <label for="videoUrl">YouTube Video Link (optional)</label>
-        <input
-          type="url"
-          id="videoUrl"
-          placeholder="https://www.youtube.com/watch?v=...">
-
-        <div class="help">
-          Paste the YouTube video URL related to this learning module.
-        </div>
-      </div>
-    </div>
-
-  </section>
-
-  <!-- ACTIONS -->
-  <div class="modal-footer">
-
-    <button
-      type="button"
-      id="cancelEdit"
-      class="btn cancel-btn">
-      ← Back · Save as Draft
-    </button>
-
-    <button
-      type="button"
-      id="saveModule"
-      class="btn save-btn">
-      Publish Module
-    </button>
-
-  </div>
-
-  <div id="message" class="message"></div>
-
-</div>
-</div>
-
-<!-- JAVASCRIPT -->
-<script type="module" src="../assets/js/teacher-modules.js"></script>
+<script type="module" src="./teacher-modules.js"></script>
 <script type="module" src="../assets/js/ui-shell.js"></script>
 <script type="module" src="../assets/js/pwa.js"></script>
 <script type="module" src="../assets/js/theme.js"></script>
+
+
+<script>
+(() => {
+  const createButton = document.getElementById("createBtn");
+  const modal = document.getElementById("editorModal");
+  const closeButton = document.getElementById("closeEditor");
+  const cancelButton = document.getElementById("cancelEditor");
+
+  if (!createButton || !modal) {
+    console.error("Create Activity button or editor modal is missing.");
+    return;
+  }
+
+  createButton.style.pointerEvents = "auto";
+  createButton.style.position = "relative";
+  createButton.style.zIndex = "100000";
+
+  createButton.addEventListener("click", function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    modal.classList.add("show");
+    modal.style.display = "flex";
+    modal.style.zIndex = "100001";
+
+    document.body.style.overflow = "hidden";
+
+    console.log("Create Activity modal opened.");
+  });
+
+  function closeActivityModal() {
+    modal.classList.remove("show");
+    modal.style.display = "none";
+    document.body.style.overflow = "";
+  }
+
+  closeButton?.addEventListener("click", closeActivityModal);
+  cancelButton?.addEventListener("click", closeActivityModal);
+})();
+</script>
+</body>
+</html>
 
 </body>
 </html>
