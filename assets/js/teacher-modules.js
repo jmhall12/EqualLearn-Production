@@ -1,4 +1,4 @@
-
+﻿
 import { auth, db } from "./firebase-config.js";
 
 import { onAuthStateChanged } from
@@ -429,8 +429,9 @@ function selectedSections() {
 // FIRESTORE LISTENERS
 // ======================================================
 
+
 function listenItems() {
-  const role = String(profile.role || "").toLowerCase();
+  const role = String(profile?.role || "").toLowerCase();
 
   const moduleQuery = role === "admin"
     ? query(collection(db, COLLECTIONS.modules))
@@ -474,7 +475,14 @@ function listenItems() {
       refresh();
     },
     error => {
-      console.error("Module listener:", error);
+      console.error("[MODULE LISTENER]", {
+        code: error.code,
+        message: error.message,
+        uid: currentUser?.uid,
+        role: profile?.role,
+        collection: COLLECTIONS.modules
+      });
+
       showNotice(errorMessage(error), "error");
     }
   );
@@ -491,11 +499,21 @@ function listenItems() {
       refresh();
     },
     error => {
-      console.error("Activity listener:", error);
+      console.error("[ACTIVITY LISTENER]", {
+        code: error.code,
+        message: error.message,
+        uid: currentUser?.uid,
+        role: profile?.role,
+        status: profile?.status,
+        collection: COLLECTIONS.activities,
+        projectId: db.app.options.projectId
+      });
+
       showNotice(errorMessage(error), "error");
     }
   );
 }
+
 
 // ======================================================
 // ACTIVITY FORM CONTROLS
@@ -1224,6 +1242,8 @@ async function saveActivity(status) {
     saving = false;
     setSavingState(false);
   }
+
+  
 }
 
 function setSavingState(value) {

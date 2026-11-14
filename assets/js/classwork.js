@@ -15,12 +15,11 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
 /* =========================================================
-   EQUALLEARN — STUDENT CLASSWORK HUB
+   EQUALLEARN — STUDENT CLASSWORK
    Collections:
    announcements
    modulesV2
-   assignments
-   quizzesV2
+   teacherActivitiesV2
 ========================================================= */
 
 const $ = id => document.getElementById(id);
@@ -37,26 +36,11 @@ let allActivities = [];
 let activeCategory = "all";
 
 const categoryInfo = {
-  announcement: {
-    label: "Announcement",
-    icon: "📢",
-    destination: null
-  },
-  module: {
-    label: "Learning Module",
-    icon: "📚",
-    destination: "modules.html"
-  },
-  assignment: {
-    label: "Assignment",
-    icon: "📝",
-    destination: "assignment.html"
-  },
-  quiz: {
-    label: "Quiz",
-    icon: "✍️",
-    destination: "quiz.html"
-  }
+  announcement: { label: "Announcement", icon: "📢" },
+  module: { label: "Learning Module", icon: "📚" },
+  assignment: { label: "Assignment", icon: "📝" },
+  quiz: { label: "Quiz", icon: "✍️" },
+  discussion: { label: "Discussion", icon: "💬" }
 };
 
 /* =========================================================
@@ -70,6 +54,7 @@ onAuthStateChanged(auth, async user => {
   }
 
   currentUser = user;
+  allActivities = [];
 
   try {
     await loadStudentProfile();
@@ -79,7 +64,7 @@ onAuthStateChanged(auth, async user => {
 
     showState(
       "Unable to load classwork",
-      error.message || "Please refresh the page and try again.",
+      getErrorMessage(error),
       "⚠️"
     );
   }
@@ -100,129 +85,187 @@ async function loadStudentProfile() {
 
   studentProfile = profileSnap.data();
 
-  if (
-    String(studentProfile.role || "").toLowerCase() !== "student"
-  ) {
+  const role = String(studentProfile.role || "").toLowerCase();
+  const status = String(studentProfile.status || "").toLowerCase();
+
+  if (role !== "student") {
     throw new Error("This page is for student accounts only.");
   }
 
-  if (
-    studentProfile.status &&
-    String(studentProfile.status).toLowerCase() !== "active"
-  ) {
+  if (status !== "active") {
     throw new Error("Your student account is not active.");
   }
 
-  studentSectionId = String(studentProfile.sectionId || "");
+  studentSectionId = String(
+    studentProfile.sectionId || ""
+  ).trim();
 
   if (!studentSectionId) {
     throw new Error(
       "Your account has no assigned section. Please contact your teacher."
     );
   }
+
+  console.log("[CLASSWORK] Student profile loaded:", {
+    uid: currentUser.uid,
+    role,
+    status,
+    sectionId: studentSectionId,
+    projectId: db.app.options.projectId
+  });
 }
 
 /* =========================================================
-   LOAD ALL CATEGORIES
+   LOAD ALL CLASSWORK
 ========================================================= */
 
 async function loadAllClasswork() {
+  allActivities = [];
+
   showState(
     "Loading your classwork",
-    "Retrieving announcements, modules, assignments, and quizzes.",
+    "Retrieving your teacher's posts and learning activities.",
     "⏳"
   );
 
-  const results = await Promise.allSettled([
-    loadAnnouncements(),
-    loadModules(),
-    loadAssignments(),
-    loadQuizzes()
-  ]);
-
-  const categoryNames = [
-    "Announcements",
-    "Modules",
-    "Assignments",
-    "Quizzes"
+  const tasks = [
+    {
+      name: "Announcements",
+      run: loadAnnouncements
+    },
+    {
+      name: "Modules",
+      run: loadModules
+    },
+    {
+      name: "Teacher Activities",
+      run: loadTeacherActivities
+    }
   ];
+
+  const results = await Promise.allSettled(
+    tasks.map(task => task.run())
+  );
 
   const failures = [];
 
   results.forEach((result, index) => {
     if (result.status === "rejected") {
-      console.error(
-        `[CLASSWORK] ${categoryNames[index]} could not load:`,
-        result.reason
-      );
+      failures.push(tasks[index].name);
 
-      failures.push(categoryNames[index]);
+      console.error(
+        `[CLASSWORK] ${tasks[index].name} failed:`,
+        {
+          code: result.reason?.code,
+          message: result.reason?.message,
+          error: result.reason
+        }
+      );
     }
   });
 
   updateStatistics();
   renderActivities();
 
+  console.log("[CLASSWORK] Loaded activities:", {
+    total: allActivities.length,
+    announcements: countCategory("announcement"),
+    modules: countCategory("module"),
+    assignments: countCategory("assignment"),
+    quizzes: countCategory("quiz"),
+    discussions: countCategory("discussion"),
+    failedCategories: failures
+  });
+
   if (failures.length) {
     console.warn(
-      "[CLASSWORK] Some categories could not be loaded:",
+      "[CLASSWORK] Failed categories:",
       failures
     );
   }
 }
 
 /* =========================================================
-   SAFE COLLECTION QUERY HELPERS
+   V2 SECTION QUERY
+   Must match Firestore student read rules.
 ========================================================= */
 
-async function fetchSectionDocuments(collectionName) {
+
+async function fetchPublishedSectionDocuments(collectionName) {
+  if (!studentSectionId) {
+    throw new Error("Student section ID is missing.");
+  }
+
   const collectionRef = collection(db, collectionName);
 
-  const attempts = [
+  const queries = [
     query(
       collectionRef,
+      where("status", "==", "published"),
       where("sectionIds", "array-contains", studentSectionId)
     ),
     query(
       collectionRef,
+      where("status", "==", "published"),
       where("sectionId", "==", studentSectionId)
     )
   ];
 
-  const snapshots = await Promise.allSettled(
-    attempts.map(item => getDocs(item))
+  const results = await Promise.allSettled(
+    queries.map(q => getDocs(q))
   );
 
   const documents = new Map();
+  const errors = [];
 
-  snapshots.forEach(result => {
-    if (result.status !== "fulfilled") return;
-
-    result.value.forEach(snapshot => {
-      documents.set(snapshot.id, {
-        id: snapshot.id,
-        ...snapshot.data()
+  results.forEach(result => {
+    if (result.status === "fulfilled") {
+      result.value.forEach(snapshot => {
+        documents.set(snapshot.id, {
+          id: snapshot.id,
+          ...snapshot.data()
+        });
       });
-    });
+    } else {
+      errors.push(result.reason);
+    }
   });
 
-  if (!documents.size && snapshots.every(
-    result => result.status === "rejected"
-  )) {
-    throw snapshots[0].reason;
+  if (documents.size === 0 && errors.length === queries.length) {
+    throw errors[0];
   }
+
+  console.log("[CLASSWORK] Section documents:", {
+    collection: collectionName,
+    sectionId: studentSectionId,
+    count: documents.size,
+    queryErrors: errors.map(error => ({
+      code: error.code,
+      message: error.message
+    }))
+  });
 
   return [...documents.values()];
 }
+
 
 /* =========================================================
    ANNOUNCEMENTS
 ========================================================= */
 
 async function loadAnnouncements() {
-  const documents = await fetchSectionDocuments("announcements");
+  const collectionRef = collection(db, "announcements");
 
-  documents.forEach(data => {
+  const q = query(
+    collectionRef,
+    where("sectionIds", "array-contains", studentSectionId)
+  );
+
+  const snapshot = await getDocs(q);
+
+  snapshot.forEach(document => {
+    const data = document.data();
+
     const status = String(data.status || "").toLowerCase();
 
     if (
@@ -233,51 +276,74 @@ async function loadAnnouncements() {
     }
 
     allActivities.push({
-      id: data.id,
+      id: document.id,
+      collectionName: "announcements",
       category: "announcement",
-      title: data.title || data.announcementTitle || "Announcement",
+
+      title:
+        data.title ||
+        data.announcementTitle ||
+        "Announcement",
+
       description:
         data.content ||
         data.message ||
         data.description ||
         "Your teacher shared an announcement.",
+
       teacherName:
         data.teacherName ||
         data.createdByName ||
         "Your Teacher",
+
       date: toDate(
         data.createdAt ||
         data.publishedAt ||
         data.timestamp
       ),
+
       status: "Announcement",
       original: data
     });
   });
+
+  console.log("[CLASSWORK] Announcements:", snapshot.size);
 }
 
 /* =========================================================
-   LEARNING MODULES V2
+   LEARNING MODULES
 ========================================================= */
 
 async function loadModules() {
-  const documents = await fetchSectionDocuments("modulesV2");
+  const documents = await fetchPublishedSectionDocuments(
+    "modulesV2"
+  );
 
   documents.forEach(data => {
-    if (String(data.status || "").toLowerCase() !== "published") {
-      return;
-    }
-
     allActivities.push({
       id: data.id,
+      collectionName: "modulesV2",
       category: "module",
-      title: data.title || "Untitled Learning Module",
+
+      title:
+        data.title ||
+        "Untitled Learning Module",
+
       description:
         data.description ||
         data.content ||
         "Open this learning module to view its resources.",
-      teacherName: data.teacherName || "Your Teacher",
-      date: toDate(data.publishedAt || data.createdAt || data.updatedAt),
+
+      teacherName:
+        data.teacherName ||
+        "Your Teacher",
+
+      date: toDate(
+        data.publishedAt ||
+        data.createdAt ||
+        data.updatedAt
+      ),
+
       status: "Published",
       original: data
     });
@@ -285,64 +351,78 @@ async function loadModules() {
 }
 
 /* =========================================================
-   ASSIGNMENTS
+   TEACHER ACTIVITIES
+   Assignments, Quizzes, Discussions
 ========================================================= */
 
-async function loadAssignments() {
-  const documents = await fetchSectionDocuments("assignments");
+async function loadTeacherActivities() {
+  const documents = await fetchPublishedSectionDocuments(
+    "teacherActivitiesV2"
+  );
 
   documents.forEach(data => {
-    if (String(data.status || "").toLowerCase() !== "active") {
+    const type = String(data.type || "").toLowerCase();
+
+    if (!["assignment", "quiz", "discussion"].includes(type)) {
       return;
     }
 
-    const dueDate = toDate(data.dueDate);
-
-    const isOverdue = dueDate && dueDate < new Date();
-
-    allActivities.push({
+    const common = {
       id: data.id,
-      category: "assignment",
-      title: data.title || "Untitled Assignment",
-      description:
-        data.instructions ||
-        data.description ||
-        "Open this assignment to view the instructions.",
+      collectionName: "teacherActivitiesV2",
+      title: data.title || `Untitled ${type}`,
       teacherName: data.teacherName || "Your Teacher",
-      date: toDate(data.createdAt || data.publishedAt),
-      dueDate,
-      status: isOverdue ? "Past Due" : "Pending",
+      date: toDate(
+        data.publishedAt ||
+        data.createdAt ||
+        data.updatedAt
+      ),
       original: data
-    });
-  });
-}
+    };
 
-/* =========================================================
-   QUIZZES V2
-========================================================= */
+    if (type === "assignment") {
+      const dueDate = toDate(data.activityData?.dueDate);
+      const isOverdue = dueDate && dueDate < new Date();
 
-async function loadQuizzes() {
-  const documents = await fetchSectionDocuments("quizzesV2");
+      allActivities.push({
+        ...common,
+        category: "assignment",
+        description:
+          data.description ||
+          data.activityData?.instructions ||
+          "Open this assignment to view its instructions.",
+        dueDate,
+        status: isOverdue ? "Past Due" : "Pending"
+      });
 
-  documents.forEach(data => {
-    if (String(data.status || "").toLowerCase() !== "published") {
       return;
     }
 
-    allActivities.push({
-      id: data.id,
-      category: "quiz",
-      title: data.title || "Untitled Quiz",
-      description:
-        data.description ||
-        data.instructions ||
-        "Open this quiz to view its instructions.",
-      teacherName: data.teacherName || "Your Teacher",
-      date: toDate(data.publishedAt || data.createdAt || data.updatedAt),
-      dueDate: toDate(data.dueDate),
-      status: "Available",
-      original: data
-    });
+    if (type === "quiz") {
+      allActivities.push({
+        ...common,
+        category: "quiz",
+        description:
+          data.description ||
+          "Open this quiz to view its instructions.",
+        dueDate: toDate(data.activityData?.dueDate),
+        status: "Available"
+      });
+
+      return;
+    }
+
+    if (type === "discussion") {
+      allActivities.push({
+        ...common,
+        category: "discussion",
+        description:
+          data.activityData?.prompt ||
+          data.description ||
+          "Your teacher started a discussion.",
+        status: "Published"
+      });
+    }
   });
 }
 
@@ -350,15 +430,24 @@ async function loadQuizzes() {
    STATISTICS
 ========================================================= */
 
-function updateStatistics() {
-  const count = category => allActivities.filter(
+function countCategory(category) {
+  return allActivities.filter(
     item => item.category === category
   ).length;
+}
 
-  $("announcementCount").textContent = count("announcement");
-  $("moduleCount").textContent = count("module");
-  $("assignmentCount").textContent = count("assignment");
-  $("quizCount").textContent = count("quiz");
+function updateStatistics() {
+  $("announcementCount").textContent =
+    countCategory("announcement");
+
+  $("moduleCount").textContent =
+    countCategory("module");
+
+  $("assignmentCount").textContent =
+    countCategory("assignment");
+
+  $("quizCount").textContent =
+    countCategory("quiz");
 
   $("allCategoryCount").textContent =
     `${allActivities.length} activities`;
@@ -377,15 +466,38 @@ document.querySelectorAll(".cw-category").forEach(button => {
     });
 
     const titles = {
-      all: ["All Classwork", "Your latest classroom activities."],
-      announcement: ["Announcements", "Updates shared by your teachers."],
-      module: ["Learning Modules", "Lessons and learning resources."],
-      assignment: ["Assignments", "Activities and tasks assigned to you."],
-      quiz: ["Quizzes", "Available assessments and quizzes."]
+      all: [
+        "All Classwork",
+        "Your latest classroom activities."
+      ],
+      announcement: [
+        "Announcements",
+        "Updates shared by your teachers."
+      ],
+      module: [
+        "Learning Modules",
+        "Lessons and learning resources."
+      ],
+      assignment: [
+        "Assignments",
+        "Activities and tasks assigned to you."
+      ],
+      quiz: [
+        "Quizzes",
+        "Available assessments and quizzes."
+      ],
+      discussion: [
+        "Discussions",
+        "Topics shared by your teachers."
+      ]
     };
 
-    $("feedTitle").textContent = titles[activeCategory][0];
-    $("feedSubtitle").textContent = titles[activeCategory][1];
+    const selected = titles[activeCategory];
+
+    if (selected) {
+      $("feedTitle").textContent = selected[0];
+      $("feedSubtitle").textContent = selected[1];
+    }
 
     renderActivities();
   });
@@ -429,23 +541,32 @@ function renderActivities() {
   const sort = sortSelect.value;
 
   if (sort === "recent") {
-    items.sort((a, b) => dateValue(b.date) - dateValue(a.date));
+    items.sort(
+      (a, b) => dateValue(b.date) - dateValue(a.date)
+    );
   } else if (sort === "oldest") {
-    items.sort((a, b) => dateValue(a.date) - dateValue(b.date));
+    items.sort(
+      (a, b) => dateValue(a.date) - dateValue(b.date)
+    );
   } else if (sort === "title") {
-    items.sort((a, b) => a.title.localeCompare(b.title));
+    items.sort(
+      (a, b) => a.title.localeCompare(b.title)
+    );
   }
 
   feed.replaceChildren();
 
   if (!items.length) {
     showState(
-      keyword ? "No matching activities" : "Nothing here yet",
+      keyword
+        ? "No matching activities"
+        : "Nothing here yet",
       keyword
         ? "Try a different search term or category."
         : "Your teacher's published classwork will appear here.",
       "📭"
     );
+
     return;
   }
 
@@ -459,7 +580,10 @@ function renderActivities() {
 ========================================================= */
 
 function createActivityCard(item) {
-  const info = categoryInfo[item.category];
+  const info = categoryInfo[item.category] || {
+    label: "Class Activity",
+    icon: "📘"
+  };
 
   const card = document.createElement("article");
   card.className = "cw-card";
@@ -522,7 +646,13 @@ function createActivityCard(item) {
 
   footer.append(status, open);
 
-  card.append(top, title, description, meta, footer);
+  card.append(
+    top,
+    title,
+    description,
+    meta,
+    footer
+  );
 
   return card;
 }
@@ -536,7 +666,8 @@ function getActionLabel(category) {
     announcement: "View Details",
     module: "Open Module",
     assignment: "Open Assignment",
-    quiz: "Open Quiz"
+    quiz: "Open Quiz",
+    discussion: "View Discussion"
   };
 
   return labels[category] || "Open";
@@ -557,6 +688,9 @@ function getDestination(item) {
 
     case "quiz":
       return `quiz.html?id=${id}`;
+
+    case "discussion":
+      return `classwork.html?id=${id}`;
 
     default:
       return "classwork.html";
@@ -583,8 +717,33 @@ function showState(title, message, icon = "📭") {
   const description = document.createElement("p");
   description.textContent = message;
 
-  state.append(stateIcon, heading, description);
+  state.append(
+    stateIcon,
+    heading,
+    description
+  );
+
   feed.appendChild(state);
+}
+
+/* =========================================================
+   ERROR HELPERS
+========================================================= */
+
+function getErrorMessage(error) {
+  if (
+    error?.code === "permission-denied" ||
+    error?.code === "firestore/permission-denied"
+  ) {
+    return "Firestore denied access to some classwork collections. Check the deployed student read rules.";
+  }
+
+  if (error?.code === "failed-precondition") {
+    return "A Firestore query index may be required. Check the error details in the browser console.";
+  }
+
+  return error?.message ||
+    "Please refresh the page and try again.";
 }
 
 /* =========================================================
