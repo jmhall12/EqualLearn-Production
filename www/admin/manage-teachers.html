@@ -8,10 +8,609 @@
 
     <title>Manage Teachers | EqualLearn</title>
 
-    <link rel="stylesheet" href="../assets/css/manage-teachers.css">
-    <link rel="manifest" href="../manifest.webmanifest">
-    <link rel="stylesheet" href="../assets/css/equallearn.css">
-    <link rel="icon" href="../assets/icons/icon-192.png">
+   <link rel="stylesheet" href="../assets/css/manage-teachers.css">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="stylesheet" href="../assets/css/glass-dashboard.css">
+<link rel="stylesheet" href="../assets/css/sidebar-skeuomorphism.css">
+<link rel="icon" href="../assets/icons/equallearn-logo.png">
+
+    <style>
+        :root {
+            --teacher-primary: #635bdb;
+            --teacher-primary-dark: #5148c9;
+            --teacher-text: #20243a;
+            --teacher-muted: #858ba0;
+            --teacher-border: rgba(255,255,255,.45);
+            --teacher-glass: rgba(255,255,255,.62);
+            --teacher-shadow: 0 12px 35px rgba(35, 38, 75, .09);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            color: var(--teacher-text);
+            background:
+                radial-gradient(circle at 10% 10%, rgba(99,91,219,.14), transparent 30%),
+                radial-gradient(circle at 90% 85%, rgba(120,170,255,.16), transparent 30%),
+                linear-gradient(135deg, #f4f5ff, #edf0fa 55%, #f7f8ff);
+            font-family: Inter, "Segoe UI", Arial, sans-serif;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background-image:
+                radial-gradient(rgba(99,91,219,.055) 1px, transparent 1px);
+            background-size: 22px 22px;
+        }
+
+        .container {
+            width: min(1200px, calc(100% - 40px));
+            margin: 35px auto;
+            padding: 30px;
+            border: 1px solid var(--teacher-border);
+            border-radius: 24px;
+            background: var(--teacher-glass);
+            box-shadow: var(--teacher-shadow);
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
+            animation: teacherFadeIn .55s ease both;
+        }
+
+        .container h1 {
+            margin: 0 0 25px;
+            color: var(--teacher-text);
+            font-size: clamp(25px, 4vw, 34px);
+            font-weight: 850;
+            letter-spacing: -.8px;
+        }
+
+        .container h1::after {
+            content: "";
+            display: block;
+            width: 48px;
+            height: 4px;
+            margin-top: 10px;
+            border-radius: 10px;
+            background: linear-gradient(90deg, #635bdb, #9b94ff);
+        }
+
+        #openModal,
+        .back-btn {
+            min-height: 43px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 0 8px 22px 0;
+            padding: 11px 18px;
+            border: 1px solid transparent;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 750;
+            cursor: pointer;
+            transition:
+                transform .22s ease,
+                box-shadow .22s ease,
+                background .22s ease,
+                border-color .22s ease;
+        }
+
+        #openModal {
+            color: #fff;
+            background: linear-gradient(135deg, #7169ed, #554bd0);
+            box-shadow: 0 7px 18px rgba(99,91,219,.24);
+        }
+
+        #openModal:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 11px 24px rgba(99,91,219,.32);
+        }
+
+        .back-btn {
+            color: #4c4a75;
+            border-color: rgba(99,91,219,.16);
+            background: rgba(255,255,255,.58);
+            box-shadow: 0 4px 12px rgba(35,38,75,.05);
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            border-color: rgba(99,91,219,.4);
+            background: rgba(255,255,255,.9);
+        }
+
+        #teacherList {
+            min-height: 140px;
+            padding: 20px;
+            overflow-x: auto;
+            border: 1px solid rgba(255,255,255,.65);
+            border-radius: 18px;
+            background: rgba(255,255,255,.48);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
+            color: var(--teacher-muted);
+            font-size: 14px;
+        }
+
+        /* ADD / EDIT TEACHER MODAL */
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            z-index: 100000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(20,24,48,.48);
+            backdrop-filter: blur(9px);
+            -webkit-backdrop-filter: blur(9px);
+            animation: teacherFadeIn .2s ease both;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            width: min(460px, 100%);
+            padding: 30px;
+            border: 1px solid rgba(255,255,255,.7);
+            border-radius: 23px;
+            background: rgba(255,255,255,.88);
+            box-shadow: 0 25px 80px rgba(13,17,43,.24);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            animation: teacherModalIn .3s ease both;
+        }
+
+        .modal-content h2 {
+            margin: 0 0 24px;
+            color: var(--teacher-text);
+            font-size: 23px;
+            font-weight: 850;
+            letter-spacing: -.4px;
+        }
+
+        .modal-content input {
+            display: block;
+            width: 100%;
+            min-height: 48px;
+            margin-bottom: 14px;
+            padding: 13px 15px;
+            border: 1px solid rgba(99,91,219,.16);
+            border-radius: 12px;
+            outline: none;
+            background: rgba(247,248,255,.8);
+            color: var(--teacher-text);
+            font: inherit;
+            font-size: 14px;
+            transition:
+                border-color .2s ease,
+                box-shadow .2s ease,
+                background .2s ease;
+        }
+
+        .modal-content input::placeholder {
+            color: #969bb0;
+        }
+
+        .modal-content input:hover {
+            border-color: rgba(99,91,219,.35);
+        }
+
+        .modal-content input:focus {
+            border-color: var(--teacher-primary);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(99,91,219,.11);
+        }
+
+        .modal-content input:invalid:not(:placeholder-shown) {
+            border-color: rgba(220,65,85,.5);
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 22px;
+        }
+
+        .buttons button {
+            flex: 1;
+            min-height: 45px;
+            padding: 11px 16px;
+            border: 0;
+            border-radius: 11px;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            transition:
+                transform .2s ease,
+                box-shadow .2s ease,
+                background .2s ease;
+        }
+
+        #saveTeacher {
+            color: #fff;
+            background: linear-gradient(135deg, #7169ed, #554bd0);
+            box-shadow: 0 6px 15px rgba(99,91,219,.2);
+        }
+
+        #saveTeacher:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 9px 20px rgba(99,91,219,.3);
+        }
+
+        #cancel {
+            color: #60647a;
+            border: 1px solid rgba(40,45,75,.1);
+            background: rgba(235,237,246,.8);
+        }
+
+        #cancel:hover {
+            transform: translateY(-2px);
+            background: #e2e5f0;
+        }
+
+        button:focus-visible,
+        a:focus-visible,
+        input:focus-visible {
+            outline: 3px solid rgba(99,91,219,.35);
+            outline-offset: 3px;
+        }
+
+        button:disabled {
+            opacity: .55;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* TABLE SUPPORT
+           Preserves the table generated by admin-teachers.js. */
+
+        #teacherList table {
+            width: 100%;
+            min-width: 600px;
+            border-collapse: separate;
+            border-spacing: 0;
+            color: var(--teacher-text);
+            font-size: 13px;
+        }
+
+        #teacherList thead th {
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(99,91,219,.15);
+            background: rgba(99,91,219,.07);
+            color: #57517f;
+            font-size: 11px;
+            font-weight: 850;
+            text-align: left;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+
+        #teacherList thead th:first-child {
+            border-radius: 10px 0 0 0;
+        }
+
+        #teacherList thead th:last-child {
+            border-radius: 0 10px 0 0;
+        }
+
+        #teacherList tbody td {
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(40,45,75,.07);
+            background: rgba(255,255,255,.35);
+            vertical-align: middle;
+        }
+
+        #teacherList tbody tr {
+            transition: background .2s ease;
+        }
+
+        #teacherList tbody tr:hover td {
+            background: rgba(255,255,255,.8);
+        }
+
+        #teacherList tbody tr:last-child td {
+            border-bottom: 0;
+        }
+
+        #teacherList button {
+            min-height: 34px;
+            margin: 3px;
+            padding: 7px 11px;
+            border: 1px solid rgba(99,91,219,.16);
+            border-radius: 8px;
+            background: rgba(99,91,219,.08);
+            color: var(--teacher-primary-dark);
+            font-size: 11px;
+            font-weight: 750;
+            cursor: pointer;
+            transition: .2s ease;
+        }
+
+        #teacherList button:hover {
+            background: var(--teacher-primary);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        /* ANIMATIONS */
+
+        @keyframes teacherFadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes teacherModalIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px) scale(.97);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @media (max-width: 650px) {
+            .container {
+                width: calc(100% - 22px);
+                margin: 15px auto;
+                padding: 20px 15px;
+                border-radius: 19px;
+            }
+
+            .container h1 {
+                margin-bottom: 20px;
+            }
+
+            #openModal,
+            .back-btn {
+                min-height: 42px;
+                margin-bottom: 12px;
+                padding: 10px 13px;
+                font-size: 12px;
+            }
+
+            #teacherList {
+                padding: 12px;
+                border-radius: 14px;
+            }
+
+            .modal-content {
+                padding: 23px 18px;
+                border-radius: 19px;
+            }
+
+            .modal-content h2 {
+                font-size: 21px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .01ms !important;
+            }
+        }
+
+        @supports not (backdrop-filter: blur(10px)) {
+            .container {
+                background: rgba(255,255,255,.94);
+            }
+
+            .modal-content {
+                background: #fff;
+            }
+
+            .modal {
+                background: rgba(20,24,48,.7);
+            }
+        }
+
+
+/* =====================================================
+   MANAGE TEACHERS — PREMIUM DARK MODE
+   ===================================================== */
+
+html[data-theme="dark"],
+body[data-theme="dark"] {
+    color-scheme: dark;
+
+    --teacher-text: #eef0fa;
+    --teacher-muted: #a5abc0;
+    --teacher-glass: #202331;
+    --teacher-border: #383e53;
+    --teacher-shadow: 0 12px 35px rgba(0,0,0,.22);
+}
+
+html[data-theme="dark"] {
+    background: #151722 !important;
+}
+
+body[data-theme="dark"] {
+    color: var(--teacher-text) !important;
+    background: #151722 !important;
+}
+
+/* Main container */
+body[data-theme="dark"] .container {
+    color: var(--teacher-text) !important;
+    background: #202331 !important;
+    border: 1px solid #383e53 !important;
+    box-shadow: var(--teacher-shadow) !important;
+}
+
+/* Page title */
+body[data-theme="dark"] .container h1 {
+    color: #f1f2fa !important;
+}
+
+/* Teacher list wrapper */
+body[data-theme="dark"] #teacherList {
+    color: var(--teacher-muted) !important;
+    background: #252a3b !important;
+    border: 1px solid #383e53 !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.025) !important;
+}
+
+/* Teacher cards */
+body[data-theme="dark"] .teacher-card {
+    color: var(--teacher-text) !important;
+    background: #303548 !important;
+    border: 1px solid #41475e !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,.18) !important;
+}
+
+body[data-theme="dark"] .teacher-card:hover {
+    background: #363c51 !important;
+    border-color: #7165bc !important;
+    box-shadow: 0 13px 30px rgba(0,0,0,.25) !important;
+}
+
+body[data-theme="dark"] .teacher-card h3 {
+    color: #f1f2fa !important;
+}
+
+body[data-theme="dark"] .teacher-card p {
+    color: #b0b6ca !important;
+}
+
+/* Teacher status */
+body[data-theme="dark"] .status.active {
+    color: #79dcb0 !important;
+    background: rgba(40,145,100,.17) !important;
+}
+
+body[data-theme="dark"] .status.inactive {
+    color: #ff929f !important;
+    background: rgba(190,55,75,.17) !important;
+}
+
+/* Edit and Delete */
+body[data-theme="dark"] .teacher-actions .edit-btn {
+    color: #c3b6ff !important;
+    background: #393552 !important;
+    border: 1px solid #514873 !important;
+}
+
+body[data-theme="dark"] .teacher-actions .edit-btn:hover {
+    color: white !important;
+    background: #6555bd !important;
+}
+
+body[data-theme="dark"] .teacher-actions .delete-btn {
+    color: #ff9ba5 !important;
+    background: #482d3a !important;
+    border: 1px solid #64404e !important;
+}
+
+body[data-theme="dark"] .teacher-actions .delete-btn:hover {
+    color: white !important;
+    background: #a83e52 !important;
+}
+
+/* Add Teacher button */
+body[data-theme="dark"] #openModal {
+    color: white !important;
+    background: linear-gradient(135deg, #7568df, #5548c6) !important;
+}
+
+/* Back button */
+body[data-theme="dark"] .back-btn {
+    color: #c3b6ff !important;
+    background: #30354a !important;
+    border: 1px solid #41475d !important;
+}
+
+/* Loading and empty states */
+body[data-theme="dark"] #teacherList .loading,
+body[data-theme="dark"] #teacherList .empty {
+    color: #a5abc0 !important;
+    background: #303548 !important;
+}
+
+/* Modal backdrop */
+body[data-theme="dark"] .modal {
+    background: rgba(5,7,17,.76) !important;
+}
+
+/* Modal */
+body[data-theme="dark"] .modal-content {
+    color: #eef0fa !important;
+    background: #252a3c !important;
+    border: 1px solid #41475d !important;
+    box-shadow: 0 25px 80px rgba(0,0,0,.45) !important;
+}
+
+body[data-theme="dark"] .modal-content h2 {
+    color: #f1f2fa !important;
+}
+
+/* Modal inputs */
+body[data-theme="dark"] .modal-content input {
+    color: #eef0fa !important;
+    background: #191e2d !important;
+    border: 1px solid #41475d !important;
+}
+
+body[data-theme="dark"] .modal-content input::placeholder {
+    color: #858da7 !important;
+}
+
+body[data-theme="dark"] .modal-content input:focus {
+    background: #202638 !important;
+    border-color: #9482ed !important;
+    box-shadow: 0 0 0 4px rgba(148,130,237,.13) !important;
+}
+
+/* Modal buttons */
+body[data-theme="dark"] #cancel {
+    color: #c2c8dc !important;
+    background: #363b50 !important;
+    border: 1px solid #484f67 !important;
+}
+
+body[data-theme="dark"] #cancel:hover {
+    background: #41475e !important;
+}
+
+body[data-theme="dark"] #saveTeacher {
+    color: white !important;
+    background: linear-gradient(135deg, #7568df, #5548c6) !important;
+}
+
+/* Smooth transitions */
+body[data-theme="dark"] .container,
+body[data-theme="dark"] .teacher-card,
+body[data-theme="dark"] #teacherList,
+body[data-theme="dark"] .modal-content,
+body[data-theme="dark"] .modal-content input {
+    transition:
+        background .25s ease,
+        color .25s ease,
+        border-color .25s ease,
+        box-shadow .25s ease;
+}
+
+    </style>
 </head>
 
 <body>

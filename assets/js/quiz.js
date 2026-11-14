@@ -77,20 +77,31 @@ async function loadQuiz() {
     throw new Error("An active student account is required.");
   }
 
-  const quizSnap = await getDoc(doc(db, "quizzes", quizId));
+  // Quizzes created with the Teacher Quiz Builder live in "quizzes".
+  // The Classwork hub also lists section-scoped "quizzesV2" records, so
+  // fall back to that collection before reporting a missing quiz.
+  let quizSnap = await getDoc(doc(db, "quizzes", quizId));
+
+  if (!quizSnap.exists()) {
+    quizSnap = await getDoc(doc(db, "quizzesV2", quizId));
+  }
 
   if (!quizSnap.exists()) throw new Error("Quiz not found.");
 
   quiz = { id: quizSnap.id, ...quizSnap.data() };
 
-  if (quiz.status !== "active") {
+  if (!["active", "published"].includes(String(quiz.status || "").toLowerCase())) {
     throw new Error("This quiz is not currently published.");
   }
 
-  if (
-    !Array.isArray(quiz.sectionIds) ||
-    !quiz.sectionIds.includes(profile.sectionId)
-  ) {
+  // Enforce the stored section restriction when the record has one.
+  const quizSections = Array.isArray(quiz.sectionIds)
+    ? quiz.sectionIds.map(String)
+    : quiz.sectionId
+    ? [String(quiz.sectionId)]
+    : [];
+
+  if (quizSections.length && !quizSections.includes(String(profile.sectionId))) {
     throw new Error("This quiz is not assigned to your section.");
   }
 
