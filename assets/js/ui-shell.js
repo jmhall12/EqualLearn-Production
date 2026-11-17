@@ -45,16 +45,17 @@ import {
       ]
     },
 
-    teacher: {
-      title: "Teacher",
-      subtitle: "Teaching workspace",
-      links: [
-        ["dashboard.html", "home", "Dashboard"],
-        ["modules.html", "modules", "Learning Modules"],
-        ["lessons.html", "lesson", "Lessons"],
-        ["students.html", "users", "Students"]
-      ]
-    },
+   teacher: {
+  title: "Teacher",
+  subtitle: "Teaching workspace",
+  links: [
+    ["dashboard.html", "home", "Dashboard"],
+    ["modules.html", "modules", "Learning Modules"],
+    ["lessons.html", "lesson", "Lessons"],
+    ["students.html", "users", "Students"],
+    ["grading.html", "chart", "Activity Grading"]
+  ]
+},
 
     student: {
       title: "Student",
@@ -62,6 +63,7 @@ import {
       links: [
         ["dashboard.html", "home", "Dashboard"],
         ["classwork.html", "modules", "Classwork"],
+        ["progress.html", "chart", "Progress"],
         ["quizzes.html", "quizzes", "Quizzes"],
         ["live.html", "zap", "Live"],
         ["profile.html", "profile", "Profile"]

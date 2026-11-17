@@ -6,10 +6,31 @@ import {
   collection,
   getDocs,
   query,
-  where
+  where,
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
+/* =========================================================
+   EQUALLEARN — TEACHER STUDENT DIRECTORY
+   Live student progress monitoring
+   Sources:
+   - users
+   - sections
+   - progress
+   - quizAttempts
+========================================================= */
+
 let allStudents = [];
+
+const studentProgress = new Map();
+const studentAttempts = new Map();
+const listeners = new Map();
+
+let currentTeacher = null;
+
+function $(id) {
+  return document.getElementById(id);
+}
 
 function escapeHTML(value) {
   return String(value ?? "").replace(/[&<>"']/g, char => ({
@@ -30,22 +51,6 @@ function isProfileComplete(student) {
   );
 }
 
-function updateStatistics(students) {
-  const totalElement = document.getElementById("totalStudents");
-  const completedElement = document.getElementById("completedProfiles");
-  const pendingElement = document.getElementById("pendingProfiles");
-
-  const total = students.length;
-  const completed = students.filter(isProfileComplete).length;
-  const pending = students.filter(
-    student => student.academicProfileVerified !== true
-  ).length;
-
-  if (totalElement) totalElement.textContent = total.toLocaleString("en-PH");
-  if (completedElement) completedElement.textContent = completed.toLocaleString("en-PH");
-  if (pendingElement) pendingElement.textContent = pending.toLocaleString("en-PH");
-}
-
 function getInitials(name) {
   return String(name || "Student")
     .trim()
@@ -55,10 +60,486 @@ function getInitials(name) {
     .join("");
 }
 
+function formatDate(value) {
+  if (!value) return "Date unavailable";
+
+  const date = value.toDate
+    ? value.toDate()
+    : new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Date unavailable";
+  }
+
+  return new Intl.DateTimeFormat("en-PH", {
+    dateStyle: "medium",
+    timeStyle: "short"
+  }).format(date);
+}
+
+function getAttemptScore(attempt) {
+  if (
+    attempt.score === null ||
+    attempt.score === undefined ||
+    attempt.total === null ||
+    attempt.total === undefined
+  ) {
+    return null;
+  }
+
+  const score = Number(attempt.score);
+  const total = Number(attempt.total);
+
+  if (!Number.isFinite(score) || !Number.isFinite(total) || total <= 0) {
+    return null;
+  }
+
+  return {
+    score,
+    total,
+    percentage: Math.round((score / total) * 100)
+  };
+}
+
+/* =========================================================
+   DYNAMIC PROGRESS DESIGN
+========================================================= */
+
+function injectProgressStyles() {
+  if ($("teacher-progress-styles")) return;
+
+  const style = document.createElement("style");
+  style.id = "teacher-progress-styles";
+
+  style.textContent = `
+    .live-progress-stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 15px;
+      margin: 0 0 23px;
+    }
+
+    .live-progress-stat {
+      background: var(--el-surface);
+      border: 1px solid var(--directory-border);
+      border-radius: 18px;
+      padding: 19px;
+      box-shadow: 0 8px 28px rgba(30,35,65,.035);
+    }
+
+    .live-progress-stat small {
+      color: var(--el-muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .live-progress-stat strong {
+      display: block;
+      font-size: 27px;
+      font-weight: 850;
+      margin-top: 10px;
+    }
+
+    .live-progress-stat span {
+      display: block;
+      color: var(--el-muted);
+      font-size: 11px;
+      margin-top: 4px;
+    }
+
+    .student-live-progress {
+      margin-top: 17px;
+      padding: 15px;
+      border-radius: 14px;
+      background: rgba(99,91,255,.055);
+      border: 1px solid rgba(99,91,255,.12);
+    }
+
+    .student-live-progress h4 {
+      margin: 0 0 13px;
+      font-size: 13px;
+    }
+
+    .student-progress-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 9px;
+    }
+
+    .student-progress-metric {
+      min-width: 0;
+    }
+
+    .student-progress-metric span {
+      display: block;
+      font-size: 10px;
+      color: var(--el-muted);
+      margin-bottom: 5px;
+    }
+
+    .student-progress-metric strong {
+      font-size: 16px;
+      font-weight: 850;
+      overflow-wrap: anywhere;
+    }
+
+    .student-progress-track {
+      height: 7px;
+      border-radius: 20px;
+      overflow: hidden;
+      background: rgba(120,120,150,.15);
+      margin-top: 13px;
+    }
+
+    .student-progress-track span {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg,#635bff,#9a80ff);
+      border-radius: inherit;
+      transition: width .3s ease;
+    }
+
+    .student-attempt-list {
+      margin-top: 13px;
+      border-top: 1px solid rgba(120,120,150,.18);
+      padding-top: 11px;
+    }
+
+    .student-attempt-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      font-size: 11px;
+    }
+
+    .student-attempt-row strong {
+      display: block;
+      font-size: 11px;
+    }
+
+    .student-attempt-row small {
+      color: var(--el-muted);
+    }
+
+    .attempt-status {
+      padding: 5px 8px;
+      border-radius: 20px;
+      font-size: 9px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .attempt-status.pending {
+      color: #9a6500;
+      background: #fff2ce;
+    }
+
+    .attempt-status.graded {
+      color: #16834c;
+      background: #e6f8ed;
+    }
+
+    .attempt-status.submitted {
+      color: #6255cb;
+      background: #efedff;
+    }
+
+    .student-progress-loading {
+      color: var(--el-muted);
+      font-size: 11px;
+    }
+
+    .live-progress-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #16834c;
+      font-size: 11px;
+      font-weight: 750;
+    }
+
+    .live-progress-indicator::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      background: #20b66a;
+      border-radius: 50%;
+      box-shadow: 0 0 0 4px rgba(32,182,106,.12);
+    }
+
+    @media(max-width:760px) {
+      .live-progress-stats {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media(max-width:420px) {
+      .student-progress-metrics {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  `;
+
+  document.head.appendChild(style);
+}
+
+function createProgressStats() {
+  const directoryStats = document.querySelector(".directory-stats");
+
+  if (!directoryStats || $("liveProgressStats")) return;
+
+  const wrapper = document.createElement("section");
+  wrapper.id = "liveProgressStats";
+  wrapper.className = "live-progress-stats";
+
+  wrapper.innerHTML = `
+    <article class="live-progress-stat">
+      <small>Quiz Submissions</small>
+      <strong id="totalQuizSubmissions">—</strong>
+      <span>Submitted by your students</span>
+    </article>
+
+    <article class="live-progress-stat">
+      <small>Pending Grading</small>
+      <strong id="pendingQuizGrading">—</strong>
+      <span>Awaiting teacher evaluation</span>
+    </article>
+
+    <article class="live-progress-stat">
+      <small>Graded Quizzes</small>
+      <strong id="gradedQuizCount">—</strong>
+      <span>Quiz attempts with scores</span>
+    </article>
+
+    <article class="live-progress-stat">
+      <small>Average Quiz Score</small>
+      <strong id="averageQuizScore">—</strong>
+      <span>Based on graded submissions</span>
+    </article>
+  `;
+
+  directoryStats.insertAdjacentElement("afterend", wrapper);
+}
+
+/* =========================================================
+   STATISTICS
+========================================================= */
+
+function updateStatistics() {
+  const totalElement = $("totalStudents");
+  const completedElement = $("completedProfiles");
+  const pendingElement = $("pendingProfiles");
+
+  const total = allStudents.length;
+
+  const completed = allStudents.filter(
+    isProfileComplete
+  ).length;
+
+  const pending = allStudents.filter(
+    student => student.academicProfileVerified !== true
+  ).length;
+
+  if (totalElement) totalElement.textContent = total.toLocaleString("en-PH");
+  if (completedElement) completedElement.textContent = completed.toLocaleString("en-PH");
+  if (pendingElement) pendingElement.textContent = pending.toLocaleString("en-PH");
+
+  let submissions = 0;
+  let pendingGrading = 0;
+  let graded = 0;
+  let scoreTotal = 0;
+
+  allStudents.forEach(student => {
+    const attempts = studentAttempts.get(student.uid) || [];
+
+    attempts.forEach(attempt => {
+      submissions++;
+
+      const result = getAttemptScore(attempt);
+
+      if (result) {
+        graded++;
+        scoreTotal += result.percentage;
+      } else {
+        pendingGrading++;
+      }
+    });
+  });
+
+  if ($("totalQuizSubmissions")) {
+    $("totalQuizSubmissions").textContent = submissions.toLocaleString("en-PH");
+  }
+
+  if ($("pendingQuizGrading")) {
+    $("pendingQuizGrading").textContent = pendingGrading.toLocaleString("en-PH");
+  }
+
+  if ($("gradedQuizCount")) {
+    $("gradedQuizCount").textContent = graded.toLocaleString("en-PH");
+  }
+
+  if ($("averageQuizScore")) {
+    $("averageQuizScore").textContent = graded
+      ? `${Math.round(scoreTotal / graded)}%`
+      : "—";
+  }
+}
+
+/* =========================================================
+   STUDENT PROGRESS DATA
+========================================================= */
+
+function getStudentProgressSummary(studentId) {
+  const progressRecords = studentProgress.get(studentId) || [];
+  const attempts = studentAttempts.get(studentId) || [];
+
+  const lessonCount = progressRecords.length;
+
+  const completedLessons = progressRecords.filter(record => {
+    const status = String(record.status || "").toLowerCase();
+
+    return (
+      status === "completed" ||
+      status === "complete" ||
+      record.completed === true ||
+      record.isCompleted === true
+    );
+  }).length;
+
+  const gradedAttempts = attempts.filter(
+    attempt => getAttemptScore(attempt) !== null
+  );
+
+  const average = gradedAttempts.length
+    ? Math.round(
+        gradedAttempts.reduce(
+          (sum, attempt) => sum + getAttemptScore(attempt).percentage,
+          0
+        ) / gradedAttempts.length
+      )
+    : null;
+
+  const completionPercentage = lessonCount
+    ? Math.round((completedLessons / lessonCount) * 100)
+    : 0;
+
+  return {
+    lessonCount,
+    completedLessons,
+    attempts: attempts.length,
+    graded: gradedAttempts.length,
+    average,
+    completionPercentage
+  };
+}
+
+function renderStudentProgress(studentId) {
+  const progress = getStudentProgressSummary(studentId);
+  const attempts = studentAttempts.get(studentId) || [];
+
+  const attemptRows = [...attempts]
+    .sort((a, b) => {
+      const aTime = a.submittedAt?.toMillis?.() || 0;
+      const bTime = b.submittedAt?.toMillis?.() || 0;
+      return bTime - aTime;
+    })
+    .slice(0, 3)
+    .map(attempt => {
+      const result = getAttemptScore(attempt);
+
+      const status = result
+        ? "Graded"
+        : String(attempt.status || "submitted").toLowerCase() === "submitted"
+        ? "Pending grading"
+        : escapeHTML(attempt.status || "Submitted");
+
+      const statusClass = result
+        ? "graded"
+        : status === "Pending grading"
+        ? "pending"
+        : "submitted";
+
+      const scoreLabel = result
+        ? `${result.score}/${result.total} (${result.percentage}%)`
+        : "Not graded yet";
+
+      return `
+        <div class="student-attempt-row">
+          <div>
+            <strong>${escapeHTML(attempt.quizTitle || "Quiz assessment")}</strong>
+            <small>${escapeHTML(formatDate(attempt.submittedAt))}</small>
+            <small style="display:block">${escapeHTML(scoreLabel)}</small>
+          </div>
+
+          <span class="attempt-status ${statusClass}">
+            ${escapeHTML(status)}
+          </span>
+        </div>
+      `;
+    })
+    .join("");
+
+  return `
+    <div class="student-live-progress">
+
+      <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:8px;
+        margin-bottom:13px;
+      ">
+        <h4>Learning Progress</h4>
+        <span class="live-progress-indicator">Live</span>
+      </div>
+
+      <div class="student-progress-metrics">
+
+        <div class="student-progress-metric">
+          <span>Lessons completed</span>
+          <strong>${progress.completedLessons}/${progress.lessonCount}</strong>
+        </div>
+
+        <div class="student-progress-metric">
+          <span>Quiz attempts</span>
+          <strong>${progress.attempts}</strong>
+        </div>
+
+        <div class="student-progress-metric">
+          <span>Average score</span>
+          <strong>${progress.average === null ? "—" : `${progress.average}%`}</strong>
+        </div>
+
+      </div>
+
+      <div class="student-progress-track">
+        <span style="width:${progress.completionPercentage}%"></span>
+      </div>
+
+      ${
+        attemptRows
+          ? `<div class="student-attempt-list">
+              ${attemptRows}
+            </div>`
+          : `<p class="student-progress-loading">
+              No quiz submissions yet.
+            </p>`
+      }
+
+    </div>
+  `;
+}
+
+/* =========================================================
+   RENDER STUDENTS
+========================================================= */
+
 function renderStudents() {
-  const container = document.getElementById("teacherStudentCards");
-  const searchInput = document.getElementById("studentSearch");
-  const verificationFilter = document.getElementById("verificationFilter");
+  const container = $("teacherStudentCards");
+  const searchInput = $("studentSearch");
+  const verificationFilter = $("verificationFilter");
 
   if (!container) return;
 
@@ -189,6 +670,8 @@ function renderStudents() {
         </div>
       </div>
 
+      ${renderStudentProgress(student.uid)}
+
       <div class="student-card-footer">
         <span class="student-profile-state">
           ${complete ? "✓ Profile completed" : "⚠ Profile incomplete"}
@@ -200,17 +683,113 @@ function renderStudents() {
   });
 }
 
-requireRole("teacher", async (teacherProfile) => {
-  const container = document.getElementById("teacherStudentCards");
+/* =========================================================
+   LIVE LISTENERS
+========================================================= */
+
+function stopStudentListeners() {
+  listeners.forEach(unsubscribe => unsubscribe());
+  listeners.clear();
+
+  studentProgress.clear();
+  studentAttempts.clear();
+}
+
+function watchStudentRecords(student) {
+  const uid = student.uid;
+
+  if (!uid || listeners.has(uid)) return;
+
+  // Live lesson progress.
+  const progressQuery = query(
+    collection(db, "progress"),
+    where("userId", "==", uid)
+  );
+
+  const stopProgress = onSnapshot(
+    progressQuery,
+    snapshot => {
+      studentProgress.set(
+        uid,
+        snapshot.docs.map(item => ({
+          id: item.id,
+          ...item.data()
+        }))
+      );
+
+      updateStatistics();
+      renderStudents();
+    },
+    error => {
+      console.error(
+        `[EqualLearn] Progress listener failed for ${uid}:`,
+        error
+      );
+
+      studentProgress.set(uid, []);
+      renderStudents();
+    }
+  );
+
+  // Live quiz submissions.
+  const attemptsQuery = query(
+    collection(db, "quizAttempts"),
+    where("userId", "==", uid)
+  );
+
+  const stopAttempts = onSnapshot(
+    attemptsQuery,
+    snapshot => {
+      studentAttempts.set(
+        uid,
+        snapshot.docs.map(item => ({
+          id: item.id,
+          ...item.data()
+        }))
+      );
+
+      updateStatistics();
+      renderStudents();
+    },
+    error => {
+      console.error(
+        `[EqualLearn] Quiz attempts listener failed for ${uid}:`,
+        error
+      );
+
+      studentAttempts.set(uid, []);
+      renderStudents();
+    }
+  );
+
+  listeners.set(uid, () => {
+    stopProgress();
+    stopAttempts();
+  });
+}
+
+/* =========================================================
+   INITIALIZE DIRECTORY
+========================================================= */
+
+requireRole("teacher", async teacherProfile => {
+  const container = $("teacherStudentCards");
 
   if (!container) return;
 
+  currentTeacher = teacherProfile;
+
+  injectProgressStyles();
+  createProgressStats();
+
   container.innerHTML = `
-    <div class="directory-empty">Loading student records...</div>
+    <div class="directory-empty">
+      Loading student records...
+    </div>
   `;
 
-  // Reset counters while loading.
-  updateStatistics([]);
+  updateStatistics();
+  stopStudentListeners();
 
   try {
     const teacherUid = teacherProfile.uid;
@@ -219,7 +798,7 @@ requireRole("teacher", async (teacherProfile) => {
       throw new Error("Teacher account UID is missing.");
     }
 
-    // Find sections assigned to this teacher.
+    // Find the sections assigned to this teacher.
     const sectionsRef = collection(db, "sections");
 
     const [primarySections, multipleSections] = await Promise.all([
@@ -244,12 +823,12 @@ requireRole("teacher", async (teacherProfile) => {
 
     if (!sectionIds.length) {
       allStudents = [];
-      updateStatistics([]);
+      updateStatistics();
       renderStudents();
       return;
     }
 
-    // Load students only from the teacher's assigned sections.
+    // Fetch students from assigned sections only.
     const studentResults = await Promise.all(
       sectionIds.map(sectionId =>
         getDocs(query(
@@ -273,26 +852,33 @@ requireRole("teacher", async (teacherProfile) => {
 
     allStudents = [...studentMap.values()];
 
-    // Update the three dashboard statistics.
-    updateStatistics(allStudents);
-
-    // Render the directory.
+    updateStatistics();
     renderStudents();
 
-    // Connect search and filter controls.
-    const searchInput = document.getElementById("studentSearch");
-    const verificationFilter = document.getElementById("verificationFilter");
+    // Start live progress and quiz listeners for each student.
+    allStudents.forEach(watchStudentRecords);
 
-    if (searchInput) {
+    // Search and filter.
+    const searchInput = $("studentSearch");
+    const verificationFilter = $("verificationFilter");
+
+    if (searchInput && !searchInput.dataset.progressBound) {
       searchInput.addEventListener("input", renderStudents);
+      searchInput.dataset.progressBound = "true";
     }
 
-    if (verificationFilter) {
+    if (verificationFilter && !verificationFilter.dataset.progressBound) {
       verificationFilter.addEventListener("change", renderStudents);
+      verificationFilter.dataset.progressBound = "true";
     }
+
+    console.log("[EqualLearn] Live teacher progress monitoring initialized.", {
+      students: allStudents.length,
+      sections: sectionIds.length
+    });
 
   } catch (error) {
-    console.error("Teacher student loading error:", error);
+    console.error("[EqualLearn] Teacher directory error:", error);
 
     container.innerHTML = `
       <div class="directory-empty">
