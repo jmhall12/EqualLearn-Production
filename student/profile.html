@@ -298,6 +298,121 @@
         transition: none;
       }
     }
+
+/* ==========================================
+   EQUALLEARN — PREMIUM DARK PROFILE PANELS
+========================================== */
+
+.profile-panel {
+  background: linear-gradient(
+    145deg,
+    rgba(34, 38, 58, 0.97),
+    rgba(23, 27, 44, 0.97)
+  ) !important;
+
+  border: 1px solid rgba(160, 135, 255, 0.24) !important;
+  border-radius: 22px;
+
+  box-shadow:
+    0 18px 45px rgba(0, 0, 0, 0.22),
+    0 0 25px rgba(126, 91, 239, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07) !important;
+
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  color: #f4f1ff;
+}
+
+.profile-panel h2,
+.profile-panel strong,
+.profile-panel label {
+  color: #f5f1ff !important;
+}
+
+.profile-panel .profile-help,
+.profile-panel .profile-info-item span {
+  color: #aaa8c5 !important;
+}
+
+/* Profile photo upload section */
+.profile-photo-section {
+  background: linear-gradient(
+    145deg,
+    rgba(48, 51, 76, 0.94),
+    rgba(33, 36, 57, 0.94)
+  ) !important;
+
+  border: 1px solid rgba(170, 150, 255, 0.17) !important;
+  border-radius: 18px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+}
+
+/* Input fields */
+.profile-field input,
+.profile-field select {
+  background: rgba(13, 17, 32, 0.85) !important;
+  color: #f5f1ff !important;
+  border: 1px solid rgba(160, 145, 205, 0.25) !important;
+}
+
+.profile-field input::placeholder {
+  color: #77758f !important;
+}
+
+.profile-field input:focus,
+.profile-field select:focus {
+  background: rgba(25, 24, 48, 0.98) !important;
+  border-color: #9273f5 !important;
+  box-shadow: 0 0 0 3px rgba(137, 103, 239, 0.16) !important;
+}
+
+.profile-field input[readonly] {
+  background: rgba(37, 40, 59, 0.9) !important;
+  color: #aaa8c5 !important;
+}
+
+/* Upload and remove buttons */
+.profile-photo-buttons button {
+  background: linear-gradient(
+    145deg,
+    rgba(55, 57, 83, 0.96),
+    rgba(37, 39, 61, 0.96)
+  ) !important;
+
+  border: 1px solid rgba(169, 148, 255, 0.28) !important;
+  color: #eee9ff !important;
+}
+
+.profile-photo-buttons button:hover {
+  background: rgba(117, 83, 214, 0.22) !important;
+  border-color: #9b7cff !important;
+  color: #c8b7ff !important;
+}
+
+/* Information dividers */
+.profile-divider {
+  border-top-color: rgba(173, 158, 224, 0.22) !important;
+}
+
+.profile-info-item {
+  border-bottom-color: rgba(173, 158, 224, 0.14) !important;
+}
+
+/* Verification message */
+.profile-message {
+  background: rgba(104, 77, 190, 0.19) !important;
+  border: 1px solid rgba(151, 123, 255, 0.22) !important;
+  color: #c7b7ff !important;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .profile-panel {
+    border-radius: 18px;
+  }
+}
+
+
   </style>
 </head>
 
@@ -512,5 +627,26 @@
   <script type="module" src="../assets/js/ui-shell.js"></script>
   <script type="module" src="../assets/js/pwa.js"></script>
   <script type="module" src="../assets/js/theme.js"></script>
+
+<!-- EQUALLEARN LUMI COMPANION -->
+<iframe
+  src="/assets/widgets/lumi.html"
+  title="Lumi — EqualLearn Companion"
+  id="equallearn-lumi-frame"
+  allow="autoplay"
+  style="
+    position: fixed;
+    right: 8px;
+    bottom: 8px;
+    width: 210px;
+    height: 255px;
+    border: 0;
+    background: transparent;
+    z-index: 99999;
+    overflow: hidden;
+    pointer-events: auto;
+  ">
+</iframe>
+
 </body>
 </html>

@@ -516,6 +516,32 @@
         transition-duration: .01ms !important;
       }
     }
+
+    /* =========================================
+   LUMI — FORCE ABOVE DASHBOARD
+========================================= */
+
+html body #equallearn-lumi-frame {
+  position: fixed !important;
+  right: 12px !important;
+  bottom: 12px !important;
+
+  width: 230px !important;
+  height: 280px !important;
+
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+
+  border: none !important;
+  background: transparent !important;
+
+  z-index: 2147483647 !important;
+  pointer-events: auto !important;
+
+  transform: none !important;
+  isolation: isolate !important;
+}
   </style>
 </head>
 
@@ -752,6 +778,28 @@
 <!-- PWA AND SYSTEM THEME -->
 <script type="module" src="../assets/js/pwa.js"></script>
 <script type="module" src="../assets/js/theme.js"></script>
+
+
+<!-- EQUALLEARN LUMI COMPANION -->
+<iframe
+  src="/assets/widgets/lumi.html"
+  title="Lumi — EqualLearn Companion"
+  id="equallearn-lumi-frame"
+  allow="autoplay"
+  style="
+    position: fixed;
+    right: 8px;
+    bottom: 8px;
+    width: 210px;
+    height: 255px;
+    border: 0;
+    background: transparent;
+    z-index: 99999;
+    overflow: hidden;
+    pointer-events: auto;
+  ">
+</iframe>
+
 
 </body>
 </html>

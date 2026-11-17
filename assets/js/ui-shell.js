@@ -259,25 +259,30 @@ import {
   ------------------------------------------------------- */
 
   function collectPageNodes() {
-    return [...document.body.children].filter(element => {
-      if (!(element instanceof HTMLElement)) return false;
+  return [...document.body.children].filter(element => {
+    if (!(element instanceof HTMLElement)) return false;
 
-      if (
-        ["SCRIPT", "STYLE", "LINK", "META"].includes(element.tagName)
-      ) {
-        return false;
-      }
+    // Lumi must remain outside the dashboard shell.
+    if (element.id === "equallearn-lumi-frame") {
+      return false;
+    }
 
-      if (
-        element.classList.contains("el-app-shell") ||
-        element.id === "equallearn-shell-theme"
-      ) {
-        return false;
-      }
+    if (
+      ["SCRIPT", "STYLE", "LINK", "META"].includes(element.tagName)
+    ) {
+      return false;
+    }
 
-      return true;
-    });
-  }
+    if (
+      element.classList.contains("el-app-shell") ||
+      element.id === "equallearn-shell-theme"
+    ) {
+      return false;
+    }
+
+    return true;
+  });
+}
 
   /* -------------------------------------------------------
      SHELL STYLES
