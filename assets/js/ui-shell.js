@@ -62,7 +62,7 @@ import {
       links: [
         ["dashboard.html", "home", "Dashboard"],
         ["classwork.html", "modules", "Classwork"],
-        ["quizzes.html", "quiz", "Quizzes"],
+        ["quizzes.html", "quizzes", "Quizzes"],
         ["live.html", "zap", "Live"],
         ["profile.html", "profile", "Profile"]
       ]

@@ -65,12 +65,23 @@ async function load() {
     return;
   }
 
-  let title = "Quiz submitted";
 
-  if (attempt.quizId) {
-    const quizSnap = await getDoc(doc(db, "quizzes", String(attempt.quizId)));
-    if (quizSnap.exists()) title = quizSnap.data().title || title;
+  
+let title = "Quiz submitted";
+
+if (attempt.quizId) {
+  const quizSnap = await getDoc(
+    doc(db, "teacherActivitiesV2", String(attempt.quizId))
+  );
+
+  if (quizSnap.exists()) {
+    const quizData = quizSnap.data();
+
+    if (quizData.type === "quiz") {
+      title = quizData.title || title;
+    }
   }
+}
 
   const total = Number(attempt.total || 0);
   const scored = attempt.score === null || attempt.score === undefined;

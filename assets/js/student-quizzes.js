@@ -8,8 +8,11 @@ import {
   collection,
   doc,
   getDoc,
-  getDocs
+  getDocs,
+  query,
+  where
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
+
 
 /* =========================================================
    EQUALLEARN — STUDENT QUIZ LIST
@@ -101,36 +104,67 @@ function availability(record) {
    DATA
 --------------------------------------------------------- */
 
-async function loadQuizzes() {
-  const studentSection = String(profile.sectionId || "");
 
-  const snapshot = await getDocs(collection(db, "quizzes"));
+async function loadQuizzes() {
+  const studentSection = String(profile.sectionId || "").trim();
+
+  if (!studentSection) {
+    throw new Error("Your account has no assigned section.");
+  }
+
+  const quizzesQuery = query(
+    collection(db, "teacherActivitiesV2"),
+    where("status", "==", "published"),
+    where("sectionId", "==", studentSection)
+  );
+
+  console.log("[EqualLearn] Loading Classwork quizzes:", {
+    collection: "teacherActivitiesV2",
+    sectionId: studentSection
+  });
+
+  const snapshot = await getDocs(quizzesQuery);
 
   quizzes = snapshot.docs
-    .map(item => ({ id: item.id, ...item.data() }))
+    .map(item => ({
+      id: item.id,
+      ...item.data()
+    }))
+    .filter(record =>
+      String(record.type || "").toLowerCase() === "quiz"
+    )
     .filter(isPublished)
     .map(record => {
-      const sections = sectionsOf(record);
-      return { ...record, sections };
-    })
-    .filter(record => {
-      if (!record.sections.length) return true;
-      if (!studentSection) return false;
-      return record.sections.includes(studentSection);
+      const activityData = record.activityData || {};
+
+      return {
+        ...record,
+        description:
+          record.description ||
+          activityData.instructions ||
+          "",
+        questions: Array.isArray(activityData.questions)
+          ? activityData.questions
+          : []
+      };
     });
 
-  try {
-    const questions = await getDocs(collection(db, "quizQuestions"));
-    questionCounts = new Map();
-    questions.docs.forEach(item => {
-      const quizId = String(item.data().quizId || "");
-      if (!quizId) return;
-      questionCounts.set(quizId, (questionCounts.get(quizId) || 0) + 1);
-    });
-  } catch (error) {
-    console.warn("[EqualLearn] Question counts unavailable:", error);
-  }
+  questionCounts = new Map();
+
+  quizzes.forEach(record => {
+    questionCounts.set(record.id, record.questions.length);
+  });
+
+  console.log("[EqualLearn] Classwork quizzes loaded:", {
+    count: quizzes.length,
+    quizzes: quizzes.map(item => ({
+      id: item.id,
+      title: item.title,
+      questions: item.questions.length
+    }))
+  });
 }
+
 
 /* ---------------------------------------------------------
    RENDER
