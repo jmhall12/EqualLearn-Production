@@ -30,6 +30,19 @@ body{font-family:Inter,"Segoe UI",Arial,sans-serif}
 #lumi-label{position:absolute;left:50%;bottom:7px;transform:translateX(-50%);padding:6px 12px;border:1px solid rgba(255,255,255,.92);border-radius:30px;background:rgba(255,255,255,.86);backdrop-filter:blur(12px);color:#6345bd;font-size:10px;font-weight:850;letter-spacing:.2px;white-space:nowrap;box-shadow:0 7px 19px rgba(65,43,130,.13);pointer-events:none}
 #lumi-reopen{position:absolute;right:10px;bottom:10px;pointer-events:auto;border:1px solid #fff;border-radius:30px;padding:10px 15px;background:linear-gradient(135deg,#a68af8,#704bd5);color:#fff;font:800 12px Inter,Arial;box-shadow:0 9px 25px #5136a344;cursor:pointer}
 #lumi-fallback{position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:#8064d7;font-size:12px;font-weight:700;text-align:center;padding:20px;pointer-events:none}
+#lumi-root.lumi-mobile #lumi-speech{
+ right:4px;top:4px;max-width:145px;padding:7px 9px;
+ font-size:9px;border-radius:12px 12px 4px 12px;
+}
+#lumi-root.lumi-mobile #lumi-controls{
+ right:4px;bottom:24px;gap:4px;opacity:1;transform:none;
+}
+#lumi-root.lumi-mobile .lumi-control{
+ width:25px;height:25px;font-size:11px;
+}
+#lumi-root.lumi-mobile #lumi-label{
+ bottom:4px;padding:4px 8px;font-size:8px;
+}
 @media(max-width:600px){#lumi-label{font-size:9px}#lumi-controls{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){#lumi-controls{transition:none}}
 </style>
@@ -56,6 +69,44 @@ const canvas=document.getElementById("lumi-canvas");
 const fallback=document.getElementById("lumi-fallback");
 const speech=document.getElementById("lumi-speech");
 const reduced=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// Lumi manages her own iframe size using the PARENT page viewport.
+// This makes her compact on phones across pages, independently of
+// each page's dashboard-shell CSS.
+function syncLumiFrameSize(){
+ try {
+  const frame = window.frameElement;
+  if (!frame) return;
+
+  const parentWidth = window.parent.innerWidth || window.innerWidth;
+  const mobile = parentWidth <= 600;
+  root.classList.toggle("lumi-mobile", mobile);
+
+  Object.assign(frame.style, {
+   position: "fixed",
+   width: mobile ? "145px" : "230px",
+   height: mobile ? "180px" : "280px",
+   right: mobile ? "4px" : "12px",
+   bottom: mobile ? "6px" : "12px",
+   border: "0",
+   background: "transparent",
+   zIndex: "2147483647",
+   display: "block",
+   visibility: "visible",
+   opacity: "1",
+   pointerEvents: "auto",
+   overflow: "hidden"
+  });
+  frame.setAttribute("allowtransparency", "true");
+ } catch (error) {
+  // Cross-origin embedding: parent page must set the iframe dimensions.
+ }
+}
+
+syncLumiFrameSize();
+window.addEventListener("resize", syncLumiFrameSize, {passive:true});
+window.addEventListener("orientationchange", syncLumiFrameSize, {passive:true});
+
 let renderer;
 try{
  renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:"high-performance"});
