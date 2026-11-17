@@ -221,9 +221,9 @@ function listenToModules(sectionId) {
   const modulesRef = collection(db, "modulesV2");
 
   const modulesQuery = query(
-  collection(db, "modulesV2"),
+  modulesRef,
   where("status", "==", "published"),
-  where("sectionIds", "array-contains", sectionId)
+  where("sectionId", "==", sectionId)
 );
 
   console.log("[EqualLearn Modules] Starting listener:", {
