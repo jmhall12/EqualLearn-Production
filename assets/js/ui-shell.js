@@ -284,6 +284,65 @@ import {
   });
 }
 
+/* =========================================================
+   LUMI — GLOBAL FLOATING COMPANION
+   Desktop + Mobile Responsive
+========================================================= */
+
+function keepLumiOnTop() {
+  const frame = document.getElementById("equallearn-lumi-frame");
+
+  if (!frame) return;
+
+  // Keep Lumi directly under BODY, outside dashboard containers.
+  if (frame.parentElement !== document.body) {
+    document.body.appendChild(frame);
+  }
+
+  const isMobile = window.matchMedia("(max-width: 600px)").matches;
+
+  Object.assign(frame.style, {
+    position: "fixed",
+    right: isMobile ? "5px" : "12px",
+    bottom: isMobile ? "8px" : "12px",
+    width: isMobile ? "175px" : "230px",
+    height: isMobile ? "215px" : "280px",
+    display: "block",
+    visibility: "visible",
+    opacity: "1",
+    border: "0",
+    background: "transparent",
+    zIndex: "2147483647",
+    pointerEvents: "auto",
+    overflow: "hidden",
+    transform: "none"
+  });
+
+  frame.setAttribute("allowtransparency", "true");
+}
+
+function setupLumiCompanion() {
+  keepLumiOnTop();
+
+  // Automatically resize Lumi when device orientation or viewport changes.
+  window.addEventListener("resize", keepLumiOnTop);
+  window.addEventListener("orientationchange", keepLumiOnTop);
+
+  // Detect if another script inserts or moves Lumi.
+  const observer = new MutationObserver(() => {
+    const frame = document.getElementById("equallearn-lumi-frame");
+
+    if (frame && frame.parentElement !== document.body) {
+      keepLumiOnTop();
+    }
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+}
+
   /* -------------------------------------------------------
      SHELL STYLES
      These styles are intentionally scoped to the shell.
@@ -1182,9 +1241,12 @@ function setupUserNameSync() {
     });
 
     setupSidebar();
-    setupLogout();
-    setupUserNameSync();
-    setupRouteProgress();
+setupLogout();
+setupUserNameSync();
+setupRouteProgress();
+
+// Initialize Lumi outside the dashboard shell.
+setupLumiCompanion();
 
     console.info(
       `[EqualLearn Shell] ${role} shell initialized successfully.`
@@ -1230,3 +1292,6 @@ function setupUserNameSync() {
     initialize();
   }
 })();
+
+
+
