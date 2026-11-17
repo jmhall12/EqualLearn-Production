@@ -12,8 +12,9 @@ import {
 
 /* =========================================================
    EQUALLEARN — STUDENT ASSIGNMENT
-   Existing collection: assignments
-   Existing collection: users
+   Collection: teacherActivitiesV2
+   Profile: users
+   Activity type: assignment
 ========================================================= */
 
 const $ = id => document.getElementById(id);
@@ -48,7 +49,6 @@ async function loadAssignment() {
 
     const params = new URLSearchParams(location.search);
 
-    // Support different URL parameter names.
     currentAssignmentId =
       params.get("id") ||
       params.get("assignmentId") ||
@@ -60,7 +60,15 @@ async function loadAssignment() {
       );
     }
 
-    // Load student profile.
+    /* -----------------------------------------
+       1. LOAD STUDENT PROFILE
+    ----------------------------------------- */
+
+    console.log(
+      "[ASSIGNMENT] Loading student profile:",
+      currentUser.uid
+    );
+
     const profileSnap = await getDoc(
       doc(db, "users", currentUser.uid)
     );
@@ -71,7 +79,15 @@ async function loadAssignment() {
 
     const student = profileSnap.data();
 
-    if (String(student.role || "").toLowerCase() !== "student") {
+    console.log("[ASSIGNMENT] Student profile:", {
+      role: student.role,
+      status: student.status,
+      sectionId: student.sectionId
+    });
+
+    if (
+      String(student.role || "").toLowerCase() !== "student"
+    ) {
       throw new Error("Student account required.");
     }
 
@@ -88,44 +104,79 @@ async function loadAssignment() {
       );
     }
 
-    // Load assignment document.
-    const assignmentRef = doc(
-      db,
-      "assignments",
+    /* -----------------------------------------
+       2. LOAD FROM TEACHER ACTIVITIES V2
+    ----------------------------------------- */
+
+    console.log(
+      "[ASSIGNMENT] Loading teacher activity:",
       currentAssignmentId
     );
 
-    const assignmentSnap = await getDoc(assignmentRef);
+    console.log("[ASSIGNMENT] Firebase project:", {
+      projectId: db.app.options.projectId,
+      collection: "teacherActivitiesV2",
+      authUid: currentUser.uid,
+      assignmentId: currentAssignmentId
+    });
 
-    if (!assignmentSnap.exists()) {
+    const activityRef = doc(
+      db,
+      "teacherActivitiesV2",
+      currentAssignmentId
+    );
+
+    const activitySnap = await getDoc(activityRef);
+
+    console.log(
+      "[ASSIGNMENT] Activity read successful:",
+      activitySnap.exists()
+    );
+
+    if (!activitySnap.exists()) {
       throw new Error(
         "This assignment does not exist or may have been deleted."
       );
     }
 
-    const assignment = assignmentSnap.data();
+    const activity = activitySnap.data();
 
-    // Preserve the existing active-status requirement.
+    console.log("[ASSIGNMENT] Activity data:", activity);
+
+    /* -----------------------------------------
+       3. VALIDATE ACTIVITY TYPE AND STATUS
+    ----------------------------------------- */
+
     if (
-      String(assignment.status || "").toLowerCase() !== "active"
+      String(activity.type || "").toLowerCase() !== "assignment"
+    ) {
+      throw new Error(
+        "This activity is not an assignment."
+      );
+    }
+
+    if (
+      String(activity.status || "").toLowerCase() !== "published"
     ) {
       throw new Error(
         "This assignment is not currently published."
       );
     }
 
-    // Check assignment section access.
+    /* -----------------------------------------
+       4. VALIDATE SECTION ACCESS
+    ----------------------------------------- */
+
     const studentSectionId = String(student.sectionId);
 
-    const sectionIds = Array.isArray(assignment.sectionIds)
-      ? assignment.sectionIds.map(String)
-      : assignment.sectionId
-        ? [String(assignment.sectionId)]
+    const sectionIds = Array.isArray(activity.sectionIds)
+      ? activity.sectionIds.map(String)
+      : activity.sectionId
+        ? [String(activity.sectionId)]
         : [];
 
-    const assignedToStudent = sectionIds.length
-      ? sectionIds.includes(studentSectionId)
-      : assignment.audience === "all";
+    const assignedToStudent =
+      sectionIds.includes(studentSectionId);
 
     if (!assignedToStudent) {
       throw new Error(
@@ -133,26 +184,80 @@ async function loadAssignment() {
       );
     }
 
-    // Availability and due date.
-    const availableAt = toDate(assignment.availableAt);
-    const dueDate = toDate(assignment.dueDate);
+    /* -----------------------------------------
+       5. READ NESTED ACTIVITY DATA
+    ----------------------------------------- */
+
+    const activityData =
+      activity.activityData &&
+      typeof activity.activityData === "object"
+        ? activity.activityData
+        : {};
+
+    const dueDate = toDate(
+      activityData.dueDate ||
+      activity.dueDate
+    );
+
     const now = new Date();
 
-    if (availableAt && availableAt > now) {
-      throw new Error(
-        `This assignment will be available on ${formatDate(availableAt)}.`
+    /* -----------------------------------------
+       6. PREPARE ASSIGNMENT DATA
+    ----------------------------------------- */
+
+    const assignment = {
+      title:
+        activity.title ||
+        "Untitled Assignment",
+
+      instructions:
+        activityData.instructions ||
+        activityData.description ||
+        activity.description ||
+        "No instructions provided by your teacher.",
+
+      points:
+        activityData.totalPoints ??
+        activity.points ??
+        0,
+
+      submissionType:
+        activityData.submissionType ||
+        "Not specified",
+
+      resources: Array.isArray(activity.resources)
+        ? activity.resources
+        : [],
+
+      activityData
+    };
+
+    /* -----------------------------------------
+       7. CHECK DUE DATE
+    ----------------------------------------- */
+
+    if (dueDate && dueDate < now) {
+      console.info(
+        "[ASSIGNMENT] Assignment is past due."
       );
     }
+
+    /* -----------------------------------------
+       8. RENDER
+    ----------------------------------------- */
 
     renderAssignment(assignment, dueDate);
 
     console.info(
-      "[STUDENT ASSIGNMENT] Assignment loaded:",
+      "[ASSIGNMENT] Assignment loaded successfully:",
       currentAssignmentId
     );
 
   } catch (error) {
-    console.error("[STUDENT ASSIGNMENT]", error);
+    console.error(
+      "[STUDENT ASSIGNMENT]",
+      error
+    );
 
     showStatus(
       error.message || "Unable to load assignment.",
@@ -172,28 +277,31 @@ function renderAssignment(data, dueDate) {
   const due = $("assignmentDue");
   const badge = $("assignmentStatusBadge");
 
-  if (!title || !instructions || !points || !due || !badge) {
+  if (
+    !title ||
+    !instructions ||
+    !points ||
+    !due ||
+    !badge
+  ) {
     throw new Error(
       "Assignment HTML is missing one or more required elements."
     );
   }
 
-  title.textContent =
-    data.title || "Untitled Assignment";
+  title.textContent = data.title;
 
-  instructions.textContent =
-    data.instructions ||
-    data.description ||
-    "No instructions provided by your teacher.";
+  instructions.textContent = data.instructions;
 
   points.textContent =
-    `${Number(data.points ?? 0)} Points`;
+    `${Number(data.points)} Points`;
 
   due.textContent = dueDate
     ? `Due: ${formatDate(dueDate)}`
     : "No due date";
 
-  const isOverdue = dueDate && dueDate < new Date();
+  const isOverdue =
+    dueDate && dueDate < new Date();
 
   badge.textContent = isOverdue
     ? "Past Due"
@@ -207,7 +315,15 @@ function renderAssignment(data, dueDate) {
     ? "#ff9caa"
     : "#b9aaff";
 
-  renderResources(data);
+  /* Optional HTML element for submission type. */
+  const submissionType = $("assignmentSubmissionType");
+
+  if (submissionType) {
+    submissionType.textContent =
+      `Submission: ${formatSubmissionType(data.submissionType)}`;
+  }
+
+  renderResources(data.resources, data.activityData);
 
   if (statusBox) {
     statusBox.hidden = true;
@@ -219,10 +335,10 @@ function renderAssignment(data, dueDate) {
 }
 
 /* =========================================================
-   RENDER ATTACHMENTS AND RESOURCES
+   RENDER RESOURCES
 ========================================================= */
 
-function renderResources(data) {
+function renderResources(resources, activityData = {}) {
   const section = $("resourcesSection");
   const container = $("assignmentResources");
 
@@ -230,59 +346,107 @@ function renderResources(data) {
 
   container.replaceChildren();
 
-  const resources = [];
+  const items = [];
 
-  if (data.fileURL || data.fileUrl) {
-    resources.push({
-      label: data.fileName || "Assignment Attachment",
-      url: data.fileURL || data.fileUrl
+  /* Main resources array from teacherActivitiesV2. */
+  if (Array.isArray(resources)) {
+    resources.forEach(item => {
+      if (typeof item === "string") {
+        items.push({
+          label: "Learning Resource",
+          url: item
+        });
+
+        return;
+      }
+
+      if (item && typeof item === "object") {
+        items.push({
+          label:
+            item.label ||
+            item.title ||
+            item.name ||
+            item.fileName ||
+            "Learning Resource",
+
+          url:
+            item.url ||
+            item.href ||
+            item.fileURL ||
+            item.fileUrl ||
+            item.downloadURL ||
+            item.downloadUrl ||
+            item.link
+        });
+      }
     });
   }
 
-  if (data.resourceUrl || data.resourceURL) {
-    resources.push({
+  /* Support older assignment resource fields. */
+  const legacyResources = [
+    {
+      label: activityData.fileName || "Assignment Attachment",
+      url: activityData.fileURL || activityData.fileUrl
+    },
+    {
       label: "Open Learning Resource",
-      url: data.resourceUrl || data.resourceURL
-    });
-  }
-
-  if (Array.isArray(data.resourceLinks)) {
-    data.resourceLinks.forEach(item => {
-      if (!item || typeof item !== "object") return;
-
-      const url = item.url || item.href;
-
-      if (!url) return;
-
-      resources.push({
-        label:
-          item.label ||
-          item.title ||
-          item.name ||
-          "Learning Resource",
-        url
-      });
-    });
-  }
-
-  if (data.videoUrl || data.videoURL) {
-    resources.push({
+      url: activityData.resourceUrl || activityData.resourceURL
+    },
+    {
       label: "Watch Assignment Video",
-      url: data.videoUrl || data.videoURL
+      url: activityData.videoUrl || activityData.videoURL
+    }
+  ];
+
+  legacyResources.forEach(item => {
+    if (item.url) {
+      items.push(item);
+    }
+  });
+
+  /* Support nested resourceLinks. */
+  if (Array.isArray(activityData.resourceLinks)) {
+    activityData.resourceLinks.forEach(item => {
+      if (!item) return;
+
+      if (typeof item === "string") {
+        items.push({
+          label: "Learning Resource",
+          url: item
+        });
+
+        return;
+      }
+
+      if (typeof item === "object") {
+        items.push({
+          label:
+            item.label ||
+            item.title ||
+            item.name ||
+            "Learning Resource",
+
+          url:
+            item.url ||
+            item.href ||
+            item.link
+        });
+      }
     });
   }
 
+  /* Validate and remove duplicates. */
   const unique = new Map();
 
-  resources.forEach(item => {
+  items.forEach(item => {
     const safeUrl = validateUrl(item.url);
 
-    if (safeUrl) {
-      unique.set(safeUrl, {
-        label: item.label,
-        url: safeUrl
-      });
-    }
+    if (!safeUrl) return;
+
+    unique.set(safeUrl, {
+      label: item.label || "Learning Resource",
+      url: safeUrl
+    });
   });
 
   if (!unique.size) {
@@ -304,6 +468,24 @@ function renderResources(data) {
 
     container.appendChild(link);
   });
+}
+
+/* =========================================================
+   SUBMISSION TYPE LABEL
+========================================================= */
+
+function formatSubmissionType(value) {
+  const type = String(value || "").toLowerCase();
+
+  const labels = {
+    file: "File Upload",
+    text: "Text Submission",
+    link: "Link Submission",
+    both: "File or Text Submission",
+    none: "No Submission Required"
+  };
+
+  return labels[type] || value || "Not specified";
 }
 
 /* =========================================================
@@ -346,6 +528,12 @@ function toDate(value) {
     return new Date(value.seconds * 1000);
   }
 
+  /*
+    Firestore currently stores dueDate as:
+    "2026-11-17T09:38"
+
+    This format is interpreted as local time by the browser.
+  */
   const date = new Date(value);
 
   return Number.isNaN(date.getTime())
@@ -368,13 +556,18 @@ function formatDate(date) {
 
 function validateUrl(value) {
   try {
-    const url = new URL(String(value || "").trim());
+    const url = new URL(
+      String(value || "").trim()
+    );
 
-    if (!["http:", "https:"].includes(url.protocol)) {
+    if (
+      !["http:", "https:"].includes(url.protocol)
+    ) {
       return "";
     }
 
     return url.href;
+
   } catch {
     return "";
   }
