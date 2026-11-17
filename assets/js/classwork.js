@@ -57,9 +57,15 @@ onAuthStateChanged(auth, async user => {
   allActivities = [];
 
   try {
-    await loadStudentProfile();
-    await loadAllClasswork();
-  } catch (error) {
+  await loadStudentProfile();
+
+  // Run Firestore permission diagnostics first.
+  await testClassworkPermissions();
+
+  // Load the actual classwork after the test.
+  await loadAllClasswork();
+
+} catch (error) {
     console.error("[CLASSWORK HUB]", error);
 
     showState(
@@ -113,6 +119,33 @@ async function loadStudentProfile() {
     sectionId: studentSectionId,
     projectId: db.app.options.projectId
   });
+}
+
+async function testClassworkPermissions() {
+  const collections = ["modulesV2", "teacherActivitiesV2"];
+
+  for (const name of collections) {
+    try {
+      const q = query(
+        collection(db, name),
+        where("status", "==", "published"),
+        where("sectionIds", "array-contains", studentSectionId)
+      );
+
+      const result = await getDocs(q);
+
+      console.log(`[PERMISSION TEST] ${name}: SUCCESS`, {
+        count: result.size,
+        ids: result.docs.map(item => item.id)
+      });
+    } catch (error) {
+      console.error(`[PERMISSION TEST] ${name}: FAILED`, {
+        code: error.code,
+        message: error.message,
+        projectId: db.app.options.projectId
+      });
+    }
+  }
 }
 
 /* =========================================================
@@ -191,62 +224,36 @@ async function loadAllClasswork() {
 ========================================================= */
 
 
+
+
 async function fetchPublishedSectionDocuments(collectionName) {
   if (!studentSectionId) {
     throw new Error("Student section ID is missing.");
   }
 
-  const collectionRef = collection(db, collectionName);
-
-  const queries = [
-    query(
-      collectionRef,
-      where("status", "==", "published"),
-      where("sectionIds", "array-contains", studentSectionId)
-    ),
-    query(
-      collectionRef,
-      where("status", "==", "published"),
-      where("sectionId", "==", studentSectionId)
-    )
-  ];
-
-  const results = await Promise.allSettled(
-    queries.map(q => getDocs(q))
+  const q = query(
+    collection(db, collectionName),
+    where("status", "==", "published"),
+    where("sectionId", "==", studentSectionId)
   );
 
-  const documents = new Map();
-  const errors = [];
+  const snapshot = await getDocs(q);
 
-  results.forEach(result => {
-    if (result.status === "fulfilled") {
-      result.value.forEach(snapshot => {
-        documents.set(snapshot.id, {
-          id: snapshot.id,
-          ...snapshot.data()
-        });
-      });
-    } else {
-      errors.push(result.reason);
-    }
-  });
+  const documents = snapshot.docs.map(item => ({
+    id: item.id,
+    ...item.data()
+  }));
 
-  if (documents.size === 0 && errors.length === queries.length) {
-    throw errors[0];
-  }
-
-  console.log("[CLASSWORK] Section documents:", {
+  console.log("[CLASSWORK] Section documents loaded:", {
     collection: collectionName,
     sectionId: studentSectionId,
-    count: documents.size,
-    queryErrors: errors.map(error => ({
-      code: error.code,
-      message: error.message
-    }))
+    count: documents.length
   });
 
-  return [...documents.values()];
+  return documents;
 }
+
+
 
 
 /* =========================================================
@@ -783,3 +790,39 @@ function formatDate(date) {
     timeStyle: "short"
   });
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

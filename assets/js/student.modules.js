@@ -87,6 +87,7 @@ function initializeFilters() {
    AUTHENTICATION
 ===================================================== */
 
+
 function initializeAuthentication() {
   onAuthStateChanged(auth, async user => {
     if (unsubscribeModules) {
@@ -134,23 +135,33 @@ function initializeAuthentication() {
         );
       }
 
+      // ========================================
+      // NORMAL INITIALIZATION
+      // ========================================
+
       updateStudentInformation(user, studentProfile);
+
       listenToModules(sectionId);
 
       authReady = true;
 
     } catch (error) {
-      console.error("[EqualLearn Modules] Authentication error:", error);
+      console.error(
+        "[EqualLearn Modules] Authentication error:",
+        error
+      );
 
       showState(
         "⚠️",
         "Unable to load your account",
-        error.message || "Something went wrong while loading your student profile.",
+        error.message ||
+          "Something went wrong while loading your student profile.",
         true
       );
     }
   });
 }
+
 
 /* =====================================================
    STUDENT INFORMATION
@@ -197,6 +208,8 @@ function updateStudentInformation(user, profile) {
    FIRESTORE REAL-TIME MODULE LISTENER
 ===================================================== */
 
+
+
 function listenToModules(sectionId) {
   if (unsubscribeModules) {
     unsubscribeModules();
@@ -208,29 +221,33 @@ function listenToModules(sectionId) {
   const modulesRef = collection(db, "modulesV2");
 
   const modulesQuery = query(
-    modulesRef,
-    where("status", "==", "published"),
-    where("sectionIds", "array-contains", sectionId)
-  );
+  collection(db, "modulesV2"),
+  where("status", "==", "published"),
+  where("sectionIds", "array-contains", sectionId)
+);
 
   console.log("[EqualLearn Modules] Starting listener:", {
     collection: "modulesV2",
     sectionId,
-    status: "published"
+    status: "published",
+    uid: auth.currentUser?.uid,
+    projectId: auth.app.options.projectId
   });
 
   unsubscribeModules = onSnapshot(
     modulesQuery,
 
-    snapshot => {
-      modules = snapshot.docs.map(document => ({
+    (snapshot) => {
+      modules = snapshot.docs.map((document) => ({
         id: document.id,
         ...document.data()
       }));
 
       modules.sort((a, b) => {
-        return getDate(b.publishedAt || b.createdAt) -
-          getDate(a.publishedAt || a.createdAt);
+        return (
+          getDate(b.publishedAt || b.createdAt) -
+          getDate(a.publishedAt || a.createdAt)
+        );
       });
 
       updateStatistics();
@@ -241,8 +258,19 @@ function listenToModules(sectionId) {
       );
     },
 
-    error => {
-      console.error("[EqualLearn Modules] Firestore listener error:", error);
+    (error) => {
+      console.error("[EqualLearn Modules] Listener error:", {
+        code: error.code,
+        message: error.message
+      });
+
+      // Preserve previously loaded modules.
+      if (modules.length > 0) {
+        console.warn(
+          "[EqualLearn Modules] Keeping previously loaded modules."
+        );
+        return;
+      }
 
       showState(
         "🔒",
@@ -253,6 +281,8 @@ function listenToModules(sectionId) {
     }
   );
 }
+
+
 
 /* =====================================================
    STATISTICS
