@@ -300,13 +300,26 @@ function keepLumiOnTop() {
   }
 
   const isMobile = window.matchMedia("(max-width: 600px)").matches;
+  let assistantOpen = false;
+
+  try {
+    assistantOpen = Boolean(
+      frame.contentDocument
+        ?.getElementById("lumi-root")
+        ?.classList.contains("assistant-open")
+    );
+  } catch (_) {}
 
   Object.assign(frame.style, {
     position: "fixed",
-    right: isMobile ? "5px" : "12px",
-    bottom: isMobile ? "8px" : "12px",
-    width: isMobile ? "175px" : "230px",
-    height: isMobile ? "215px" : "280px",
+    right: isMobile ? "8px" : "16px",
+    bottom: isMobile ? "8px" : "16px",
+    width: assistantOpen
+      ? (isMobile ? "min(340px, calc(100vw - 16px))" : "360px")
+      : (isMobile ? "145px" : "230px"),
+    height: assistantOpen
+      ? (isMobile ? "min(460px, calc(100dvh - 24px))" : "500px")
+      : (isMobile ? "180px" : "280px"),
     display: "block",
     visibility: "visible",
     opacity: "1",

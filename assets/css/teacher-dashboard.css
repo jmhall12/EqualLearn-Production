@@ -1,0 +1,522 @@
+
+/* ==========================================================
+   EQUALLEARN — TEACHER DASHBOARD
+   Independent Dark Premium Design
+   Does not depend on glass-dashboard.css
+========================================================== */
+
+/* DESIGN TOKENS — TEACHER ONLY */
+
+.el-dashboard {
+    --td-bg: #171925;
+    --td-panel: #222538;
+    --td-panel-hover: #2b2e45;
+    --td-inner: #292c42;
+    --td-border: rgba(169, 148, 255, .19);
+    --td-border-hover: rgba(169, 148, 255, .42);
+    --td-text: #f4f1ff;
+    --td-muted: #aaa8c2;
+    --td-subtle: #85849f;
+    --td-purple: #a58cf8;
+    --td-purple-dark: #7658d8;
+    --td-green: #4ac99b;
+    --td-shadow: 0 12px 32px rgba(0,0,0,.18);
+
+    width: 100%;
+    max-width: 1500px;
+    min-width: 0;
+    margin: 0 auto;
+    padding: 32px clamp(18px, 3vw, 40px) 55px;
+    box-sizing: border-box;
+
+    color: var(--td-text);
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+}
+
+.el-dashboard *,
+.el-dashboard *::before,
+.el-dashboard *::after {
+    box-sizing: border-box;
+}
+
+/* PAGE HEADER */
+
+.el-dashboard .el-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 22px;
+
+    width: 100%;
+    margin: 0 0 28px;
+    padding: 0 0 23px;
+
+    border: 0;
+    border-bottom: 1px solid rgba(255,255,255,.09);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.el-dashboard .el-page-kicker {
+    margin-bottom: 13px;
+
+    color: var(--td-purple);
+    font-size: 11px;
+    font-weight: 850;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+.el-dashboard .el-page-header h1 {
+    margin: 0 0 12px;
+
+    color: var(--td-text);
+    font-size: clamp(26px, 3vw, 38px);
+    font-weight: 850;
+    line-height: 1.2;
+    letter-spacing: -.8px;
+}
+
+.el-dashboard .el-page-header p {
+    margin: 0;
+    color: var(--td-muted);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* BUTTONS */
+
+.el-dashboard .el-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+
+    min-height: 44px;
+    padding: 11px 19px;
+
+    border: 1px solid transparent;
+    border-radius: 12px;
+
+    color: #fff;
+    background: linear-gradient(135deg,#9278f2,#6749cf);
+
+    box-shadow: 0 8px 22px rgba(110,80,210,.23);
+
+    font-size: 13px;
+    font-weight: 800;
+    text-decoration: none;
+
+    cursor: pointer;
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.el-dashboard .el-btn:hover {
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(110,80,210,.34);
+}
+
+.el-dashboard .el-btn:active {
+    transform: translateY(0);
+}
+
+/* DASHBOARD GRIDS */
+
+.el-dashboard .el-grid {
+    display: grid;
+    width: 100%;
+    min-width: 0;
+    gap: 18px;
+}
+
+.el-dashboard .el-grid-2 {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+}
+
+.el-dashboard .el-grid-3 {
+    grid-template-columns: repeat(3,minmax(0,1fr));
+}
+
+.el-dashboard .el-grid-4 {
+    grid-template-columns: repeat(4,minmax(0,1fr));
+}
+
+/* STATISTICS */
+
+.el-dashboard .el-stat {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    min-width: 0;
+    min-height: 165px;
+    padding: 21px;
+
+    overflow: hidden;
+
+    border: 1px solid var(--td-border);
+    border-radius: 18px;
+
+    color: var(--td-text);
+    background: linear-gradient(145deg,#272a40,#202335);
+
+    box-shadow: var(--td-shadow);
+
+    transition: transform .2s ease, border-color .2s ease;
+}
+
+.el-dashboard .el-stat:hover {
+    transform: translateY(-3px);
+    border-color: var(--td-border-hover);
+}
+
+.el-dashboard .el-stat-icon {
+    display: grid;
+    place-items: center;
+
+    width: 44px;
+    height: 44px;
+    margin-bottom: 15px;
+
+    border: 1px solid rgba(169,148,255,.2);
+    border-radius: 13px;
+
+    color: #b8a6ff;
+    background: rgba(139,111,235,.15);
+
+    font-size: 20px;
+}
+
+.el-dashboard .el-stat-label {
+    color: var(--td-muted);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.el-dashboard .el-stat-value {
+    margin-top: 5px;
+
+    color: #fff;
+    font-size: 30px;
+    font-weight: 850;
+    line-height: 1.2;
+    letter-spacing: -.7px;
+    font-variant-numeric: tabular-nums;
+}
+
+.el-dashboard .el-stat-meta {
+    margin-top: 7px;
+    color: var(--td-subtle);
+    font-size: 11px;
+}
+
+/* GENERAL DASHBOARD PANELS */
+
+.el-dashboard .el-card {
+    min-width: 0;
+    padding: 23px;
+
+    border: 1px solid var(--td-border);
+    border-radius: 18px;
+
+    color: var(--td-text);
+    background: linear-gradient(145deg,#24273b,#202335);
+
+    box-shadow: var(--td-shadow);
+}
+
+.el-dashboard .el-card-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    margin-bottom: 21px;
+}
+
+.el-dashboard .el-card-title h3 {
+    margin: 0;
+    color: var(--td-text);
+    font-size: 17px;
+    font-weight: 850;
+}
+
+.el-dashboard .el-card-title > span,
+.el-dashboard .el-card-title div > span {
+    color: var(--td-muted);
+    font-size: 11px;
+}
+
+/* QUICK ACTIONS */
+
+.el-dashboard .el-quick-grid {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 13px;
+    width: 100%;
+}
+
+.el-dashboard .el-quick {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+
+    min-width: 0;
+    min-height: 142px;
+    padding: 17px;
+
+    border: 1px solid var(--td-border);
+    border-radius: 15px;
+
+    color: var(--td-text);
+    background: var(--td-inner);
+
+    text-decoration: none;
+    box-shadow: 0 5px 16px rgba(0,0,0,.12);
+
+    transition: transform .2s ease, border-color .2s ease, background .2s ease;
+}
+
+.el-dashboard .el-quick:hover {
+    transform: translateY(-3px);
+    border-color: var(--td-border-hover);
+    color: #fff;
+    background: var(--td-panel-hover);
+}
+
+.el-dashboard .el-quick .icon {
+    display: grid;
+    place-items: center;
+
+    width: 42px;
+    height: 42px;
+
+    border-radius: 12px;
+
+    color: #b9a7ff;
+    background: rgba(139,111,235,.17);
+
+    font-size: 19px;
+}
+
+.el-dashboard .el-quick strong {
+    color: var(--td-text);
+    font-size: 13px;
+    font-weight: 850;
+}
+
+.el-dashboard .el-quick > span:last-child {
+    color: var(--td-muted);
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+/* CLASS ENGAGEMENT */
+
+.el-dashboard .teacher-engagement-list {
+    display: grid;
+    gap: 23px;
+}
+
+.el-dashboard .teacher-engagement-item {
+    display: grid;
+    gap: 10px;
+}
+
+.el-dashboard .teacher-engagement-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+
+    color: #cbc7df;
+    font-size: 12px;
+}
+
+.el-dashboard .teacher-engagement-heading strong {
+    color: var(--td-purple);
+    font-weight: 850;
+}
+
+/* Progress bar */
+
+.el-dashboard .el-progress {
+    width: 100%;
+    height: 9px;
+    overflow: hidden;
+
+    border-radius: 20px;
+    background: rgba(255,255,255,.09);
+}
+
+.el-dashboard .el-progress span {
+    display: block;
+    height: 100%;
+
+    border-radius: inherit;
+    background: linear-gradient(90deg,#a58cf8,#7656e2);
+}
+
+/* EQUALLEARN LIVE BANNER */
+
+.el-dashboard .teacher-live-banner {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 24px;
+
+    width: 100%;
+    min-width: 0;
+    margin-top: 18px;
+    padding: 28px;
+
+    overflow: hidden;
+
+    border: 1px solid rgba(169,148,255,.25);
+    border-radius: 20px;
+
+    background:
+        radial-gradient(
+            circle at 90% 10%,
+            rgba(139,111,235,.20),
+            transparent 42%
+        ),
+        linear-gradient(145deg,#29283f,#222438);
+
+    box-shadow: var(--td-shadow);
+}
+
+.el-dashboard .teacher-live-content {
+    flex: 1 1 300px;
+    min-width: 0;
+}
+
+.el-dashboard .teacher-live-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+
+    margin-bottom: 13px;
+
+    color: #ac98ff;
+    font-size: 11px;
+    font-weight: 850;
+    letter-spacing: 1px;
+}
+
+.el-dashboard .teacher-live-indicator {
+    width: 8px;
+    height: 8px;
+
+    border-radius: 50%;
+    background: var(--td-green);
+    box-shadow: 0 0 12px rgba(72,201,155,.5);
+}
+
+.el-dashboard .teacher-live-content h2 {
+    margin: 0 0 10px;
+
+    color: var(--td-text);
+    font-size: clamp(20px,3vw,27px);
+    font-weight: 850;
+}
+
+.el-dashboard .teacher-live-content p {
+    max-width: 600px;
+    margin: 0;
+
+    color: var(--td-muted);
+    font-size: 12px;
+    line-height: 1.8;
+}
+
+.el-dashboard .teacher-live-action {
+    flex-shrink: 0;
+}
+
+/* DASHBOARD LINKS */
+
+.el-dashboard a:not(.el-btn):not(.el-quick) {
+    color: #b19aff;
+}
+
+.el-dashboard a:not(.el-btn):not(.el-quick):hover {
+    color: #d1c5ff;
+}
+
+/* RESPONSIVE — TABLET */
+
+@media (max-width: 1100px) {
+    .el-dashboard .el-grid-4 {
+        grid-template-columns: repeat(2,minmax(0,1fr));
+    }
+}
+
+/* RESPONSIVE — MOBILE */
+
+@media (max-width: 700px) {
+    .el-dashboard {
+        padding: 22px 15px 38px;
+    }
+
+    .el-dashboard .el-grid-2,
+    .el-dashboard .el-grid-3 {
+        grid-template-columns: minmax(0,1fr);
+    }
+
+    .el-dashboard .el-page-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .el-dashboard .teacher-live-banner {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 21px;
+    }
+
+    .el-dashboard .teacher-live-action,
+    .el-dashboard .teacher-live-action a {
+        width: 100%;
+    }
+}
+
+/* SMALL MOBILE */
+
+@media (max-width: 430px) {
+    .el-dashboard .el-grid-4,
+    .el-dashboard .el-quick-grid {
+        grid-template-columns: minmax(0,1fr);
+    }
+
+    .el-dashboard .el-stat {
+        min-height: 145px;
+    }
+
+    .el-dashboard .el-card {
+        padding: 18px;
+    }
+}
+
+/* ACCESSIBILITY */
+
+@media (prefers-reduced-motion: reduce) {
+    .el-dashboard *,
+    .el-dashboard *::before,
+    .el-dashboard *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+    }
+}
+
+

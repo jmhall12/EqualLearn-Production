@@ -1,6 +1,6 @@
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -14,7 +14,7 @@
   <!-- BASE STYLES -->
   <link rel="stylesheet" href="../assets/css/sidebar-skeuomorphism.css">
 
-  <!-- GLASS STYLES: LOAD BEFORE ADMIN THEME OVERRIDES -->
+  <!-- GLASS STYLES -->
   <link rel="stylesheet" href="../assets/css/glass-dashboard.css">
 
   <style>
@@ -492,13 +492,13 @@
        RESPONSIVE
     ========================================= */
 
-    @media(max-width: 900px) {
+    @media (max-width: 900px) {
       .live-admin-stats {
         grid-template-columns: repeat(2,minmax(0,1fr));
       }
     }
 
-    @media(max-width: 600px) {
+    @media (max-width: 600px) {
       .live-admin-stats {
         grid-template-columns: 1fr;
       }
@@ -508,7 +508,7 @@
       }
     }
 
-    @media(prefers-reduced-motion: reduce) {
+    @media (prefers-reduced-motion: reduce) {
       *,
       *::before,
       *::after {
@@ -518,288 +518,312 @@
     }
 
     /* =========================================
-   LUMI — FORCE ABOVE DASHBOARD
-========================================= */
+       LUMI — RESPONSIVE FLOATING COMPANION
+    ========================================= */
 
-html body #equallearn-lumi-frame {
-  position: fixed !important;
-  right: 12px !important;
-  bottom: 12px !important;
+    #equallearn-lumi-frame {
+      position: fixed !important;
+      right: 12px !important;
+      bottom: 12px !important;
 
-  width: 230px !important;
-  height: 280px !important;
+      width: 230px !important;
+      height: 280px !important;
 
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
 
-  border: none !important;
-  background: transparent !important;
+      border: 0 !important;
+      background: transparent !important;
 
-  z-index: 2147483647 !important;
-  pointer-events: auto !important;
+      z-index: 2147483647 !important;
+      pointer-events: auto !important;
+      overflow: hidden !important;
+    }
 
-  transform: none !important;
-  isolation: isolate !important;
+    @media (max-width: 600px) {
+      #equallearn-lumi-frame {
+        right: 4px !important;
+        bottom: 6px !important;
+
+        width: 145px !important;
+        height: 180px !important;
+      }
+    }
+
+    /* LUMI — ADMIN DASHBOARD TRANSPARENCY FIX */
+#equallearn-lumi-frame {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: 0 !important;
+    outline: none !important;
+    box-shadow: none !important;
+
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+
+    z-index: 2147483647 !important;
+    pointer-events: auto !important;
+    overflow: hidden !important;
 }
+
   </style>
 </head>
 
 <body>
 
-<div class="el-dashboard">
+  <div class="el-dashboard">
 
-  <!-- PAGE HEADER -->
-  <header class="el-page-header">
-    <div>
-      <div class="el-page-kicker">Administration workspace</div>
-      <h1>Admin dashboard</h1>
-      <p id="adminName">Loading administrator...</p>
-    </div>
+    <!-- PAGE HEADER -->
+    <header class="el-page-header">
+      <div>
+        <div class="el-page-kicker">Administration workspace</div>
+        <h1>Admin dashboard</h1>
+        <p id="adminName">Loading administrator...</p>
+      </div>
 
-    <a class="el-btn el-btn-primary" href="register-teacher.html">
-      <span data-icon="plus"></span>
-      Add teacher
+      <a class="el-btn el-btn-primary" href="register-teacher.html">
+        <span data-icon="plus"></span>
+        Add teacher
+      </a>
+    </header>
+
+    <!-- PLATFORM STATISTICS -->
+    <section class="el-grid el-grid-4">
+
+      <article class="el-card el-stat">
+        <div class="el-stat-icon">
+          <span data-icon="teacher"></span>
+        </div>
+        <div class="el-stat-label">Teachers</div>
+        <div class="el-stat-value" id="teacherCount">0</div>
+        <div class="el-stat-meta">Registered teaching accounts</div>
+      </article>
+
+      <article class="el-card el-stat">
+        <div class="el-stat-icon">
+          <span data-icon="users"></span>
+        </div>
+        <div class="el-stat-label">Students</div>
+        <div class="el-stat-value" id="studentCount">0</div>
+        <div class="el-stat-meta">Active learner profiles</div>
+      </article>
+
+      <article class="el-card el-stat">
+        <div class="el-stat-icon">
+          <span data-icon="modules"></span>
+        </div>
+        <div class="el-stat-label">Modules</div>
+        <div class="el-stat-value" id="moduleCount">0</div>
+        <div class="el-stat-meta">Learning modules created</div>
+      </article>
+
+      <article class="el-card el-stat">
+        <div class="el-stat-icon">
+          <span data-icon="lesson"></span>
+        </div>
+        <div class="el-stat-label">Lessons</div>
+        <div class="el-stat-value" id="lessonCount">0</div>
+        <div class="el-stat-meta">Published lesson content</div>
+      </article>
+
+    </section>
+
+    <!-- EQUALLEARN LIVE ADMIN MONITOR -->
+    <section class="el-card admin-monitor-card">
+
+      <div class="el-card-title">
+        <div>
+          <h3>EqualLearn Live Monitoring</h3>
+          <span>Monitor classroom sessions across the platform</span>
+        </div>
+
+        <button
+          type="button"
+          class="el-btn el-btn-primary"
+          id="refreshLiveSessions">
+          <span data-icon="refresh-cw"></span>
+          Refresh
+        </button>
+      </div>
+
+      <div class="live-admin-stats">
+
+        <div class="live-admin-stat">
+          <span>Ongoing sessions</span>
+          <strong id="liveOngoingCount">0</strong>
+        </div>
+
+        <div class="live-admin-stat">
+          <span>Scheduled sessions</span>
+          <strong id="liveScheduledCount">0</strong>
+        </div>
+
+        <div class="live-admin-stat">
+          <span>Ended sessions</span>
+          <strong id="liveEndedCount">0</strong>
+        </div>
+
+      </div>
+
+      <div class="live-admin-toolbar">
+        <div>
+          <strong>Live classroom sessions</strong>
+          <div class="el-stat-meta" id="liveLastUpdated">
+            Not yet refreshed
+          </div>
+        </div>
+      </div>
+
+      <div id="liveSessionsMessage" aria-live="polite">
+        Loading live sessions...
+      </div>
+
+      <div
+        class="live-session-list"
+        id="adminLiveSessions">
+      </div>
+
+    </section>
+
+    <!-- ACTIVITY AND QUICK ACTIONS -->
+    <section class="el-grid el-grid-2 admin-activity-card">
+
+      <!-- PLATFORM ACTIVITY -->
+      <article class="el-card">
+
+        <div class="el-card-title">
+          <div>
+            <h3>Platform activity</h3>
+            <span>Visual overview</span>
+          </div>
+        </div>
+
+        <div class="el-chart">
+          <span class="el-bar" style="height:38%"></span>
+          <span class="el-bar" style="height:55%"></span>
+          <span class="el-bar" style="height:48%"></span>
+          <span class="el-bar" style="height:74%"></span>
+          <span class="el-bar" style="height:66%"></span>
+          <span class="el-bar" style="height:88%"></span>
+          <span class="el-bar" style="height:79%"></span>
+        </div>
+
+        <div class="el-chart-labels">
+          <span>Mon</span>
+          <span>Tue</span>
+          <span>Wed</span>
+          <span>Thu</span>
+          <span>Fri</span>
+          <span>Sat</span>
+          <span>Sun</span>
+        </div>
+
+      </article>
+
+      <!-- QUICK ACTIONS -->
+      <article class="el-card">
+
+        <div class="el-card-title">
+          <div>
+            <h3>Quick actions</h3>
+            <span>Manage EqualLearn</span>
+          </div>
+        </div>
+
+        <div class="el-quick-grid">
+
+          <a class="el-quick" href="register-teacher.html">
+            <span class="icon">
+              <span data-icon="plus"></span>
+            </span>
+            <strong>Register teacher</strong>
+            <span>Create a teaching account.</span>
+          </a>
+
+          <a class="el-quick" href="students.html">
+            <span class="icon">
+              <span data-icon="users"></span>
+            </span>
+            <strong>Students</strong>
+            <span>Review learner accounts.</span>
+          </a>
+
+          <a class="el-quick" href="class-assignments.html">
+            <span class="icon">
+              <span data-icon="classes"></span>
+            </span>
+            <strong>Assignments</strong>
+            <span>Connect classes and teachers.</span>
+          </a>
+
+          <a class="el-quick" href="reports.html">
+            <span class="icon">
+              <span data-icon="progress"></span>
+            </span>
+            <strong>Reports</strong>
+            <span>View performance data.</span>
+          </a>
+
+          <a class="el-quick" href="manage-teachers.html">
+            <span class="icon">
+              <span data-icon="teacher"></span>
+            </span>
+            <strong>Teachers</strong>
+            <span>Manage teaching profiles.</span>
+          </a>
+
+          <a class="el-quick" href="settings.html">
+            <span class="icon">
+              <span data-icon="settings"></span>
+            </span>
+            <strong>Settings</strong>
+            <span>Account and security.</span>
+          </a>
+
+        </div>
+      </article>
+
+    </section>
+
+    <!-- HIDDEN LOGOUT CONTROL -->
+    <a href="../login.html" id="logout" style="display:none">
+      Logout
     </a>
-  </header>
 
-  <!-- PLATFORM STATISTICS -->
-  <section class="el-grid el-grid-4">
+  </div>
 
-    <article class="el-card el-stat">
-      <div class="el-stat-icon">
-        <span data-icon="teacher"></span>
-      </div>
-      <div class="el-stat-label">Teachers</div>
-      <div class="el-stat-value" id="teacherCount">0</div>
-      <div class="el-stat-meta">Registered teaching accounts</div>
-    </article>
+  <!-- EXISTING APPLICATION SCRIPTS -->
+  <script type="module" src="../assets/js/admin-dashboard.js"></script>
+  <script type="module" src="../assets/js/admin_live.js"></script>
 
-    <article class="el-card el-stat">
-      <div class="el-stat-icon">
-        <span data-icon="users"></span>
-      </div>
-      <div class="el-stat-label">Students</div>
-      <div class="el-stat-value" id="studentCount">0</div>
-      <div class="el-stat-meta">Active learner profiles</div>
-    </article>
+  <!-- UI SHELL -->
+  <script type="module" src="../assets/js/ui-shell.js"></script>
 
-    <article class="el-card el-stat">
-      <div class="el-stat-icon">
-        <span data-icon="modules"></span>
-      </div>
-      <div class="el-stat-label">Modules</div>
-      <div class="el-stat-value" id="moduleCount">0</div>
-      <div class="el-stat-meta">Learning modules created</div>
-    </article>
+  <!-- PWA AND SYSTEM THEME -->
+  <script type="module" src="../assets/js/pwa.js"></script>
+  <script type="module" src="../assets/js/theme.js"></script>
 
-    <article class="el-card el-stat">
-      <div class="el-stat-icon">
-        <span data-icon="lesson"></span>
-      </div>
-      <div class="el-stat-label">Lessons</div>
-      <div class="el-stat-value" id="lessonCount">0</div>
-      <div class="el-stat-meta">Published lesson content</div>
-    </article>
-
-  </section>
-
-  <!-- EQUALLEARN LIVE ADMIN MONITOR -->
-  <section class="el-card admin-monitor-card">
-
-    <div class="el-card-title">
-      <div>
-        <h3>EqualLearn Live Monitoring</h3>
-        <span>Monitor classroom sessions across the platform</span>
-      </div>
-
-      <button
-        type="button"
-        class="el-btn el-btn-primary"
-        id="refreshLiveSessions">
-        <span data-icon="refresh-cw"></span>
-        Refresh
-      </button>
-    </div>
-
-    <div class="live-admin-stats">
-
-      <div class="live-admin-stat">
-        <span>Ongoing sessions</span>
-        <strong id="liveOngoingCount">0</strong>
-      </div>
-
-      <div class="live-admin-stat">
-        <span>Scheduled sessions</span>
-        <strong id="liveScheduledCount">0</strong>
-      </div>
-
-      <div class="live-admin-stat">
-        <span>Ended sessions</span>
-        <strong id="liveEndedCount">0</strong>
-      </div>
-
-    </div>
-
-    <div class="live-admin-toolbar">
-      <div>
-        <strong>Live classroom sessions</strong>
-        <div class="el-stat-meta" id="liveLastUpdated">
-          Not yet refreshed
-        </div>
-      </div>
-    </div>
-
-    <div id="liveSessionsMessage" aria-live="polite">
-      Loading live sessions...
-    </div>
-
-    <div
-      class="live-session-list"
-      id="adminLiveSessions">
-    </div>
-
-  </section>
-
-  <!-- ACTIVITY AND QUICK ACTIONS -->
-  <section class="el-grid el-grid-2 admin-activity-card">
-
-    <!-- PLATFORM ACTIVITY -->
-    <article class="el-card">
-
-      <div class="el-card-title">
-        <div>
-          <h3>Platform activity</h3>
-          <span>Visual overview</span>
-        </div>
-      </div>
-
-      <div class="el-chart">
-        <span class="el-bar" style="height:38%"></span>
-        <span class="el-bar" style="height:55%"></span>
-        <span class="el-bar" style="height:48%"></span>
-        <span class="el-bar" style="height:74%"></span>
-        <span class="el-bar" style="height:66%"></span>
-        <span class="el-bar" style="height:88%"></span>
-        <span class="el-bar" style="height:79%"></span>
-      </div>
-
-      <div class="el-chart-labels">
-        <span>Mon</span>
-        <span>Tue</span>
-        <span>Wed</span>
-        <span>Thu</span>
-        <span>Fri</span>
-        <span>Sat</span>
-        <span>Sun</span>
-      </div>
-
-    </article>
-
-    <!-- QUICK ACTIONS -->
-    <article class="el-card">
-
-      <div class="el-card-title">
-        <div>
-          <h3>Quick actions</h3>
-          <span>Manage EqualLearn</span>
-        </div>
-      </div>
-
-      <div class="el-quick-grid">
-
-        <a class="el-quick" href="register-teacher.html">
-          <span class="icon">
-            <span data-icon="plus"></span>
-          </span>
-          <strong>Register teacher</strong>
-          <span>Create a teaching account.</span>
-        </a>
-
-        <a class="el-quick" href="students.html">
-          <span class="icon">
-            <span data-icon="users"></span>
-          </span>
-          <strong>Students</strong>
-          <span>Review learner accounts.</span>
-        </a>
-
-        <a class="el-quick" href="class-assignments.html">
-          <span class="icon">
-            <span data-icon="classes"></span>
-          </span>
-          <strong>Assignments</strong>
-          <span>Connect classes and teachers.</span>
-        </a>
-
-        <a class="el-quick" href="reports.html">
-          <span class="icon">
-            <span data-icon="progress"></span>
-          </span>
-          <strong>Reports</strong>
-          <span>View performance data.</span>
-        </a>
-
-        <a class="el-quick" href="manage-teachers.html">
-          <span class="icon">
-            <span data-icon="teacher"></span>
-          </span>
-          <strong>Teachers</strong>
-          <span>Manage teaching profiles.</span>
-        </a>
-
-        <a class="el-quick" href="settings.html">
-          <span class="icon">
-            <span data-icon="settings"></span>
-          </span>
-          <strong>Settings</strong>
-          <span>Account and security.</span>
-        </a>
-
-      </div>
-    </article>
-
-  </section>
-
-  <!-- HIDDEN LOGOUT CONTROL -->
-  <a href="../login.html" id="logout" style="display:none">
-    Logout
-  </a>
-
-</div>
-
-<!-- EXISTING APPLICATION SCRIPTS -->
-<script type="module" src="../assets/js/admin-dashboard.js"></script>
-<script type="module" src="../assets/js/admin_live.js"></script>
-
-<!-- UI SHELL -->
-<script type="module" src="../assets/js/ui-shell.js"></script>
-
-<!-- PWA AND SYSTEM THEME -->
-<script type="module" src="../assets/js/pwa.js"></script>
-<script type="module" src="../assets/js/theme.js"></script>
-
-
-<!-- EQUALLEARN LUMI COMPANION -->
-<iframe
-  src="/assets/widgets/lumi.html"
-  title="Lumi — EqualLearn Companion"
-  id="equallearn-lumi-frame"
-  allow="autoplay"
-  style="
-    position: fixed;
-    right: 8px;
-    bottom: 8px;
-    width: 210px;
-    height: 255px;
-    border: 0;
-    background: transparent;
-    z-index: 99999;
-    overflow: hidden;
-    pointer-events: auto;
-  ">
-</iframe>
-
+  <!-- EQUALLEARN LUMI COMPANION -->
+  <iframe
+    src="/assets/widgets/lumi.html"
+    title="Lumi — EqualLearn Companion"
+    id="equallearn-lumi-frame"
+    allow="autoplay"
+    style="
+      position: fixed;
+      right: 12px;
+      bottom: 12px;
+      width: 230px;
+      height: 280px;
+      border: 0;
+      background: transparent;
+      z-index: 2147483647;
+      overflow: hidden;
+      pointer-events: auto;
+    ">
+  </iframe>
 
 </body>
 </html>
