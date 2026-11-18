@@ -97,7 +97,7 @@ body{font-family:Inter,"Segoe UI",Arial,sans-serif}
     <input id="lumi-chat-input" type="text" maxlength="300" placeholder="Ask Lumi for help..." aria-label="Message Lumi" required>
     <button type="submit" aria-label="Send message">➤</button>
    </form>
-   <div class="lumi-chat-foot">Lumi gives in-app guidance. For account or technical issues, contact your teacher or administrator.</div>
+   <div class="lumi-chat-foot">Lumi Help Guide · Built-in guidance only. Never share your password, OTP, or recovery codes.</div>
   </section>
   <div id="lumi-controls" aria-label="Lumi controls">
    <button class="lumi-control" id="lumi-wave" title="Wave hello" aria-label="Wave hello">👋</button>
@@ -115,6 +115,7 @@ const canvas=document.getElementById("lumi-canvas");
 const fallback=document.getElementById("lumi-fallback");
 const speech=document.getElementById("lumi-speech");
 const reduced=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let hidden=false;
 
 // Lumi manages her own iframe size using the PARENT page viewport.
 // This makes her compact on phones across pages, independently of
@@ -123,33 +124,24 @@ function syncLumiFrameSize(){
  try {
   const frame = window.frameElement;
   if (!frame) return;
-
   const parentWidth = window.parent.innerWidth || window.innerWidth;
   const mobile = parentWidth <= 600;
   root.classList.toggle("lumi-mobile", mobile);
-
   const assistantOpen = root.classList.contains("assistant-open");
+  const isHidden = hidden;
   Object.assign(frame.style, {
    position: "fixed",
-   width: assistantOpen ? (mobile ? "min(340px, calc(100vw - 16px))" : "360px") : (mobile ? "145px" : "230px"),
-   height: assistantOpen ? (mobile ? "min(460px, calc(100dvh - 24px))" : "500px") : (mobile ? "180px" : "280px"),
+   width: isHidden ? "78px" : assistantOpen ? (mobile ? "min(360px, calc(100vw - 16px))" : "390px") : (mobile ? "145px" : "230px"),
+   height: isHidden ? "52px" : assistantOpen ? (mobile ? "min(520px, calc(100dvh - 24px))" : "540px") : (mobile ? "180px" : "280px"),
    right: mobile ? "8px" : "16px",
    bottom: mobile ? "8px" : "16px",
-   border: "0",
-   background: "transparent",
-   zIndex: "2147483647",
-   display: "block",
-   visibility: "visible",
-   opacity: "1",
-   pointerEvents: "auto",
-   overflow: "hidden"
+   border: "0", background: "transparent", zIndex: "2147483647",
+   display: "block", visibility: "visible", opacity: "1",
+   pointerEvents: isHidden ? "auto" : "auto", overflow: "hidden"
   });
   frame.setAttribute("allowtransparency", "true");
- } catch (error) {
-  // Cross-origin embedding: parent page must set the iframe dimensions.
- }
+ } catch (error) { console.warn("Lumi could not resize its parent frame", error); }
 }
-
 syncLumiFrameSize();
 window.addEventListener("resize", syncLumiFrameSize, {passive:true});
 window.addEventListener("orientationchange", syncLumiFrameSize, {passive:true});
@@ -303,7 +295,7 @@ if(renderer){
 
  // Cursor target with smoothed movement
  const pointer={x:0,y:0},target={x:0,y:0};
- let waveUntil=0,clickPulse=0,hidden=false,speechTimer=null,raf=0;
+ let waveUntil=0,clickPulse=0,speechTimer=null,raf=0;
  const clock=new THREE.Clock();
  function say(message,duration=3800){speech.textContent=message;speech.classList.add("show");clearTimeout(speechTimer);speechTimer=setTimeout(()=>speech.classList.remove("show"),duration);}
  // FULL-PAGE CURSOR TRACKING:
@@ -390,39 +382,12 @@ if(renderer){
  const currentPath=(()=>{try{return window.parent.location.pathname.toLowerCase()}catch(_){return location.pathname.toLowerCase()}})();
  const currentTitle=(()=>{try{return window.parent.document.title||"EqualLearn"}catch(_){return "EqualLearn"}})();
  const role=currentPath.includes("/admin/")?"admin":currentPath.includes("/teacher/")?"teacher":currentPath.includes("/student/")?"student":"visitor";
+ const conversation = [];
  const pageName=currentPath.split("/").pop().replace(/\.html?$/i,"").replace(/[-_]/g," ")||"home";
  const roleLinks={
   student:[{label:"Dashboard",url:"/student/dashboard.html"},{label:"Learning Modules",url:"/student/modules.html"},{label:"Quizzes",url:"/student/quizzes.html"},{label:"Classwork",url:"/student/classwork.html"},{label:"Progress",url:"/student/progress.html"},{label:"Live Class",url:"/student/live.html"},{label:"Profile",url:"/student/profile.html"}],
   teacher:[{label:"Dashboard",url:"/teacher/dashboard.html"},{label:"My Classes",url:"/teacher/classes.html"},{label:"Modules",url:"/teacher/modules.html"},{label:"Lessons",url:"/teacher/lessons.html"},{label:"Quiz Builder",url:"/teacher/quiz_builder.html"},{label:"Grading",url:"/teacher/grading.html"},{label:"Students",url:"/teacher/students.html"},{label:"Live Class",url:"/teacher/live.html"}],
   admin:[{label:"Dashboard",url:"/admin/dashboard.html"},{label:"Students",url:"/admin/students.html"},{label:"Teachers",url:"/admin/manage-teachers.html"},{label:"Register Teacher",url:"/admin/register-teacher.html"},{label:"Live Sessions",url:"/admin/live.html"},{label:"Create Content",url:"/admin/create-content.html"},{label:"Lessons",url:"/admin/lessons.html"},{label:"Class Assignments",url:"/admin/class-assignments.html"},{label:"Reports",url:"/admin/reports.html"},{label:"Settings",url:"/admin/settings.html"}]
- };
- const knowledge={
-  student:[
-   {keys:["module","modules","lesson","learn","learning","study"],answer:"To start learning, open Learning Modules. Choose an available module, open a lesson, and follow its content. Your learning pages are collected in the Modules section.",link:"Learning Modules"},
-   {keys:["quiz","quizzes","exam","test","assessment"],answer:"Open Quizzes to see available assessments. Select a quiz to begin, read each question carefully, and submit when you're done. Check the result page after submission.",link:"Quizzes"},
-   {keys:["assignment","classwork","activity","activities","homework","task"],answer:"Open Classwork to view activities and assignments shared with your class. Open an item to read its instructions and check its requirements before submitting.",link:"Classwork"},
-   {keys:["progress","score","grade","performance","result"],answer:"Open Progress to review your learning progress. Quiz results are also available after you finish an assessment. If a score looks incorrect, ask your teacher to review it.",link:"Progress"},
-   {keys:["live","meeting","class call","video call","recitation"],answer:"Open Live Class to join your class session. Make sure your browser has permission to use your microphone or camera when your teacher requires them.",link:"Live Class"},
-   {keys:["profile","account","password","name"],answer:"Open Profile to review your account information. For password or account-access problems, use the account recovery option or contact your school administrator.",link:"Profile"}
-  ],
-  teacher:[
-   {keys:["module","modules","course"],answer:"Open Modules to manage your teaching workspace and learning modules. Choose the relevant module to continue working on its learning materials.",link:"Modules"},
-   {keys:["lesson","lessons","content","material","resource"],answer:"Open Lessons to manage lesson materials. Review the lesson details before saving changes so students see the correct learning content.",link:"Lessons"},
-   {keys:["quiz","quiz builder","assessment","question"],answer:"Open Quiz Builder to create or manage assessments. Add the questions and choices, review the correct answers and settings, then save or publish when ready.",link:"Quiz Builder"},
-   {keys:["grade","grading","check submission","score","mark"],answer:"Open Grading to review student activity submissions and record grades or feedback. Check the student's submitted work before finalizing a score.",link:"Grading"},
-   {keys:["student","students","section","class list"],answer:"Open Students to review your learners. Use My Classes to check the classes or sections assigned to you.",link:"Students"},
-   {keys:["live","meeting","video call","class call"],answer:"Open Live Class to start or manage a class session. Check your microphone and camera permissions before inviting students to join.",link:"Live Class"},
-   {keys:["class","classes","section"],answer:"Open My Classes to review your assigned classes and sections. If a class is missing, ask the administrator to verify your teaching assignment.",link:"My Classes"}
-  ],
-  admin:[
-   {keys:["student","students","verify","verification","account"],answer:"Open Students to review student accounts and academic verification details. Check the student's submitted information before changing an account status.",link:"Students"},
-   {keys:["teacher","teachers","register teacher","staff"],answer:"Open Register Teacher to add a teacher account. Use Teachers to review and manage existing teacher accounts.",link:"Register Teacher"},
-   {keys:["content","create","publish","module","lesson"],answer:"Open Create Content to prepare learning content, or Lessons to review existing lesson materials. Confirm the content details before publishing it to learners.",link:"Create Content"},
-   {keys:["assignment","class assignment","assign"],answer:"Open Class Assignments to manage assignments distributed to classes. Verify the target class or section before publishing an assignment.",link:"Class Assignments"},
-   {keys:["report","reports","analytics","performance"],answer:"Open Reports to review student and academic reports. Use the available filters and check the selected reporting period before interpreting the results.",link:"Reports"},
-   {keys:["setting","settings","configuration","system"],answer:"Open Settings to review the available system and account configuration options. Change settings only when you are sure of their effect.",link:"Settings"},
-   {keys:["live","meeting","class session"],answer:"Open Live Sessions to access the administrator's live-class area and review the available session controls.",link:"Live Sessions"}
-  ]
  };
  const links=roleLinks[role]||[{label:"Login",url:"/login.html"},{label:"Register",url:"/register.html"}];
  const roleLabel=role==="visitor"?"Welcome to EqualLearn":`${role[0].toUpperCase()+role.slice(1)} guide`;
@@ -434,78 +399,95 @@ if(renderer){
  }
  function navigate(url){try{window.parent.location.href=url}catch(_){location.href=url}}
  function setSuggestions(items){suggestionBox.replaceChildren();items.forEach(item=>{const b=document.createElement("button");b.type="button";b.textContent=item;b.addEventListener("click",()=>handleQuestion(item));suggestionBox.appendChild(b)})}
- function openAssistant(){root.classList.add("assistant-open");chatPanel.setAttribute("aria-hidden","false");syncLumiFrameSize();setSuggestions(role==="student"?["How do I find lessons?","Where are my quizzes?","How can I see my progress?"]:role==="teacher"?["How do I create a quiz?","How do I grade work?","How do I start a live class?"]:role==="admin"?["How do I verify students?","How do I register a teacher?","Where are reports?"]:["What is EqualLearn?","How do I log in?"]);setTimeout(()=>chatInput.focus(),120)}
+ function suggestionsForRole(){
+  if(role==="student")return ["Paano maghanap ng lessons?","Paano mag-submit ng activity?","Hindi gumagana ang quiz","Paano makita ang grades?"];
+  if(role==="teacher")return ["Paano gumawa ng quiz?","Paano mag-check ng submissions?","Paano gumawa ng lesson?","Hindi makita ang section ko"];
+  if(role==="admin")return ["Paano mag-verify ng student?","Paano mag-register ng teacher?","Paano makita ang reports?","May system problem"];
+  return ["Ano ang EqualLearn?","Paano mag-login?","Anong features ang meron?"];
+ }
+ function openAssistant(){root.classList.add("assistant-open");chatPanel.setAttribute("aria-hidden","false");syncLumiFrameSize();setSuggestions(suggestionsForRole());setTimeout(()=>chatInput.focus(),120)}
  function closeAssistant(){root.classList.remove("assistant-open");chatPanel.setAttribute("aria-hidden","true");syncLumiFrameSize()}
-
-function handleQuestion(raw) {
-  const q = String(raw || "").trim();
-  if (!q) return;
-
-  addMessage(q, "user");
-
-  const lower = q.toLowerCase();
-
-  let answer = "I can help you find EqualLearn features. Tell me what you want to open or accomplish.";
-  let link = null;
-
-  if (/hello|hi\b|hey\b|good morning|good afternoon|kumusta/.test(lower)) {
-    answer = "Hello! 💜 I'm Lumi, your EqualLearn guide. What would you like to open?";
+ function normalize(value){return String(value||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9\s]/g," ").replace(/\s+/g," ").trim()}
+ const guides={
+  student:[
+   {id:"modules",keys:["module","modules","lesson","lessons","learn","learning","study","aralin","leksyon","matuto"],label:"Learning Modules",steps:"1. Buksan ang Learning Modules.\n2. Pumili ng available na module.\n3. Buksan ang lesson at basahin o panoorin ang materials.\n4. Sundin ang instructions at bumalik sa module list para magpatuloy."},
+   {id:"quiz",keys:["quiz","quizzes","exam","test","assessment","pagsusulit","exam ko"],label:"Quizzes",steps:"1. Buksan ang Quizzes.\n2. Tingnan kung aling assessment ang available.\n3. Buksan ang quiz at basahin muna ang instructions.\n4. Sagutan ang bawat item at i-review ang answers bago mag-submit.\n5. Tingnan ang result kung available pagkatapos ng submission."},
+   {id:"classwork",keys:["assignment","classwork","activity","activities","homework","task","submit","submission","ipasa","gawain","aktibidad"],label:"Classwork",steps:"1. Buksan ang Classwork.\n2. Piliin ang activity o assignment.\n3. Basahin ang instructions, deadline, at required files.\n4. Ihanda ang sagot o attachment.\n5. Gamitin ang submission control na ipinapakita sa activity at tiyaking may confirmation bago umalis."},
+   {id:"progress",keys:["progress","score","grade","performance","result","marka","grado","คะแนน"],label:"Progress",steps:"1. Buksan ang Progress.\n2. Tingnan ang progress summary at available results.\n3. Buksan ang relevant item kung may detailed result.\n4. Kung may score na sa tingin mo ay mali, i-message ang teacher at ibigay ang activity o quiz name."},
+   {id:"live",keys:["live","meeting","class call","video call","recitation","camera","microphone","mic","join class"],label:"Live Class",steps:"1. Buksan ang Live Class.\n2. Piliin ang active session ng iyong section kung mayroon.\n3. Payagan ang browser na gumamit ng microphone o camera kung kailangan.\n4. I-check ang mic at camera controls bago magsalita.\n5. Kung walang session, hintayin ang teacher o kontakin siya."},
+   {id:"profile",keys:["profile","account","password","name","email","pass","login","log in","sign in","forgot password","forgot password"],label:"Profile",steps:"Buksan ang Profile para tingnan ang account details. Kung hindi makapag-login, i-check muna ang email at password, siguraduhing tama ang spelling, at gamitin ang password recovery option kung available. Huwag ibigay kay Lumi o kahit kanino ang password o OTP."}
+  ],
+  teacher:[
+   {id:"classes",keys:["my classes","classes","class","section","sections","advisory","assigned class"],label:"My Classes",steps:"1. Buksan ang My Classes.\n2. Piliin ang assigned class o section.\n3. I-check ang class details at learner list.\n4. Kung may nawawalang section, ipasuri sa administrator ang teaching assignment mo."},
+   {id:"modules",keys:["module","modules","course"],label:"Modules",steps:"1. Buksan ang Modules.\n2. Piliin ang module na gagamitin.\n3. I-review ang materials at module details.\n4. Sundin ang available controls para mag-edit o mag-manage."},
+   {id:"lessons",keys:["lesson","lessons","content","material","resource","pdf","file","link","upload"],label:"Lessons",steps:"1. Buksan ang Lessons.\n2. Piliin ang lesson na ie-edit o gumawa ng bago kung may create option.\n3. Ilagay ang title at learning content.\n4. Kung may file/link field, i-attach ang tamang resource.\n5. I-preview at i-check ang target module bago mag-save o mag-publish."},
+   {id:"quiz",keys:["quiz","quiz builder","assessment","question","exam","test"],label:"Quiz Builder",steps:"1. Buksan ang Quiz Builder.\n2. Piliin ang create/new quiz option.\n3. Ilagay ang title at instructions.\n4. Idagdag ang questions at choices, at markahan ang correct answer.\n5. I-review ang settings at target class bago i-save o i-publish."},
+   {id:"grading",keys:["grade","grading","check submission","score","mark","review work","submission","submissions"],label:"Grading",steps:"1. Buksan ang Grading.\n2. Piliin ang class/activity na iche-check.\n3. Buksan ang learner submission.\n4. Basahin ang work bago magbigay ng score o feedback.\n5. I-review ang grade bago i-save."},
+   {id:"students",keys:["student","students","learner","learners","class list"],label:"Students",steps:"Buksan ang Students para tingnan ang learners na sakop ng iyong access. Para sa class assignment o section na wala sa listahan, makipag-ugnayan sa administrator."},
+   {id:"live",keys:["live","meeting","video call","class call","start class"],label:"Live Class",steps:"1. Buksan ang Live Class.\n2. Piliin o simulan ang session para sa tamang section.\n3. I-check ang microphone at camera permissions.\n4. Ipaalam sa students ang session details.\n5. Gamitin ang End for everyone lamang kapag talagang tatapusin ang buong class session."}
+  ],
+  admin:[
+   {id:"students",keys:["student","students","verify","verification","account","approve","pending"],label:"Students",steps:"1. Buksan ang Students.\n2. Hanapin ang student account.\n3. Suriin ang submitted information at supporting details.\n4. Magdesisyon lamang matapos ma-verify ang impormasyon.\n5. Iwasang baguhin ang account kung hindi malinaw ang request."},
+   {id:"teachers",keys:["teacher","teachers","register teacher","staff","faculty"],label:"Register Teacher",steps:"1. Buksan ang Register Teacher para magdagdag ng teacher.\n2. Ilagay ang hinihinging account details.\n3. I-double-check ang institutional email at role.\n4. I-submit gamit ang form controls.\n5. Gamitin ang Teachers page para i-review ang existing teacher accounts."},
+   {id:"content",keys:["content","create content","publish","module","lesson","material"],label:"Create Content",steps:"1. Buksan ang Create Content.\n2. Piliin ang content type kung may pagpipilian.\n3. Ilagay ang title, instructions, at learning material.\n4. I-check ang target module o audience.\n5. I-preview bago i-publish."},
+   {id:"assignments",keys:["assignment","class assignment","assign","activity"],label:"Class Assignments",steps:"1. Buksan ang Class Assignments.\n2. Piliin ang target class o section.\n3. I-review ang instructions at due date.\n4. I-check ang audience bago i-publish."},
+   {id:"reports",keys:["report","reports","analytics","performance","statistics"],label:"Reports",steps:"1. Buksan ang Reports.\n2. Piliin ang available filters o reporting period.\n3. I-check kung tama ang scope ng report.\n4. Suriin ang totals at details bago gumawa ng conclusion."},
+   {id:"settings",keys:["setting","settings","configuration","system"],label:"Settings",steps:"Buksan ang Settings at basahin muna ang description ng option bago magbago. Iwasang baguhin ang security, access, o system settings kung hindi ka sigurado sa epekto."},
+   {id:"live",keys:["live","meeting","class session"],label:"Live Sessions",steps:"Buksan ang Live Sessions para makita ang available session controls. I-check muna ang session at participants bago gumawa ng administrative action."}
+  ]
+ };
+ function findGuide(q){
+  const text=normalize(q);const items=guides[role]||[];
+  const scored=items.map(item=>({item,score:Math.max(0,...item.keys.map(key=>{const k=normalize(key);return text===k?100+k.length:text.includes(k)?k.length:0}))})).sort((a,b)=>b.score-a.score);
+  return scored[0]?.score>=3?scored[0].item:null;
+ }
+ function getPageHint(){
+  const page=normalize(pageName);
+  const map={dashboard:"Nasa Dashboard ka ngayon. Dito karaniwang makikita ang overview at shortcuts ng account mo.",modules:"Nasa Modules area ka. Pumili ng module para ma-access ang learning materials.",lessons:"Nasa Lessons area ka. I-review ang lesson content at available actions sa page.",classwork:"Nasa Classwork area ka. Tingnan ang instructions at submission status ng activity.",quizzes:"Nasa Quizzes area ka. I-check ang available assessments at instructions bago magsimula.",grading:"Nasa Grading area ka. I-review ang learner submission bago magbigay ng score.",live:"Nasa Live Class area ka. I-check ang active session at audio/video permissions."};
+  return map[page]||`Nasa ${currentTitle} ka ngayon. Sabihin mo kung anong task ang gusto mong gawin at tutulungan kitang hanapin ang tamang section.`;
+ }
+ function handleQuestion(raw){
+  const q=String(raw||"").trim();if(!q)return;
+  addMessage(q,"user");chatInput.value="";
+  const text=normalize(q);
+  if(/^(hi|hello|hey|kumusta|good morning|good afternoon|good evening|magandang umaga|magandang hapon|magandang gabi)$/.test(text)){
+   addMessage(`Hello! 💜 Ako si Lumi, ang ${roleLabel.toLowerCase()} mo. Kaya kitang gabayan sa features at steps ng EqualLearn. Ano ang gusto mong gawin?`);setSuggestions(suggestionsForRole());return;
   }
-  else if (/what is equallearn|about equallearn|ano ang equallearn/.test(lower)) {
-    answer = "EqualLearn is your learning platform for lessons, assessments, class activities, and classroom tools.";
+  if(text.includes("ano ang equallearn")||text.includes("what is equallearn")||text.includes("about equallearn")){
+   addMessage("Ang EqualLearn ay isang mobile learning application para sa Gender Equality Education and Awareness ng Pateros Technological College. May learning resources at classroom activities para suportahan ang pagkatuto tungkol sa gender equality.");return;
   }
-  else if (/help|support|contact|problem|error|not working|hindi gumagana/.test(lower)) {
-    answer = "I can guide you around EqualLearn. Tell me which feature you need help with, and I'll take you there if it's available.";
+  if(text.includes("where am i")||text.includes("anong page")||text.includes("nasaan ako")||text.includes("current page")){
+   addMessage(getPageHint());return;
   }
-  else if (/where am i|what page|current page/.test(lower)) {
-    answer = `You're currently viewing ${currentTitle}. What would you like to do next?`;
+  if(text.includes("contact")||text.includes("admin")||text.includes("teacher ko")||text.includes("tao na")||text.includes("human support")||text.includes("report a problem")||text.includes("ireport")){
+   addMessage(role==="student"?"Para sa account, section, grade, o technical issue na hindi ko kayang ayusin, kontakin ang iyong assigned teacher o school administrator. Isama ang page, oras ng error, at screenshot kung maaari. Huwag ipadala ang password o OTP.":role==="teacher"?"Para sa access, section assignment, o system issue, kontakin ang EqualLearn administrator. Ibigay ang page, oras ng error, at screenshot kung mayroon. Huwag mag-share ng password o OTP.":"Kung kailangan ng technical investigation, i-record ang page, exact error, oras, at steps bago lumabas ang problema. I-escalate ito sa authorized system maintainer.");return;
   }
-  else {
-    const matches = (knowledge[role] || [])
-      .filter(item => item.keys.some(key => lower.includes(key)))
-      .sort((a, b) => {
-        const score = item =>
-          Math.max(0, ...item.keys
-            .filter(key => lower.includes(key))
-            .map(key => key.length));
-        return score(b) - score(a);
-      });
-
-    if (matches.length) {
-      answer = matches[0].answer;
-
-      link = links.find(item =>
-        item.label.toLowerCase() === matches[0].link.toLowerCase()
-      ) || null;
-    }
-    else if (role === "visitor") {
-      answer = "Please sign in first to access your EqualLearn workspace.";
-      link = { label: "Login", url: "/login.html" };
-    }
+  if(/(hindi gumagana|not working|error|problem|ayaw|failed|failure|di ma|cannot|can't|unable|stuck|loading|blank|white screen)/.test(text)){
+   addMessage("Sige, tulungan kitang i-troubleshoot. Subukan muna ito:\n1. I-refresh ang page nang isang beses.\n2. I-check ang internet connection.\n3. Mag-sign out at mag-sign in ulit kung account-related.\n4. Kung may error message, kopyahin ang exact text o kumuha ng screenshot.\n\nAnong feature ang may problema—login, lesson, quiz, classwork, grading, o live class?");setSuggestions(["Login problem","Lesson problem","Quiz problem","Classwork problem","Live Class problem"]);return;
   }
-
-  addMessage(answer, "bot");
-
-  // Automatically navigate when Lumi identifies a destination.
-  if (link && link.url) {
-    setTimeout(() => {
-      addMessage(`Taking you to ${link.label} now. 💜`, "bot");
-      setTimeout(() => navigate(link.url), 900);
-    }, 1100);
+  if(text.includes("paano")||text.includes("how do i")||text.includes("how to")||text.includes("help me")||text.includes("turuan")){
+   const guide=findGuide(q);
+   if(guide){const link=links.find(x=>x.label.toLowerCase()===guide.label.toLowerCase());addMessage(`${guide.steps}\n\nMagsimula sa ${guide.label}. Sundin ang available controls sa page; maaaring mag-iba ang eksaktong buttons depende sa access at page version.`,"bot",link?[link]:[]);return;}
   }
-}
-
- chatForm.addEventListener("submit",e=>{e.preventDefault();handleQuestion(chatInput.value);chatInput.value=""});
+  const guide=findGuide(q);
+  if(guide){const link=links.find(x=>x.label.toLowerCase()===guide.label.toLowerCase());addMessage(`${guide.steps}\n\nGusto mo bang buksan ang ${guide.label}?`,"bot",link?[link]:[]);return;}
+  if(role==="visitor"){
+   addMessage("Para magamit ang student, teacher, o admin workspace, mag-sign in muna gamit ang authorized EqualLearn account. Maaari kitang tulungang hanapin ang login page.","bot",[{label:"Open Login",url:"/login.html"}]);return;
+  }
+  addMessage("Gusto kitang matulungan nang tama. Hindi ko pa matukoy kung anong feature ang tinutukoy mo. Maaari mong sabihin kung anong ginagawa mo, anong page ka, at ano ang lumalabas na message? Maaari rin akong magbigay ng step-by-step guide sa lessons, quizzes, classwork, progress, live class, o account.");
+  setSuggestions(suggestionsForRole());
+ }
+ chatForm.addEventListener("submit",e=>{e.preventDefault();handleQuestion(chatInput.value)});
  document.getElementById("lumi-chat-close").addEventListener("click",closeAssistant);
  document.getElementById("lumi-talk").addEventListener("click",openAssistant);
  document.getElementById("lumi-wave").addEventListener("click",()=>{waveUntil=performance.now()+2300;clickPulse=1;say("Hiiii! Need help with something? Tap the chat button and ask me. 👋",4800)});
  // Open chat from a mascot click as well as from the talk button.
  canvas.addEventListener("dblclick",()=>openAssistant());
  document.getElementById("lumi-hide").addEventListener("click",()=>{
-  if(hidden)return;hidden=true;root.style.display="none";
-  const reopen=document.createElement("button");reopen.id="lumi-reopen";reopen.textContent="✦ Lumi";reopen.type="button";
-  document.body.appendChild(reopen);
-  reopen.addEventListener("click",()=>{reopen.remove();root.style.display="block";hidden=false;say("I'm back! What shall we learn? 💜");});
+  if(hidden)return;hidden=true;root.classList.add("lumi-hidden");root.style.display="none";
+  const reopen=document.createElement("button");reopen.id="lumi-reopen";reopen.textContent="✦ Lumi";reopen.type="button";reopen.setAttribute("aria-label","Show Lumi");
+  document.body.appendChild(reopen);syncLumiFrameSize();
+  reopen.addEventListener("click",()=>{reopen.remove();hidden=false;root.classList.remove("lumi-hidden");root.style.display="block";syncLumiFrameSize();say("I'm back! What shall we learn? 💜");});
  });
 
  function resize(){

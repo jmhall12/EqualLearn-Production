@@ -1,3 +1,4 @@
+
 import { auth, db } from "./firebase-config.js";
 
 import {
@@ -13,12 +14,21 @@ import {
   where
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
-
 /* =========================================================
    EQUALLEARN — STUDENT QUIZ LIST
-   Reads the existing "quizzes" and "quizQuestions" collections
-   (the same records used by quiz.js and quiz-builder.js).
-   No data model or configuration changes are made here.
+
+   Collection:
+   teacherActivitiesV2
+
+   Access:
+   - Active student only
+   - Published quizzes only
+   - Quizzes assigned to the student's section
+
+   Section field:
+   sectionIds: ["SECTION_ID"]
+
+   No data model or configuration changes.
 ========================================================= */
 
 const $ = id => document.getElementById(id);
@@ -48,16 +58,29 @@ function escapeHTML(value) {
 
 function toDate(value) {
   if (!value) return null;
-  if (value instanceof Date) return value;
-  if (typeof value.toDate === "function") return value.toDate();
-  if (typeof value.seconds === "number") return new Date(value.seconds * 1000);
+
+  if (value instanceof Date) {
+    return value;
+  }
+
+  if (typeof value.toDate === "function") {
+    return value.toDate();
+  }
+
+  if (typeof value.seconds === "number") {
+    return new Date(value.seconds * 1000);
+  }
+
   const date = new Date(value);
+
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
 function formatDate(value) {
   const date = toDate(value);
+
   if (!date) return "";
+
   return date.toLocaleDateString("en-PH", {
     month: "short",
     day: "numeric",
@@ -69,29 +92,30 @@ function normalize(value) {
   return String(value ?? "").trim().toLowerCase();
 }
 
-function sectionsOf(record) {
-  if (Array.isArray(record.sectionIds)) {
-    return record.sectionIds.map(String);
-  }
-  if (record.sectionId) return [String(record.sectionId)];
-  return [];
-}
-
 function isPublished(record) {
-  return ["active", "published"].includes(normalize(record.status));
+  return ["active", "published"].includes(
+    normalize(record.status)
+  );
 }
 
 function availability(record) {
   const now = Date.now();
+
   const available = toDate(record.availableAt);
   const due = toDate(record.dueDate);
 
   if (available && now < available.getTime()) {
-    return { state: "upcoming", label: `Opens ${formatDate(available)}` };
+    return {
+      state: "upcoming",
+      label: `Opens ${formatDate(available)}`
+    };
   }
 
   if (due && now > due.getTime()) {
-    return { state: "closed", label: `Closed ${formatDate(due)}` };
+    return {
+      state: "closed",
+      label: `Closed ${formatDate(due)}`
+    };
   }
 
   return {
@@ -101,27 +125,47 @@ function availability(record) {
 }
 
 /* ---------------------------------------------------------
-   DATA
+   LOAD QUIZZES
 --------------------------------------------------------- */
 
-
 async function loadQuizzes() {
-  const studentSection = String(profile.sectionId || "").trim();
+  const studentSection = String(
+    profile?.sectionId || ""
+  ).trim();
 
   if (!studentSection) {
-    throw new Error("Your account has no assigned section.");
+    throw new Error(
+      "Your account has no assigned section. Please contact your teacher or administrator."
+    );
   }
+
+  /*
+   * IMPORTANT:
+   * Uses sectionIds array to match section-based access.
+   *
+   * Firestore document example:
+   *
+   * {
+   *   type: "quiz",
+   *   status: "published",
+   *   sectionIds: ["SECTION_ID"],
+   *   title: "Sample Quiz"
+   * }
+   */
 
   const quizzesQuery = query(
     collection(db, "teacherActivitiesV2"),
     where("status", "==", "published"),
-    where("sectionId", "==", studentSection)
+    where("sectionIds", "array-contains", studentSection)
   );
 
-  console.log("[EqualLearn] Loading Classwork quizzes:", {
-    collection: "teacherActivitiesV2",
-    sectionId: studentSection
-  });
+  console.log(
+    "[EqualLearn] Loading student quizzes:",
+    {
+      collection: "teacherActivitiesV2",
+      sectionIds: studentSection
+    }
+  );
 
   const snapshot = await getDocs(quizzesQuery);
 
@@ -131,7 +175,7 @@ async function loadQuizzes() {
       ...item.data()
     }))
     .filter(record =>
-      String(record.type || "").toLowerCase() === "quiz"
+      normalize(record.type) === "quiz"
     )
     .filter(isPublished)
     .map(record => {
@@ -139,10 +183,12 @@ async function loadQuizzes() {
 
       return {
         ...record,
+
         description:
           record.description ||
           activityData.instructions ||
           "",
+
         questions: Array.isArray(activityData.questions)
           ? activityData.questions
           : []
@@ -152,78 +198,197 @@ async function loadQuizzes() {
   questionCounts = new Map();
 
   quizzes.forEach(record => {
-    questionCounts.set(record.id, record.questions.length);
+    questionCounts.set(
+      record.id,
+      record.questions.length
+    );
   });
 
-  console.log("[EqualLearn] Classwork quizzes loaded:", {
-    count: quizzes.length,
-    quizzes: quizzes.map(item => ({
-      id: item.id,
-      title: item.title,
-      questions: item.questions.length
-    }))
-  });
+  console.log(
+    "[EqualLearn] Student quizzes loaded:",
+    {
+      count: quizzes.length,
+      quizzes: quizzes.map(item => ({
+        id: item.id,
+        title: item.title,
+        questions: item.questions.length
+      }))
+    }
+  );
 }
 
+/* ---------------------------------------------------------
+   QUIZ CARD
+--------------------------------------------------------- */
+
+function card(record) {
+  const status = availability(record);
+
+  const count = questionCounts.get(record.id) || 0;
+
+  const teacher = record.teacherName || "Your teacher";
+
+  const action = status.state === "open"
+    ? `
+      <a
+        class="quiz-open"
+        href="quiz.html?id=${encodeURIComponent(record.id)}"
+      >
+        Open quiz →
+      </a>
+    `
+    : `
+      <span class="quiz-open is-disabled">
+        ${escapeHTML(status.label)}
+      </span>
+    `;
+
+  return `
+    <article class="quiz-item">
+
+      <div class="quiz-item-main">
+
+        <div class="quiz-item-top">
+
+          <span class="quiz-eyebrow">
+            ${escapeHTML(teacher)}
+          </span>
+
+          <span class="quiz-status ${status.state}">
+            ${
+              status.state === "open"
+                ? "Available"
+                : status.state === "upcoming"
+                  ? "Upcoming"
+                  : "Closed"
+            }
+          </span>
+
+        </div>
+
+        <h3>
+          ${escapeHTML(record.title || "Untitled quiz")}
+        </h3>
+
+        <p>
+          ${escapeHTML(
+            record.description ||
+            "Open this quiz to see its instructions."
+          )}
+        </p>
+
+        <div class="quiz-meta">
+
+          <span>
+            ${
+              count
+                ? `${count} question${count === 1 ? "" : "s"}`
+                : "Questions available inside"
+            }
+          </span>
+
+          <span>
+            ${escapeHTML(status.label)}
+          </span>
+
+        </div>
+
+      </div>
+
+      ${action}
+
+    </article>
+  `;
+}
 
 /* ---------------------------------------------------------
    RENDER
 --------------------------------------------------------- */
 
-function card(record) {
-  const status = availability(record);
-  const count = questionCounts.get(record.id) || 0;
-  const teacher = record.teacherName || "Your teacher";
-
-  const action = status.state === "open"
-    ? `<a class="quiz-open" href="quiz.html?id=${encodeURIComponent(record.id)}">Open quiz →</a>`
-    : `<span class="quiz-open is-disabled">${escapeHTML(status.label)}</span>`;
-
-  return `
-    <article class="quiz-item">
-      <div class="quiz-item-main">
-        <div class="quiz-item-top">
-          <span class="quiz-eyebrow">${escapeHTML(teacher)}</span>
-          <span class="quiz-status ${status.state}">${escapeHTML(
-            status.state === "open" ? "Available" : status.state === "upcoming" ? "Upcoming" : "Closed"
-          )}</span>
-        </div>
-        <h3>${escapeHTML(record.title || "Untitled quiz")}</h3>
-        <p>${escapeHTML(record.description || "Open this quiz to see its instructions.")}</p>
-        <div class="quiz-meta">
-          <span>${count ? `${count} question${count === 1 ? "" : "s"}` : "Questions available inside"}</span>
-          <span>${escapeHTML(status.label)}</span>
-        </div>
-      </div>
-      ${action}
-    </article>
-  `;
-}
-
 function render() {
   if (!quizList) return;
 
   const term = normalize(quizSearch?.value);
-  const lessonFilter = new URLSearchParams(location.search).get("lesson") || "";
+
+  const lessonFilter =
+    new URLSearchParams(location.search).get("lesson") || "";
 
   const rows = quizzes.filter(record => {
-    if (lessonFilter && String(record.lessonId || "") !== lessonFilter) return false;
-    if (!term) return true;
-    return normalize(`${record.title} ${record.description} ${record.teacherName}`).includes(term);
+
+    if (
+      lessonFilter &&
+      String(record.lessonId || "") !== lessonFilter
+    ) {
+      return false;
+    }
+
+    if (!term) {
+      return true;
+    }
+
+    return normalize(
+      `${record.title || ""} ${
+        record.description || ""
+      } ${
+        record.teacherName || ""
+      }`
+    ).includes(term);
   });
 
   if (quizCount) {
-    quizCount.textContent = `${rows.length} quiz${rows.length === 1 ? "" : "zes"}`;
+    quizCount.textContent =
+      `${rows.length} quiz${rows.length === 1 ? "" : "zes"}`;
   }
 
   if (!rows.length) {
     quizList.innerHTML = "";
-    if (quizEmpty) quizEmpty.style.display = "block";
+
+    if (quizEmpty) {
+      quizEmpty.style.display = "block";
+    }
+
     return;
   }
 
-  if (quizEmpty) quizEmpty.style.display = "none";
+  if (quizEmpty) {
+    quizEmpty.style.display = "none";
+  }
+
   quizList.innerHTML = rows.map(card).join("");
+}
+
+/* ---------------------------------------------------------
+   ERROR DISPLAY
+--------------------------------------------------------- */
+
+function showError(error) {
+  console.error(
+    "[EqualLearn] Quiz list error:",
+    error
+  );
+
+  if (!quizList) return;
+
+  let message = error?.message || "Please try again.";
+
+  if (
+    error?.code === "permission-denied" ||
+    message.includes("Missing or insufficient permissions")
+  ) {
+    message =
+      "You do not currently have permission to access these quizzes. Please check your section assignment or contact your administrator.";
+  }
+
+  quizList.innerHTML = `
+    <div class="quiz-message">
+      <strong>Quizzes could not be loaded.</strong>
+      <p>${escapeHTML(message)}</p>
+    </div>
+  `;
+
+  if (quizEmpty) {
+    quizEmpty.style.display = "none";
+  }
 }
 
 /* ---------------------------------------------------------
@@ -233,13 +398,19 @@ function render() {
 quizSearch?.addEventListener("input", render);
 
 onAuthStateChanged(auth, async user => {
+
   if (!user) {
     location.href = "../login.html";
     return;
   }
 
   try {
-    const snapshot = await getDoc(doc(db, "users", user.uid));
+
+    /* Load student profile */
+
+    const snapshot = await getDoc(
+      doc(db, "users", user.uid)
+    );
 
     if (!snapshot.exists()) {
       throw new Error("Student profile not found.");
@@ -247,28 +418,36 @@ onAuthStateChanged(auth, async user => {
 
     profile = snapshot.data();
 
+    /* Validate role */
+
     if (normalize(profile.role) !== "student") {
-      throw new Error("An active student account is required.");
+      throw new Error(
+        "An active student account is required."
+      );
     }
 
-    if (normalize(profile.status || "active") !== "active") {
-      throw new Error("This student account is not active.");
+    /* Validate account status */
+
+    if (
+      normalize(profile.status || "active") !== "active"
+    ) {
+      throw new Error(
+        "This student account is not active."
+      );
     }
+
+    /* Load assigned quizzes */
 
     await loadQuizzes();
+
+    /* Display quizzes */
+
     render();
+
   } catch (error) {
-    console.error("[EqualLearn] Quiz list error:", error);
 
-    if (quizList) {
-      quizList.innerHTML = `
-        <div class="quiz-message">
-          <strong>Quizzes could not be loaded.</strong>
-          <p>${escapeHTML(error.message || "Please try again.")}</p>
-        </div>
-      `;
-    }
+    showError(error);
 
-    if (quizEmpty) quizEmpty.style.display = "none";
   }
+
 });
