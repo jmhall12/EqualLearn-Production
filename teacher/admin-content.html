@@ -13,17 +13,21 @@
 
     <style>
         * { box-sizing: border-box; }
+
         body {
             margin: 0;
             background: #edf0fa;
-            color: #20243a;
+            color: #20243a !important;
             font-family: Arial, sans-serif;
         }
+
         .page {
-            max-width: 1200px;
+            width: 100%;
+            max-width: 1250px;
             margin: auto;
             padding: 28px 22px 60px;
         }
+
         .header {
             display: flex;
             justify-content: space-between;
@@ -32,54 +36,69 @@
             flex-wrap: wrap;
             margin-bottom: 24px;
         }
+
         .eyebrow {
-            color: #68708c;
+            color: #68708c !important;
             font-size: 12px;
-            font-weight: 700;
+            font-weight: 800;
             letter-spacing: 1.5px;
             text-transform: uppercase;
         }
-        h1 { margin: 7px 0; font-size: clamp(25px, 4vw, 34px); }
-        .subtitle { color: #69718a; margin: 0; line-height: 1.6; }
+
+        h1 {
+            color: #20243a !important;
+            margin: 7px 0;
+            font-size: clamp(25px, 4vw, 34px);
+        }
+
+        .subtitle {
+            color: #69718a !important;
+            margin: 0;
+            line-height: 1.6;
+        }
+
         .back {
             text-decoration: none;
-            color: #fff;
+            color: #fff !important;
             background: #4656a8;
             padding: 12px 17px;
             border-radius: 12px;
             font-weight: 700;
+            transition: .2s;
         }
-        .toolbar {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin: 22px 0;
-        }
-        .tab {
-            border: 1px solid #d9deef;
-            background: #fff;
-            color: #505a78;
-            padding: 11px 17px;
-            border-radius: 11px;
-            cursor: pointer;
-            font-weight: 700;
-        }
-        .tab.active { background: #4656a8; color: #fff; border-color: #4656a8; }
+
+        .back:hover { background: #35458f; transform: translateY(-2px); }
+
         .summary {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 14px;
             margin-bottom: 20px;
         }
+
         .stat, .content-card {
-            background: #fff;
+            background: #fff !important;
+            color: #20243a !important;
             border: 1px solid #e0e4f0;
             border-radius: 17px;
-            box-shadow: 0 8px 24px rgba(35,45,90,.05);
+            box-shadow: 0 8px 24px rgba(35,45,90,.06);
         }
-        .stat { padding: 18px; }
-        .stat span { display: block; color: #707995; font-size: 13px; }
-        .stat strong { display: block; margin-top: 7px; font-size: 27px; }
+
+        .stat { padding: 19px; }
+
+        .stat span {
+            display: block;
+            color: #707995 !important;
+            font-size: 13px;
+        }
+
+        .stat strong {
+            display: block;
+            margin-top: 7px;
+            color: #303c83 !important;
+            font-size: 29px;
+        }
+
         #message {
             display: none;
             padding: 13px 16px;
@@ -87,107 +106,219 @@
             margin: 15px 0;
             line-height: 1.5;
         }
+
         #message.show { display: block; }
-        #message.error { color: #9b2424; background: #fff0f0; }
-        #message.success { color: #17643a; background: #eaf8ef; }
+        #message.error { color: #9b2424 !important; background: #fff0f0; }
+        #message.success { color: #17643a !important; background: #eaf8ef; }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 22px 0;
+        }
+
+        .tab {
+            border: 1px solid #d9deef;
+            background: #fff;
+            color: #505a78 !important;
+            padding: 11px 19px;
+            border-radius: 11px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: .2s;
+        }
+
+        .tab:hover { border-color: #4656a8; }
+        .tab.active { background: #4656a8; color: #fff !important; border-color: #4656a8; }
+
         #contentList { display: grid; gap: 16px; }
-        .content-card { padding: 20px; }
+
+        .content-card {
+            padding: 22px;
+            min-width: 0;
+        }
+
         .card-top {
             display: flex;
             align-items: flex-start;
             justify-content: space-between;
             gap: 12px;
         }
+
+        .content-card h2 {
+            margin: 0 0 10px;
+            color: #252d4b !important;
+            font-size: 21px;
+            line-height: 1.4;
+            overflow-wrap: anywhere;
+        }
+
         .type {
-            color: #4656a8;
+            color: #4656a8 !important;
             background: #eef0ff;
             border-radius: 30px;
-            padding: 6px 10px;
+            padding: 7px 11px;
             font-size: 11px;
             font-weight: 800;
             text-transform: uppercase;
             white-space: nowrap;
         }
-        .content-card h2 { margin: 0 0 8px; font-size: 20px; }
-        .description { color: #69718a; line-height: 1.6; white-space: pre-wrap; }
+
+        .status {
+            display: inline-block;
+            border-radius: 30px;
+            padding: 6px 11px;
+            font-size: 11px;
+            font-weight: 800;
+            background: #fff5df;
+            color: #946000 !important;
+        }
+
+        .status.approved { background: #e4f6eb; color: #17643a !important; }
+        .status.published { background: #e9edff; color: #394b9c !important; }
+        .status.rejected { background: #fff0f0; color: #a32b2b !important; }
+
+        .description {
+            color: #626c86 !important;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
         .meta {
             display: flex;
             flex-wrap: wrap;
             gap: 8px 16px;
-            color: #7a829b;
+            color: #7a829b !important;
             font-size: 12px;
             margin: 13px 0;
         }
+
         .preview {
             border-top: 1px solid #edf0f6;
             margin-top: 15px;
-            padding-top: 14px;
+            padding-top: 15px;
         }
-        .preview h3 { font-size: 14px; margin: 0 0 8px; }
+
+        .preview h3 {
+            color: #303957 !important;
+            font-size: 14px;
+            margin: 0 0 8px;
+        }
+
         .preview-content {
-            color: #505a78;
-            line-height: 1.65;
+            color: #505a78 !important;
+            line-height: 1.7;
             white-space: pre-wrap;
             overflow-wrap: anywhere;
             max-height: 230px;
             overflow: auto;
         }
-        .resources { display: grid; gap: 8px; margin-top: 12px; }
+
+        .resources {
+            display: grid;
+            gap: 9px;
+            margin-top: 14px;
+        }
+
         .resources a {
-            color: #4656a8;
+            display: block;
+            padding: 11px 13px;
+            background: #f5f6fc;
+            border: 1px solid #e8eaf4;
+            border-radius: 10px;
+            color: #4656a8 !important;
+            text-decoration: none;
             overflow-wrap: anywhere;
         }
+
+        .resources a:hover {
+            background: #edf0ff;
+            border-color: #cbd2ef;
+        }
+
         .assignment {
             background: #f6f7fc;
-            padding: 15px;
+            border: 1px solid #e8eaf4;
+            padding: 16px;
             border-radius: 13px;
-            margin-top: 16px;
+            margin-top: 17px;
         }
-        .assignment label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 8px; }
-        select {
+
+        .assignment label {
+            display: block;
+            color: #303957 !important;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 9px;
+        }
+
+        .assignment select {
             width: 100%;
             padding: 12px;
             border: 1px solid #d9deeb;
             border-radius: 10px;
             background: #fff;
-            color: #30364e;
+            color: #30364e !important;
+            font-size: 14px;
         }
-        .actions { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 13px; }
+
+        .actions {
+            display: flex;
+            gap: 9px;
+            flex-wrap: wrap;
+            margin-top: 13px;
+        }
+
         .btn {
             border: 0;
             border-radius: 10px;
-            padding: 11px 15px;
+            padding: 12px 16px;
             cursor: pointer;
             font-weight: 700;
+            transition: .2s;
         }
+
+        .btn:hover:not(:disabled) { transform: translateY(-1px); }
         .btn:disabled { opacity: .5; cursor: not-allowed; }
-        .approve { background: #e4f6eb; color: #17643a; }
-        .reject { background: #fff0f0; color: #a32b2b; }
-        .publish { background: #4656a8; color: #fff; }
+
+        .approve { background: #e4f6eb; color: #17643a !important; }
+        .reject { background: #fff0f0; color: #a32b2b !important; }
+        .publish { background: #4656a8; color: #fff !important; }
+
         .empty {
             background: #fff;
             border: 1px dashed #cbd2e5;
             border-radius: 16px;
-            padding: 35px 20px;
+            padding: 38px 20px;
             text-align: center;
-            color: #737b94;
+            color: #737b94 !important;
+            line-height: 1.6;
         }
-        .empty strong { display: block; color: #30364e; margin-bottom: 7px; }
-        .status {
-            display: inline-block;
-            border-radius: 30px;
-            padding: 6px 10px;
-            font-size: 11px;
-            font-weight: 800;
-            background: #fff5df;
-            color: #946000;
+
+        .empty strong {
+            display: block;
+            color: #30364e !important;
+            margin-bottom: 7px;
         }
-        .status.approved { background: #e4f6eb; color: #17643a; }
-        .status.published { background: #e9edff; color: #394b9c; }
-        @media(max-width:650px) {
+
+        .published-info {
+            padding: 12px 14px;
+            background: #f0f3ff;
+            border-radius: 10px;
+            color: #394b9c !important;
+            font-size: 13px;
+            margin-top: 14px;
+        }
+
+        @media(max-width:700px) {
             .page { padding: 20px 14px 45px; }
             .summary { grid-template-columns: 1fr; }
             .content-card { padding: 16px; }
+            .card-top { flex-direction: column; }
+            .type { align-self: flex-start; }
+            .back { width: 100%; text-align: center; }
         }
     </style>
 </head>
@@ -197,9 +328,9 @@
     <header class="header">
         <div>
             <div class="eyebrow">Teacher workspace</div>
-            <h1>Admin Learning Content</h1>
+            <h1>Admin Content Review</h1>
             <p class="subtitle">
-                Review learning materials submitted by Admin and assign approved content to your section.
+                Review Admin learning materials, approve them, and publish them to your assigned sections.
             </p>
         </div>
         <a class="back" href="dashboard.html">← Dashboard</a>
@@ -220,15 +351,15 @@
         </article>
     </section>
 
-    <div id="message" role="status"></div>
+    <div id="message" role="status" aria-live="polite"></div>
 
     <nav class="toolbar" aria-label="Content filters">
-        <button class="tab active" data-filter="all">All content</button>
-        <button class="tab" data-filter="module">Modules</button>
-        <button class="tab" data-filter="lesson">Lessons</button>
+        <button type="button" class="tab active" data-filter="all">All content</button>
+        <button type="button" class="tab" data-filter="module">Modules</button>
+        <button type="button" class="tab" data-filter="lesson">Lessons</button>
     </nav>
 
-    <section id="contentList">
+    <section id="contentList" aria-live="polite">
         <div class="empty">Loading Admin content...</div>
     </section>
 </main>
@@ -238,15 +369,15 @@
 <script type="module" src="../assets/js/pwa.js"></script>
 <script type="module" src="../assets/js/theme.js"></script>
 
+<!-- Lumi is intentionally smaller so it does not cover review controls. -->
 <iframe
     src="/assets/widgets/lumi.html"
     title="Lumi — EqualLearn Companion"
     id="equallearn-lumi-frame"
     allow="autoplay"
-    allowtransparency="true"
     frameborder="0"
     scrolling="no"
-    style="position:fixed;right:8px;bottom:8px;width:210px;height:255px;border:0;background:transparent;z-index:99999;overflow:hidden;">
+    style="position:fixed;right:10px;bottom:10px;width:125px;height:150px;border:0;background:transparent;z-index:1000;overflow:hidden;">
 </iframe>
 </body>
 </html>

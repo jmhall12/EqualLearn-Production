@@ -26,6 +26,10 @@ let teacherSections = [];
 let allContent = [];
 let activeFilter = "all";
 
+/* =====================================================
+   HELPERS
+===================================================== */
+
 function showMessage(message, type = "success") {
     messageBox.textContent = message;
     messageBox.className = `show ${type}`;
@@ -42,14 +46,51 @@ function escapeHTML(value = "") {
     })[char]);
 }
 
+function normalizeStatus(item) {
+    const value = String(item.reviewStatus || item.status || "pending")
+        .toLowerCase()
+        .trim();
+
+    if (["pending_review", "pending"].includes(value)) return "pending";
+    if (["approved"].includes(value)) return "approved";
+    if (["rejected"].includes(value)) return "rejected";
+
+    return value;
+}
+
 function getStatus(item) {
-    return item.reviewStatus || "pending";
+    return normalizeStatus(item);
 }
 
 function isAssignedToTeacher(item) {
-    return item.assignedTeacherId === currentTeacher.uid
-        && item.status === "active";
+    return item.assignedTeacherId === currentTeacher?.uid
+        && item.status === "active"
+        && getStatus(item) === "approved";
 }
+
+function getCollectionName(item) {
+    return item.type === "module" ? "modules" : "lessons";
+}
+
+function safeUrl(value) {
+    if (!value) return "";
+
+    try {
+        const url = new URL(String(value), window.location.href);
+
+        if (!["http:", "https:", "blob:"].includes(url.protocol)) {
+            return "";
+        }
+
+        return url.href;
+    } catch {
+        return "";
+    }
+}
+
+/* =====================================================
+   SUMMARY
+===================================================== */
 
 function updateSummary() {
     const pending = allContent.filter(item =>
@@ -57,7 +98,8 @@ function updateSummary() {
     ).length;
 
     const approved = allContent.filter(item =>
-        getStatus(item) === "approved" && !isAssignedToTeacher(item)
+        getStatus(item) === "approved" &&
+        !isAssignedToTeacher(item)
     ).length;
 
     const assigned = allContent.filter(isAssignedToTeacher).length;
@@ -107,10 +149,14 @@ async function loadTeacherSections() {
 }
 
 /* =====================================================
-   LOAD ADMIN MODULES AND LESSONS
+   LOAD ADMIN CONTENT
 ===================================================== */
 
 async function loadAdminContent() {
+    contentList.innerHTML = `
+        <div class="empty">Loading Admin content...</div>
+    `;
+
     const modulesQuery = query(
         collection(db, "modules"),
         where("createdByRole", "==", "admin"),
@@ -189,53 +235,74 @@ function renderAttachments(item) {
 
     const legacyFile = item.fileUrl
         ? [{
-            name: item.fileName || "Open attachment",
-            url: item.fileUrl
+            fileUrl: item.fileUrl,
+            fileName: item.fileName || "Open attachment"
         }]
         : [];
 
     const files = [...attachments, ...legacyFile];
+    const links = [];
 
-    if (!files.length && !resources.length && !item.videoUrl) {
-        return "";
+    const videoUrl = safeUrl(item.videoUrl);
+
+    if (videoUrl) {
+        links.push(`
+            <a href="${escapeHTML(videoUrl)}"
+               target="_blank" rel="noopener noreferrer">
+                ▶ Open video resource
+            </a>
+        `);
     }
 
+    files.forEach(file => {
+        const url = safeUrl(
+            file.fileUrl ||
+            file.url ||
+            file.downloadURL ||
+            file.downloadUrl
+        );
+
+        if (!url) return;
+
+        const name = file.fileName || file.name || "Attachment";
+
+        links.push(`
+            <a href="${escapeHTML(url)}"
+               target="_blank" rel="noopener noreferrer">
+                📎 ${escapeHTML(name)}
+            </a>
+        `);
+    });
+
+    resources.forEach(resource => {
+        const url = safeUrl(
+            typeof resource === "string"
+                ? resource
+                : resource.url || resource.link
+        );
+
+        if (!url) return;
+
+        const label = typeof resource === "string"
+            ? resource
+            : resource.title || resource.label || url;
+
+        links.push(`
+            <a href="${escapeHTML(url)}"
+               target="_blank" rel="noopener noreferrer">
+                ↗ ${escapeHTML(label)}
+            </a>
+        `);
+    });
+
+    if (!links.length) return "";
+
     return `
-        <div class="resources">
-            ${item.videoUrl ? `
-                <a href="${escapeHTML(item.videoUrl)}"
-                   target="_blank" rel="noopener">
-                    ▶ Open video resource
-                </a>` : ""}
-
-            ${files.map(file => {
-                const url = file.url || file.downloadURL || file.downloadUrl;
-                if (!url) return "";
-
-                return `
-                    <a href="${escapeHTML(url)}"
-                       target="_blank" rel="noopener">
-                        📎 ${escapeHTML(file.name || file.fileName || "Attachment")}
-                    </a>`;
-            }).join("")}
-
-            ${resources.map(resource => {
-                const url = typeof resource === "string"
-                    ? resource
-                    : resource.url || resource.link;
-
-                const label = typeof resource === "string"
-                    ? resource
-                    : resource.title || resource.label || url;
-
-                if (!url) return "";
-
-                return `
-                    <a href="${escapeHTML(url)}"
-                       target="_blank" rel="noopener">
-                        ↗ ${escapeHTML(label)}
-                    </a>`;
-            }).join("")}
+        <div class="preview">
+            <h3>Attachments and learning resources</h3>
+            <div class="resources">
+                ${links.join("")}
+            </div>
         </div>
     `;
 }
@@ -250,13 +317,19 @@ function renderCard(item) {
 
     const statusClass = assigned
         ? "published"
-        : status === "approved" ? "approved" : "";
+        : status === "approved"
+            ? "approved"
+            : status === "rejected"
+                ? "rejected"
+                : "";
 
     const statusLabel = assigned
         ? "Published"
         : status === "approved"
             ? "Approved — awaiting assignment"
-            : "Pending review";
+            : status === "rejected"
+                ? "Rejected"
+                : "Pending review";
 
     const description = item.description || "";
     const body = item.content || "";
@@ -274,7 +347,8 @@ function renderCard(item) {
                     Select the section that will receive this ${item.type}
                 </label>
 
-                <select id="section-${escapeHTML(item.id)}">
+                <select id="section-${escapeHTML(item.id)}"
+                    ${!teacherSections.length ? "disabled" : ""}>
                     ${sectionOptions(item)}
                 </select>
 
@@ -282,7 +356,8 @@ function renderCard(item) {
                     <button class="btn approve"
                         data-action="approve-publish"
                         data-id="${escapeHTML(item.id)}"
-                        data-type="${item.type}">
+                        data-type="${item.type}"
+                        ${!teacherSections.length ? "disabled" : ""}>
                         ✓ Approve &amp; Publish
                     </button>
 
@@ -302,7 +377,8 @@ function renderCard(item) {
                     Select section to publish this ${item.type}
                 </label>
 
-                <select id="section-${escapeHTML(item.id)}">
+                <select id="section-${escapeHTML(item.id)}"
+                    ${!teacherSections.length ? "disabled" : ""}>
                     ${sectionOptions(item)}
                 </select>
 
@@ -310,7 +386,8 @@ function renderCard(item) {
                     <button class="btn publish"
                         data-action="publish"
                         data-id="${escapeHTML(item.id)}"
-                        data-type="${item.type}">
+                        data-type="${item.type}"
+                        ${!teacherSections.length ? "disabled" : ""}>
                         Publish to Students
                     </button>
                 </div>
@@ -318,13 +395,25 @@ function renderCard(item) {
         `;
     } else if (assigned) {
         const section = teacherSections.find(
-            s => s.id === item.sectionIds?.[0]
+            s => item.sectionIds?.includes(s.id)
         );
 
         actionArea = `
-            <p class="description">
-                Published to: ${escapeHTML(section?.name || item.sectionIds?.[0] || "Assigned section")}
-            </p>
+            <div class="published-info">
+                ✓ Published to:
+                <strong>${escapeHTML(
+                    section?.name ||
+                    item.sectionIds?.join(", ") ||
+                    "Assigned section"
+                )}</strong>
+            </div>
+        `;
+    } else if (status === "rejected") {
+        actionArea = `
+            <div class="published-info">
+                Rejection reason:
+                ${escapeHTML(item.reviewFeedback || "No reason provided.")}
+            </div>
         `;
     }
 
@@ -333,16 +422,20 @@ function renderCard(item) {
             <div class="card-top">
                 <div>
                     <h2>${escapeHTML(item.title || "Untitled content")}</h2>
-                    <span class="status ${statusClass}">${statusLabel}</span>
+                    <span class="status ${statusClass}">
+                        ${statusLabel}
+                    </span>
                 </div>
                 <span class="type">${item.type}</span>
             </div>
 
-            <p class="description">${escapeHTML(description)}</p>
+            ${description ? `
+                <p class="description">${escapeHTML(description)}</p>
+            ` : ""}
 
             <div class="meta">
                 <span>By: ${escapeHTML(item.createdByName || "Admin")}</span>
-                <span>Duration: ${escapeHTML(item.estimatedDuration || "Not specified")}</span>
+                <span>Duration: ${escapeHTML(item.estimatedDuration || item.duration || "Not specified")}</span>
                 ${item.moduleName
                     ? `<span>Module: ${escapeHTML(item.moduleName)}</span>`
                     : ""}
@@ -391,89 +484,70 @@ function renderContent() {
 }
 
 /* =====================================================
-   REVIEW ADMIN CONTENT
+   REJECT CONTENT
 ===================================================== */
 
-async function reviewContent(item, decision) {
-    const feedback = decision === "rejected"
-        ? (window.prompt("Reason for rejecting this content:") || "").trim()
-        : "";
+async function rejectContent(item) {
+    const feedback = (
+        window.prompt("Reason for rejecting this content:")
+        || ""
+    ).trim();
 
-    if (decision === "rejected" && !feedback) {
+    if (!feedback) {
         throw new Error("Please provide a reason before rejecting.");
     }
 
-    const collectionName = item.type === "module"
-        ? "modules"
-        : "lessons";
-
-    await updateDoc(doc(db, collectionName, item.id), {
-        reviewStatus: decision,
-        status: decision,
-        reviewedBy: currentTeacher.uid,
-        reviewedAt: serverTimestamp(),
-        reviewFeedback: feedback,
-        updatedAt: serverTimestamp()
-    });
+    await updateDoc(
+        doc(db, getCollectionName(item), item.id),
+        {
+            reviewStatus: "rejected",
+            status: "rejected",
+            reviewedBy: currentTeacher.uid,
+            reviewedAt: serverTimestamp(),
+            reviewFeedback: feedback,
+            updatedAt: serverTimestamp()
+        }
+    );
 }
 
 /* =====================================================
-   PUBLISH CONTENT
+   APPROVE AND PUBLISH
 ===================================================== */
 
-async function publishContent(item, sectionId) {
+async function publishContent(item, sectionId, approveFirst = false) {
     const section = teacherSections.find(s => s.id === sectionId);
 
     if (!section) {
         throw new Error("Invalid section selection.");
     }
 
-    const collectionName = item.type === "module"
-        ? "modules"
-        : "lessons";
-
-    await updateDoc(doc(db, collectionName, item.id), {
+    const payload = {
         status: "active",
+        reviewStatus: "approved",
         sectionIds: [sectionId],
+
         assignedTeacherId: currentTeacher.uid,
         assignedTeacherName:
             currentTeacher.fullname ||
             currentTeacher.displayName ||
             currentTeacher.email ||
             "Teacher",
+
         publishedBy: currentTeacher.uid,
         publishedAt: serverTimestamp(),
         updatedAt: serverTimestamp()
-    });
-}
+    };
 
-/* =====================================================
-   ONE-CLICK APPROVE AND PUBLISH
-===================================================== */
-
-async function approveAndPublish(item) {
-    const select = $(`section-${item.id}`);
-    const sectionId = select?.value;
-
-    if (!sectionId) {
-        throw new Error("Select your assigned section first.");
+    if (approveFirst) {
+        payload.reviewedBy = currentTeacher.uid;
+        payload.reviewedAt = serverTimestamp();
+        payload.reviewFeedback = "";
     }
 
-    const section = teacherSections.find(s => s.id === sectionId);
-
-    if (!section) {
-        throw new Error("Invalid section selection.");
-    }
-
-    const collectionName = item.type === "module"
-        ? "modules"
-        : "lessons";
-
-    // Step 1: Approve the Admin content.
-    await reviewContent(item, "approved");
-
-    // Step 2: Immediately publish it to the selected section.
-    await publishContent(item, sectionId);
+    await updateDoc(
+        doc(db, getCollectionName(item), item.id),
+        payload
+    );
 
     return section;
 }
@@ -484,7 +558,7 @@ async function approveAndPublish(item) {
 
 contentList.addEventListener("click", async event => {
     const button = event.target.closest("button[data-action]");
-    if (!button) return;
+    if (!button || button.disabled) return;
 
     const { action, id, type } = button.dataset;
 
@@ -500,28 +574,42 @@ contentList.addEventListener("click", async event => {
     }
 
     if (action === "approve-publish" &&
-        !window.confirm("Approve and immediately publish this content to the selected section?")) {
+        !window.confirm(
+            "Approve and publish this content to the selected section?"
+        )) {
         return;
     }
 
     if (action === "publish" &&
-        !window.confirm("Publish this content to the selected section?")) {
+        !window.confirm(
+            "Publish this approved content to the selected section?"
+        )) {
         return;
     }
 
     button.disabled = true;
 
     try {
+        if (action === "reject") {
+            await rejectContent(item);
+            showMessage("Content rejected successfully.");
+        }
+
         if (action === "approve-publish") {
-            const section = await approveAndPublish(item);
+            const sectionId = $(`section-${item.id}`)?.value;
+
+            if (!sectionId) {
+                throw new Error("Select your assigned section first.");
+            }
+
+            const section = await publishContent(item, sectionId, true);
 
             showMessage(
                 `${item.type === "module" ? "Module" : "Lesson"} approved and published successfully to ${section.name}.`
             );
-        } else if (action === "reject") {
-            await reviewContent(item, "rejected");
-            showMessage("Content rejected.");
-        } else if (action === "publish") {
+        }
+
+        if (action === "publish") {
             const sectionId = $(`section-${item.id}`)?.value;
 
             if (!sectionId) {
@@ -543,12 +631,7 @@ contentList.addEventListener("click", async event => {
             "error"
         );
 
-        // Refresh in case approval succeeded but publishing failed.
-        try {
-            await loadAdminContent();
-        } catch (reloadError) {
-            console.error("CONTENT RELOAD ERROR:", reloadError);
-        }
+        button.disabled = false;
     }
 });
 
@@ -563,6 +646,7 @@ document.querySelectorAll("[data-filter]").forEach(button => {
 
         button.classList.add("active");
         activeFilter = button.dataset.filter;
+
         renderContent();
     });
 });

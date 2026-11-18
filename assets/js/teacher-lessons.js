@@ -1,19 +1,11 @@
 
-import { auth, db } from "./firebase-config.js";
+import { auth, db, storage } from "./firebase-config.js";
 
 import { notifySectionStudents } from "./notification-service.js";
 
 import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
-
-import {
-  getStorage,
-  ref,
-  uploadBytesResumable,
-  getDownloadURL,
-  deleteObject
-} from "https://www.gstatic.com/firebasejs/12.17.0/firebase-storage.js";
 
 import {
   collection,
@@ -28,6 +20,13 @@ import {
   query,
   where
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
+
+import {
+  ref as storageRef,
+  uploadBytesResumable,
+  getDownloadURL,
+  deleteObject
+} from "https://www.gstatic.com/firebasejs/12.17.0/firebase-storage.js";
 
 // ==========================================
 // DOM ELEMENTS
@@ -48,6 +47,7 @@ const lessonTitle = $("lessonTitle");
 const lessonDescription = $("lessonDescription");
 const lessonFile = $("lessonFile");
 const videoUrl = $("videoUrl");
+const lessonCategory = $("lessonCategory");
 
 const uploadStatus = $("uploadStatus");
 const currentFile = $("currentFile");
@@ -56,11 +56,9 @@ const currentFile = $("currentFile");
 // CONFIGURATION
 // ==========================================
 
-// Store file binaries in Firebase Storage, never in Firestore documents.
-// Firestore stores only file URL, path, name, MIME type, and size.
-// Client-side limit: 500 MB per attachment. Storage Rules must allow this too.
-const storage = getStorage();
-const MAX_FILE_SIZE = 500 * 1024 * 1024;
+// Store small file binaries directly in Firestore as Base64.
+// Firestore documents are limited to 1 MiB, so use share links for larger files.
+const MAX_FILE_SIZE = 20 * 1024 * 1024;
 
 const ALLOWED_EXTENSIONS = new Set([
   "pdf",
@@ -214,54 +212,90 @@ function showPageError(message, error) {
 // LOAD MODULES
 // ==========================================
 
+
 async function loadModules() {
-  if (!moduleSelect) return;
+  if (!moduleSelect || !currentUser) return;
 
   moduleSelect.innerHTML =
     `<option value="">Loading modules...</option>`;
 
   try {
     const modulesRef = collection(db, "modules");
+    let snapshots = [];
 
-    const modulesQuery =
-      currentRole === "admin"
-        ? query(
-            modulesRef,
-            orderBy("order", "asc")
-          )
-        : query(
-            modulesRef,
-            where("createdBy", "==", currentUser.uid),
-            orderBy("order", "asc")
-          );
+    if (currentRole === "admin") {
+      snapshots = [await getDocs(modulesRef)];
+    } else {
+      const [assignedSnap, ownedSnap] = await Promise.all([
+        // Admin modules approved and assigned to this teacher
+        getDocs(query(
+          modulesRef,
+          where("createdByRole", "==", "admin"),
+          where("reviewStatus", "==", "approved"),
+          where("assignedTeacherId", "==", currentUser.uid),
+          where("status", "==", "active")
+        )),
 
-    const snapshot = await getDocs(modulesQuery);
+        // Modules created by this teacher
+        getDocs(query(
+          modulesRef,
+          where("createdBy", "==", currentUser.uid)
+        ))
+      ]);
 
-    modules = snapshot.docs.map((item) => ({
-      id: item.id,
-      ...item.data()
-    }));
+      snapshots = [assignedSnap, ownedSnap];
+    }
 
-    moduleSelect.replaceChildren(
-      new Option("Select Module", "")
-    );
+    const unique = new Map();
 
-    const fragment = document.createDocumentFragment();
+    snapshots.forEach(snapshot => {
+      snapshot.docs.forEach(item => {
+        const data = item.data();
 
-    modules.forEach((module) => {
-      const option = document.createElement("option");
+        const isOwn =
+          data.createdBy === currentUser.uid;
 
-      option.value = module.id;
+        const isAssigned =
+          data.createdByRole === "admin" &&
+          data.reviewStatus === "approved" &&
+          data.assignedTeacherId === currentUser.uid &&
+          data.status === "active";
 
-      option.textContent =
-        module.title ||
-        module.name ||
-        "Untitled Module";
-
-      fragment.appendChild(option);
+        if (
+          currentRole === "admin" ||
+          isOwn ||
+          isAssigned
+        ) {
+          unique.set(item.id, {
+            id: item.id,
+            ...data
+          });
+        }
+      });
     });
 
-    moduleSelect.appendChild(fragment);
+    modules = [...unique.values()].sort((a, b) =>
+      Number(a.order || 9999) -
+      Number(b.order || 9999)
+    );
+
+    moduleSelect.replaceChildren(
+      new Option(
+        modules.length
+          ? "Select Module"
+          : "No approved modules assigned to you",
+        ""
+      )
+    );
+
+    modules.forEach(module => {
+      moduleSelect.appendChild(
+        new Option(
+          module.title || module.name || "Untitled Module",
+          module.id
+        )
+      );
+    });
 
   } catch (error) {
     console.error("Module loading error:", error);
@@ -273,7 +307,7 @@ async function loadModules() {
   }
 }
 
-// ==========================================
+
 // LOAD LESSONS
 // ==========================================
 
@@ -412,6 +446,7 @@ function renderLessons() {
       <span class="module-badge">
         ${escapeHTML(moduleName)}
       </span>
+      ${lesson.category ? `<span class="module-badge lesson-category">${escapeHTML(lesson.category)}</span>` : ""}
 
       <h2>
         ${escapeHTML(lesson.title || "Untitled Lesson")}
@@ -580,6 +615,7 @@ function editLesson(id) {
     modalTitle.textContent = "Edit Lesson";
 
     moduleSelect.value = lesson.moduleId || "";
+    if (lessonCategory) lessonCategory.value = lesson.category || "Lesson";
     lessonTitle.value = lesson.title || "";
     lessonDescription.value = lesson.description || "";
     videoUrl.value = lesson.videoUrl || "";
@@ -661,6 +697,7 @@ saveLesson?.addEventListener("click", async () => {
   const moduleId = moduleSelect.value;
   const titleValue = lessonTitle.value.trim();
   const descriptionValue = lessonDescription.value.trim();
+  const categoryValue = lessonCategory?.value || "Lesson";
   const youtube = videoUrl.value.trim();
   const file = lessonFile.files?.[0] || null;
 
@@ -678,6 +715,10 @@ saveLesson?.addEventListener("click", async () => {
     );
   }
 
+  if (!categoryValue) {
+    return showLessonStatus("Please select a lesson category.", true);
+  }
+
   const selectedModule = modules.find(
     (item) => item.id === moduleId
   );
@@ -691,10 +732,11 @@ saveLesson?.addEventListener("click", async () => {
 
   if (
     currentRole !== "admin" &&
-    selectedModule.createdBy !== currentUser.uid
+    selectedModule.createdBy !== currentUser.uid &&
+    selectedModule.assignedTeacherId !== currentUser.uid
   ) {
     return showLessonStatus(
-      "You are not authorized to add lessons to this module.",
+      "This module is not assigned to your teacher account.",
       true
     );
   }
@@ -731,82 +773,32 @@ saveLesson?.addEventListener("click", async () => {
     let filePath = existingFilePath;
 
     if (file) {
-      const safeFileName = file.name
-        .replace(/[^\w.-]/g, "_")
-        .slice(-140);
+      setUploadProgress(0, "Uploading file to Firebase Storage...");
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      filePath = `lessons/${currentUser.uid}/${Date.now()}_${safeName}`;
+      const fileRef = storageRef(storage, filePath);
+      activeUploadTask = uploadBytesResumable(fileRef, file, {
+        contentType: file.type || "application/octet-stream"
+      });
 
-      const newStoragePath =
-        `lessons/${currentUser.uid}/${Date.now()}_${safeFileName}`;
+      await new Promise((resolve, reject) => {
+        activeUploadTask.on("state_changed",
+          snapshot => {
+            const percent = snapshot.totalBytes
+              ? (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+              : 0;
+            setUploadProgress(percent, `Uploading ${file.name}...`);
+          },
+          reject,
+          resolve
+        );
+      });
 
-      const fileRef = ref(storage, newStoragePath);
+      if (uploadCancelled) throw new Error("Upload cancelled.");
 
-      uploadPanel.hidden = false;
-
-      lessonUploadTitle.textContent =
-        "Uploading attachment";
-
-      setUploadProgress(
-        0,
-        `Starting ${file.name}...`
-      );
-
-      activeUploadTask = uploadBytesResumable(
-        fileRef,
-        file,
-        {
-          contentType:
-            file.type || "application/octet-stream",
-
-          customMetadata: {
-            uploadedBy: currentUser.uid,
-            originalFileName: file.name
-          }
-        }
-      );
-
-      const uploadedSnapshot = await new Promise(
-        (resolve, reject) => {
-          activeUploadTask.on(
-            "state_changed",
-
-            snapshot => {
-              const percent = snapshot.totalBytes
-                ? Math.round(
-                    (snapshot.bytesTransferred /
-                      snapshot.totalBytes) * 100
-                  )
-                : 0;
-
-              setUploadProgress(
-                percent,
-                `${formatFileSize(snapshot.bytesTransferred)} of ${formatFileSize(snapshot.totalBytes)}`
-              );
-            },
-
-            error => reject(error),
-
-            () => resolve(activeUploadTask.snapshot)
-          );
-        }
-      );
-
-      if (uploadCancelled) {
-        throw new Error("Upload cancelled.");
-      }
-
-      fileUrl = await getDownloadURL(
-        uploadedSnapshot.ref
-      );
-
-      filePath = newStoragePath;
-
-      // New files are stored in Firebase Storage.
-      // Keep this empty to avoid Firestore document-size problems.
+      fileUrl = await getDownloadURL(fileRef);
       fileDataBase64 = "";
-
-      fileMimeType =
-        file.type || "application/octet-stream";
-
+      fileMimeType = file.type || "application/octet-stream";
       fileName = file.name;
       fileSize = file.size;
     }
@@ -825,6 +817,7 @@ saveLesson?.addEventListener("click", async () => {
       moduleName,
       title: titleValue,
       description: descriptionValue,
+      category: categoryValue,
 
       fileUrl,
       filePath,
@@ -884,23 +877,6 @@ saveLesson?.addEventListener("click", async () => {
 
       await updateDoc(lessonRef, payload);
 
-      // Remove the replaced Storage object only after the lesson record is saved.
-      if (
-        file &&
-        existingFilePath &&
-        existingFilePath !== filePath
-      ) {
-        try {
-          await deleteObject(
-            ref(storage, existingFilePath)
-          );
-        } catch (cleanupError) {
-          console.warn(
-            "Old lesson attachment cleanup failed:",
-            cleanupError
-          );
-        }
-      }
 
       const index = lessons.findIndex(
         (item) => item.id === editingLessonId
@@ -1087,17 +1063,11 @@ async function deleteLesson(id) {
 
     await deleteDoc(lessonRef);
 
-    // Delete a Storage attachment after the lesson record is removed.
     if (data.filePath) {
       try {
-        await deleteObject(
-          ref(storage, data.filePath)
-        );
+        await deleteObject(storageRef(storage, data.filePath));
       } catch (storageError) {
-        console.warn(
-          "Lesson attachment cleanup failed:",
-          storageError
-        );
+        console.warn("Lesson file cleanup skipped:", storageError);
       }
     }
 
@@ -1160,6 +1130,7 @@ function resetForm() {
   existingFileSize = 0;
 
   if (moduleSelect) moduleSelect.value = "";
+  if (lessonCategory) lessonCategory.value = "Lesson";
   if (lessonTitle) lessonTitle.value = "";
   if (lessonDescription) lessonDescription.value = "";
   if (lessonFile) lessonFile.value = "";
@@ -1197,6 +1168,7 @@ function setBusy(busy, label = "Saving...") {
 
   [
     moduleSelect,
+    lessonCategory,
     lessonTitle,
     lessonDescription,
     lessonFile,
@@ -1245,7 +1217,6 @@ function showLessonStatus(text, error = false) {
   );
 }
 
-// ==========================================
 // FILE VALIDATION
 // ==========================================
 
@@ -1316,18 +1287,6 @@ function readableUploadError(error) {
     error?.code === "firestore/permission-denied"
   ) {
     return "Firestore permission denied. Check your Firestore Rules.";
-  }
-
-  if (error?.code === "storage/unauthorized") {
-    return "Firebase Storage denied this upload. Check your Storage Rules and file-size limit.";
-  }
-
-  if (error?.code === "storage/canceled") {
-    return "Attachment upload cancelled. The lesson was not saved.";
-  }
-
-  if (error?.code === "storage/quota-exceeded") {
-    return "Firebase Storage quota exceeded. Check your Firebase plan and available storage.";
   }
 
   if (error?.code === "resource-exhausted") {

@@ -116,6 +116,12 @@
             margin-bottom: 12px;
         }
 
+        .lesson-category {
+            margin-left: 6px;
+            background: #183449 !important;
+            color: #9de4ff !important;
+        }
+
         .file-info {
             background: #18243b !important;
             border: 1px solid #30415f;
@@ -434,6 +440,19 @@
                 </select>
             </div>
 
+            <!-- CATEGORY -->
+            <div class="form-group">
+                <label for="lessonCategory">Category</label>
+                <select id="lessonCategory" required>
+                    <option value="Lesson">Lesson</option>
+                    <option value="Reading Material">Reading Material</option>
+                    <option value="Practice">Practice</option>
+                    <option value="Assessment">Assessment</option>
+                    <option value="Performance Task">Performance Task</option>
+                    <option value="General">General</option>
+                </select>
+            </div>
+
             <!-- TITLE -->
             <div class="form-group">
                 <label for="lessonTitle">Lesson Title</label>
@@ -464,7 +483,7 @@
 
                 <div class="file-help">
                     Supported: PDF, Word, PowerPoint, Excel, TXT and images.
-                    Maximum file size: 20 MB.
+                    Maximum file size: 20 MB. Files are securely uploaded to Firebase Storage.
                 </div>
 
                 <div
