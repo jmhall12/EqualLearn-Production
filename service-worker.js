@@ -1,5 +1,5 @@
 
-const CACHE = "equallearn-shell-v8";
+const CACHE = "equallearn-shell-v9";
 
 const CORE = [
     "./",
@@ -56,7 +56,6 @@ const OFFLINE_MESSAGE = `
 </html>
 `;
 
-
 // ============================================
 // INSTALL
 // ============================================
@@ -85,7 +84,6 @@ self.addEventListener("install", event => {
     );
 });
 
-
 // ============================================
 // ACTIVATE
 // ============================================
@@ -109,7 +107,6 @@ self.addEventListener("activate", event => {
     );
 });
 
-
 // ============================================
 // FETCH
 // ============================================
@@ -123,10 +120,7 @@ self.addEventListener("fetch", event => {
 
     if (url.origin !== self.location.origin) return;
 
-
-    // ========================================
     // PAGE NAVIGATION - NETWORK FIRST
-    // ========================================
 
     if (request.mode === "navigate") {
         event.respondWith(
@@ -143,8 +137,6 @@ self.addEventListener("fetch", event => {
                         );
                     }
 
-                    // Return the actual server response.
-                    // Do not replace HTTP errors with index.html.
                     return response;
 
                 } catch (error) {
@@ -165,10 +157,7 @@ self.addEventListener("fetch", event => {
         return;
     }
 
-
-    // ========================================
     // STATIC ASSETS - NETWORK FIRST
-    // ========================================
 
     const isStaticAsset = [
         "style",
@@ -216,10 +205,7 @@ self.addEventListener("fetch", event => {
         return;
     }
 
-
-    // ========================================
     // OTHER SAME-ORIGIN REQUESTS
-    // ========================================
 
     event.respondWith(
         (async () => {
@@ -241,3 +227,179 @@ self.addEventListener("fetch", event => {
         })()
     );
 });
+
+// ============================================
+// BACKGROUND PUSH NOTIFICATIONS
+// ============================================
+
+self.addEventListener("push", event => {
+    event.waitUntil(
+        (async () => {
+            let payload = {};
+
+            try {
+                if (event.data) {
+                    payload = event.data.json();
+                }
+            } catch (error) {
+                console.warn(
+                    "EqualLearn: Push payload parsing failed.",
+                    error
+                );
+
+                payload = {
+                    title: "EqualLearn",
+                    body: event.data?.text() ||
+                        "You have a new classroom update."
+                };
+            }
+
+            const title =
+                String(payload.title || "EqualLearn")
+                    .slice(0, 100);
+
+            const body =
+                String(
+                    payload.body ||
+                    "You have a new classroom update."
+                ).slice(0, 250);
+
+            const targetUrl = getSafeNotificationUrl(
+                payload.url
+            );
+
+            const options = {
+                body,
+
+                tag: String(
+                    payload.tag ||
+                    payload.notificationId ||
+                    "equallearn-update"
+                ).slice(0, 100),
+
+                data: {
+                    url: targetUrl,
+                    notificationId:
+                        payload.notificationId || null,
+                    contentType:
+                        payload.contentType || null,
+                    contentId:
+                        payload.contentId || null
+                },
+
+                timestamp: Date.now(),
+
+                vibrate: [200, 100, 200],
+
+                renotify: true,
+
+                requireInteraction: false
+            };
+
+            await self.registration.showNotification(
+                title,
+                options
+            );
+
+            console.info(
+                "EqualLearn: Background notification displayed."
+            );
+        })()
+    );
+});
+
+// ============================================
+// SAFE NOTIFICATION URL
+// ============================================
+
+function getSafeNotificationUrl(value) {
+    const fallback =
+        new URL(
+            "/student/dashboard.html",
+            self.location.origin
+        ).href;
+
+    if (typeof value !== "string" || !value.trim()) {
+        return fallback;
+    }
+
+    try {
+        const parsed = new URL(
+            value,
+            self.location.origin
+        );
+
+        if (parsed.origin !== self.location.origin) {
+            return fallback;
+        }
+
+        return parsed.href;
+
+    } catch (error) {
+        return fallback;
+    }
+}
+
+// ============================================
+// NOTIFICATION CLICK
+// ============================================
+
+self.addEventListener("notificationclick", event => {
+    event.notification.close();
+
+    event.waitUntil(
+        (async () => {
+            const targetUrl = getSafeNotificationUrl(
+                event.notification.data?.url
+            );
+
+            const target = new URL(targetUrl);
+
+            const windowClients =
+                await self.clients.matchAll({
+                    type: "window",
+                    includeUncontrolled: true
+                });
+
+            // Reuse an existing EqualLearn window.
+
+            for (const client of windowClients) {
+                if (
+                    new URL(client.url).origin ===
+                    self.location.origin
+                ) {
+                    try {
+                        await client.navigate(target.href);
+                        await client.focus();
+
+                        return;
+                    } catch (error) {
+                        console.warn(
+                            "EqualLearn: Existing window navigation failed.",
+                            error
+                        );
+                    }
+                }
+            }
+
+            // Open a new EqualLearn window if none exists.
+
+            await self.clients.openWindow(target.href);
+        })()
+    );
+});
+
+// ============================================
+// NOTIFICATION CLOSED
+// ============================================
+
+self.addEventListener("notificationclose", event => {
+    console.info(
+        "EqualLearn notification dismissed:",
+        event.notification.tag
+    );
+});
+
+console.info(
+    "EqualLearn: Offline cache and background push handlers initialized."
+);

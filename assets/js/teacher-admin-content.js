@@ -514,6 +514,7 @@ async function rejectContent(item) {
    APPROVE AND PUBLISH
 ===================================================== */
 
+
 async function publishContent(item, sectionId, approveFirst = false) {
     const section = teacherSections.find(s => s.id === sectionId);
 
@@ -521,36 +522,65 @@ async function publishContent(item, sectionId, approveFirst = false) {
         throw new Error("Invalid section selection.");
     }
 
-    const payload = {
+    if (!currentTeacher?.uid) {
+        throw new Error("Teacher session is invalid. Please log in again.");
+    }
+
+    const collectionName = getCollectionName(item);
+    const contentRef = doc(db, collectionName, item.id);
+
+    const teacherName =
+        currentTeacher.fullname ||
+        currentTeacher.displayName ||
+        currentTeacher.email ||
+        "Teacher";
+
+    console.log("[CONTENT PUBLISH]", {
+        collection: collectionName,
+        itemId: item.id,
+        teacherUid: currentTeacher.uid,
+        sectionId,
+        approveFirst
+    });
+
+    // STEP 1: APPROVE THE ADMIN CONTENT
+    // This uses validReviewUpdate() / validAdminLessonReviewUpdate()
+    if (approveFirst) {
+        await updateDoc(contentRef, {
+            reviewStatus: "approved",
+            status: "approved",
+            reviewedBy: currentTeacher.uid,
+            reviewedAt: serverTimestamp(),
+            reviewFeedback: "",
+            updatedAt: serverTimestamp()
+        });
+
+        console.log("[CONTENT REVIEW] Approved successfully:", item.id);
+    }
+
+    // STEP 2: PUBLISH APPROVED CONTENT TO THE SELECTED SECTION
+    // This uses validModulePublishing() / validAdminLessonPublishing()
+    await updateDoc(contentRef, {
         status: "active",
         reviewStatus: "approved",
         sectionIds: [sectionId],
 
         assignedTeacherId: currentTeacher.uid,
-        assignedTeacherName:
-            currentTeacher.fullname ||
-            currentTeacher.displayName ||
-            currentTeacher.email ||
-            "Teacher",
+        assignedTeacherName: teacherName,
 
         publishedBy: currentTeacher.uid,
         publishedAt: serverTimestamp(),
         updatedAt: serverTimestamp()
-    };
+    });
 
-    if (approveFirst) {
-        payload.reviewedBy = currentTeacher.uid;
-        payload.reviewedAt = serverTimestamp();
-        payload.reviewFeedback = "";
-    }
-
-    await updateDoc(
-        doc(db, getCollectionName(item), item.id),
-        payload
-    );
+    console.log("[CONTENT PUBLISH] Published successfully:", {
+        itemId: item.id,
+        sectionId
+    });
 
     return section;
 }
+
 
 /* =====================================================
    ACTION HANDLER
@@ -623,8 +653,15 @@ contentList.addEventListener("click", async event => {
 
         await loadAdminContent();
 
-    } catch (error) {
-        console.error("ADMIN CONTENT ACTION ERROR:", error);
+        } catch (error) {
+        console.error("ADMIN CONTENT ACTION ERROR:", {
+            action,
+            itemId: item?.id,
+            itemType: item?.type,
+            errorCode: error.code,
+            errorMessage: error.message,
+            error
+        });
 
         showMessage(
             `Action failed: ${error.code || error.message || "Unknown error"}`,
