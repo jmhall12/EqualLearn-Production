@@ -1,0 +1,252 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#edf0fa">
+    <title>Admin Content | EqualLearn</title>
+
+    <link rel="manifest" href="../manifest.webmanifest">
+    <link rel="icon" href="../assets/icons/icon-192.png">
+    <link rel="stylesheet" href="../assets/css/sidebar-skeuomorphism.css">
+
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: #edf0fa;
+            color: #20243a;
+            font-family: Arial, sans-serif;
+        }
+        .page {
+            max-width: 1200px;
+            margin: auto;
+            padding: 28px 22px 60px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+        .eyebrow {
+            color: #68708c;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+        h1 { margin: 7px 0; font-size: clamp(25px, 4vw, 34px); }
+        .subtitle { color: #69718a; margin: 0; line-height: 1.6; }
+        .back {
+            text-decoration: none;
+            color: #fff;
+            background: #4656a8;
+            padding: 12px 17px;
+            border-radius: 12px;
+            font-weight: 700;
+        }
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 22px 0;
+        }
+        .tab {
+            border: 1px solid #d9deef;
+            background: #fff;
+            color: #505a78;
+            padding: 11px 17px;
+            border-radius: 11px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+        .tab.active { background: #4656a8; color: #fff; border-color: #4656a8; }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+        .stat, .content-card {
+            background: #fff;
+            border: 1px solid #e0e4f0;
+            border-radius: 17px;
+            box-shadow: 0 8px 24px rgba(35,45,90,.05);
+        }
+        .stat { padding: 18px; }
+        .stat span { display: block; color: #707995; font-size: 13px; }
+        .stat strong { display: block; margin-top: 7px; font-size: 27px; }
+        #message {
+            display: none;
+            padding: 13px 16px;
+            border-radius: 12px;
+            margin: 15px 0;
+            line-height: 1.5;
+        }
+        #message.show { display: block; }
+        #message.error { color: #9b2424; background: #fff0f0; }
+        #message.success { color: #17643a; background: #eaf8ef; }
+        #contentList { display: grid; gap: 16px; }
+        .content-card { padding: 20px; }
+        .card-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .type {
+            color: #4656a8;
+            background: #eef0ff;
+            border-radius: 30px;
+            padding: 6px 10px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .content-card h2 { margin: 0 0 8px; font-size: 20px; }
+        .description { color: #69718a; line-height: 1.6; white-space: pre-wrap; }
+        .meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 16px;
+            color: #7a829b;
+            font-size: 12px;
+            margin: 13px 0;
+        }
+        .preview {
+            border-top: 1px solid #edf0f6;
+            margin-top: 15px;
+            padding-top: 14px;
+        }
+        .preview h3 { font-size: 14px; margin: 0 0 8px; }
+        .preview-content {
+            color: #505a78;
+            line-height: 1.65;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            max-height: 230px;
+            overflow: auto;
+        }
+        .resources { display: grid; gap: 8px; margin-top: 12px; }
+        .resources a {
+            color: #4656a8;
+            overflow-wrap: anywhere;
+        }
+        .assignment {
+            background: #f6f7fc;
+            padding: 15px;
+            border-radius: 13px;
+            margin-top: 16px;
+        }
+        .assignment label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d9deeb;
+            border-radius: 10px;
+            background: #fff;
+            color: #30364e;
+        }
+        .actions { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 13px; }
+        .btn {
+            border: 0;
+            border-radius: 10px;
+            padding: 11px 15px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+        .btn:disabled { opacity: .5; cursor: not-allowed; }
+        .approve { background: #e4f6eb; color: #17643a; }
+        .reject { background: #fff0f0; color: #a32b2b; }
+        .publish { background: #4656a8; color: #fff; }
+        .empty {
+            background: #fff;
+            border: 1px dashed #cbd2e5;
+            border-radius: 16px;
+            padding: 35px 20px;
+            text-align: center;
+            color: #737b94;
+        }
+        .empty strong { display: block; color: #30364e; margin-bottom: 7px; }
+        .status {
+            display: inline-block;
+            border-radius: 30px;
+            padding: 6px 10px;
+            font-size: 11px;
+            font-weight: 800;
+            background: #fff5df;
+            color: #946000;
+        }
+        .status.approved { background: #e4f6eb; color: #17643a; }
+        .status.published { background: #e9edff; color: #394b9c; }
+        @media(max-width:650px) {
+            .page { padding: 20px 14px 45px; }
+            .summary { grid-template-columns: 1fr; }
+            .content-card { padding: 16px; }
+        }
+    </style>
+</head>
+
+<body>
+<main class="page">
+    <header class="header">
+        <div>
+            <div class="eyebrow">Teacher workspace</div>
+            <h1>Admin Learning Content</h1>
+            <p class="subtitle">
+                Review learning materials submitted by Admin and assign approved content to your section.
+            </p>
+        </div>
+        <a class="back" href="dashboard.html">← Dashboard</a>
+    </header>
+
+    <section class="summary">
+        <article class="stat">
+            <span>Pending review</span>
+            <strong id="pendingCount">—</strong>
+        </article>
+        <article class="stat">
+            <span>Approved, not assigned</span>
+            <strong id="approvedCount">—</strong>
+        </article>
+        <article class="stat">
+            <span>Assigned to you</span>
+            <strong id="assignedCount">—</strong>
+        </article>
+    </section>
+
+    <div id="message" role="status"></div>
+
+    <nav class="toolbar" aria-label="Content filters">
+        <button class="tab active" data-filter="all">All content</button>
+        <button class="tab" data-filter="module">Modules</button>
+        <button class="tab" data-filter="lesson">Lessons</button>
+    </nav>
+
+    <section id="contentList">
+        <div class="empty">Loading Admin content...</div>
+    </section>
+</main>
+
+<script type="module" src="../assets/js/teacher-admin-content.js"></script>
+<script type="module" src="../assets/js/ui-shell.js"></script>
+<script type="module" src="../assets/js/pwa.js"></script>
+<script type="module" src="../assets/js/theme.js"></script>
+
+<iframe
+    src="/assets/widgets/lumi.html"
+    title="Lumi — EqualLearn Companion"
+    id="equallearn-lumi-frame"
+    allow="autoplay"
+    allowtransparency="true"
+    frameborder="0"
+    scrolling="no"
+    style="position:fixed;right:8px;bottom:8px;width:210px;height:255px;border:0;background:transparent;z-index:99999;overflow:hidden;">
+</iframe>
+</body>
+</html>

@@ -53,6 +53,7 @@ import {
     ["modules.html", "modules", "Learning Modules"],
     ["lessons.html", "lesson", "Lessons"],
     ["students.html", "users", "Students"],
+    ["admin-content.html", "admin", "Admin Content"],
     ["grading.html", "chart", "Activity Grading"]
   ]
 },

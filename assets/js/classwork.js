@@ -16,7 +16,7 @@ import {
 
 /* =========================================================
    EQUALLEARN — STUDENT CLASSWORK
-   Collections:
+   Current collections:
    announcements
    modulesV2
    teacherActivitiesV2
@@ -57,15 +57,10 @@ onAuthStateChanged(auth, async user => {
   allActivities = [];
 
   try {
-  await loadStudentProfile();
-
-  // Run Firestore permission diagnostics first.
-  await testClassworkPermissions();
-
-  // Load the actual classwork after the test.
-  await loadAllClasswork();
-
-} catch (error) {
+    await loadStudentProfile();
+    await testClassworkPermissions();
+    await loadAllClasswork();
+  } catch (error) {
     console.error("[CLASSWORK HUB]", error);
 
     showState(
@@ -121,28 +116,39 @@ async function loadStudentProfile() {
   });
 }
 
+/* =========================================================
+   PERMISSION DIAGNOSTICS
+   Current student workflow uses V2 collections only.
+========================================================= */
+
 async function testClassworkPermissions() {
-  const collections = ["modulesV2", "teacherActivitiesV2"];
+  const tests = [
+    {
+      name: "modulesV2",
+      run: () => fetchPublishedSectionDocuments("modulesV2")
+    },
+    {
+      name: "teacherActivitiesV2",
+      run: () => fetchPublishedSectionDocuments("teacherActivitiesV2")
+    }
+  ];
 
-  for (const name of collections) {
+  for (const test of tests) {
     try {
-      const q = query(
-        collection(db, name),
-        where("status", "==", "published"),
-        where("sectionIds", "array-contains", studentSectionId)
-      );
+      const documents = await test.run();
 
-      const result = await getDocs(q);
-
-      console.log(`[PERMISSION TEST] ${name}: SUCCESS`, {
-        count: result.size,
-        ids: result.docs.map(item => item.id)
+      console.log(`[PERMISSION TEST] ${test.name}: SUCCESS`, {
+        count: documents.length,
+        ids: documents.map(item => item.id),
+        sectionId: studentSectionId
       });
     } catch (error) {
-      console.error(`[PERMISSION TEST] ${name}: FAILED`, {
+      console.error(`[PERMISSION TEST] ${test.name}: FAILED`, {
         code: error.code,
         message: error.message,
-        projectId: db.app.options.projectId
+        error,
+        projectId: db.app.options.projectId,
+        sectionId: studentSectionId
       });
     }
   }
@@ -223,9 +229,6 @@ async function loadAllClasswork() {
    Must match Firestore student read rules.
 ========================================================= */
 
-
-
-
 async function fetchPublishedSectionDocuments(collectionName) {
   if (!studentSectionId) {
     throw new Error("Student section ID is missing.");
@@ -234,7 +237,7 @@ async function fetchPublishedSectionDocuments(collectionName) {
   const q = query(
     collection(db, collectionName),
     where("status", "==", "published"),
-    where("sectionId", "==", studentSectionId)
+    where("sectionIds", "array-contains", studentSectionId)
   );
 
   const snapshot = await getDocs(q);
@@ -244,17 +247,15 @@ async function fetchPublishedSectionDocuments(collectionName) {
     ...item.data()
   }));
 
-  console.log("[CLASSWORK] Section documents loaded:", {
+  console.log("[CLASSWORK] Published section documents loaded:", {
     collection: collectionName,
     sectionId: studentSectionId,
-    count: documents.length
+    count: documents.length,
+    ids: documents.map(item => item.id)
   });
 
   return documents;
 }
-
-
-
 
 /* =========================================================
    ANNOUNCEMENTS
@@ -318,13 +319,11 @@ async function loadAnnouncements() {
 }
 
 /* =========================================================
-   LEARNING MODULES
+   LEARNING MODULES — V2
 ========================================================= */
 
 async function loadModules() {
-  const documents = await fetchPublishedSectionDocuments(
-    "modulesV2"
-  );
+  const documents = await fetchPublishedSectionDocuments("modulesV2");
 
   documents.forEach(data => {
     allActivities.push({
@@ -334,15 +333,18 @@ async function loadModules() {
 
       title:
         data.title ||
+        data.moduleTitle ||
         "Untitled Learning Module",
 
       description:
         data.description ||
         data.content ||
+        data.moduleDescription ||
         "Open this learning module to view its resources.",
 
       teacherName:
         data.teacherName ||
+        data.assignedTeacherName ||
         "Your Teacher",
 
       date: toDate(
@@ -683,22 +685,20 @@ function getActionLabel(category) {
 function getDestination(item) {
   const id = encodeURIComponent(item.id);
 
+  if (item.collectionName === "modules" ||
+      item.collectionName === "modulesV2") {
+    return `modules.html?id=${id}&type=module`;
+  }
+
   switch (item.category) {
     case "announcement":
       return `announcement.html?id=${id}`;
-
-    case "module":
-      return `modules.html?id=${id}`;
-
     case "assignment":
       return `assignment.html?id=${id}`;
-
     case "quiz":
       return `quiz.html?id=${id}`;
-
     case "discussion":
       return `classwork.html?id=${id}`;
-
     default:
       return "classwork.html";
   }
@@ -790,39 +790,3 @@ function formatDate(date) {
     timeStyle: "short"
   });
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
