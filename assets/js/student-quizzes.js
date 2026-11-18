@@ -1,4 +1,3 @@
-
 import { auth, db } from "./firebase-config.js";
 
 import {
@@ -25,8 +24,10 @@ import {
    - Published quizzes only
    - Quizzes assigned to the student's section
 
-   Section field:
-   sectionIds: ["SECTION_ID"]
+   Resources:
+   - Reads record.resources (teacher activity attachments)
+   - Also supports activityData.resources as fallback
+   - Supports Base64 files and external/hosted URLs
 
    No data model or configuration changes.
 ========================================================= */
@@ -59,9 +60,7 @@ function escapeHTML(value) {
 function toDate(value) {
   if (!value) return null;
 
-  if (value instanceof Date) {
-    return value;
-  }
+  if (value instanceof Date) return value;
 
   if (typeof value.toDate === "function") {
     return value.toDate();
@@ -125,6 +124,253 @@ function availability(record) {
 }
 
 /* ---------------------------------------------------------
+   RESOURCE HELPERS
+--------------------------------------------------------- */
+
+function getResources(record) {
+  const activityData = record.activityData || {};
+
+  const source = Array.isArray(record.resources)
+    ? record.resources
+    : Array.isArray(activityData.resources)
+      ? activityData.resources
+      : [];
+
+  return source
+    .filter(resource => resource && typeof resource === "object")
+    .map((resource, index) => ({
+      ...resource,
+      label:
+        resource.label ||
+        resource.fileName ||
+        resource.name ||
+        resource.title ||
+        `Attachment ${index + 1}`,
+      type: normalize(resource.type || resource.kind || "file"),
+      url:
+        resource.url ||
+        resource.href ||
+        resource.fileURL ||
+        resource.fileUrl ||
+        "",
+      base64: typeof resource.base64 === "string"
+        ? resource.base64
+        : "",
+      mimeType: resource.mimeType || "application/octet-stream",
+      fileName:
+        resource.fileName ||
+        resource.name ||
+        resource.label ||
+        `equallearn-attachment-${index + 1}`
+    }))
+    .filter(resource => resource.base64 || resource.url);
+}
+
+function safeExternalURL(value) {
+  if (!value) return "";
+
+  try {
+    const parsed = new URL(String(value));
+
+    if (!["http:", "https:"].includes(parsed.protocol)) {
+      return "";
+    }
+
+    return parsed.href;
+  } catch {
+    return "";
+  }
+}
+
+function resourceHref(resource) {
+  if (resource.base64) {
+    return `data:${resource.mimeType || "application/octet-stream"};base64,${resource.base64}`;
+  }
+
+  return safeExternalURL(resource.url);
+}
+
+function isLinkResource(resource) {
+  return resource.type === "link" && !resource.base64;
+}
+
+function resourceMarkup(record) {
+  const resources = getResources(record);
+
+  if (!resources.length) return "";
+
+  const items = resources.map((resource, index) => {
+    const href = resourceHref(resource);
+
+    if (!href) return "";
+
+    const label = escapeHTML(resource.label);
+    const fileName = escapeHTML(resource.fileName || resource.label);
+
+    if (isLinkResource(resource)) {
+      return `
+        <a
+          class="quiz-resource-link"
+          href="${escapeHTML(href)}"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="${label}"
+        >
+          <span class="quiz-resource-icon" aria-hidden="true">↗</span>
+          <span class="quiz-resource-text">
+            <strong>${label}</strong>
+            <small>Open link</small>
+          </span>
+        </a>
+      `;
+    }
+
+    const mime = normalize(resource.mimeType);
+    const isPDF =
+      mime.includes("pdf") ||
+      /\.pdf$/i.test(resource.fileName || resource.label || "");
+
+    const actionLabel = isPDF ? "View / Download PDF" : "View / Download file";
+
+    return `
+      <a
+        class="quiz-resource-link"
+        href="${escapeHTML(href)}"
+        ${resource.base64 ? `download="${fileName}"` : `target="_blank" rel="noopener noreferrer"`}
+        title="${label}"
+      >
+        <span class="quiz-resource-icon" aria-hidden="true">📎</span>
+        <span class="quiz-resource-text">
+          <strong>${label}</strong>
+          <small>${actionLabel}</small>
+        </span>
+      </a>
+    `;
+  }).filter(Boolean).join("");
+
+  if (!items) return "";
+
+  return `
+    <div class="quiz-resources">
+      <div class="quiz-resources-heading">
+        <span aria-hidden="true">📁</span>
+        Teacher's attached resources
+        <span class="quiz-resource-count">${resources.length}</span>
+      </div>
+      <div class="quiz-resources-list">
+        ${items}
+      </div>
+    </div>
+  `;
+}
+
+function ensureResourceStyles() {
+  if (document.getElementById("equallearn-quiz-resource-styles")) return;
+
+  const style = document.createElement("style");
+  style.id = "equallearn-quiz-resource-styles";
+  style.textContent = `
+    .quiz-resources {
+      margin-top: 16px;
+      padding: 13px;
+      border: 1px solid rgba(99, 102, 241, .18);
+      border-radius: 13px;
+      background: rgba(99, 102, 241, .045);
+    }
+
+    .quiz-resources-heading {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 10px;
+      color: var(--text-primary, #27324a);
+      font-size: .83rem;
+      font-weight: 700;
+    }
+
+    .quiz-resource-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 6px;
+      border-radius: 20px;
+      background: rgba(99, 102, 241, .12);
+      color: #5558c9;
+      font-size: .72rem;
+    }
+
+    .quiz-resources-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+      gap: 8px;
+    }
+
+    .quiz-resource-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      padding: 10px 11px;
+      border: 1px solid rgba(100, 116, 139, .18);
+      border-radius: 10px;
+      background: var(--surface, #fff);
+      color: inherit;
+      text-decoration: none;
+      transition: border-color .18s ease, transform .18s ease, background .18s ease;
+    }
+
+    .quiz-resource-link:hover {
+      border-color: #7779e8;
+      background: rgba(99, 102, 241, .055);
+      transform: translateY(-1px);
+    }
+
+    .quiz-resource-icon {
+      display: grid;
+      flex: 0 0 34px;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      border-radius: 9px;
+      background: rgba(99, 102, 241, .11);
+      font-size: 1rem;
+    }
+
+    .quiz-resource-text {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      min-width: 0;
+      gap: 3px;
+    }
+
+    .quiz-resource-text strong {
+      overflow: hidden;
+      color: var(--text-primary, #27324a);
+      font-size: .8rem;
+      font-weight: 700;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .quiz-resource-text small {
+      color: var(--text-muted, #718096);
+      font-size: .72rem;
+    }
+
+    @media (max-width: 520px) {
+      .quiz-resources-list {
+        grid-template-columns: 1fr;
+      }
+    }
+  `;
+
+  document.head.appendChild(style);
+}
+
+/* ---------------------------------------------------------
    LOAD QUIZZES
 --------------------------------------------------------- */
 
@@ -140,7 +386,6 @@ async function loadQuizzes() {
   }
 
   /*
-   * IMPORTANT:
    * Uses sectionIds array to match section-based access.
    *
    * Firestore document example:
@@ -149,7 +394,8 @@ async function loadQuizzes() {
    *   type: "quiz",
    *   status: "published",
    *   sectionIds: ["SECTION_ID"],
-   *   title: "Sample Quiz"
+   *   title: "Sample Quiz",
+   *   resources: [...]
    * }
    */
 
@@ -191,7 +437,9 @@ async function loadQuizzes() {
 
         questions: Array.isArray(activityData.questions)
           ? activityData.questions
-          : []
+          : [],
+
+        resources: getResources(record)
       };
     });
 
@@ -211,7 +459,8 @@ async function loadQuizzes() {
       quizzes: quizzes.map(item => ({
         id: item.id,
         title: item.title,
-        questions: item.questions.length
+        questions: item.questions.length,
+        resources: item.resources.length
       }))
     }
   );
@@ -283,7 +532,7 @@ function card(record) {
             ${
               count
                 ? `${count} question${count === 1 ? "" : "s"}`
-                : "Questions available inside"
+                : "Learning resource"
             }
           </span>
 
@@ -292,6 +541,8 @@ function card(record) {
           </span>
 
         </div>
+
+        ${resourceMarkup(record)}
 
       </div>
 
@@ -331,6 +582,8 @@ function render() {
         record.description || ""
       } ${
         record.teacherName || ""
+      } ${
+        getResources(record).map(resource => resource.label).join(" ")
       }`
     ).includes(term);
   });
@@ -394,6 +647,8 @@ function showError(error) {
 /* ---------------------------------------------------------
    BOOT
 --------------------------------------------------------- */
+
+ensureResourceStyles();
 
 quizSearch?.addEventListener("input", render);
 

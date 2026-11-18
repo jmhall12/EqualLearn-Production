@@ -28,6 +28,7 @@ let modules = [];
 let activeFilter = "all";
 let unsubscribeModules = null;
 let authReady = false;
+let activePdfObjectUrls = [];
 
 /* =====================================================
    INITIALIZATION
@@ -370,10 +371,37 @@ function getResources(module) {
       resource.url ||
       resource.href ||
       resource.fileURL ||
-      resource.fileUrl;
+      resource.fileUrl ||
+      "";
+
+    // New Teacher Activity Builder format: Base64 file stored in Firestore.
+    const base64 = typeof resource.base64 === "string"
+      ? resource.base64
+      : "";
+
+    const mimeType = resource.mimeType || "application/octet-stream";
+    const fileName = resource.fileName || resource.name || "attachment";
+
+    if (base64) {
+      const key = `base64:${fileName}:${base64.slice(0, 48)}`;
+
+      unique.set(key, {
+        label:
+          resource.label ||
+          resource.name ||
+          resource.title ||
+          fileName ||
+          "Open File",
+        type: resource.type || "file",
+        base64,
+        mimeType,
+        fileName,
+        size: Number(resource.size || 0)
+      });
+      return;
+    }
 
     const safeURL = validURL(rawURL);
-
     if (!safeURL) return;
 
     unique.set(safeURL, {
@@ -382,17 +410,29 @@ function getResources(module) {
         resource.name ||
         resource.title ||
         "Open Resource",
-
       url: safeURL,
-
       type:
         resource.type ||
         resource.kind ||
-        "link"
+        "link",
+      fileName,
+      mimeType,
+      size: Number(resource.size || 0)
     });
   });
 
   return [...unique.values()];
+}
+
+// Convert the Firestore Base64 attachment into a browser-readable data URL.
+function resourceDataURL(resource) {
+  if (!resource?.base64) return null;
+
+  const mimeType = String(
+    resource.mimeType || "application/octet-stream"
+  ).replace(/[^\w.+/-]/g, "");
+
+  return `data:${mimeType};base64,${resource.base64}`;
 }
 
 /* =====================================================
@@ -632,12 +672,10 @@ function initializeModal() {
 
 function openModule(module) {
   const modal = $("moduleModal");
-
   if (!modal) return;
 
   if ($("modalTitle")) {
-    $("modalTitle").textContent =
-      module.title || "Module Details";
+    $("modalTitle").textContent = module.title || "Module Details";
   }
 
   if ($("modalDescription")) {
@@ -646,39 +684,109 @@ function openModule(module) {
   }
 
   const resourceContainer = $("modalResources");
-
   if (resourceContainer) {
     resourceContainer.replaceChildren();
+    revokePdfObjectUrls();
 
     const resources = getResources(module);
 
     resources.forEach(resource => {
-      const url = validURL(resource.url);
+      const dataURL = resourceDataURL(resource);
+      const externalURL = validURL(resource.url);
+      const mime = String(resource.mimeType || "").toLowerCase();
+      const fileName = String(resource.fileName || resource.label || "").toLowerCase();
+      const isPdf = mime === "application/pdf" ||
+        fileName.endsWith(".pdf") ||
+        String(resource.type || "").toLowerCase() === "pdf";
 
-      if (!url) return;
+      const item = document.createElement("section");
+      item.className = "el-resource-viewer-item";
+      item.style.cssText = [
+        "width:100%", "margin:14px 0", "padding:12px",
+        "border:1px solid rgba(255,255,255,.14)",
+        "border-radius:14px", "background:rgba(255,255,255,.035)",
+        "box-sizing:border-box"
+      ].join(";");
 
-      const link = document.createElement("a");
+      const heading = document.createElement("div");
+      heading.style.cssText = "display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;";
 
-      link.href = url;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
+      const name = document.createElement("strong");
+      name.textContent = resource.label || resource.fileName || "Learning resource";
+      name.style.cssText = "font-size:14px;overflow-wrap:anywhere;";
+      heading.appendChild(name);
 
-      const label = document.createElement("span");
-      label.textContent = resource.label;
+      const detail = document.createElement("small");
+      detail.textContent = resource.fileName || (externalURL ? "External resource" : "Attachment");
+      detail.style.cssText = "display:block;opacity:.7;margin-top:3px;font-size:11px;";
+      const nameWrap = document.createElement("div");
+      nameWrap.append(name, detail);
+      heading.replaceChildren(nameWrap);
 
-      const arrow = document.createElement("span");
-      arrow.textContent = "↗";
+      let viewerURL = null;
+      if (dataURL) {
+        viewerURL = createResourceObjectURL(resource);
+      } else if (externalURL) {
+        viewerURL = externalURL;
+      }
 
-      link.append(label, arrow);
-      resourceContainer.appendChild(link);
+      if (isPdf && viewerURL) {
+        const frame = document.createElement("iframe");
+        frame.title = `PDF viewer: ${resource.fileName || resource.label || "document"}`;
+        frame.src = viewerURL;
+        frame.setAttribute("loading", "lazy");
+        frame.setAttribute("allow", "fullscreen");
+        frame.style.cssText = [
+          "display:block", "width:100%", "height:min(70vh,760px)",
+          "min-height:420px", "border:0", "border-radius:10px",
+          "background:#fff"
+        ].join(";");
+        item.append(heading, frame);
+
+        const fallback = document.createElement("div");
+        fallback.style.cssText = "display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;";
+        const openLink = document.createElement("a");
+        openLink.href = viewerURL;
+        openLink.target = "_blank";
+        openLink.rel = "noopener noreferrer";
+        openLink.textContent = "Open PDF separately ↗";
+        openLink.style.cssText = "color:inherit;text-decoration:underline;font-size:13px;";
+        fallback.appendChild(openLink);
+
+        if (dataURL) {
+          const download = document.createElement("a");
+          download.href = viewerURL;
+          download.download = resource.fileName || "equallearn-document.pdf";
+          download.textContent = "Download PDF ↓";
+          download.style.cssText = openLink.style.cssText;
+          fallback.appendChild(download);
+        }
+        item.appendChild(fallback);
+      } else {
+        item.appendChild(heading);
+        if (viewerURL) {
+          const link = document.createElement("a");
+          link.href = viewerURL;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.textContent = dataURL ? "Open / Download attachment ↓" : "Open resource ↗";
+          if (dataURL) link.download = resource.fileName || resource.label || "equallearn-attachment";
+          link.style.cssText = "display:inline-block;margin-top:8px;color:inherit;text-decoration:underline;font-size:13px;";
+          item.appendChild(link);
+        } else {
+          const unavailable = document.createElement("p");
+          unavailable.textContent = "This attachment could not be opened. Please contact your teacher.";
+          item.appendChild(unavailable);
+        }
+      }
+
+      resourceContainer.appendChild(item);
     });
 
     if (resources.length === 0) {
       const note = document.createElement("p");
-
       note.className = "no-resources";
       note.textContent = "No additional resources attached.";
-
       resourceContainer.appendChild(note);
     }
   }
@@ -687,7 +795,40 @@ function openModule(module) {
   document.body.style.overflow = "hidden";
 }
 
+function createResourceObjectURL(resource) {
+  if (!resource?.base64) return null;
+  try {
+    const binary = atob(resource.base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    const blob = new Blob([bytes], {
+      type: resource.mimeType || "application/octet-stream"
+    });
+    const objectURL = URL.createObjectURL(blob);
+    activePdfObjectUrls.push(objectURL);
+    return objectURL;
+  } catch (error) {
+    console.error("[EqualLearn] Unable to prepare attachment preview:", error);
+    return null;
+  }
+}
+
+function revokePdfObjectUrls() {
+  activePdfObjectUrls.forEach(url => URL.revokeObjectURL(url));
+  activePdfObjectUrls = [];
+}
+
+function formatResourceSize(bytes) {
+  const value = Number(bytes) || 0;
+  if (value < 1024) return `${value} B`;
+  if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
+  return `${(value / (1024 * 1024)).toFixed(2)} MB`;
+}
+
 function closeModal() {
+  revokePdfObjectUrls();
   const modal = $("moduleModal");
 
   if (modal) {

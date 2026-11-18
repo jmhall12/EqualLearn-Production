@@ -24,6 +24,9 @@ const $ = id => document.getElementById(id);
 const quizCard = $("quizCard");
 const nextBtn = $("nextBtn");
 const message = $("message");
+const quizResources = $("quizResources");
+
+let resourceObjectUrls = [];
 
 const quizId = new URLSearchParams(location.search).get("id");
 
@@ -111,6 +114,167 @@ function formatTime(seconds) {
   const remaining = seconds % 60;
 
   return `${String(minutes).padStart(2, "0")}:${String(remaining).padStart(2, "0")}`;
+}
+
+/* =========================================================
+   QUIZ LEARNING RESOURCES
+   Supports:
+   - Firestore Base64 attachments: { type:"file", base64, mimeType, fileName, label }
+   - Existing hosted file URLs: { type:"file", url, fileName, label }
+   - External links: { type:"link", url, label }
+========================================================= */
+
+function clearResourceObjectUrls() {
+  resourceObjectUrls.forEach(url => URL.revokeObjectURL(url));
+  resourceObjectUrls = [];
+}
+
+function base64ToBlob(base64, mimeType = "application/octet-stream") {
+  const clean = String(base64 || "").includes(",")
+    ? String(base64).split(",").pop()
+    : String(base64 || "");
+
+  const binary = atob(clean);
+  const bytes = new Uint8Array(binary.length);
+
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+
+  return new Blob([bytes], { type: mimeType });
+}
+
+function safeHttpUrl(value) {
+  try {
+    const url = new URL(String(value || ""), location.href);
+    return ["http:", "https:", "blob:", "data:"].includes(url.protocol)
+      ? url.href
+      : "";
+  } catch {
+    return "";
+  }
+}
+
+function renderQuizResources(resources = []) {
+  if (!quizResources) return;
+
+  clearResourceObjectUrls();
+  quizResources.replaceChildren();
+
+  const validResources = Array.isArray(resources) ? resources : [];
+
+  if (!validResources.length) {
+    quizResources.style.display = "none";
+    return;
+  }
+
+  quizResources.style.display = "block";
+
+  const heading = document.createElement("h2");
+  heading.textContent = "Learning Materials";
+  heading.className = "resource-heading";
+
+  const intro = document.createElement("p");
+  intro.className = "resource-intro";
+  intro.textContent = "Review these materials before answering the quiz.";
+
+  const list = document.createElement("div");
+  list.className = "resource-list";
+
+  validResources.forEach((resource, index) => {
+    if (!resource || typeof resource !== "object") return;
+
+    const label = String(
+      resource.label || resource.fileName || `Learning resource ${index + 1}`
+    );
+
+    const type = String(resource.type || "").toLowerCase();
+    let url = "";
+
+    if (resource.base64) {
+      const blob = base64ToBlob(
+        resource.base64,
+        resource.mimeType || "application/octet-stream"
+      );
+      url = URL.createObjectURL(blob);
+      resourceObjectUrls.push(url);
+    } else if (resource.url) {
+      url = safeHttpUrl(resource.url);
+    }
+
+    if (!url) return;
+
+    const item = document.createElement("article");
+    item.className = "resource-item";
+
+    const title = document.createElement("div");
+    title.className = "resource-title";
+    title.textContent = label;
+
+    const isPdf =
+      String(resource.mimeType || "").toLowerCase() === "application/pdf" ||
+      String(resource.fileName || "").toLowerCase().endsWith(".pdf") ||
+      (type === "file" && /\.pdf(?:$|[?#])/i.test(url));
+
+    const isLink = type === "link";
+
+    const actions = document.createElement("div");
+    actions.className = "resource-actions";
+
+    if (isPdf) {
+      const viewer = document.createElement("iframe");
+      viewer.className = "resource-pdf-viewer";
+      viewer.src = url;
+      viewer.title = `PDF preview: ${label}`;
+      viewer.loading = "lazy";
+      viewer.setAttribute("allow", "fullscreen");
+      item.append(title, viewer);
+
+      const open = document.createElement("a");
+      open.href = url;
+      open.target = "_blank";
+      open.rel = "noopener noreferrer";
+      open.textContent = "Open PDF";
+      open.className = "resource-link-button";
+      actions.appendChild(open);
+
+      const download = document.createElement("a");
+      download.href = url;
+      download.download = resource.fileName || label || "learning-material.pdf";
+      download.textContent = "Download";
+      download.className = "resource-link-button secondary";
+      actions.appendChild(download);
+    } else {
+      item.appendChild(title);
+
+      const open = document.createElement("a");
+      open.href = url;
+      open.target = "_blank";
+      open.rel = "noopener noreferrer";
+      open.textContent = isLink ? "Open learning link" : "Open attachment";
+      open.className = "resource-link-button";
+      actions.appendChild(open);
+
+      if (!isLink) {
+        const download = document.createElement("a");
+        download.href = url;
+        download.download = resource.fileName || label || "attachment";
+        download.textContent = "Download";
+        download.className = "resource-link-button secondary";
+        actions.appendChild(download);
+      }
+    }
+
+    item.appendChild(actions);
+    list.appendChild(item);
+  });
+
+  if (!list.children.length) {
+    quizResources.style.display = "none";
+    return;
+  }
+
+  quizResources.append(heading, intro, list);
 }
 
 /* =========================================================
@@ -223,6 +387,9 @@ async function loadQuiz() {
   };
 
   const activityData = quiz.activityData || {};
+
+  // Teacher Activity Builder stores attached resources on the activity document.
+  renderQuizResources(quiz.resources || activityData.resources || []);
 
   // Questions are stored inside activityData.questions.
   questions = Array.isArray(activityData.questions)
@@ -543,3 +710,6 @@ async function submitQuiz(timeExpired = false) {
         : "Next Question";
   }
 }
+
+
+window.addEventListener("beforeunload", clearResourceObjectUrls);
