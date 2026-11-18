@@ -36,6 +36,113 @@ let unsubscribeNotifications = null;
 let notificationListenerStarted = false;
 
 // ======================================================
+// EQUALLEARN NOTIFICATION SOUND
+// ======================================================
+
+const SOUND_ENABLED_KEY = "equalLearn_notification_sound_enabled";
+const SOUND_VOLUME_KEY = "equalLearn_notification_sound_volume";
+
+let notificationSoundEnabled =
+    localStorage.getItem(SOUND_ENABLED_KEY) !== "false";
+
+let notificationSoundVolume = Number(
+    localStorage.getItem(SOUND_VOLUME_KEY) ?? "0.35"
+);
+
+notificationSoundVolume = Math.max(
+    0,
+    Math.min(1, notificationSoundVolume)
+);
+
+let notificationAudioContext = null;
+let notificationAudioUnlocked = false;
+
+function unlockNotificationAudio() {
+    try {
+        const AudioContextClass =
+            window.AudioContext || window.webkitAudioContext;
+
+        if (!AudioContextClass) return;
+
+        if (!notificationAudioContext) {
+            notificationAudioContext = new AudioContextClass();
+        }
+
+        if (notificationAudioContext.state === "suspended") {
+            notificationAudioContext.resume();
+        }
+
+        notificationAudioUnlocked = true;
+
+    } catch (error) {
+        console.warn("Notification audio unlock failed:", error);
+    }
+}
+
+// Browsers require a user interaction before playing audio.
+document.addEventListener(
+    "pointerdown",
+    unlockNotificationAudio,
+    { once: true }
+);
+
+document.addEventListener(
+    "keydown",
+    unlockNotificationAudio,
+    { once: true }
+);
+
+// Original EqualLearn three-tone chime.
+function playEqualLearnChime() {
+    if (!notificationSoundEnabled) return;
+    if (!notificationAudioUnlocked) return;
+    if (!notificationAudioContext) return;
+
+    if (notificationAudioContext.state !== "running") {
+        return;
+    }
+
+    const audio = notificationAudioContext;
+    const startTime = audio.currentTime + 0.02;
+
+    const notes = [
+        { frequency: 659.25, start: 0, duration: 0.16 },
+        { frequency: 783.99, start: 0.13, duration: 0.18 },
+        { frequency: 987.77, start: 0.28, duration: 0.30 }
+    ];
+
+    notes.forEach(note => {
+        const oscillator = audio.createOscillator();
+        const gain = audio.createGain();
+
+        oscillator.type = "sine";
+        oscillator.frequency.value = note.frequency;
+
+        const noteStart = startTime + note.start;
+        const noteEnd = noteStart + note.duration;
+
+        const volume = notificationSoundVolume * 0.22;
+
+        gain.gain.setValueAtTime(0, noteStart);
+        gain.gain.linearRampToValueAtTime(
+            volume,
+            noteStart + 0.025
+        );
+
+        gain.gain.exponentialRampToValueAtTime(
+            0.001,
+            noteEnd
+        );
+
+        oscillator.connect(gain);
+        gain.connect(audio.destination);
+
+        oscillator.start(noteStart);
+        oscillator.stop(noteEnd + 0.02);
+    });
+}
+
+// ======================================================
 // SAFE DISPLAY
 // ======================================================
 
@@ -44,6 +151,200 @@ function setText(element, value) {
         element.textContent = value;
     }
 }
+
+// ======================================================
+// NOTIFICATION SOUND SETTINGS UI
+// ======================================================
+
+function createNotificationSoundSettings() {
+    if (!notificationList) return;
+
+    if (document.getElementById("equalLearnSoundSettings")) {
+        return;
+    }
+
+    const container = document.createElement("div");
+    container.id = "equalLearnSoundSettings";
+
+    container.innerHTML = `
+        <div class="el-sound-settings-header">
+            <div>
+                <strong>Notification Sound</strong>
+                <small>Customize your EqualLearn alerts</small>
+            </div>
+
+            <button
+                type="button"
+                id="elSoundToggle"
+                aria-pressed="${notificationSoundEnabled}"
+            >
+                ${notificationSoundEnabled ? "Sound On" : "Sound Off"}
+            </button>
+        </div>
+
+        <div class="el-sound-volume">
+            <label for="elSoundVolume">
+                Volume
+                <span id="elSoundVolumeValue">
+                    ${Math.round(notificationSoundVolume * 100)}%
+                </span>
+            </label>
+
+            <input
+                type="range"
+                id="elSoundVolume"
+                min="0"
+                max="100"
+                value="${Math.round(notificationSoundVolume * 100)}"
+            >
+        </div>
+
+        <button
+            type="button"
+            id="elSoundTest"
+        >
+            <span>♫</span> Test Sound
+        </button>
+    `;
+
+    const style = document.createElement("style");
+    style.id = "equalLearnSoundSettingsStyles";
+
+    style.textContent = `
+        #equalLearnSoundSettings {
+            padding: 14px;
+            margin: 10px 0 14px;
+            border: 1px solid rgba(120,101,220,.18);
+            border-radius: 14px;
+            background: var(--el-card-bg, rgba(120,101,220,.045));
+        }
+
+        .el-sound-settings-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .el-sound-settings-header strong {
+            display: block;
+            font-size: 13px;
+        }
+
+        .el-sound-settings-header small {
+            display: block;
+            margin-top: 3px;
+            font-size: 11px;
+            opacity: .65;
+        }
+
+        #elSoundToggle,
+        #elSoundTest {
+            border: 0;
+            border-radius: 9px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font: inherit;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        #elSoundToggle {
+            background: rgba(120,101,220,.14);
+            color: var(--student-purple, #7865dc);
+        }
+
+        #elSoundTest {
+            margin-top: 10px;
+            background: var(--student-purple, #7865dc);
+            color: white;
+        }
+
+        .el-sound-volume {
+            margin-top: 14px;
+        }
+
+        .el-sound-volume label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            margin-bottom: 8px;
+        }
+
+        #elSoundVolume {
+            width: 100%;
+            accent-color: var(--student-purple, #7865dc);
+            cursor: pointer;
+        }
+    `;
+
+    document.head.appendChild(style);
+
+    notificationList.parentNode.insertBefore(
+        container,
+        notificationList
+    );
+
+    const toggle = container.querySelector("#elSoundToggle");
+    const volume = container.querySelector("#elSoundVolume");
+    const volumeValue = container.querySelector("#elSoundVolumeValue");
+    const testButton = container.querySelector("#elSoundTest");
+
+    toggle.addEventListener("click", () => {
+        unlockNotificationAudio();
+
+        notificationSoundEnabled = !notificationSoundEnabled;
+
+        localStorage.setItem(
+            SOUND_ENABLED_KEY,
+            String(notificationSoundEnabled)
+        );
+
+        toggle.textContent = notificationSoundEnabled
+            ? "Sound On"
+            : "Sound Off";
+
+        toggle.setAttribute(
+            "aria-pressed",
+            String(notificationSoundEnabled)
+        );
+
+        if (notificationSoundEnabled) {
+            playEqualLearnChime();
+        }
+    });
+
+    volume.addEventListener("input", () => {
+        notificationSoundVolume = Number(volume.value) / 100;
+
+        volumeValue.textContent = `${volume.value}%`;
+
+        localStorage.setItem(
+            SOUND_VOLUME_KEY,
+            String(notificationSoundVolume)
+        );
+    });
+
+    testButton.addEventListener("click", () => {
+        unlockNotificationAudio();
+
+        if (!notificationSoundEnabled) {
+            notificationSoundEnabled = true;
+
+            localStorage.setItem(
+                SOUND_ENABLED_KEY,
+                "true"
+            );
+
+            toggle.textContent = "Sound On";
+            toggle.setAttribute("aria-pressed", "true");
+        }
+
+        playEqualLearnChime();
+    });
+}
+
+createNotificationSoundSettings();
 
 // ======================================================
 // AUTHENTICATION
@@ -358,16 +659,17 @@ function listenToNotifications(uid) {
 
                 snapshot.docChanges().forEach(change => {
 
-                    if (change.type === "added" || change.type === "modified") {
-                        const data = {
-                            id: change.doc.id,
-                            ...change.doc.data()
-                        };
+                    if (change.type === "added") {
+    const data = {
+        id: change.doc.id,
+        ...change.doc.data()
+    };
 
-                        if (data.read !== true) {
-                            showNewNotificationToast(data);
-                        }
-                    }
+    if (data.read !== true) {
+        playEqualLearnChime();
+        showNewNotificationToast(data);
+    }
+}
 
                 });
 

@@ -1588,6 +1588,13 @@ async function handleQuestion(raw){
 
  say("Hi! I'm Lumi, your 3D learning buddy. 💜",4200);
 
+  // Start every page visit hidden; the host-page ✦ Lumi launcher is the opt-in.
+  // This also removes the full-screen iframe from hit-testing until opened.
+  requestAnimationFrame(()=>{
+   const hideButton=document.getElementById("lumi-hide");
+   if(hideButton && !hidden) hideButton.click();
+  });
+
 }
 
 </script>
