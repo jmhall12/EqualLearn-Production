@@ -592,14 +592,14 @@ function openEditor(item = null) {
   }
 }
 
-function closeEditor() {
-  if (saving) return;
+function closeEditor(force = false) {
+    if (saving && !force) return;
 
-  $("editorModal")?.classList.remove("show");
+    $("editorModal")?.classList.remove("show");
 
-  document.body.style.overflow = "";
+    document.body.style.overflow = "";
 
-  editing = null;
+    editing = null;
 }
 
 function updateEditorLabels() {
@@ -1253,7 +1253,8 @@ async function saveActivity(status) {
       "success"
     );
 
-    closeEditor();
+    // Automatically close editor after successful save/publish.
+closeEditor(true);
 
   } catch (error) {
     console.error("Save activity error:", error);
