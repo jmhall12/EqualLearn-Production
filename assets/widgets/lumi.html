@@ -231,9 +231,9 @@ const dragHitbox=document.getElementById("lumi-drag-hitbox");
 // Responsive companion scale: deliberately compact so Lumi never dominates the page.
 function getResponsiveLumiScale(){
  const width=window.visualViewport?.width||window.innerWidth||360;
- if(width<=600)return .36;
- if(width<=1024)return .42;
- return .46;
+ if(width<=600)return .29;
+ if(width<=1024)return .33;
+ return .37;
 }
 let camera=null;
 let lumi=null;
@@ -1252,11 +1252,11 @@ if(renderer){
   headPivot.rotation.x=-pointer.y*.08+Math.sin(t*.45)*.012+(mood==="Sleepy"?.16:0);
   torso.rotation.z=(mood==="Dance"?Math.sin(t*4.2)*.10:0);
   armL.rotation.z=isWalking?-.08+walkCycle*.045:-.08+Math.sin(t*.45)*.012;
-  armR.rotation.z=isWaving?-.95+Math.sin(t*13)*.24:isWalking?.08-walkCycle*.045:petMode==="play"?.08+Math.sin(t*2.1)*.09:.08+Math.sin(t*.5)*.012;
-  armR.rotation.x=isWaving?-.12:petMode==="play"?Math.sin(t*2.6)*.055:isFlying?-.16:0;
+  armR.rotation.z=isWaving?1.08+Math.sin(t*7.8)*.12:isWalking?.08-walkCycle*.045:petMode==="play"?.08+Math.sin(t*2.1)*.09:.08+Math.sin(t*.5)*.012;
+  armR.rotation.x=isWaving?-.04:petMode==="play"?Math.sin(t*2.6)*.055:isFlying?-.16:0;
 
-  if(clickPulse>0){lumi.scale.setScalar(.68*(1+clickPulse*.055));clickPulse*=.88;if(clickPulse<.01)clickPulse=0;}
-  else lumi.scale.setScalar(.68*(1+(mood==="Bounce"?Math.abs(Math.sin(t*4.2))*.025:0)));
+  if(clickPulse>0){lumi.scale.setScalar(.58*(1+clickPulse*.035));clickPulse*=.88;if(clickPulse<.01)clickPulse=0;}
+  else lumi.scale.setScalar(.58*(1+(mood==="Bounce"?Math.abs(Math.sin(t*4.2))*.018:0)));
 
   const blink=(mood==="Sleepy"?(Math.sin(t*.65)>.72?.18:1):(Math.sin(t*1.15+Math.sin(t*.27))>.985?.12:1));
   eyeGroups.forEach(g=>g.scale.y+=(blink-g.scale.y)*.42);
