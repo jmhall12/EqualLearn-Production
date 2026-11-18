@@ -41,6 +41,164 @@ const esc = value =>
     "'": "&#39;"
   }[c]));
 
+
+
+function getStudentPhoto(student) {
+  if (!student) return "";
+
+  // Priority 1: EqualLearn uploaded profile picture.
+  const equalLearnPhoto = String(
+    student.photoURL || ""
+  ).trim();
+
+  if (/^https?:\/\//i.test(equalLearnPhoto)) {
+    return equalLearnPhoto;
+  }
+
+  // Priority 2: Google profile photo saved in Firestore.
+  const googlePhoto = String(
+    student.googlePhotoURL ||
+    student.googleProfilePhoto ||
+    student.profileImage ||
+    student.authPhotoURL ||
+    ""
+  ).trim();
+
+  if (
+    /^https?:\/\//i.test(googlePhoto) ||
+    /^data:image\//i.test(googlePhoto)
+  ) {
+    return googlePhoto;
+  }
+
+  // Priority 3: Legacy Base64 image.
+  const base64 = String(
+    student.profileImageBase64 || ""
+  ).trim();
+
+  if (/^data:image\//i.test(base64)) {
+    return base64;
+  }
+
+  if (base64 && /^[A-Za-z0-9+/=\s]+$/.test(base64)) {
+    const mime = student.profileImageMime || "image/jpeg";
+    return `data:${mime};base64,${base64}`;
+  }
+
+  return "";
+}
+
+
+
+function renderStudentPhoto(student) {
+  const name = student.fullname || "Student";
+  const photo = getStudentPhoto(student);
+
+  const initials = name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map(part => part.charAt(0).toUpperCase())
+    .join("");
+
+  return `
+    <div class="admin-student-identity">
+      <div class="admin-student-photo">
+        ${
+          photo
+            ? `
+              <img
+                src="${esc(photo)}"
+                alt="${esc(name)}"
+                loading="lazy"
+                referrerpolicy="no-referrer"
+                onerror="
+                  this.style.display='none';
+                  this.nextElementSibling.style.display='grid';
+                "
+              >
+            `
+            : ""
+        }
+
+        <span
+          class="admin-student-photo-fallback"
+          ${photo ? 'style="display:none"' : ""}
+        >
+          ${esc(initials || "S")}
+        </span>
+      </div>
+
+      <div class="admin-student-details">
+        <strong>${esc(name)}</strong>
+        <div class="muted">
+          ${esc(student.uid || student.id)}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function injectStudentPhotoStyles() {
+  if (document.getElementById("admin-student-photo-styles")) return;
+
+  const style = document.createElement("style");
+  style.id = "admin-student-photo-styles";
+
+  style.textContent = `
+    .admin-student-identity {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 190px;
+    }
+
+    .admin-student-photo {
+      width: 48px;
+      height: 48px;
+      min-width: 48px;
+      border-radius: 50%;
+      overflow: hidden;
+      position: relative;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #635bff, #9a80ff);
+      color: white;
+      font-size: 15px;
+      font-weight: 800;
+      border: 2px solid rgba(99,91,255,.15);
+    }
+
+    .admin-student-photo img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: inherit;
+    }
+
+    .admin-student-photo-fallback {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+    }
+
+    .admin-student-name {
+      font-weight: 750;
+      color: var(--text, inherit);
+    }
+
+    .admin-student-identity .muted {
+      font-size: 11px;
+      margin-top: 3px;
+    }
+  `;
+
+  document.head.appendChild(style);
+}
+
 const emailDomainAllowed = email =>
   String(email || "")
     .trim()
@@ -142,6 +300,8 @@ function updateBatchButtons() {
 }
 
 function render() {
+  injectStudentPhotoStyles();
+
   const rows = visibleStudents();
 
   selectAll.checked = false;
@@ -219,8 +379,7 @@ function render() {
               </td>
 
               <td>
-                <strong>${esc(student.fullname || "Student")}</strong>
-                <div class="muted">${esc(student.uid || student.id)}</div>
+                ${renderStudentPhoto(student)}
               </td>
 
               <td>${esc(student.studentNumber || "—")}</td>
@@ -578,6 +737,8 @@ onAuthStateChanged(auth, async user => {
     tableContainer.innerHTML =
       '<div class="empty">Unable to load student records.</div>';
   }
+
+  
 });
 
 searchInput.addEventListener("input", render);

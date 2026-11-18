@@ -11,6 +11,7 @@ import {
     doc,
     getDoc,
     setDoc,
+    updateDoc,
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
@@ -78,21 +79,58 @@ function redirectToDashboard(role) {
 // CREATE STUDENT PROFILE
 // ======================================================
 
+
 async function createStudentProfile(user, provider) {
     const userRef = doc(db, "users", user.uid);
     const snapshot = await getDoc(userRef);
 
-    // Preserve existing teacher/admin/student accounts.
+    const googlePhotoURL =
+        provider === "google"
+            ? (user.photoURL || "")
+            : "";
+
+    // ==========================================
+    // EXISTING ACCOUNT
+    // ==========================================
+
     if (snapshot.exists()) {
-        return snapshot.data();
+        const existingProfile = snapshot.data();
+
+        // Update Google photo without replacing
+        // the user's custom EqualLearn photoURL.
+        if (googlePhotoURL) {
+            await updateDoc(userRef, {
+                googlePhotoURL: googlePhotoURL,
+                authPhotoURL: googlePhotoURL,
+                googlePhotoUpdatedAt: serverTimestamp(),
+                lastLogin: serverTimestamp()
+            });
+
+            return {
+                ...existingProfile,
+                googlePhotoURL,
+                authPhotoURL: googlePhotoURL
+            };
+        }
+
+        return existingProfile;
     }
 
-    // Public registration always creates a student.
+    // ==========================================
+    // NEW STUDENT ACCOUNT
+    // ==========================================
+
     const profile = {
         uid: user.uid,
         email: user.email || "",
         fullname: user.displayName || "",
-        profileImage: user.photoURL || "",
+
+        // Custom EqualLearn photo is separate.
+        photoURL: "",
+
+        // Google profile picture fallback.
+        googlePhotoURL: googlePhotoURL,
+        authPhotoURL: googlePhotoURL,
 
         role: "student",
         status: "active",
@@ -117,6 +155,7 @@ async function createStudentProfile(user, provider) {
         status: "active"
     };
 }
+
 
 // ======================================================
 // EMAIL REGISTRATION

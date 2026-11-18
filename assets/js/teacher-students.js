@@ -60,6 +60,69 @@ function getInitials(name) {
     .join("");
 }
 
+/* =========================================================
+   STUDENT PROFILE PHOTO
+========================================================= */
+
+function getStudentPhotoURL(student) {
+  const photoURL = String(
+    student.photoURL ||
+    student.profileImage ||
+    ""
+  ).trim();
+
+  if (photoURL) return photoURL;
+
+  const base64 = String(
+    student.profileImageBase64 || ""
+  ).trim();
+
+  if (!base64) return "";
+
+  // Supports existing data URLs and raw Base64.
+  if (base64.startsWith("data:image/")) {
+    return base64;
+  }
+
+  const mime = String(
+    student.profileImageMime || "image/jpeg"
+  ).trim();
+
+  return `data:${mime};base64,${base64}`;
+}
+
+function renderStudentAvatar(student) {
+  const initials = escapeHTML(
+    getInitials(student.fullname)
+  );
+
+  const photoURL = getStudentPhotoURL(student);
+
+  if (!photoURL) {
+    return `
+      <div class="student-avatar" aria-label="${initials}">
+        ${initials}
+      </div>
+    `;
+  }
+
+  return `
+    <div class="student-avatar has-photo" aria-label="${initials}">
+      <img
+        src="${escapeHTML(photoURL)}"
+        alt="${escapeHTML(student.fullname || "Student")} profile picture"
+        loading="lazy"
+        referrerpolicy="no-referrer"
+        onerror="this.hidden=true; this.nextElementSibling.hidden=false"
+      >
+
+      <span class="student-avatar-fallback" hidden>
+        ${initials}
+      </span>
+    </div>
+  `;
+}
+
 function formatDate(value) {
   if (!value) return "Date unavailable";
 
@@ -90,7 +153,11 @@ function getAttemptScore(attempt) {
   const score = Number(attempt.score);
   const total = Number(attempt.total);
 
-  if (!Number.isFinite(score) || !Number.isFinite(total) || total <= 0) {
+  if (
+    !Number.isFinite(score) ||
+    !Number.isFinite(total) ||
+    total <= 0
+  ) {
     return null;
   }
 
@@ -269,6 +336,37 @@ function injectProgressStyles() {
       box-shadow: 0 0 0 4px rgba(32,182,106,.12);
     }
 
+    /* Student profile photos */
+
+    .student-avatar.has-photo {
+      position: relative;
+      overflow: hidden;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+    }
+
+    .student-avatar.has-photo img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: inherit;
+    }
+
+    .student-avatar-fallback {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font: inherit;
+    }
+
+    .student-avatar-fallback[hidden] {
+      display: none;
+    }
+
     @media(max-width:760px) {
       .live-progress-stats {
         grid-template-columns: 1fr 1fr;
@@ -342,9 +440,17 @@ function updateStatistics() {
     student => student.academicProfileVerified !== true
   ).length;
 
-  if (totalElement) totalElement.textContent = total.toLocaleString("en-PH");
-  if (completedElement) completedElement.textContent = completed.toLocaleString("en-PH");
-  if (pendingElement) pendingElement.textContent = pending.toLocaleString("en-PH");
+  if (totalElement) {
+    totalElement.textContent = total.toLocaleString("en-PH");
+  }
+
+  if (completedElement) {
+    completedElement.textContent = completed.toLocaleString("en-PH");
+  }
+
+  if (pendingElement) {
+    pendingElement.textContent = pending.toLocaleString("en-PH");
+  }
 
   let submissions = 0;
   let pendingGrading = 0;
@@ -369,15 +475,18 @@ function updateStatistics() {
   });
 
   if ($("totalQuizSubmissions")) {
-    $("totalQuizSubmissions").textContent = submissions.toLocaleString("en-PH");
+    $("totalQuizSubmissions").textContent =
+      submissions.toLocaleString("en-PH");
   }
 
   if ($("pendingQuizGrading")) {
-    $("pendingQuizGrading").textContent = pendingGrading.toLocaleString("en-PH");
+    $("pendingQuizGrading").textContent =
+      pendingGrading.toLocaleString("en-PH");
   }
 
   if ($("gradedQuizCount")) {
-    $("gradedQuizCount").textContent = graded.toLocaleString("en-PH");
+    $("gradedQuizCount").textContent =
+      graded.toLocaleString("en-PH");
   }
 
   if ($("averageQuizScore")) {
@@ -415,7 +524,8 @@ function getStudentProgressSummary(studentId) {
   const average = gradedAttempts.length
     ? Math.round(
         gradedAttempts.reduce(
-          (sum, attempt) => sum + getAttemptScore(attempt).percentage,
+          (sum, attempt) =>
+            sum + getAttemptScore(attempt).percentage,
           0
         ) / gradedAttempts.length
       )
@@ -452,14 +562,14 @@ function renderStudentProgress(studentId) {
       const status = result
         ? "Graded"
         : String(attempt.status || "submitted").toLowerCase() === "submitted"
-        ? "Pending grading"
-        : escapeHTML(attempt.status || "Submitted");
+          ? "Pending grading"
+          : escapeHTML(attempt.status || "Submitted");
 
       const statusClass = result
         ? "graded"
         : status === "Pending grading"
-        ? "pending"
-        : "submitted";
+          ? "pending"
+          : "submitted";
 
       const scoreLabel = result
         ? `${result.score}/${result.total} (${result.percentage}%)`
@@ -600,7 +710,9 @@ function renderStudents() {
         : "Not provided"
     );
 
-    const studentID = escapeHTML(student.studentNumber || "Not provided");
+    const studentID = escapeHTML(
+      student.studentNumber || "Not provided"
+    );
 
     const section = escapeHTML(
       student.section ||
@@ -623,9 +735,7 @@ function renderStudents() {
     card.className = "el-card";
 
     card.innerHTML = `
-      <div class="student-avatar">
-        ${escapeHTML(getInitials(student.fullname))}
-      </div>
+      ${renderStudentAvatar(student)}
 
       <div style="
         display:flex;
@@ -872,10 +982,13 @@ requireRole("teacher", async teacherProfile => {
       verificationFilter.dataset.progressBound = "true";
     }
 
-    console.log("[EqualLearn] Live teacher progress monitoring initialized.", {
-      students: allStudents.length,
-      sections: sectionIds.length
-    });
+    console.log(
+      "[EqualLearn] Live teacher progress monitoring initialized.",
+      {
+        students: allStudents.length,
+        sections: sectionIds.length
+      }
+    );
 
   } catch (error) {
     console.error("[EqualLearn] Teacher directory error:", error);

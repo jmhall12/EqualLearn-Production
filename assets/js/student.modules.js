@@ -210,6 +210,7 @@ function updateStudentInformation(user, profile) {
 
 
 
+
 function listenToModules(sectionId) {
   if (unsubscribeModules) {
     unsubscribeModules();
@@ -220,15 +221,17 @@ function listenToModules(sectionId) {
 
   const modulesRef = collection(db, "modulesV2");
 
+  // Match the deployed Firestore Security Rules:
+  // studentProfile.sectionId must exist in document.sectionIds.
   const modulesQuery = query(
-  modulesRef,
-  where("status", "==", "published"),
-  where("sectionId", "==", sectionId)
-);
+    modulesRef,
+    where("status", "==", "published"),
+    where("sectionIds", "array-contains", sectionId)
+  );
 
   console.log("[EqualLearn Modules] Starting listener:", {
     collection: "modulesV2",
-    sectionId,
+    sectionIds: sectionId,
     status: "published",
     uid: auth.currentUser?.uid,
     projectId: auth.app.options.projectId
@@ -237,8 +240,8 @@ function listenToModules(sectionId) {
   unsubscribeModules = onSnapshot(
     modulesQuery,
 
-    (snapshot) => {
-      modules = snapshot.docs.map((document) => ({
+    snapshot => {
+      modules = snapshot.docs.map(document => ({
         id: document.id,
         ...document.data()
       }));
@@ -258,13 +261,14 @@ function listenToModules(sectionId) {
       );
     },
 
-    (error) => {
+    error => {
       console.error("[EqualLearn Modules] Listener error:", {
-        code: error.code,
-        message: error.message
+        code: error?.code,
+        message: error?.message,
+        name: error?.name,
+        stack: error?.stack
       });
 
-      // Preserve previously loaded modules.
       if (modules.length > 0) {
         console.warn(
           "[EqualLearn Modules] Keeping previously loaded modules."
@@ -281,6 +285,7 @@ function listenToModules(sectionId) {
     }
   );
 }
+
 
 
 

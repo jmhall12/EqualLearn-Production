@@ -1,556 +1,1212 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <meta name="theme-color" content="#8b68ee">
+
 <title>Lumi — EqualLearn 3D Companion</title>
+
 <style>
+
 :root{--violet:#8b68ee;--deep:#5734bd;--ink:#292044}
+
 *{box-sizing:border-box}
+
 html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent!important}
+
 body{font-family:Inter,"Segoe UI",Arial,sans-serif}
+
 #lumi-root{position:relative;width:100%;height:100%;overflow:hidden;background:transparent;pointer-events:none}
-#lumi-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:auto;touch-action:pan-y;outline:none}
+
+#lumi-canvas{position:absolute;left:0;right:0;top:34px;bottom:58px;width:100%;height:calc(100% - 92px);display:block;pointer-events:auto;touch-action:pan-y;outline:none}
+
 #lumi-ui{position:absolute;inset:0;pointer-events:none}
+
 #lumi-speech{
- position:absolute;right:7px;top:8px;max-width:min(190px,75%);padding:10px 13px;
- border:1px solid rgba(255,255,255,.92);border-radius:16px 16px 5px 16px;
- background:linear-gradient(145deg,rgba(255,255,255,.97),rgba(245,239,255,.93));
- color:var(--ink);box-shadow:0 12px 30px rgba(64,42,130,.16),inset 0 1px 0 #fff;
- font-size:11px;line-height:1.45;font-weight:750;opacity:0;
- transform:translateY(7px) scale(.96);transform-origin:bottom right;
+ position:absolute;left:50%;right:auto;top:5px;width:min(150px,calc(100% - 18px));max-width:150px;
+ padding:6px 9px;border:1px solid rgba(255,255,255,.96);border-radius:12px 12px 4px 12px;
+ background:linear-gradient(145deg,rgba(255,255,255,.99),rgba(245,239,255,.97));
+ color:var(--ink);box-shadow:0 7px 18px rgba(64,42,130,.18),inset 0 1px 0 #fff;
+ font-size:10px;line-height:1.25;font-weight:750;text-align:center;
+ display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;
+ max-height:34px;overflow:hidden;overflow-wrap:anywhere;
+ opacity:0;transform:translate(-50%,7px) scale(.96);transform-origin:top center;
  transition:opacity .22s,transform .22s;pointer-events:none;z-index:3
 }
-#lumi-speech.show{opacity:1;transform:translateY(0) scale(1)}
-#lumi-controls{position:absolute;right:8px;bottom:34px;display:flex;gap:7px;opacity:0;transform:translateY(6px);transition:.2s;pointer-events:auto;z-index:4}
+#lumi-speech.show{opacity:1;transform:translate(-50%,0) scale(1)}
+
+#lumi-controls{position:absolute;right:8px;bottom:34px;display:flex;gap:6px;opacity:0;transform:translateY(6px);transition:.2s;pointer-events:auto;z-index:4}
+
 #lumi-root:hover #lumi-controls,#lumi-root:focus-within #lumi-controls{opacity:1;transform:translateY(0)}
-.lumi-control{width:32px;height:32px;border:1px solid rgba(255,255,255,.96);border-radius:50%;background:linear-gradient(145deg,#fff,#eee8ff);color:#6849c7;box-shadow:0 5px 14px rgba(56,37,115,.15);font-size:14px;cursor:pointer;display:grid;place-items:center;pointer-events:auto}
-.lumi-control:hover{transform:translateY(-3px);background:#e8ddff}
+
+.lumi-control{width:30px;height:30px;flex:0 0 auto;border:1px solid rgba(255,255,255,.96);border-radius:50%;background:linear-gradient(145deg,#fff,#eee8ff);color:#6849c7;box-shadow:0 5px 14px rgba(56,37,115,.15);font-size:13px;cursor:pointer;display:grid;place-items:center;pointer-events:auto;transition:transform .18s,background .18s,box-shadow .18s}
+
+.lumi-control:hover{transform:translateY(-3px);background:#e8ddff}.lumi-control.is-active{background:linear-gradient(145deg,#7653d3,#9b7bea);color:#fff;box-shadow:0 0 0 3px #9b7bea33,0 6px 18px #7653d355}#lumi-root.move-mode #lumi-canvas{cursor:grab;touch-action:none}#lumi-root.move-mode #lumi-canvas:active{cursor:grabbing}#lumi-move-hint{position:absolute;left:50%;top:8px;transform:translateX(-50%);display:none;padding:6px 10px;border-radius:20px;background:#7653d3;color:#fff;font-size:10px;font-weight:800;white-space:nowrap;z-index:5;pointer-events:none;box-shadow:0 5px 16px #49328a33}#lumi-root.move-mode #lumi-move-hint{display:block}
+
 #lumi-label{position:absolute;left:50%;bottom:7px;transform:translateX(-50%);padding:6px 12px;border:1px solid rgba(255,255,255,.92);border-radius:30px;background:rgba(255,255,255,.86);backdrop-filter:blur(12px);color:#6345bd;font-size:10px;font-weight:850;letter-spacing:.2px;white-space:nowrap;box-shadow:0 7px 19px rgba(65,43,130,.13);pointer-events:none}
+
 #lumi-reopen{position:absolute;right:10px;bottom:10px;pointer-events:auto;border:1px solid #fff;border-radius:30px;padding:10px 15px;background:linear-gradient(135deg,#a68af8,#704bd5);color:#fff;font:800 12px Inter,Arial;box-shadow:0 9px 25px #5136a344;cursor:pointer}
-#lumi-fallback{position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:#8064d7;font-size:12px;font-weight:700;text-align:center;padding:20px;pointer-events:none}
+
+#lumi-fallback{position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:#8064d7;font-size:12px;font-weight:700;text-align:center;padding:20px;pointer-events:none;background:radial-gradient(circle,rgba(255,255,255,.96),rgba(245,239,255,.78));border-radius:18px}
+
 #lumi-root.lumi-mobile #lumi-speech{
- right:4px;top:4px;max-width:145px;padding:7px 9px;
- font-size:9px;border-radius:12px 12px 4px 12px;
+
+ right:4px;top:4px;max-width:145px;padding:7px 9px;
+
+ font-size:9px;border-radius:12px 12px 4px 12px;
+
 }
+
 #lumi-root.lumi-mobile #lumi-controls{
- right:4px;bottom:24px;gap:4px;opacity:1;transform:none;
+
+ right:3px;bottom:24px;gap:3px;opacity:1;transform:none;
+
 }
+
 #lumi-root.lumi-mobile .lumi-control{
- width:25px;height:25px;font-size:11px;
+
+ width:23px;height:23px;font-size:10px;
+
 }
+
 #lumi-root.lumi-mobile #lumi-label{
- bottom:4px;padding:4px 8px;font-size:8px;
+
+ bottom:4px;padding:4px 8px;font-size:8px;
+
 }
-@media(max-width:600px){#lumi-label{font-size:9px}#lumi-controls{opacity:1;transform:none}}
+
+@media(max-width:600px){#lumi-label{font-size:8px}#lumi-controls{opacity:1;transform:translateX(-50%)}}
+
 @media(prefers-reduced-motion:reduce){#lumi-controls{transition:none}}
 
+
+
 /* Lumi interactive help panel */
+
 #lumi-root.assistant-open{pointer-events:auto}
+
 #lumi-root.assistant-open #lumi-canvas,
+
 #lumi-root.assistant-open #lumi-label,
+
 #lumi-root.assistant-open #lumi-speech{display:none}
+
 #lumi-root.assistant-open #lumi-controls{display:none}
+
 #lumi-assistant{display:none;position:absolute;inset:0;z-index:10;pointer-events:auto;flex-direction:column;overflow:hidden;border:1px solid rgba(255,255,255,.9);border-radius:22px;background:linear-gradient(160deg,#fbfaff 0%,#f2edff 100%);box-shadow:0 18px 50px rgba(43,26,91,.24);color:#292044}
+
 #lumi-root.assistant-open #lumi-assistant{display:flex}
+
 .lumi-chat-head{display:flex;align-items:center;gap:10px;padding:13px 14px;background:linear-gradient(120deg,#7653d3,#9b7bea);color:#fff;flex-shrink:0}
+
 .lumi-chat-avatar{width:34px;height:34px;display:grid;place-items:center;border-radius:12px;background:#ffffff2b;border:1px solid #ffffff66;font-size:20px}
+
 .lumi-chat-heading{display:flex;flex:1;flex-direction:column;gap:2px;min-width:0}.lumi-chat-heading strong{font-size:14px}.lumi-chat-heading span{font-size:10px;opacity:.88;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
 #lumi-chat-close{width:29px;height:29px;border:0;border-radius:50%;background:#ffffff2b;color:#fff;font-size:22px;cursor:pointer}
+
 #lumi-chat-messages{flex:1;overflow:auto;padding:12px 11px 6px;display:flex;flex-direction:column;gap:9px;overscroll-behavior:contain}
+
 .lumi-msg{max-width:91%;padding:9px 11px;border-radius:14px;font-size:11px;line-height:1.5;overflow-wrap:anywhere;white-space:pre-wrap}
+
 .lumi-bot{align-self:flex-start;background:#fff;border:1px solid #e9e2fb;border-bottom-left-radius:5px;color:#342953;box-shadow:0 3px 10px #49328a0d}
+
 .lumi-user{align-self:flex-end;background:#7653d3;color:#fff;border-bottom-right-radius:5px}
+
 .lumi-action-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+
 .lumi-action{border:1px solid #d9cdf8;border-radius:20px;padding:6px 9px;background:#f4efff;color:#6344bb;font-size:10px;font-weight:800;cursor:pointer}
+
 .lumi-suggestions{display:flex;gap:6px;overflow-x:auto;padding:7px 10px;flex-shrink:0;scrollbar-width:none}.lumi-suggestions:empty{display:none}
+
 .lumi-suggestions button{white-space:nowrap;border:1px solid #d9cdf8;border-radius:18px;padding:6px 9px;background:#fff;color:#6849c7;font-size:10px;cursor:pointer}
+
 #lumi-chat-form{display:flex;gap:7px;padding:8px 10px 9px;border-top:1px solid #e8e1f6;background:#fff;flex-shrink:0}
+
 #lumi-chat-input{min-width:0;flex:1;border:1px solid #e0d8f1;border-radius:20px;padding:10px 12px;outline:none;font:11px Inter,Arial;color:#292044;background:#fbfaff}
+
 #lumi-chat-input:focus{border-color:#9879e7;box-shadow:0 0 0 3px #9879e722}
+
 #lumi-chat-form button{width:36px;height:36px;border:0;border-radius:50%;background:#7653d3;color:#fff;font-size:17px;cursor:pointer}
+
 .lumi-chat-foot{padding:0 11px 9px;background:#fff;color:#8a819d;font-size:8px;line-height:1.35;text-align:center;flex-shrink:0}
+
 #lumi-root.lumi-mobile.assistant-open #lumi-assistant{border-radius:18px}
+
 #lumi-root.lumi-mobile .lumi-chat-head{padding:10px 11px}
+
 #lumi-root.lumi-mobile .lumi-msg{font-size:10px}
 
+
+
 </style>
+
 </head>
+
 <body>
+
 <div id="lumi-root">
- <canvas id="lumi-canvas" aria-label="Interactive 3D Lumi companion" tabindex="0"></canvas>
- <div id="lumi-fallback">Lumi needs WebGL support to show her 3D character.</div>
- <div id="lumi-ui">
-  <div id="lumi-speech" role="status" aria-live="polite">Hi! I'm Lumi, your learning buddy. 💜</div>
-  <section id="lumi-assistant" aria-label="Lumi help assistant" aria-hidden="true">
-   <header class="lumi-chat-head">
-    <div class="lumi-chat-avatar">✦</div>
-    <div class="lumi-chat-heading"><strong>Ask Lumi</strong><span id="lumi-context">Your EqualLearn guide</span></div>
-    <button type="button" id="lumi-chat-close" aria-label="Close assistant">×</button>
-   </header>
-   <div id="lumi-chat-messages" role="log" aria-live="polite" aria-relevant="additions">
-    <div class="lumi-msg lumi-bot">Hi! I'm Lumi. I can guide you around EqualLearn, explain features, and help you find what you need. What can I help you with?</div>
-   </div>
-   <div id="lumi-suggestions" class="lumi-suggestions"></div>
-   <form id="lumi-chat-form" autocomplete="off">
-    <input id="lumi-chat-input" type="text" maxlength="300" placeholder="Ask Lumi for help..." aria-label="Message Lumi" required>
-    <button type="submit" aria-label="Send message">➤</button>
-   </form>
-   <div class="lumi-chat-foot">Lumi Help Guide · Built-in guidance only. Never share your password, OTP, or recovery codes.</div>
-  </section>
-  <div id="lumi-controls" aria-label="Lumi controls">
-   <button class="lumi-control" id="lumi-wave" title="Wave hello" aria-label="Wave hello">👋</button>
-   <button class="lumi-control" id="lumi-talk" title="Talk to Lumi" aria-label="Talk to Lumi">💬</button>
-   <button class="lumi-control" id="lumi-hide" title="Hide Lumi" aria-label="Hide Lumi">−</button>
-  </div>
-  <div id="lumi-label">✦ Lumi · Your learning buddy</div>
- </div>
+
+ <canvas id="lumi-canvas" aria-label="Interactive 3D Lumi companion" tabindex="0"></canvas>
+
+ <div id="lumi-fallback">Lumi needs WebGL support to show her 3D character.</div>
+
+ <div id="lumi-ui">
+
+  <div id="lumi-speech" role="status" aria-live="polite">Hi! I'm Lumi, your learning buddy. 💜</div>
+
+  <div id="lumi-move-hint">✦ Move mode · Drag Lumi anywhere</div>
+<section id="lumi-assistant" aria-label="Lumi help assistant" aria-hidden="true">
+
+   <header class="lumi-chat-head">
+
+    <div class="lumi-chat-avatar">✦</div>
+
+    <div class="lumi-chat-heading"><strong>Ask Lumi</strong><span id="lumi-context">Your EqualLearn guide</span></div>
+
+    <button type="button" id="lumi-chat-close" aria-label="Close assistant">×</button>
+
+   </header>
+
+   <div id="lumi-chat-messages" role="log" aria-live="polite" aria-relevant="additions">
+
+    <div class="lumi-msg lumi-bot">Hi! I'm Lumi. I can guide you around EqualLearn, explain features, and help you find what you need. What can I help you with?</div>
+
+   </div>
+
+   <div id="lumi-suggestions" class="lumi-suggestions"></div>
+
+   <form id="lumi-chat-form" autocomplete="off">
+
+    <input id="lumi-chat-input" type="text" maxlength="300" placeholder="Ask Lumi for help..." aria-label="Message Lumi" required>
+
+    <button type="submit" aria-label="Send message">➤</button>
+
+   </form>
+
+   <div class="lumi-chat-foot">Lumi Help Guide · Built-in guidance only. Never share your password, OTP, or recovery codes.</div>
+
+  </section>
+
+  <div id="lumi-controls" aria-label="Lumi controls">
+
+   <button class="lumi-control" id="lumi-wave" title="Wave hello" aria-label="Wave hello">👋</button>
+
+   <button class="lumi-control" id="lumi-mood" title="Change 3D animation" aria-label="Change 3D animation">✨</button>
+
+   <button class="lumi-control" id="lumi-move" title="Toggle move mode" aria-label="Toggle move mode" aria-pressed="false">↔</button>
+
+   <button class="lumi-control" id="lumi-talk" title="Talk to Lumi" aria-label="Talk to Lumi">💬</button>
+
+   <button class="lumi-control" id="lumi-hide" title="Hide Lumi" aria-label="Hide Lumi">−</button>
+
+  </div>
+
+  <div id="lumi-label">✦ Lumi · Your learning buddy</div>
+
+ </div>
+
 </div>
+
 <script type="module">
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js";
+
+import * as THREE from "https\://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js";
+
+
 
 const root=document.getElementById("lumi-root");
+
 const canvas=document.getElementById("lumi-canvas");
+
 const fallback=document.getElementById("lumi-fallback");
+
 const speech=document.getElementById("lumi-speech");
+
 const reduced=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 let hidden=false;
+let moveMode=false;
+let customFramePosition=null;
+let dragState=null;
+let suppressNextCanvasClick=false;
+let moodIndex=0;
+const moods=[
+ {name:"Idle",label:"Relaxed floating",icon:"✨"},
+ {name:"Dance",label:"Happy dance",icon:"💃"},
+ {name:"Spin",label:"360° spin",icon:"🌀"},
+ {name:"Bounce",label:"Super bounce",icon:"⭐"},
+ {name:"Sleepy",label:"Sleepy sway",icon:"🌙"}
+];
+try{
+ const saved=localStorage.getItem("equallearn-lumi-position");
+ if(saved){const parsed=JSON.parse(saved);if(Number.isFinite(parsed.left)&&Number.isFinite(parsed.top))customFramePosition=parsed;}
+}catch(_){}
+
+
 
 // Lumi manages her own iframe size using the PARENT page viewport.
+
 // This makes her compact on phones across pages, independently of
+
 // each page's dashboard-shell CSS.
+
 function syncLumiFrameSize(){
- try {
-  const frame = window.frameElement;
-  if (!frame) return;
-  const parentWidth = window.parent.innerWidth || window.innerWidth;
-  const mobile = parentWidth <= 600;
-  root.classList.toggle("lumi-mobile", mobile);
-  const assistantOpen = root.classList.contains("assistant-open");
-  const isHidden = hidden;
-  Object.assign(frame.style, {
-   position: "fixed",
-   width: isHidden ? "78px" : assistantOpen ? (mobile ? "min(360px, calc(100vw - 16px))" : "390px") : (mobile ? "145px" : "230px"),
-   height: isHidden ? "52px" : assistantOpen ? (mobile ? "min(520px, calc(100dvh - 24px))" : "540px") : (mobile ? "180px" : "280px"),
-   right: mobile ? "8px" : "16px",
-   bottom: mobile ? "8px" : "16px",
-   border: "0", background: "transparent", zIndex: "2147483647",
-   display: "block", visibility: "visible", opacity: "1",
-   pointerEvents: isHidden ? "auto" : "auto", overflow: "hidden"
-  });
-  frame.setAttribute("allowtransparency", "true");
- } catch (error) { console.warn("Lumi could not resize its parent frame", error); }
+
+ try {
+
+  const frame = window.frameElement;
+
+  if (!frame) return;
+
+  const parentWidth = window.parent.innerWidth || window.innerWidth;
+
+  const mobile = parentWidth <= 600;
+
+  root.classList.toggle("lumi-mobile", mobile);
+
+  const assistantOpen = root.classList.contains("assistant-open");
+
+  const isHidden = hidden;
+
+  Object.assign(frame.style, {
+
+   position: "fixed",
+
+   width: isHidden ? "78px" : assistantOpen ? (mobile ? "min(360px, calc(100vw - 16px))" : "390px") : (mobile ? "190px" : "230px"),
+
+   height: isHidden ? "52px" : assistantOpen ? (mobile ? "min(520px, calc(100dvh - 24px))" : "540px") : (mobile ? "250px" : "280px"),
+
+   right: customFramePosition ? "auto" : (mobile ? "8px" : "16px"),
+
+   bottom: customFramePosition ? "auto" : (mobile ? "8px" : "16px"),
+
+   left: customFramePosition ? `${customFramePosition.left}px` : "auto",
+
+   top: customFramePosition ? `${customFramePosition.top}px` : "auto",
+
+   border: "0", background: "transparent", zIndex: "2147483647",
+
+   display: "block", visibility: "visible", opacity: "1",
+
+   pointerEvents: isHidden ? "auto" : "auto", overflow: "hidden"
+
+  });
+
+  frame.setAttribute("allowtransparency", "true");
+
+ } catch (error) { console.warn("Lumi could not resize its parent frame", error); }
+
 }
+
 syncLumiFrameSize();
+
 window.addEventListener("resize", syncLumiFrameSize, {passive:true});
+
 window.addEventListener("orientationchange", syncLumiFrameSize, {passive:true});
 
-let renderer;
-try{
- renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:"high-performance"});
-}catch(e){
- fallback.style.display="flex";
- console.error("Lumi WebGL initialization failed",e);
+// Move mode: drag the 3D companion anywhere inside the parent viewport.
+const moveButton=document.getElementById("lumi-move");
+const moodButton=document.getElementById("lumi-mood");
+function setMoveMode(enabled){
+ moveMode=!!enabled;
+ root.classList.toggle("move-mode",moveMode);
+ moveButton.classList.toggle("is-active",moveMode);
+ moveButton.setAttribute("aria-pressed",String(moveMode));
+ moveButton.textContent=moveMode?"✓":"↔";
+ moveButton.title=moveMode?"Turn off move mode":"Turn on move mode";
+ canvas.style.touchAction=moveMode?"none":"pan-y";
+ say(moveMode?"Move mode is on. Drag Lumi to any corner or position. 💜":"Move mode is off.",2600);
 }
+moveButton.addEventListener("click",()=>setMoveMode(!moveMode));
+function clampFramePosition(left,top){
+ const frame=window.frameElement;
+ const parent=window.parent;
+ const width=frame?.offsetWidth||230;
+ const height=frame?.offsetHeight||280;
+ const maxLeft=Math.max(0,(parent.innerWidth||window.innerWidth)-width);
+ const maxTop=Math.max(0,(parent.innerHeight||window.innerHeight)-height);
+ return {left:Math.min(maxLeft,Math.max(0,left)),top:Math.min(maxTop,Math.max(0,top))};
+}
+canvas.addEventListener("pointerdown",event=>{
+ if(!moveMode||!window.frameElement)return;
+ const rect=window.frameElement.getBoundingClientRect();
+ dragState={pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,left:rect.left,top:rect.top,moved:false};
+ try{canvas.setPointerCapture(event.pointerId);}catch(_){}
+ event.preventDefault();
+});
+canvas.addEventListener("pointermove",event=>{
+ if(!moveMode||!dragState||dragState.pointerId!==event.pointerId)return;
+ const dx=event.clientX-dragState.startX;
+ const dy=event.clientY-dragState.startY;
+ if(Math.abs(dx)+Math.abs(dy)>3)dragState.moved=true;
+ const pos=clampFramePosition(dragState.left+dx,dragState.top+dy);
+ const frame=window.frameElement;
+ frame.style.left=`${pos.left}px`;frame.style.top=`${pos.top}px`;
+ frame.style.right="auto";frame.style.bottom="auto";
+ customFramePosition=pos;
+ event.preventDefault();
+});
+function finishLumiDrag(event){
+ if(!dragState||dragState.pointerId!==event.pointerId)return;
+ if(dragState.moved){
+  suppressNextCanvasClick=true;
+  try{localStorage.setItem("equallearn-lumi-position",JSON.stringify(customFramePosition));}catch(_){}
+ }
+ dragState=null;
+}
+canvas.addEventListener("pointerup",finishLumiDrag);
+canvas.addEventListener("pointercancel",finishLumiDrag);
+
+
+
+
+let renderer = null;
+let webglAvailable = false;
+try {
+ // Use conservative settings to reduce GPU/context pressure.
+ renderer = new THREE.WebGLRenderer({
+  canvas, alpha: true, antialias: false,
+  powerPreference: "low-power", stencil: false,
+  depth: true, preserveDrawingBuffer: false
+ });
+ webglAvailable = true;
+} catch (e) {
+ console.warn("Lumi 3D is unavailable; keeping the help assistant active.", e);
+}
+
+if (!webglAvailable) {
+ fallback.style.display = "flex";
+ fallback.textContent = "✦ Lumi is here! 3D mode is unavailable in this browser, but you can still chat with me. 💜";
+ canvas.style.display = "none";
+ // Continue initializing Lumi's chat and controls without a GPU renderer.
+ renderer = {
+  shadowMap: { enabled: false, type: null },
+  setPixelRatio() {}, setClearColor() {}, setSize() {}, render() {}, dispose() {}
+ };
+}
+
 if(renderer){
- renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
- renderer.setClearColor(0x000000,0);
- renderer.outputColorSpace=THREE.SRGBColorSpace;
- renderer.toneMapping=THREE.ACESFilmicToneMapping;
- renderer.toneMappingExposure=1.22;
- renderer.shadowMap.enabled=true;
- renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 
- const scene=new THREE.Scene();
- const camera=new THREE.PerspectiveCamera(32,1,.1,100);
- camera.position.set(0,0,8.6);
-
- scene.add(new THREE.HemisphereLight(0xf5edff,0x6550a0,2.0));
- const key=new THREE.DirectionalLight(0xffffff,3.3);key.position.set(-3,5,7);key.castShadow=true;scene.add(key);
- const fill=new THREE.PointLight(0xb69aff,34,15);fill.position.set(3,1,4);scene.add(fill);
- const rim=new THREE.PointLight(0x78cfff,18,12);rim.position.set(-3,-1,2);scene.add(rim);
- const glowLight=new THREE.PointLight(0xa88aff,13,9);glowLight.position.set(0,2,-1);scene.add(glowLight);
-
- const mat=(color,roughness=.3,metalness=.05,extra={})=>new THREE.MeshPhysicalMaterial({color,roughness,metalness,clearcoat:.9,clearcoatRoughness:.18,...extra});
- const shell=mat(0xf2ecff,.22,.08);
- const shellShade=mat(0xc8b5ff,.25,.12);
- const purple=mat(0x8059df,.22,.18);
- const purpleDark=mat(0x432b91,.28,.16);
- const darkFace=mat(0x17132e,.2,.12,{clearcoat:1});
- const white=mat(0xffffff,.16,.04);
- const cyan= new THREE.MeshPhysicalMaterial({color:0x7dd5ff,emissive:0x3caaff,emissiveIntensity:1.9,roughness:.16,metalness:.05,clearcoat:1});
- const pink= new THREE.MeshBasicMaterial({color:0xff9fc9,transparent:true,opacity:.62});
- const gold=mat(0xf5d9a4,.23,.55);
-
- const lumi=new THREE.Group();scene.add(lumi);
- const torso=new THREE.Group();lumi.add(torso);
- const headPivot=new THREE.Group();torso.add(headPivot);
- const armL=new THREE.Group(),armR=new THREE.Group();torso.add(armL,armR);
- const accessories=new THREE.Group();lumi.add(accessories);
-
- function roundedBox(w,h,d,r,material,parent,pos=[0,0,0]){
-  const shape=new THREE.Shape();
-  const x=-w/2,y=-h/2;
-  shape.moveTo(x+r,y);shape.lineTo(x+w-r,y);shape.quadraticCurveTo(x+w,y,x+w,y+r);
-  shape.lineTo(x+w,y+h-r);shape.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
-  shape.lineTo(x+r,y+h);shape.quadraticCurveTo(x,y+h,x,y+h-r);
-  shape.lineTo(x,y+r);shape.quadraticCurveTo(x,y,x+r,y);
-  const geo=new THREE.ExtrudeGeometry(shape,{depth:d,bevelEnabled:true,bevelSegments:4,steps:1,bevelSize:r*.38,bevelThickness:r*.42,curveSegments:12});
-  geo.center();
-  const mesh=new THREE.Mesh(geo,material);mesh.position.set(...pos);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;
+ if (webglAvailable) {
+  canvas.addEventListener("webglcontextlost", (event) => {
+   event.preventDefault();
+   webglAvailable = false;
+   cancelAnimationFrame(raf);
+   canvas.style.display = "none";
+   fallback.style.display = "flex";
+   fallback.textContent = "✦ Lumi's 3D view paused because the browser released its graphics context. Ask Lumi still works. 💜";
+  }, { once: true });
  }
- function sphere(radius,material,parent,pos,scale=[1,1,1],segments=40){
-  const mesh=new THREE.Mesh(new THREE.SphereGeometry(radius,segments,segments),material);
-  mesh.position.set(...pos);mesh.scale.set(...scale);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;
- }
- function capsuleBetween(a,b,radius,material,parent){
-  const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b),delta=new THREE.Vector3().subVectors(end,start);
-  const mesh=new THREE.Mesh(new THREE.CapsuleGeometry(radius,Math.max(.01,delta.length()-radius*2),8,24),material);
-  mesh.position.copy(start).add(end).multiplyScalar(.5);
-  mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());
-  mesh.castShadow=true;parent.add(mesh);return mesh;
+ renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));
+
+ renderer.setClearColor(0x000000,0);
+
+ renderer.outputColorSpace=THREE.SRGBColorSpace;
+
+ renderer.toneMapping=THREE.ACESFilmicToneMapping;
+
+ renderer.toneMappingExposure=1.22;
+
+ renderer.shadowMap.enabled=true;
+
+ renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+
+
+
+ const scene=new THREE.Scene();
+
+ const camera=new THREE.PerspectiveCamera(32,1,.1,100);
+
+ camera.position.set(0,0,8.6);
+
+
+
+ scene.add(new THREE.HemisphereLight(0xf5edff,0x6550a0,2.0));
+
+ const key=new THREE.DirectionalLight(0xffffff,3.3);key.position.set(-3,5,7);key.castShadow=true;scene.add(key);
+
+ const fill=new THREE.PointLight(0xb69aff,34,15);fill.position.set(3,1,4);scene.add(fill);
+
+ const rim=new THREE.PointLight(0x78cfff,18,12);rim.position.set(-3,-1,2);scene.add(rim);
+
+ const glowLight=new THREE.PointLight(0xa88aff,13,9);glowLight.position.set(0,2,-1);scene.add(glowLight);
+
+
+
+ const mat=(color,roughness=.3,metalness=.05,extra={})=>new THREE.MeshPhysicalMaterial({color,roughness,metalness,clearcoat:.9,clearcoatRoughness:.18,...extra});
+
+ const shell=mat(0xf2ecff,.22,.08);
+
+ const shellShade=mat(0xc8b5ff,.25,.12);
+
+ const purple=mat(0x8059df,.22,.18);
+
+ const purpleDark=mat(0x432b91,.28,.16);
+
+ const darkFace=mat(0x17132e,.2,.12,{clearcoat:1});
+
+ const white=mat(0xffffff,.16,.04);
+
+ const cyan= new THREE.MeshPhysicalMaterial({color:0x7dd5ff,emissive:0x3caaff,emissiveIntensity:1.9,roughness:.16,metalness:.05,clearcoat:1});
+
+ const pink= new THREE.MeshBasicMaterial({color:0xff9fc9,transparent:true,opacity:.62});
+
+ const gold=mat(0xf5d9a4,.23,.55);
+
+
+
+ const lumi=new THREE.Group();scene.add(lumi);
+
+ const torso=new THREE.Group();lumi.add(torso);
+
+ const headPivot=new THREE.Group();torso.add(headPivot);
+
+ const armL=new THREE.Group(),armR=new THREE.Group();torso.add(armL,armR);
+
+ const accessories=new THREE.Group();lumi.add(accessories);
+
+
+
+ function roundedBox(w,h,d,r,material,parent,pos=[0,0,0]){
+
+  const shape=new THREE.Shape();
+
+  const x=-w/2,y=-h/2;
+
+  shape.moveTo(x+r,y);shape.lineTo(x+w-r,y);shape.quadraticCurveTo(x+w,y,x+w,y+r);
+
+  shape.lineTo(x+w,y+h-r);shape.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+
+  shape.lineTo(x+r,y+h);shape.quadraticCurveTo(x,y+h,x,y+h-r);
+
+  shape.lineTo(x,y+r);shape.quadraticCurveTo(x,y,x+r,y);
+
+  const geo=new THREE.ExtrudeGeometry(shape,{depth:d,bevelEnabled:true,bevelSegments:4,steps:1,bevelSize:r*.38,bevelThickness:r*.42,curveSegments:12});
+
+  geo.center();
+
+  const mesh=new THREE.Mesh(geo,material);mesh.position.set(...pos);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;
+
+ }
+
+ function sphere(radius,material,parent,pos,scale=[1,1,1],segments=40){
+
+  const mesh=new THREE.Mesh(new THREE.SphereGeometry(radius,segments,segments),material);
+
+  mesh.position.set(...pos);mesh.scale.set(...scale);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;
+
+ }
+
+ function capsuleBetween(a,b,radius,material,parent){
+
+  const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b),delta=new THREE.Vector3().subVectors(end,start);
+
+  const mesh=new THREE.Mesh(new THREE.CapsuleGeometry(radius,Math.max(.01,delta.length()-radius*2),8,24),material);
+
+  mesh.position.copy(start).add(end).multiplyScalar(.5);
+
+  mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());
+
+  mesh.castShadow=true;parent.add(mesh);return mesh;
+
+ }
+
+
+
+ // Backpack, body and premium chest emblem
+
+ roundedBox(.57,.91,.34,.15,purpleDark,torso,[.55,-.28,-.24]);
+
+ roundedBox(.12,.62,.07,.05,purple,torso,[.55,-.28,-.045]);
+
+ const body=sphere(.77,shell,torso,[0,-.48,.03],[.76,.69,.48],48);
+
+ sphere(.61,shellShade,torso,[0,-.59,-.02],[.69,.53,.38],40);
+
+ sphere(.16,purple,torso,[0,-.43,.45],[1,1,.34],36);
+
+ // emblem star, raised and luminous
+
+ const starShape=new THREE.Shape();
+
+ const spikes=5,outer=.105,inner=.047;
+
+ for(let i=0;i<spikes*2;i++){const a=Math.PI/2+i*Math.PI/spikes,r=i%2===0?outer:inner;const x=Math.cos(a)*r,y=Math.sin(a)*r;if(i===0)starShape.moveTo(x,y);else starShape.lineTo(x,y);}
+
+ starShape.closePath();
+
+ const star=new THREE.Mesh(new THREE.ExtrudeGeometry(starShape,{depth:.025,bevelEnabled:true,bevelThickness:.012,bevelSize:.01,bevelSegments:2}),white);
+
+ star.position.set(-.07,-.49,.59);torso.add(star);
+
+
+
+ // Neck joint
+
+ sphere(.22,purpleDark,torso,[0,.22,.02],[1,1,.85],32);
+
+
+
+ // Head shell, face glass and trim
+
+ const head=sphere(.91,shell,headPivot,[0,.92,.04],[1.0,.91,.72],56);
+
+ const faceFrame=sphere(.69,purpleDark,headPivot,[0,.9,.59],[1.0,.58,.2],48);
+
+ const face=sphere(.65,darkFace,headPivot,[0,.91,.625],[.98,.56,.19],48);
+
+ // Eye sockets, eye lenses and highlights
+
+ const eyeGroups=[];
+
+ for(const x of [-.29,.29]){
+
+  sphere(.19,purpleDark,headPivot,[x,.98,.79],[1,1.08,.34],32);
+
+  const eyeGroup=new THREE.Group();eyeGroup.position.set(x,.99,.84);headPivot.add(eyeGroup);
+
+  sphere(.135,cyan,eyeGroup,[0,0,0],[.83,1.06,.52],36);
+
+  sphere(.043,white,eyeGroup,[-.035,.055,.071],[.75,.75,.5],20);
+
+  sphere(.018,white,eyeGroup,[.045,-.055,.073],[.8,.8,.5],16);
+
+  eyeGroups.push(eyeGroup);
+
+ }
+
+ // Mouth as a soft curved smile
+
+ const smileCurve=new THREE.QuadraticBezierCurve3(new THREE.Vector3(-.075,.68,.81),new THREE.Vector3(0,.635,.84),new THREE.Vector3(.075,.68,.81));
+
+ const smile=new THREE.Mesh(new THREE.TubeGeometry(smileCurve,20,.012,8,false),mat(0xe4d8ff,.3));
+
+ headPivot.add(smile);
+
+ // Blush
+
+ sphere(.075,pink,headPivot,[-.53,.76,.68],[1,.48,.15],24);
+
+ sphere(.075,pink,headPivot,[.53,.76,.68],[1,.48,.15],24);
+
+
+
+ // Side ear pods
+
+ for(const x of [-.91,.91]){
+
+  const pod=sphere(.22,purple,headPivot,[x,.9,.04],[.48,.82,.8],32);
+
+  sphere(.12,shellShade,headPivot,[x,.9,.17],[.42,.7,.45],24);
+
+ }
+
+ // Antenna stem and jewel
+
+ capsuleBetween([0,1.73,.02],[0,2.04,.02],.045,purple,headPivot);
+
+ sphere(.105,shellShade,headPivot,[0,2.12,.02],[1,1,1],32);
+
+ sphere(.073,cyan,headPivot,[0,2.13,.095],[1,1,.6],28);
+
+
+
+ // Arms with shoulder joints, tapered upper arms and soft hands
+
+ for(const [group,side] of [[armL,-1],[armR,1]]){
+
+  group.position.set(side*.66,-.05,.02);
+
+  sphere(.17,purple,group,[0,0,0],[1,1,1],28);
+
+  capsuleBetween([0,-.06,0],[side*.13,-.47,.02],.105,shellShade,group);
+
+  sphere(.145,shell,group,[side*.13,-.52,.05],[1,1,.92],32);
+
+  sphere(.11,white,group,[side*.13,-.55,.12],[1,1,.65],28);
+
+ }
+
+
+
+ // Floating halo and orbit behind Lumi
+
+ const halo=new THREE.Mesh(new THREE.TorusGeometry(1.28,.018,12,100),new THREE.MeshBasicMaterial({color:0xbca7ff,transparent:true,opacity:.56}));
+
+ halo.position.set(0,.45,-.72);halo.rotation.set(.9,.15,-.22);accessories.add(halo);
+
+ const orbit=new THREE.Mesh(new THREE.TorusGeometry(1.48,.009,8,120),new THREE.MeshBasicMaterial({color:0x8ddcff,transparent:true,opacity:.36}));
+
+ orbit.position.set(0,.38,-.8);orbit.rotation.set(1.18,.1,.45);accessories.add(orbit);
+
+ // Sparkle particles
+
+ const sparkMat=new THREE.MeshBasicMaterial({color:0xd7c9ff});
+
+ const sparkles=[];
+
+ for(let i=0;i<9;i++){
+
+  const s=new THREE.Mesh(new THREE.OctahedronGeometry(.035+Math.random()*.025),sparkMat);
+
+  const a=i/9*Math.PI*2,r=1.35+Math.random()*.35;
+
+  s.position.set(Math.cos(a)*r,Math.sin(a)*r*.75,.1-Math.random()*.6);accessories.add(s);
+
+  sparkles.push({mesh:s,phase:Math.random()*Math.PI*2,base:s.position.clone()});
+
+ }
+
+ // Soft ground shadow, transparent plane with radial texture
+
+ const shadowCanvas=document.createElement("canvas");shadowCanvas.width=128;shadowCanvas.height=128;
+
+ const ctx=shadowCanvas.getContext("2d"),grad=ctx.createRadialGradient(64,64,3,64,64,62);
+
+ grad.addColorStop(0,"rgba(42,24,95,.32)");grad.addColorStop(.45,"rgba(75,49,145,.14)");grad.addColorStop(1,"rgba(75,49,145,0)");
+
+ ctx.fillStyle=grad;ctx.fillRect(0,0,128,128);
+
+ const shadowTex=new THREE.CanvasTexture(shadowCanvas);
+
+ const shadow=new THREE.Mesh(new THREE.PlaneGeometry(2.2,.65),new THREE.MeshBasicMaterial({map:shadowTex,transparent:true,depthWrite:false}));
+
+ shadow.rotation.x=0;shadow.position.set(0,-1.45,-.3);scene.add(shadow);
+
+
+
+ // Cursor target with smoothed movement
+
+ const pointer={x:0,y:0},target={x:0,y:0};
+
+ let waveUntil=0,clickPulse=0,speechTimer=null,raf=0;
+
+ const clock=new THREE.Clock();
+
+ function say(message,duration=3800){speech.textContent=message;speech.classList.add("show");clearTimeout(speechTimer);speechTimer=setTimeout(()=>speech.classList.remove("show"),duration);}
+
+ // FULL-PAGE CURSOR TRACKING:
+
+ // When embedded on the same origin, read pointer movement from the
+
+ // parent page so Lumi follows the cursor anywhere on the whole website,
+
+ // not only while the pointer is over the small iframe.
+
+ function setPointerFromPage(clientX, clientY, pageWidth, pageHeight, frameRect){
+
+  const frame = frameRect || {left:0, top:0, width:root.clientWidth, height:root.clientHeight};
+
+  // Approximate Lumi's visual center inside its fixed companion frame.
+
+  const mascotX = frame.left + frame.width * 0.50;
+
+  const mascotY = frame.top + frame.height * 0.49;
+
+  const spanX = Math.max(180, pageWidth * 0.48);
+
+  const spanY = Math.max(150, pageHeight * 0.48);
+
+  target.x = THREE.MathUtils.clamp((clientX - mascotX) / spanX, -1, 1);
+
+  target.y = THREE.MathUtils.clamp((mascotY - clientY) / spanY, -1, 1);
+
+ }
+
+
+
+ function trackParentPointer(e){
+
+  let frame = null;
+
+  try {
+
+   const frameElement = window.frameElement;
+
+   if (frameElement) {
+
+    const r = frameElement.getBoundingClientRect();
+
+    frame = {left:r.left, top:r.top, width:r.width, height:r.height};
+
+   }
+
+   const page = window.parent;
+
+   setPointerFromPage(
+
+    e.clientX, e.clientY,
+
+    page.innerWidth || document.documentElement.clientWidth,
+
+    page.innerHeight || document.documentElement.clientHeight,
+
+    frame
+
+   );
+
+  } catch (err) {
+
+   // Cross-origin fallback: parent page can forward pointer coordinates
+
+   // using the postMessage bridge documented below.
+
+  }
+
+ }
+
+
+
+ try {
+
+  if (window.parent && window.parent !== window) {
+
+   window.parent.document.addEventListener("pointermove", trackParentPointer, {passive:true});
+
+   window.parent.document.addEventListener("pointerleave", () => {
+
+    target.x = 0; target.y = 0;
+
+   }, {passive:true});
+
+  } else {
+
+   document.addEventListener("pointermove", e => {
+
+    setPointerFromPage(e.clientX,e.clientY,window.innerWidth,window.innerHeight);
+
+   }, {passive:true});
+
+  }
+
+ } catch (err) {
+
+  // Parent is cross-origin; use the postMessage bridge below.
+
+ }
+
+
+
+ // Cross-origin / sandbox-safe fallback. The parent page may send:
+
+ // iframe.contentWindow.postMessage({type:"LUMI_POINTER",x,y,w,h},"*")
+
+ window.addEventListener("message", e => {
+
+  if (!e.data || e.data.type !== "LUMI_POINTER") return;
+
+  const d = e.data;
+
+  const frame = d.frame || null;
+
+  setPointerFromPage(Number(d.x)||0,Number(d.y)||0,
+
+   Number(d.w)||window.innerWidth,Number(d.h)||window.innerHeight,frame);
+
+ });
+
+
+
+ const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();
+
+ const clickable=[head,body];
+
+ function interact(e){
+
+  if(suppressNextCanvasClick){suppressNextCanvasClick=false;return;}
+
+  const rect=canvas.getBoundingClientRect();
+
+  mouse.x=((e.clientX-rect.left)/rect.width)*2-1;
+
+  mouse.y=-((e.clientY-rect.top)/rect.height)*2+1;
+
+  raycaster.setFromCamera(mouse,camera);
+
+  const hits=raycaster.intersectObjects(clickable,false);
+
+  if(hits.length){waveUntil=performance.now()+2300;clickPulse=1;openAssistant();}
+
+ }
+
+ canvas.addEventListener("click",interact);
+
+ canvas.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();waveUntil=performance.now()+2300;clickPulse=1;say("Hello, learning star! ✨");}});
+
+ document.getElementById("lumi-wave").addEventListener("click",()=>{waveUntil=performance.now()+2300;clickPulse=1;say("Hiiii! So happy to see you! 👋",4200);});
+
+ // Context-aware, role-aware EqualLearn help. This version runs locally and
+
+ // never sends a student's messages or account information to an AI service.
+
+ const chatPanel=document.getElementById("lumi-assistant");
+
+ const chatMessages=document.getElementById("lumi-chat-messages");
+
+ const chatInput=document.getElementById("lumi-chat-input");
+
+ const chatForm=document.getElementById("lumi-chat-form");
+
+ const suggestionBox=document.getElementById("lumi-suggestions");
+
+ const currentPath=(()=>{try{return window.parent.location.pathname.toLowerCase()}catch(_){return location.pathname.toLowerCase()}})();
+
+ const currentTitle=(()=>{try{return window.parent.document.title||"EqualLearn"}catch(_){return "EqualLearn"}})();
+
+ const role=currentPath.includes("/admin/")?"admin":currentPath.includes("/teacher/")?"teacher":currentPath.includes("/student/")?"student":"visitor";
+
+ const conversation = [];
+
+ const pageName=currentPath.split("/").pop().replace(/\.html?$/i,"").replace(/[-_]/g," ")||"home";
+
+ const roleLinks={
+
+  student:[{label:"Dashboard",url:"/student/dashboard.html"},{label:"Learning Modules",url:"/student/modules.html"},{label:"Quizzes",url:"/student/quizzes.html"},{label:"Classwork",url:"/student/classwork.html"},{label:"Progress",url:"/student/progress.html"},{label:"Live Class",url:"/student/live.html"},{label:"Profile",url:"/student/profile.html"}],
+
+  teacher:[{label:"Dashboard",url:"/teacher/dashboard.html"},{label:"My Classes",url:"/teacher/classes.html"},{label:"Modules",url:"/teacher/modules.html"},{label:"Lessons",url:"/teacher/lessons.html"},{label:"Quiz Builder",url:"/teacher/quiz_builder.html"},{label:"Grading",url:"/teacher/grading.html"},{label:"Students",url:"/teacher/students.html"},{label:"Live Class",url:"/teacher/live.html"}],
+
+  admin:[{label:"Dashboard",url:"/admin/dashboard.html"},{label:"Students",url:"/admin/students.html"},{label:"Teachers",url:"/admin/manage-teachers.html"},{label:"Register Teacher",url:"/admin/register-teacher.html"},{label:"Live Sessions",url:"/admin/live.html"},{label:"Create Content",url:"/admin/create-content.html"},{label:"Lessons",url:"/admin/lessons.html"},{label:"Class Assignments",url:"/admin/class-assignments.html"},{label:"Reports",url:"/admin/reports.html"},{label:"Settings",url:"/admin/settings.html"}]
+
+ };
+
+ const links=roleLinks[role]||[{label:"Login",url:"/login.html"},{label:"Register",url:"/register.html"}];
+
+ const roleLabel=role==="visitor"?"Welcome to EqualLearn":`${role[0].toUpperCase()+role.slice(1)} guide`;
+
+ document.getElementById("lumi-context").textContent=`${roleLabel} · ${pageName}`;
+
+ function addMessage(text,who="bot",actions=[]){
+
+  const bubble=document.createElement("div");bubble.className=`lumi-msg ${who==="user"?"lumi-user":"lumi-bot"}`;bubble.textContent=text;
+
+  if(actions.length){const row=document.createElement("div");row.className="lumi-action-row";actions.forEach(a=>{const b=document.createElement("button");b.type="button";b.className="lumi-action";b.textContent=a.label;b.addEventListener("click",()=>navigate(a.url));row.appendChild(b)});bubble.appendChild(row)}
+
+  chatMessages.appendChild(bubble);chatMessages.scrollTop=chatMessages.scrollHeight;
+
+ }
+
+ function navigate(url){try{window.parent.location.href=url}catch(_){location.href=url}}
+
+ function setSuggestions(items){suggestionBox.replaceChildren();items.forEach(item=>{const b=document.createElement("button");b.type="button";b.textContent=item;b.addEventListener("click",()=>handleQuestion(item));suggestionBox.appendChild(b)})}
+
+ function suggestionsForRole(){
+
+  if(role==="student")return ["Paano maghanap ng lessons?","Paano mag-submit ng activity?","Hindi gumagana ang quiz","Paano makita ang grades?"];
+
+  if(role==="teacher")return ["Paano gumawa ng quiz?","Paano mag-check ng submissions?","Paano gumawa ng lesson?","Hindi makita ang section ko"];
+
+  if(role==="admin")return ["Paano mag-verify ng student?","Paano mag-register ng teacher?","Paano makita ang reports?","May system problem"];
+
+  return ["Ano ang EqualLearn?","Paano mag-login?","Anong features ang meron?"];
+
+ }
+
+ function openAssistant(){root.classList.add("assistant-open");chatPanel.setAttribute("aria-hidden","false");syncLumiFrameSize();setSuggestions(suggestionsForRole());setTimeout(()=>chatInput.focus(),120)}
+
+ function closeAssistant(){root.classList.remove("assistant-open");chatPanel.setAttribute("aria-hidden","true");syncLumiFrameSize()}
+
+ function normalize(value){return String(value||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9\s]/g," ").replace(/\s+/g," ").trim()}
+
+ const guides={
+
+  student:[
+
+   {id:"modules",keys:["module","modules","lesson","lessons","learn","learning","study","aralin","leksyon","matuto"],label:"Learning Modules",steps:"1. Buksan ang Learning Modules.\n2. Pumili ng available na module.\n3. Buksan ang lesson at basahin o panoorin ang materials.\n4. Sundin ang instructions at bumalik sa module list para magpatuloy."},
+
+   {id:"quiz",keys:["quiz","quizzes","exam","test","assessment","pagsusulit","exam ko"],label:"Quizzes",steps:"1. Buksan ang Quizzes.\n2. Tingnan kung aling assessment ang available.\n3. Buksan ang quiz at basahin muna ang instructions.\n4. Sagutan ang bawat item at i-review ang answers bago mag-submit.\n5. Tingnan ang result kung available pagkatapos ng submission."},
+
+   {id:"classwork",keys:["assignment","classwork","activity","activities","homework","task","submit","submission","ipasa","gawain","aktibidad"],label:"Classwork",steps:"1. Buksan ang Classwork.\n2. Piliin ang activity o assignment.\n3. Basahin ang instructions, deadline, at required files.\n4. Ihanda ang sagot o attachment.\n5. Gamitin ang submission control na ipinapakita sa activity at tiyaking may confirmation bago umalis."},
+
+   {id:"progress",keys:["progress","score","grade","performance","result","marka","grado","คะแนน"],label:"Progress",steps:"1. Buksan ang Progress.\n2. Tingnan ang progress summary at available results.\n3. Buksan ang relevant item kung may detailed result.\n4. Kung may score na sa tingin mo ay mali, i-message ang teacher at ibigay ang activity o quiz name."},
+
+   {id:"live",keys:["live","meeting","class call","video call","recitation","camera","microphone","mic","join class"],label:"Live Class",steps:"1. Buksan ang Live Class.\n2. Piliin ang active session ng iyong section kung mayroon.\n3. Payagan ang browser na gumamit ng microphone o camera kung kailangan.\n4. I-check ang mic at camera controls bago magsalita.\n5. Kung walang session, hintayin ang teacher o kontakin siya."},
+
+   {id:"profile",keys:["profile","account","password","name","email","pass","login","log in","sign in","forgot password","forgot password"],label:"Profile",steps:"Buksan ang Profile para tingnan ang account details. Kung hindi makapag-login, i-check muna ang email at password, siguraduhing tama ang spelling, at gamitin ang password recovery option kung available. Huwag ibigay kay Lumi o kahit kanino ang password o OTP."}
+
+  ],
+
+  teacher:[
+
+   {id:"classes",keys:["my classes","classes","class","section","sections","advisory","assigned class"],label:"My Classes",steps:"1. Buksan ang My Classes.\n2. Piliin ang assigned class o section.\n3. I-check ang class details at learner list.\n4. Kung may nawawalang section, ipasuri sa administrator ang teaching assignment mo."},
+
+   {id:"modules",keys:["module","modules","course"],label:"Modules",steps:"1. Buksan ang Modules.\n2. Piliin ang module na gagamitin.\n3. I-review ang materials at module details.\n4. Sundin ang available controls para mag-edit o mag-manage."},
+
+   {id:"lessons",keys:["lesson","lessons","content","material","resource","pdf","file","link","upload"],label:"Lessons",steps:"1. Buksan ang Lessons.\n2. Piliin ang lesson na ie-edit o gumawa ng bago kung may create option.\n3. Ilagay ang title at learning content.\n4. Kung may file/link field, i-attach ang tamang resource.\n5. I-preview at i-check ang target module bago mag-save o mag-publish."},
+
+   {id:"quiz",keys:["quiz","quiz builder","assessment","question","exam","test"],label:"Quiz Builder",steps:"1. Buksan ang Quiz Builder.\n2. Piliin ang create/new quiz option.\n3. Ilagay ang title at instructions.\n4. Idagdag ang questions at choices, at markahan ang correct answer.\n5. I-review ang settings at target class bago i-save o i-publish."},
+
+   {id:"grading",keys:["grade","grading","check submission","score","mark","review work","submission","submissions"],label:"Grading",steps:"1. Buksan ang Grading.\n2. Piliin ang class/activity na iche-check.\n3. Buksan ang learner submission.\n4. Basahin ang work bago magbigay ng score o feedback.\n5. I-review ang grade bago i-save."},
+
+   {id:"students",keys:["student","students","learner","learners","class list"],label:"Students",steps:"Buksan ang Students para tingnan ang learners na sakop ng iyong access. Para sa class assignment o section na wala sa listahan, makipag-ugnayan sa administrator."},
+
+   {id:"live",keys:["live","meeting","video call","class call","start class"],label:"Live Class",steps:"1. Buksan ang Live Class.\n2. Piliin o simulan ang session para sa tamang section.\n3. I-check ang microphone at camera permissions.\n4. Ipaalam sa students ang session details.\n5. Gamitin ang End for everyone lamang kapag talagang tatapusin ang buong class session."}
+
+  ],
+
+  admin:[
+
+   {id:"students",keys:["student","students","verify","verification","account","approve","pending"],label:"Students",steps:"1. Buksan ang Students.\n2. Hanapin ang student account.\n3. Suriin ang submitted information at supporting details.\n4. Magdesisyon lamang matapos ma-verify ang impormasyon.\n5. Iwasang baguhin ang account kung hindi malinaw ang request."},
+
+   {id:"teachers",keys:["teacher","teachers","register teacher","staff","faculty"],label:"Register Teacher",steps:"1. Buksan ang Register Teacher para magdagdag ng teacher.\n2. Ilagay ang hinihinging account details.\n3. I-double-check ang institutional email at role.\n4. I-submit gamit ang form controls.\n5. Gamitin ang Teachers page para i-review ang existing teacher accounts."},
+
+   {id:"content",keys:["content","create content","publish","module","lesson","material"],label:"Create Content",steps:"1. Buksan ang Create Content.\n2. Piliin ang content type kung may pagpipilian.\n3. Ilagay ang title, instructions, at learning material.\n4. I-check ang target module o audience.\n5. I-preview bago i-publish."},
+
+   {id:"assignments",keys:["assignment","class assignment","assign","activity"],label:"Class Assignments",steps:"1. Buksan ang Class Assignments.\n2. Piliin ang target class o section.\n3. I-review ang instructions at due date.\n4. I-check ang audience bago i-publish."},
+
+   {id:"reports",keys:["report","reports","analytics","performance","statistics"],label:"Reports",steps:"1. Buksan ang Reports.\n2. Piliin ang available filters o reporting period.\n3. I-check kung tama ang scope ng report.\n4. Suriin ang totals at details bago gumawa ng conclusion."},
+
+   {id:"settings",keys:["setting","settings","configuration","system"],label:"Settings",steps:"Buksan ang Settings at basahin muna ang description ng option bago magbago. Iwasang baguhin ang security, access, o system settings kung hindi ka sigurado sa epekto."},
+
+   {id:"live",keys:["live","meeting","class session"],label:"Live Sessions",steps:"Buksan ang Live Sessions para makita ang available session controls. I-check muna ang session at participants bago gumawa ng administrative action."}
+
+  ]
+
+ };
+
+ function findGuide(q){
+
+  const text=normalize(q);const items=guides[role]||[];
+
+  const scored=items.map(item=>({item,score:Math.max(0,...item.keys.map(key=>{const k=normalize(key);return text===k?100+k.length:text.includes(k)?k.length:0}))})).sort((a,b)=>b.score-a.score);
+
+  return scored[0]?.score>=3?scored[0].item:null;
+
+ }
+
+ function getPageHint(){
+
+  const page=normalize(pageName);
+
+  const map={dashboard:"Nasa Dashboard ka ngayon. Dito karaniwang makikita ang overview at shortcuts ng account mo.",modules:"Nasa Modules area ka. Pumili ng module para ma-access ang learning materials.",lessons:"Nasa Lessons area ka. I-review ang lesson content at available actions sa page.",classwork:"Nasa Classwork area ka. Tingnan ang instructions at submission status ng activity.",quizzes:"Nasa Quizzes area ka. I-check ang available assessments at instructions bago magsimula.",grading:"Nasa Grading area ka. I-review ang learner submission bago magbigay ng score.",live:"Nasa Live Class area ka. I-check ang active session at audio/video permissions."};
+
+  return map[page]||`Nasa ${currentTitle} ka ngayon. Sabihin mo kung anong task ang gusto mong gawin at tutulungan kitang hanapin ang tamang section.`;
+
+ }
+
+ function handleQuestion(raw){
+
+  const q=String(raw||"").trim();if(!q)return;
+
+  addMessage(q,"user");chatInput.value="";
+
+  const text=normalize(q);
+
+  if(/^(hi|hello|hey|kumusta|good morning|good afternoon|good evening|magandang umaga|magandang hapon|magandang gabi)$/.test(text)){
+
+   addMessage(`Hello! 💜 Ako si Lumi, ang ${roleLabel.toLowerCase()} mo. Kaya kitang gabayan sa features at steps ng EqualLearn. Ano ang gusto mong gawin?`);setSuggestions(suggestionsForRole());return;
+
+  }
+
+  if(text.includes("ano ang equallearn")||text.includes("what is equallearn")||text.includes("about equallearn")){
+
+   addMessage("Ang EqualLearn ay isang mobile learning application para sa Gender Equality Education and Awareness ng Pateros Technological College. May learning resources at classroom activities para suportahan ang pagkatuto tungkol sa gender equality.");return;
+
+  }
+
+  if(text.includes("where am i")||text.includes("anong page")||text.includes("nasaan ako")||text.includes("current page")){
+
+   addMessage(getPageHint());return;
+
+  }
+
+  if(text.includes("contact")||text.includes("admin")||text.includes("teacher ko")||text.includes("tao na")||text.includes("human support")||text.includes("report a problem")||text.includes("ireport")){
+
+   addMessage(role==="student"?"Para sa account, section, grade, o technical issue na hindi ko kayang ayusin, kontakin ang iyong assigned teacher o school administrator. Isama ang page, oras ng error, at screenshot kung maaari. Huwag ipadala ang password o OTP.":role==="teacher"?"Para sa access, section assignment, o system issue, kontakin ang EqualLearn administrator. Ibigay ang page, oras ng error, at screenshot kung mayroon. Huwag mag-share ng password o OTP.":"Kung kailangan ng technical investigation, i-record ang page, exact error, oras, at steps bago lumabas ang problema. I-escalate ito sa authorized system maintainer.");return;
+
+  }
+
+  if(/(hindi gumagana|not working|error|problem|ayaw|failed|failure|di ma|cannot|can't|unable|stuck|loading|blank|white screen)/.test(text)){
+
+   addMessage("Sige, tulungan kitang i-troubleshoot. Subukan muna ito:\n1. I-refresh ang page nang isang beses.\n2. I-check ang internet connection.\n3. Mag-sign out at mag-sign in ulit kung account-related.\n4. Kung may error message, kopyahin ang exact text o kumuha ng screenshot.\n\nAnong feature ang may problema—login, lesson, quiz, classwork, grading, o live class?");setSuggestions(["Login problem","Lesson problem","Quiz problem","Classwork problem","Live Class problem"]);return;
+
+  }
+
+  if(text.includes("paano")||text.includes("how do i")||text.includes("how to")||text.includes("help me")||text.includes("turuan")){
+
+   const guide=findGuide(q);
+
+   if(guide){const link=links.find(x=>x.label.toLowerCase()===guide.label.toLowerCase());addMessage(`${guide.steps}\n\nMagsimula sa ${guide.label}. Sundin ang available controls sa page; maaaring mag-iba ang eksaktong buttons depende sa access at page version.`,"bot",link?[link]:[]);return;}
+
+  }
+
+  const guide=findGuide(q);
+
+  if(guide){const link=links.find(x=>x.label.toLowerCase()===guide.label.toLowerCase());addMessage(`${guide.steps}\n\nGusto mo bang buksan ang ${guide.label}?`,"bot",link?[link]:[]);return;}
+
+  if(role==="visitor"){
+
+   addMessage("Para magamit ang student, teacher, o admin workspace, mag-sign in muna gamit ang authorized EqualLearn account. Maaari kitang tulungang hanapin ang login page.","bot",[{label:"Open Login",url:"/login.html"}]);return;
+
+  }
+
+  addMessage("Gusto kitang matulungan nang tama. Hindi ko pa matukoy kung anong feature ang tinutukoy mo. Maaari mong sabihin kung anong ginagawa mo, anong page ka, at ano ang lumalabas na message? Maaari rin akong magbigay ng step-by-step guide sa lessons, quizzes, classwork, progress, live class, o account.");
+
+  setSuggestions(suggestionsForRole());
+
+ }
+
+ chatForm.addEventListener("submit",e=>{e.preventDefault();handleQuestion(chatInput.value)});
+
+ document.getElementById("lumi-chat-close").addEventListener("click",closeAssistant);
+
+ document.getElementById("lumi-talk").addEventListener("click",openAssistant);
+moodButton.addEventListener("click",()=>{
+ moodIndex=(moodIndex+1)%moods.length;
+ moodButton.textContent=moods[moodIndex].icon;
+ moodButton.title=`3D animation: ${moods[moodIndex].name}`;
+ say(`${moods[moodIndex].label}! 💜`,2200);
+ waveUntil=performance.now()+900;
+ clickPulse=1;
+});
+
+ document.getElementById("lumi-wave").addEventListener("click",()=>{waveUntil=performance.now()+2300;clickPulse=1;say("Hiiii! Need help? Tap 💬 to chat! 👋",3600)});
+
+ // Open chat from a mascot click as well as from the talk button.
+
+ canvas.addEventListener("dblclick",()=>openAssistant());
+
+ document.getElementById("lumi-hide").addEventListener("click",()=>{
+
+  if(hidden)return;hidden=true;root.classList.add("lumi-hidden");root.style.display="none";
+
+  const reopen=document.createElement("button");reopen.id="lumi-reopen";reopen.textContent="✦ Lumi";reopen.type="button";reopen.setAttribute("aria-label","Show Lumi");
+
+  document.body.appendChild(reopen);syncLumiFrameSize();
+
+  reopen.addEventListener("click",()=>{reopen.remove();hidden=false;root.classList.remove("lumi-hidden");root.style.display="block";syncLumiFrameSize();say("I'm back! What shall we learn? 💜");});
+
+ });
+
+
+
+ function resize(){
+
+  const w=root.clientWidth||220,h=root.clientHeight||265;
+  const canvasWidth=canvas.clientWidth||w;
+  const canvasHeight=canvas.clientHeight||Math.max(120,h-92);
+  renderer.setSize(canvasWidth,canvasHeight,false);
+  camera.aspect=canvasWidth/canvasHeight;
+  camera.position.set(0,0,camera.aspect<1.15?10.2:8.6);
+  camera.updateProjectionMatrix();
+
+ }
+
+ const ro=new ResizeObserver(resize);ro.observe(root);resize();
+
+
+
+ const waveQuaternion=new THREE.Quaternion();
+
+ function animate(){
+  raf=requestAnimationFrame(animate);
+  const t=clock.getElapsedTime(),now=performance.now();
+  pointer.x+=(target.x-pointer.x)*.055;pointer.y+=(target.y-pointer.y)*.055;
+  const isWaving=now<waveUntil;
+  const mood=moods[moodIndex].name;
+
+  // Continuous 3D idle motion plus selectable personality animations.
+  const idleBob=Math.sin(t*1.55)*.075;
+  const danceBob=Math.abs(Math.sin(t*4.2))*.22;
+  const bounceBob=Math.abs(Math.sin(t*5.1))*.34;
+  const sleepyBob=Math.sin(t*.72)*.035;
+  lumi.position.y=idleBob+(mood==="Dance"?danceBob:mood==="Bounce"?bounceBob:mood==="Sleepy"?sleepyBob:0);
+  const spin=mood==="Spin"?(t*1.65)%(Math.PI*2):0;
+  lumi.rotation.y=pointer.x*.34+Math.sin(t*.45)*.035+spin;
+  lumi.rotation.x=-pointer.y*.16+(mood==="Sleepy"?.13:0);
+  lumi.rotation.z=(mood==="Dance"?Math.sin(t*4.2)*.13:Math.sin(t*.8)*.018);
+  headPivot.rotation.y=pointer.x*.25+Math.sin(t*.9)*.045;
+  headPivot.rotation.x=-pointer.y*.16+Math.sin(t*1.3)*.025+(mood==="Sleepy"?.16:0);
+  torso.rotation.z=pointer.x*.035+(mood==="Dance"?Math.sin(t*4.2)*.10:0);
+
+  // Arms: gentle idle motion, waving, dancing and celebratory bounce.
+  armL.rotation.z=mood==="Dance"?-.65+Math.sin(t*4.2)*.38:-.08+Math.sin(t*1.2)*.035;
+  armR.rotation.z=isWaving?-.95+Math.sin(t*13)*.24:
+   mood==="Dance"?.65+Math.sin(t*4.2+1)*.42:
+   mood==="Bounce"?-.55+Math.sin(t*5.1)*.25:
+   .08+Math.sin(t*1.4)*.035;
+  armR.rotation.x=(isWaving||mood==="Bounce")?-.12:0;
+
+  if(clickPulse>0){lumi.scale.setScalar(1+clickPulse*.055);clickPulse*=.88;if(clickPulse<.01)clickPulse=0;}
+  else lumi.scale.setScalar(1+(mood==="Bounce"?Math.abs(Math.sin(t*5.1))*.045:0));
+
+  const blink=(mood==="Sleepy"?(Math.sin(t*.65)>.72?.18:1):(Math.sin(t*1.15+Math.sin(t*.27))>.985?.12:1));
+  eyeGroups.forEach(g=>g.scale.y+=(blink-g.scale.y)*.42);
+  halo.rotation.z=t*(mood==="Spin"?.75:.12);
+  orbit.rotation.z=-t*(mood==="Dance"?.42:.09);
+  halo.scale.setScalar(1+Math.sin(t*2.1)*.025);
+  sparkles.forEach(s=>{
+   s.mesh.position.y=s.base.y+Math.sin(t*1.2+s.phase)*.07;
+   s.mesh.rotation.y=t*.5+s.phase;
+   s.mesh.rotation.x=Math.sin(t+s.phase)*.35;
+  });
+  shadow.scale.set(1-Math.sin(t*1.55)*.08,1,1);
+  shadow.material.opacity=.8-Math.sin(t*1.55)*.15;
+  if(webglAvailable)renderer.render(scene,camera);
+ }
+
+ if(webglAvailable){
+  if(webglAvailable){ if(reduced){renderer.render(scene,camera);}else animate(); }
  }
 
- // Backpack, body and premium chest emblem
- roundedBox(.57,.91,.34,.15,purpleDark,torso,[.55,-.28,-.24]);
- roundedBox(.12,.62,.07,.05,purple,torso,[.55,-.28,-.045]);
- const body=sphere(.77,shell,torso,[0,-.48,.03],[.76,.69,.48],48);
- sphere(.61,shellShade,torso,[0,-.59,-.02],[.69,.53,.38],40);
- sphere(.16,purple,torso,[0,-.43,.45],[1,1,.34],36);
- // emblem star, raised and luminous
- const starShape=new THREE.Shape();
- const spikes=5,outer=.105,inner=.047;
- for(let i=0;i<spikes*2;i++){const a=Math.PI/2+i*Math.PI/spikes,r=i%2===0?outer:inner;const x=Math.cos(a)*r,y=Math.sin(a)*r;if(i===0)starShape.moveTo(x,y);else starShape.lineTo(x,y);}
- starShape.closePath();
- const star=new THREE.Mesh(new THREE.ExtrudeGeometry(starShape,{depth:.025,bevelEnabled:true,bevelThickness:.012,bevelSize:.01,bevelSegments:2}),white);
- star.position.set(-.07,-.49,.59);torso.add(star);
 
- // Neck joint
- sphere(.22,purpleDark,torso,[0,.22,.02],[1,1,.85],32);
 
- // Head shell, face glass and trim
- const head=sphere(.91,shell,headPivot,[0,.92,.04],[1.0,.91,.72],56);
- const faceFrame=sphere(.69,purpleDark,headPivot,[0,.9,.59],[1.0,.58,.2],48);
- const face=sphere(.65,darkFace,headPivot,[0,.91,.625],[.98,.56,.19],48);
- // Eye sockets, eye lenses and highlights
- const eyeGroups=[];
- for(const x of [-.29,.29]){
-  sphere(.19,purpleDark,headPivot,[x,.98,.79],[1,1.08,.34],32);
-  const eyeGroup=new THREE.Group();eyeGroup.position.set(x,.99,.84);headPivot.add(eyeGroup);
-  sphere(.135,cyan,eyeGroup,[0,0,0],[.83,1.06,.52],36);
-  sphere(.043,white,eyeGroup,[-.035,.055,.071],[.75,.75,.5],20);
-  sphere(.018,white,eyeGroup,[.045,-.055,.073],[.8,.8,.5],16);
-  eyeGroups.push(eyeGroup);
- }
- // Mouth as a soft curved smile
- const smileCurve=new THREE.QuadraticBezierCurve3(new THREE.Vector3(-.075,.68,.81),new THREE.Vector3(0,.635,.84),new THREE.Vector3(.075,.68,.81));
- const smile=new THREE.Mesh(new THREE.TubeGeometry(smileCurve,20,.012,8,false),mat(0xe4d8ff,.3));
- headPivot.add(smile);
- // Blush
- sphere(.075,pink,headPivot,[-.53,.76,.68],[1,.48,.15],24);
- sphere(.075,pink,headPivot,[.53,.76,.68],[1,.48,.15],24);
+ window.addEventListener("pagehide",()=>{cancelAnimationFrame(raf);ro.disconnect();renderer.dispose();scene.traverse(o=>{o.geometry?.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}});},{once:true});
 
- // Side ear pods
- for(const x of [-.91,.91]){
-  const pod=sphere(.22,purple,headPivot,[x,.9,.04],[.48,.82,.8],32);
-  sphere(.12,shellShade,headPivot,[x,.9,.17],[.42,.7,.45],24);
- }
- // Antenna stem and jewel
- capsuleBetween([0,1.73,.02],[0,2.04,.02],.045,purple,headPivot);
- sphere(.105,shellShade,headPivot,[0,2.12,.02],[1,1,1],32);
- sphere(.073,cyan,headPivot,[0,2.13,.095],[1,1,.6],28);
+ moodButton.textContent=moods[moodIndex].icon;
+ say("Hi! I'm Lumi, your 3D learning buddy. 💜",4200);
 
- // Arms with shoulder joints, tapered upper arms and soft hands
- for(const [group,side] of [[armL,-1],[armR,1]]){
-  group.position.set(side*.66,-.05,.02);
-  sphere(.17,purple,group,[0,0,0],[1,1,1],28);
-  capsuleBetween([0,-.06,0],[side*.13,-.47,.02],.105,shellShade,group);
-  sphere(.145,shell,group,[side*.13,-.52,.05],[1,1,.92],32);
-  sphere(.11,white,group,[side*.13,-.55,.12],[1,1,.65],28);
- }
-
- // Floating halo and orbit behind Lumi
- const halo=new THREE.Mesh(new THREE.TorusGeometry(1.28,.018,12,100),new THREE.MeshBasicMaterial({color:0xbca7ff,transparent:true,opacity:.56}));
- halo.position.set(0,.45,-.72);halo.rotation.set(.9,.15,-.22);accessories.add(halo);
- const orbit=new THREE.Mesh(new THREE.TorusGeometry(1.48,.009,8,120),new THREE.MeshBasicMaterial({color:0x8ddcff,transparent:true,opacity:.36}));
- orbit.position.set(0,.38,-.8);orbit.rotation.set(1.18,.1,.45);accessories.add(orbit);
- // Sparkle particles
- const sparkMat=new THREE.MeshBasicMaterial({color:0xd7c9ff});
- const sparkles=[];
- for(let i=0;i<9;i++){
-  const s=new THREE.Mesh(new THREE.OctahedronGeometry(.035+Math.random()*.025),sparkMat);
-  const a=i/9*Math.PI*2,r=1.35+Math.random()*.35;
-  s.position.set(Math.cos(a)*r,Math.sin(a)*r*.75,.1-Math.random()*.6);accessories.add(s);
-  sparkles.push({mesh:s,phase:Math.random()*Math.PI*2,base:s.position.clone()});
- }
- // Soft ground shadow, transparent plane with radial texture
- const shadowCanvas=document.createElement("canvas");shadowCanvas.width=128;shadowCanvas.height=128;
- const ctx=shadowCanvas.getContext("2d"),grad=ctx.createRadialGradient(64,64,3,64,64,62);
- grad.addColorStop(0,"rgba(42,24,95,.32)");grad.addColorStop(.45,"rgba(75,49,145,.14)");grad.addColorStop(1,"rgba(75,49,145,0)");
- ctx.fillStyle=grad;ctx.fillRect(0,0,128,128);
- const shadowTex=new THREE.CanvasTexture(shadowCanvas);
- const shadow=new THREE.Mesh(new THREE.PlaneGeometry(2.2,.65),new THREE.MeshBasicMaterial({map:shadowTex,transparent:true,depthWrite:false}));
- shadow.rotation.x=0;shadow.position.set(0,-1.45,-.3);scene.add(shadow);
-
- // Cursor target with smoothed movement
- const pointer={x:0,y:0},target={x:0,y:0};
- let waveUntil=0,clickPulse=0,speechTimer=null,raf=0;
- const clock=new THREE.Clock();
- function say(message,duration=3800){speech.textContent=message;speech.classList.add("show");clearTimeout(speechTimer);speechTimer=setTimeout(()=>speech.classList.remove("show"),duration);}
- // FULL-PAGE CURSOR TRACKING:
- // When embedded on the same origin, read pointer movement from the
- // parent page so Lumi follows the cursor anywhere on the whole website,
- // not only while the pointer is over the small iframe.
- function setPointerFromPage(clientX, clientY, pageWidth, pageHeight, frameRect){
-  const frame = frameRect || {left:0, top:0, width:root.clientWidth, height:root.clientHeight};
-  // Approximate Lumi's visual center inside its fixed companion frame.
-  const mascotX = frame.left + frame.width * 0.50;
-  const mascotY = frame.top + frame.height * 0.49;
-  const spanX = Math.max(180, pageWidth * 0.48);
-  const spanY = Math.max(150, pageHeight * 0.48);
-  target.x = THREE.MathUtils.clamp((clientX - mascotX) / spanX, -1, 1);
-  target.y = THREE.MathUtils.clamp((mascotY - clientY) / spanY, -1, 1);
- }
-
- function trackParentPointer(e){
-  let frame = null;
-  try {
-   const frameElement = window.frameElement;
-   if (frameElement) {
-    const r = frameElement.getBoundingClientRect();
-    frame = {left:r.left, top:r.top, width:r.width, height:r.height};
-   }
-   const page = window.parent;
-   setPointerFromPage(
-    e.clientX, e.clientY,
-    page.innerWidth || document.documentElement.clientWidth,
-    page.innerHeight || document.documentElement.clientHeight,
-    frame
-   );
-  } catch (err) {
-   // Cross-origin fallback: parent page can forward pointer coordinates
-   // using the postMessage bridge documented below.
-  }
- }
-
- try {
-  if (window.parent && window.parent !== window) {
-   window.parent.document.addEventListener("pointermove", trackParentPointer, {passive:true});
-   window.parent.document.addEventListener("pointerleave", () => {
-    target.x = 0; target.y = 0;
-   }, {passive:true});
-  } else {
-   document.addEventListener("pointermove", e => {
-    setPointerFromPage(e.clientX,e.clientY,window.innerWidth,window.innerHeight);
-   }, {passive:true});
-  }
- } catch (err) {
-  // Parent is cross-origin; use the postMessage bridge below.
- }
-
- // Cross-origin / sandbox-safe fallback. The parent page may send:
- // iframe.contentWindow.postMessage({type:"LUMI_POINTER",x,y,w,h},"*")
- window.addEventListener("message", e => {
-  if (!e.data || e.data.type !== "LUMI_POINTER") return;
-  const d = e.data;
-  const frame = d.frame || null;
-  setPointerFromPage(Number(d.x)||0,Number(d.y)||0,
-   Number(d.w)||window.innerWidth,Number(d.h)||window.innerHeight,frame);
- });
-
- const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();
- const clickable=[head,body];
- function interact(e){
-  const rect=canvas.getBoundingClientRect();
-  mouse.x=((e.clientX-rect.left)/rect.width)*2-1;
-  mouse.y=-((e.clientY-rect.top)/rect.height)*2+1;
-  raycaster.setFromCamera(mouse,camera);
-  const hits=raycaster.intersectObjects(clickable,false);
-  if(hits.length){waveUntil=performance.now()+2300;clickPulse=1;openAssistant();}
- }
- canvas.addEventListener("click",interact);
- canvas.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();waveUntil=performance.now()+2300;clickPulse=1;say("Hello, learning star! ✨");}});
- document.getElementById("lumi-wave").addEventListener("click",()=>{waveUntil=performance.now()+2300;clickPulse=1;say("Hiiii! So happy to see you! 👋",4200);});
- // Context-aware, role-aware EqualLearn help. This version runs locally and
- // never sends a student's messages or account information to an AI service.
- const chatPanel=document.getElementById("lumi-assistant");
- const chatMessages=document.getElementById("lumi-chat-messages");
- const chatInput=document.getElementById("lumi-chat-input");
- const chatForm=document.getElementById("lumi-chat-form");
- const suggestionBox=document.getElementById("lumi-suggestions");
- const currentPath=(()=>{try{return window.parent.location.pathname.toLowerCase()}catch(_){return location.pathname.toLowerCase()}})();
- const currentTitle=(()=>{try{return window.parent.document.title||"EqualLearn"}catch(_){return "EqualLearn"}})();
- const role=currentPath.includes("/admin/")?"admin":currentPath.includes("/teacher/")?"teacher":currentPath.includes("/student/")?"student":"visitor";
- const conversation = [];
- const pageName=currentPath.split("/").pop().replace(/\.html?$/i,"").replace(/[-_]/g," ")||"home";
- const roleLinks={
-  student:[{label:"Dashboard",url:"/student/dashboard.html"},{label:"Learning Modules",url:"/student/modules.html"},{label:"Quizzes",url:"/student/quizzes.html"},{label:"Classwork",url:"/student/classwork.html"},{label:"Progress",url:"/student/progress.html"},{label:"Live Class",url:"/student/live.html"},{label:"Profile",url:"/student/profile.html"}],
-  teacher:[{label:"Dashboard",url:"/teacher/dashboard.html"},{label:"My Classes",url:"/teacher/classes.html"},{label:"Modules",url:"/teacher/modules.html"},{label:"Lessons",url:"/teacher/lessons.html"},{label:"Quiz Builder",url:"/teacher/quiz_builder.html"},{label:"Grading",url:"/teacher/grading.html"},{label:"Students",url:"/teacher/students.html"},{label:"Live Class",url:"/teacher/live.html"}],
-  admin:[{label:"Dashboard",url:"/admin/dashboard.html"},{label:"Students",url:"/admin/students.html"},{label:"Teachers",url:"/admin/manage-teachers.html"},{label:"Register Teacher",url:"/admin/register-teacher.html"},{label:"Live Sessions",url:"/admin/live.html"},{label:"Create Content",url:"/admin/create-content.html"},{label:"Lessons",url:"/admin/lessons.html"},{label:"Class Assignments",url:"/admin/class-assignments.html"},{label:"Reports",url:"/admin/reports.html"},{label:"Settings",url:"/admin/settings.html"}]
- };
- const links=roleLinks[role]||[{label:"Login",url:"/login.html"},{label:"Register",url:"/register.html"}];
- const roleLabel=role==="visitor"?"Welcome to EqualLearn":`${role[0].toUpperCase()+role.slice(1)} guide`;
- document.getElementById("lumi-context").textContent=`${roleLabel} · ${pageName}`;
- function addMessage(text,who="bot",actions=[]){
-  const bubble=document.createElement("div");bubble.className=`lumi-msg ${who==="user"?"lumi-user":"lumi-bot"}`;bubble.textContent=text;
-  if(actions.length){const row=document.createElement("div");row.className="lumi-action-row";actions.forEach(a=>{const b=document.createElement("button");b.type="button";b.className="lumi-action";b.textContent=a.label;b.addEventListener("click",()=>navigate(a.url));row.appendChild(b)});bubble.appendChild(row)}
-  chatMessages.appendChild(bubble);chatMessages.scrollTop=chatMessages.scrollHeight;
- }
- function navigate(url){try{window.parent.location.href=url}catch(_){location.href=url}}
- function setSuggestions(items){suggestionBox.replaceChildren();items.forEach(item=>{const b=document.createElement("button");b.type="button";b.textContent=item;b.addEventListener("click",()=>handleQuestion(item));suggestionBox.appendChild(b)})}
- function suggestionsForRole(){
-  if(role==="student")return ["Paano maghanap ng lessons?","Paano mag-submit ng activity?","Hindi gumagana ang quiz","Paano makita ang grades?"];
-  if(role==="teacher")return ["Paano gumawa ng quiz?","Paano mag-check ng submissions?","Paano gumawa ng lesson?","Hindi makita ang section ko"];
-  if(role==="admin")return ["Paano mag-verify ng student?","Paano mag-register ng teacher?","Paano makita ang reports?","May system problem"];
-  return ["Ano ang EqualLearn?","Paano mag-login?","Anong features ang meron?"];
- }
- function openAssistant(){root.classList.add("assistant-open");chatPanel.setAttribute("aria-hidden","false");syncLumiFrameSize();setSuggestions(suggestionsForRole());setTimeout(()=>chatInput.focus(),120)}
- function closeAssistant(){root.classList.remove("assistant-open");chatPanel.setAttribute("aria-hidden","true");syncLumiFrameSize()}
- function normalize(value){return String(value||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9\s]/g," ").replace(/\s+/g," ").trim()}
- const guides={
-  student:[
-   {id:"modules",keys:["module","modules","lesson","lessons","learn","learning","study","aralin","leksyon","matuto"],label:"Learning Modules",steps:"1. Buksan ang Learning Modules.\n2. Pumili ng available na module.\n3. Buksan ang lesson at basahin o panoorin ang materials.\n4. Sundin ang instructions at bumalik sa module list para magpatuloy."},
-   {id:"quiz",keys:["quiz","quizzes","exam","test","assessment","pagsusulit","exam ko"],label:"Quizzes",steps:"1. Buksan ang Quizzes.\n2. Tingnan kung aling assessment ang available.\n3. Buksan ang quiz at basahin muna ang instructions.\n4. Sagutan ang bawat item at i-review ang answers bago mag-submit.\n5. Tingnan ang result kung available pagkatapos ng submission."},
-   {id:"classwork",keys:["assignment","classwork","activity","activities","homework","task","submit","submission","ipasa","gawain","aktibidad"],label:"Classwork",steps:"1. Buksan ang Classwork.\n2. Piliin ang activity o assignment.\n3. Basahin ang instructions, deadline, at required files.\n4. Ihanda ang sagot o attachment.\n5. Gamitin ang submission control na ipinapakita sa activity at tiyaking may confirmation bago umalis."},
-   {id:"progress",keys:["progress","score","grade","performance","result","marka","grado","คะแนน"],label:"Progress",steps:"1. Buksan ang Progress.\n2. Tingnan ang progress summary at available results.\n3. Buksan ang relevant item kung may detailed result.\n4. Kung may score na sa tingin mo ay mali, i-message ang teacher at ibigay ang activity o quiz name."},
-   {id:"live",keys:["live","meeting","class call","video call","recitation","camera","microphone","mic","join class"],label:"Live Class",steps:"1. Buksan ang Live Class.\n2. Piliin ang active session ng iyong section kung mayroon.\n3. Payagan ang browser na gumamit ng microphone o camera kung kailangan.\n4. I-check ang mic at camera controls bago magsalita.\n5. Kung walang session, hintayin ang teacher o kontakin siya."},
-   {id:"profile",keys:["profile","account","password","name","email","pass","login","log in","sign in","forgot password","forgot password"],label:"Profile",steps:"Buksan ang Profile para tingnan ang account details. Kung hindi makapag-login, i-check muna ang email at password, siguraduhing tama ang spelling, at gamitin ang password recovery option kung available. Huwag ibigay kay Lumi o kahit kanino ang password o OTP."}
-  ],
-  teacher:[
-   {id:"classes",keys:["my classes","classes","class","section","sections","advisory","assigned class"],label:"My Classes",steps:"1. Buksan ang My Classes.\n2. Piliin ang assigned class o section.\n3. I-check ang class details at learner list.\n4. Kung may nawawalang section, ipasuri sa administrator ang teaching assignment mo."},
-   {id:"modules",keys:["module","modules","course"],label:"Modules",steps:"1. Buksan ang Modules.\n2. Piliin ang module na gagamitin.\n3. I-review ang materials at module details.\n4. Sundin ang available controls para mag-edit o mag-manage."},
-   {id:"lessons",keys:["lesson","lessons","content","material","resource","pdf","file","link","upload"],label:"Lessons",steps:"1. Buksan ang Lessons.\n2. Piliin ang lesson na ie-edit o gumawa ng bago kung may create option.\n3. Ilagay ang title at learning content.\n4. Kung may file/link field, i-attach ang tamang resource.\n5. I-preview at i-check ang target module bago mag-save o mag-publish."},
-   {id:"quiz",keys:["quiz","quiz builder","assessment","question","exam","test"],label:"Quiz Builder",steps:"1. Buksan ang Quiz Builder.\n2. Piliin ang create/new quiz option.\n3. Ilagay ang title at instructions.\n4. Idagdag ang questions at choices, at markahan ang correct answer.\n5. I-review ang settings at target class bago i-save o i-publish."},
-   {id:"grading",keys:["grade","grading","check submission","score","mark","review work","submission","submissions"],label:"Grading",steps:"1. Buksan ang Grading.\n2. Piliin ang class/activity na iche-check.\n3. Buksan ang learner submission.\n4. Basahin ang work bago magbigay ng score o feedback.\n5. I-review ang grade bago i-save."},
-   {id:"students",keys:["student","students","learner","learners","class list"],label:"Students",steps:"Buksan ang Students para tingnan ang learners na sakop ng iyong access. Para sa class assignment o section na wala sa listahan, makipag-ugnayan sa administrator."},
-   {id:"live",keys:["live","meeting","video call","class call","start class"],label:"Live Class",steps:"1. Buksan ang Live Class.\n2. Piliin o simulan ang session para sa tamang section.\n3. I-check ang microphone at camera permissions.\n4. Ipaalam sa students ang session details.\n5. Gamitin ang End for everyone lamang kapag talagang tatapusin ang buong class session."}
-  ],
-  admin:[
-   {id:"students",keys:["student","students","verify","verification","account","approve","pending"],label:"Students",steps:"1. Buksan ang Students.\n2. Hanapin ang student account.\n3. Suriin ang submitted information at supporting details.\n4. Magdesisyon lamang matapos ma-verify ang impormasyon.\n5. Iwasang baguhin ang account kung hindi malinaw ang request."},
-   {id:"teachers",keys:["teacher","teachers","register teacher","staff","faculty"],label:"Register Teacher",steps:"1. Buksan ang Register Teacher para magdagdag ng teacher.\n2. Ilagay ang hinihinging account details.\n3. I-double-check ang institutional email at role.\n4. I-submit gamit ang form controls.\n5. Gamitin ang Teachers page para i-review ang existing teacher accounts."},
-   {id:"content",keys:["content","create content","publish","module","lesson","material"],label:"Create Content",steps:"1. Buksan ang Create Content.\n2. Piliin ang content type kung may pagpipilian.\n3. Ilagay ang title, instructions, at learning material.\n4. I-check ang target module o audience.\n5. I-preview bago i-publish."},
-   {id:"assignments",keys:["assignment","class assignment","assign","activity"],label:"Class Assignments",steps:"1. Buksan ang Class Assignments.\n2. Piliin ang target class o section.\n3. I-review ang instructions at due date.\n4. I-check ang audience bago i-publish."},
-   {id:"reports",keys:["report","reports","analytics","performance","statistics"],label:"Reports",steps:"1. Buksan ang Reports.\n2. Piliin ang available filters o reporting period.\n3. I-check kung tama ang scope ng report.\n4. Suriin ang totals at details bago gumawa ng conclusion."},
-   {id:"settings",keys:["setting","settings","configuration","system"],label:"Settings",steps:"Buksan ang Settings at basahin muna ang description ng option bago magbago. Iwasang baguhin ang security, access, o system settings kung hindi ka sigurado sa epekto."},
-   {id:"live",keys:["live","meeting","class session"],label:"Live Sessions",steps:"Buksan ang Live Sessions para makita ang available session controls. I-check muna ang session at participants bago gumawa ng administrative action."}
-  ]
- };
- function findGuide(q){
-  const text=normalize(q);const items=guides[role]||[];
-  const scored=items.map(item=>({item,score:Math.max(0,...item.keys.map(key=>{const k=normalize(key);return text===k?100+k.length:text.includes(k)?k.length:0}))})).sort((a,b)=>b.score-a.score);
-  return scored[0]?.score>=3?scored[0].item:null;
- }
- function getPageHint(){
-  const page=normalize(pageName);
-  const map={dashboard:"Nasa Dashboard ka ngayon. Dito karaniwang makikita ang overview at shortcuts ng account mo.",modules:"Nasa Modules area ka. Pumili ng module para ma-access ang learning materials.",lessons:"Nasa Lessons area ka. I-review ang lesson content at available actions sa page.",classwork:"Nasa Classwork area ka. Tingnan ang instructions at submission status ng activity.",quizzes:"Nasa Quizzes area ka. I-check ang available assessments at instructions bago magsimula.",grading:"Nasa Grading area ka. I-review ang learner submission bago magbigay ng score.",live:"Nasa Live Class area ka. I-check ang active session at audio/video permissions."};
-  return map[page]||`Nasa ${currentTitle} ka ngayon. Sabihin mo kung anong task ang gusto mong gawin at tutulungan kitang hanapin ang tamang section.`;
- }
- function handleQuestion(raw){
-  const q=String(raw||"").trim();if(!q)return;
-  addMessage(q,"user");chatInput.value="";
-  const text=normalize(q);
-  if(/^(hi|hello|hey|kumusta|good morning|good afternoon|good evening|magandang umaga|magandang hapon|magandang gabi)$/.test(text)){
-   addMessage(`Hello! 💜 Ako si Lumi, ang ${roleLabel.toLowerCase()} mo. Kaya kitang gabayan sa features at steps ng EqualLearn. Ano ang gusto mong gawin?`);setSuggestions(suggestionsForRole());return;
-  }
-  if(text.includes("ano ang equallearn")||text.includes("what is equallearn")||text.includes("about equallearn")){
-   addMessage("Ang EqualLearn ay isang mobile learning application para sa Gender Equality Education and Awareness ng Pateros Technological College. May learning resources at classroom activities para suportahan ang pagkatuto tungkol sa gender equality.");return;
-  }
-  if(text.includes("where am i")||text.includes("anong page")||text.includes("nasaan ako")||text.includes("current page")){
-   addMessage(getPageHint());return;
-  }
-  if(text.includes("contact")||text.includes("admin")||text.includes("teacher ko")||text.includes("tao na")||text.includes("human support")||text.includes("report a problem")||text.includes("ireport")){
-   addMessage(role==="student"?"Para sa account, section, grade, o technical issue na hindi ko kayang ayusin, kontakin ang iyong assigned teacher o school administrator. Isama ang page, oras ng error, at screenshot kung maaari. Huwag ipadala ang password o OTP.":role==="teacher"?"Para sa access, section assignment, o system issue, kontakin ang EqualLearn administrator. Ibigay ang page, oras ng error, at screenshot kung mayroon. Huwag mag-share ng password o OTP.":"Kung kailangan ng technical investigation, i-record ang page, exact error, oras, at steps bago lumabas ang problema. I-escalate ito sa authorized system maintainer.");return;
-  }
-  if(/(hindi gumagana|not working|error|problem|ayaw|failed|failure|di ma|cannot|can't|unable|stuck|loading|blank|white screen)/.test(text)){
-   addMessage("Sige, tulungan kitang i-troubleshoot. Subukan muna ito:\n1. I-refresh ang page nang isang beses.\n2. I-check ang internet connection.\n3. Mag-sign out at mag-sign in ulit kung account-related.\n4. Kung may error message, kopyahin ang exact text o kumuha ng screenshot.\n\nAnong feature ang may problema—login, lesson, quiz, classwork, grading, o live class?");setSuggestions(["Login problem","Lesson problem","Quiz problem","Classwork problem","Live Class problem"]);return;
-  }
-  if(text.includes("paano")||text.includes("how do i")||text.includes("how to")||text.includes("help me")||text.includes("turuan")){
-   const guide=findGuide(q);
-   if(guide){const link=links.find(x=>x.label.toLowerCase()===guide.label.toLowerCase());addMessage(`${guide.steps}\n\nMagsimula sa ${guide.label}. Sundin ang available controls sa page; maaaring mag-iba ang eksaktong buttons depende sa access at page version.`,"bot",link?[link]:[]);return;}
-  }
-  const guide=findGuide(q);
-  if(guide){const link=links.find(x=>x.label.toLowerCase()===guide.label.toLowerCase());addMessage(`${guide.steps}\n\nGusto mo bang buksan ang ${guide.label}?`,"bot",link?[link]:[]);return;}
-  if(role==="visitor"){
-   addMessage("Para magamit ang student, teacher, o admin workspace, mag-sign in muna gamit ang authorized EqualLearn account. Maaari kitang tulungang hanapin ang login page.","bot",[{label:"Open Login",url:"/login.html"}]);return;
-  }
-  addMessage("Gusto kitang matulungan nang tama. Hindi ko pa matukoy kung anong feature ang tinutukoy mo. Maaari mong sabihin kung anong ginagawa mo, anong page ka, at ano ang lumalabas na message? Maaari rin akong magbigay ng step-by-step guide sa lessons, quizzes, classwork, progress, live class, o account.");
-  setSuggestions(suggestionsForRole());
- }
- chatForm.addEventListener("submit",e=>{e.preventDefault();handleQuestion(chatInput.value)});
- document.getElementById("lumi-chat-close").addEventListener("click",closeAssistant);
- document.getElementById("lumi-talk").addEventListener("click",openAssistant);
- document.getElementById("lumi-wave").addEventListener("click",()=>{waveUntil=performance.now()+2300;clickPulse=1;say("Hiiii! Need help with something? Tap the chat button and ask me. 👋",4800)});
- // Open chat from a mascot click as well as from the talk button.
- canvas.addEventListener("dblclick",()=>openAssistant());
- document.getElementById("lumi-hide").addEventListener("click",()=>{
-  if(hidden)return;hidden=true;root.classList.add("lumi-hidden");root.style.display="none";
-  const reopen=document.createElement("button");reopen.id="lumi-reopen";reopen.textContent="✦ Lumi";reopen.type="button";reopen.setAttribute("aria-label","Show Lumi");
-  document.body.appendChild(reopen);syncLumiFrameSize();
-  reopen.addEventListener("click",()=>{reopen.remove();hidden=false;root.classList.remove("lumi-hidden");root.style.display="block";syncLumiFrameSize();say("I'm back! What shall we learn? 💜");});
- });
-
- function resize(){
-  const w=root.clientWidth||220,h=root.clientHeight||265;
-  renderer.setSize(w,h,false);camera.aspect=w/h;
-  // Preserve a complete character at narrow and wide iframe sizes.
-  camera.position.z=w/h<.8?10.2:8.6;
-  camera.updateProjectionMatrix();
- }
- const ro=new ResizeObserver(resize);ro.observe(root);resize();
-
- const waveQuaternion=new THREE.Quaternion();
- function animate(){
-  raf=requestAnimationFrame(animate);
-  const t=clock.getElapsedTime(),now=performance.now();
-  pointer.x+=(target.x-pointer.x)*.055;pointer.y+=(target.y-pointer.y)*.055;
-  const isWaving=now<waveUntil;
-  lumi.position.y=Math.sin(t*1.55)*.075;
-  lumi.rotation.y=pointer.x*.34+Math.sin(t*.45)*.035;
-  lumi.rotation.x=-pointer.y*.16;
-  headPivot.rotation.y=pointer.x*.25;
-  headPivot.rotation.x=-pointer.y*.16;
-  torso.rotation.z=pointer.x*.035;
-  // Independent arm movement; wave with a friendly elbow lift.
-  armL.rotation.z=-.08+Math.sin(t*1.2)*.035;
-  armR.rotation.z=isWaving?-.95+Math.sin(t*13)*.24:.08+Math.sin(t*1.4)*.035;
-  armR.rotation.x=isWaving?-.12:0;
-  if(clickPulse>0){lumi.scale.setScalar(1+clickPulse*.055);clickPulse*=.88;if(clickPulse<.01)clickPulse=0;}else lumi.scale.setScalar(1);
-  // Soft idle blinking.
-  const blink=(Math.sin(t*1.15+Math.sin(t*.27))>.985)?0.12:1;
-  eyeGroups.forEach(g=>g.scale.y+=(blink-g.scale.y)*.42);
-  halo.rotation.z=t*.12;orbit.rotation.z=-t*.09;
-  sparkles.forEach(s=>{s.mesh.position.y=s.base.y+Math.sin(t*1.2+s.phase)*.07;s.mesh.rotation.y=t*.5+s.phase;});
-  shadow.scale.set(1-Math.sin(t*1.55)*.08,1,1);
-  shadow.material.opacity=.8-Math.sin(t*1.55)*.15;
-  renderer.render(scene,camera);
- }
- if(reduced){renderer.render(scene,camera);}else animate();
-
- window.addEventListener("pagehide",()=>{cancelAnimationFrame(raf);ro.disconnect();renderer.dispose();scene.traverse(o=>{o.geometry?.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}});},{once:true});
- say("Hi! I'm Lumi, your 3D learning buddy. 💜",4200);
 }
+
 </script>
+
+
 
 <!--
+
 OPTIONAL CROSS-ORIGIN PARENT BRIDGE:
+
 If the site embeds Lumi from a different origin or uses a restrictive sandbox,
+
 add this listener to the parent page. Same-origin embeds already track the
+
 whole parent page automatically.
 
+
+
 <script>
+
 document.addEventListener("pointermove", (e) => {
-  const frame = document.getElementById("equallearn-lumi-frame");
-  if (!frame?.contentWindow) return;
-  const r = frame.getBoundingClientRect();
-  frame.contentWindow.postMessage({
-    type: "LUMI_POINTER",
-    x: e.clientX, y: e.clientY,
-    w: window.innerWidth, h: window.innerHeight,
-    frame: { left:r.left, top:r.top, width:r.width, height:r.height }
-  }, "*");
+
+  const frame = document.getElementById("equallearn-lumi-frame");
+
+  if (!frame?.contentWindow) return;
+
+  const r = frame.getBoundingClientRect();
+
+  frame.contentWindow.postMessage({
+
+    type: "LUMI_POINTER",
+
+    x: e.clientX, y: e.clientY,
+
+    w: window.innerWidth, h: window.innerHeight,
+
+    frame: { left:r.left, top:r.top, width:r.width, height:r.height }
+
+  }, "*");
+
 }, {passive:true});
+
 </script>
--->
+
+\-->
+
 </body>
+
 </html>
