@@ -175,7 +175,7 @@ body{font-family:Inter,"Segoe UI",Arial,sans-serif}
 
    </form>
 
-   <div class="lumi-chat-foot">Lumi Help Guide · Built-in guidance only. Never share your password, OTP, or recovery codes.</div>
+   <div class="lumi-chat-foot">Lumi AI Companion · Never share your password, OTP, or recovery codes.</div>
 
   </section>
 
@@ -198,6 +198,9 @@ body{font-family:Inter,"Segoe UI",Arial,sans-serif}
 <script type="module">
 
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js";
+import { auth, db } from "../js/firebase-config.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
 
 
@@ -224,6 +227,9 @@ let lastUserInteraction=performance.now();
 let petPosition=null;
 let roamTarget=null;
 let roamVelocity=null;
+let guidedTargetElement=null;
+let guidedTargetUntil=0;
+let guidedTargetLabel="";
 let dragPlane=null;
 let dragRaycaster=null;
 let dragOffset=null;
@@ -242,6 +248,13 @@ function syncLumiFrameSize(){
  try{
   const frame=window.frameElement;
   if(!frame)return;
+  // Fully remove the hidden iframe from host-page hit testing.
+  if(hidden){
+   frame.style.setProperty("display","none","important");
+   frame.style.setProperty("pointer-events","none","important");
+   frame.style.setProperty("visibility","hidden","important");
+   return;
+  }
   const parent=window.parent;
   const mobile=(parent.innerWidth||window.innerWidth)<=600;
   root.classList.toggle("lumi-mobile",mobile);
@@ -277,7 +290,7 @@ window.addEventListener("orientationchange",syncLumiFrameSize,{passive:true});
 try{
  const frame=window.frameElement;
  if(frame && window.parent && window.parent.document){
-  const frameObserver=new MutationObserver(()=>syncLumiFrameSize());
+  const frameObserver=new MutationObserver(()=>{if(!hidden)syncLumiFrameSize();});
   frameObserver.observe(frame,{attributes:true,attributeFilter:["style","class"]});
   window.addEventListener("pagehide",()=>frameObserver.disconnect(),{once:true});
  }
@@ -911,9 +924,11 @@ if(renderer){
 
  const currentTitle=(()=>{try{return window.parent.document.title||"EqualLearn"}catch(_){return "EqualLearn"}})();
 
- const role=currentPath.includes("/admin/")?"admin":currentPath.includes("/teacher/")?"teacher":currentPath.includes("/student/")?"student":"visitor";
+ let role=currentPath.includes("/admin/")?"admin":currentPath.includes("/teacher/")?"teacher":currentPath.includes("/student/")?"student":"visitor";
 
  const conversation = [];
+let currentAccountName="friend";
+let accountProfile={};
 
  const pageName=currentPath.split("/").pop().replace(/\.html?$/i,"").replace(/[-_]/g," ")||"home";
 
@@ -927,11 +942,28 @@ if(renderer){
 
  };
 
- const links=roleLinks[role]||[{label:"Login",url:"/login.html"},{label:"Register",url:"/register.html"}];
+ let links=roleLinks[role]||[{label:"Login",url:"/login.html"},{label:"Register",url:"/register.html"}];
 
- const roleLabel=role==="visitor"?"Welcome to EqualLearn":`${role[0].toUpperCase()+role.slice(1)} guide`;
+ let roleLabel=role==="visitor"?"Welcome to EqualLearn":`${role[0].toUpperCase()+role.slice(1)} guide`;
 
- document.getElementById("lumi-context").textContent=`${roleLabel} · ${pageName}`;
+ const contextLabel=document.getElementById("lumi-context");
+ contextLabel.textContent=`${roleLabel} · ${pageName}`;
+ // Personalize Lumi from the authenticated EqualLearn account profile.
+ onAuthStateChanged(auth,async user=>{
+  if(!user){currentAccountName="friend";return;}
+  try{
+   const snap=await getDoc(doc(db,"users",user.uid));
+   accountProfile=snap.exists()?snap.data():{};
+   const candidates=[accountProfile.fullname,accountProfile.fullName,accountProfile.name,accountProfile.username,user.displayName,String(user.email||"").split("@")[0]];
+   currentAccountName=String(candidates.find(v=>typeof v==="string"&&v.trim())||"friend").trim().split(/\s+/).slice(0,2).join(" ");
+   const storedRole=String(accountProfile.role||role||"visitor").toLowerCase();
+   if(["student","teacher","admin"].includes(storedRole))role=storedRole;
+   roleLabel=role==="visitor"?"EqualLearn guest":`${role[0].toUpperCase()+role.slice(1)} companion`;
+   links=roleLinks[role]||links;
+   contextLabel.textContent=`Hi, ${currentAccountName} · ${roleLabel} · ${pageName}`;
+   if(!window.__lumiPersonalGreetingShown){window.__lumiPersonalGreetingShown=true;say(`Hi, ${currentAccountName}! 💜 I’m Lumi, your EqualLearn buddy.`,4200);markUserInteraction();}
+  }catch(error){console.warn("Lumi profile lookup unavailable; using a friendly fallback.",error);}
+ });
 
  function addMessage(text,who="bot",actions=[]){
 
@@ -964,6 +996,60 @@ if(renderer){
  function closeAssistant(){root.classList.remove("assistant-open");chatPanel.setAttribute("aria-hidden","true");syncLumiFrameSize()}
 
  function normalize(value){return String(value||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9\s]/g," ").replace(/\s+/g," ").trim()}
+
+ function getHostDocument(){try{return window.parent.document}catch(_){return document}}
+ function getInteractiveTargets(){
+  const host=getHostDocument();
+  const selector='button,a[href],[role="button"],input[type="button"],input[type="submit"],input[type="reset"],select,summary,[tabindex]:not([tabindex="-1"])';
+  return [...host.querySelectorAll(selector)].filter(el=>{
+   if(el.closest("#lumi-root,#lumi-assistant,#lumi-controls,#lumi-reopen")||el.id==="equallearn-lumi-frame")return false;
+   if(el.disabled||el.getAttribute("aria-disabled")==="true")return false;
+   const style=host.defaultView.getComputedStyle(el),rect=el.getBoundingClientRect();
+   return style.display!=="none"&&style.visibility!=="hidden"&&Number(style.opacity)!==0&&rect.width>0&&rect.height>0;
+  });
+ }
+ function targetLabel(el){return String(el.innerText||el.value||el.getAttribute("aria-label")||el.title||el.name||el.id||el.placeholder||el.tagName).replace(/\s+/g," ").trim().slice(0,90)}
+ function findInteractiveTarget(query){
+  const stop=new Set(["lumi","please","paki","hanapin","find","show","me","where","is","the","button","btn","punta","pumunta","ako","mo","ka","sa","yung","ito","dito","diyan","dyan"]);
+  const terms=normalize(query).split(" ").filter(w=>w.length>1&&!stop.has(w));
+  if(!terms.length)return null;
+  let best=null,bestScore=0;
+  for(const el of getInteractiveTargets()){
+   const label=normalize([targetLabel(el),el.id,el.className,el.getAttribute("data-testid")].join(" "));
+   const score=terms.reduce((n,term)=>n+(label.includes(term)?(term.length>3?3:1):0),0);
+   if(score>bestScore){best=el;bestScore=score;}
+  }
+  return bestScore>0?best:null;
+ }
+ function screenPointToWorld(clientX,clientY){
+  if(!camera||!dragRaycaster||!dragPlane)return null;
+  const rect=canvas.getBoundingClientRect();
+  const mouse=new THREE.Vector2(((clientX-rect.left)/rect.width)*2-1,-((clientY-rect.top)/rect.height)*2+1);
+  dragRaycaster.setFromCamera(mouse,camera);
+  const point=new THREE.Vector3();
+  return dragRaycaster.ray.intersectPlane(dragPlane,point)?point:null;
+ }
+ function highlightHostTarget(el){
+  const host=getHostDocument();let style=host.getElementById("lumi-guided-target-style");
+  if(!style){style=host.createElement("style");style.id="lumi-guided-target-style";style.textContent='.lumi-guided-target{outline:3px solid #9b7bea!important;outline-offset:4px!important;box-shadow:0 0 0 7px rgba(155,123,234,.18)!important;transition:outline-color .2s!important}';host.head.appendChild(style);}
+  el.classList.add("lumi-guided-target");setTimeout(()=>el.classList.remove("lumi-guided-target"),4200);
+ }
+ function guideLumiToButton(rawQuery){
+  const target=findInteractiveTarget(rawQuery);
+  if(!target){addMessage(`Hmm, hindi ko makita ang button na “${rawQuery}” sa current page. Sabihin mo ang exact label na nakasulat dito, or ask me to list the buttons I can see.`);return false;}
+  const label=targetLabel(target)||"button";target.scrollIntoView({behavior:"smooth",block:"center",inline:"center"});
+  guidedTargetElement=target;guidedTargetLabel=label;guidedTargetUntil=performance.now()+18000;markUserInteraction();
+  const started=performance.now();
+  const updateDestination=()=>{if(guidedTargetElement!==target)return;const r=target.getBoundingClientRect();const point=screenPointToWorld(r.left+r.width/2,r.top+r.height/2);if(point&&roamTarget&&petPosition){const distance=petPosition.distanceTo(point);roamTarget.copy(point);petMode=distance>1.45?"flight":"explore";modeUntil=performance.now()+19000;nextRoamAt=performance.now()+19000;}if(performance.now()-started<1000)requestAnimationFrame(updateDestination);};
+  requestAnimationFrame(updateDestination);
+  addMessage(`Found it! 👀 I’m going to “${label}”. I’ll point it out, but I won’t click or submit anything without your permission.`);
+  say(`This way, ${currentAccountName}! I found ${label}. ✨`,3600);return true;
+ }
+ function listVisibleButtons(){
+  const items=getInteractiveTargets().slice(0,18).map(targetLabel).filter(Boolean);
+  if(!items.length){addMessage("Wala akong makitang available buttons sa current page ngayon.");return;}
+  addMessage(`Ito ang mga controls na nakikita ko sa page na ito:\n• ${items.join("\n• ")}\n\nSabihin mo kung alin ang gusto mong puntahan ko.`);
+ }
 
  const guides={
 
@@ -1041,13 +1127,18 @@ if(renderer){
 
  }
 
- function handleQuestion(raw){
+ async function handleQuestion(raw){
 
   const q=String(raw||"").trim();if(!q)return;
 
   addMessage(q,"user");chatInput.value="";
 
   const text=normalize(q);
+  if(/\b(list|show|what are|anong)\b/.test(text)&&/\b(buttons|controls|pindutan)\b/.test(text)){listVisibleButtons();return;}
+  if(/\b(find|locate|show me|where is|take me|go to|guide me|hanapin|hanapin mo|punta|puntahan|dalhin mo|ituro|ipakita)\b/.test(text)&&/(button|btn|save|cancel|submit|create|add|edit|delete|back|next|search|filter|upload|publish|approve|reject|profile|settings|menu)/.test(text)){
+   const targetPhrase=q.replace(/\b(lumi|please|paki|hanapin mo|hanapin|find|locate|show me|where is|take me to|go to|guide me to|punta ka sa|puntahan mo|dalhin mo ako sa|ituro mo|ipakita mo|button|btn|yung|na|sa|the|me|ako|mo)\b/gi," ").trim();
+   if(guideLumiToButton(targetPhrase||q))return;
+  }
 
   if(/\b(thank you|thanks|salamat|ty)\b/.test(text)){
    addMessage("You're very welcome! 💜 I'm happy to keep you company. Just tap me or open chat whenever you need help.");waveUntil=performance.now()+900;return;
@@ -1063,9 +1154,10 @@ if(renderer){
   }
 
 
-  if(/^(hi|hello|hey|kumusta|good morning|good afternoon|good evening|magandang umaga|magandang hapon|magandang gabi)$/.test(text)){
+  // Lumi Lite uses built-in, role-aware replies. No external AI service or API key is required.
+  if(/^(hi|hello|hey|kumusta|good morning|good afternoon|good evening|magandang umaga|magandang hapon|magandang gabi)$/.test(text)){
 
-   addMessage(`Hello! 💜 Ako si Lumi, ang ${roleLabel.toLowerCase()} mo. Kaya kitang gabayan sa features at steps ng EqualLearn. Ano ang gusto mong gawin?`);setSuggestions(suggestionsForRole());return;
+   addMessage(`Hello, ${currentAccountName}! 💜 Ako si Lumi, ang ${roleLabel.toLowerCase()} mo. Kaya kitang gabayan sa features at steps ng EqualLearn. Ano ang gusto mong gawin?`);setSuggestions(suggestionsForRole());return;
 
   }
 
@@ -1129,17 +1221,27 @@ if(renderer){
 
  dragHitbox.addEventListener("dblclick",()=>openAssistant());
 
- document.getElementById("lumi-hide").addEventListener("click",()=>{
+ document.getElementById("lumi-hide").addEventListener("click",()=>{
+  if(hidden)return;
+  hidden=true;
+  root.classList.add("lumi-hidden");
+  root.style.display="none";
 
-  if(hidden)return;hidden=true;root.classList.add("lumi-hidden");root.style.display="none";
-
-  // Place the restore launcher in the HOST page, outside this clipped iframe.
+  // Hide the iframe element itself: no invisible full-screen layer can
+  // intercept clicks while Lumi is hidden. The launcher stays in the host.
   const hostDoc=(window.parent && window.parent!==window)?window.parent.document:document;
+  const frame=window.frameElement;
+  if(frame){
+   frame.style.setProperty("display","none","important");
+   frame.style.setProperty("pointer-events","none","important");
+   frame.style.setProperty("visibility","hidden","important");
+  }
+  hostDoc.getElementById("lumi-reopen")?.remove();
   const reopen=hostDoc.createElement("button");
   reopen.id="lumi-reopen";reopen.textContent="✦ Lumi";reopen.type="button";
   reopen.setAttribute("aria-label","Show Lumi");
   Object.assign(reopen.style,{
-   position:"fixed",right:"18px",bottom:"18px",left:"auto",top:"auto",
+   position:"fixed",right:"16px",bottom:"16px",left:"auto",top:"auto",
    zIndex:"2147483647",display:"inline-flex",alignItems:"center",justifyContent:"center",
    minWidth:"64px",minHeight:"38px",padding:"9px 14px",border:"1px solid rgba(255,255,255,.95)",
    borderRadius:"999px",background:"linear-gradient(135deg,#a68af8,#704bd5)",
@@ -1147,16 +1249,14 @@ if(renderer){
    boxShadow:"0 8px 22px rgba(81,54,163,.32)",cursor:"pointer",pointerEvents:"auto"
   });
   hostDoc.body.appendChild(reopen);
-  syncLumiFrameSize();
   reopen.addEventListener("click",()=>{
-   reopen.remove();hidden=false;root.classList.remove("lumi-hidden");root.style.display="block";
-   try{const frame=window.frameElement;if(frame){frame.style.setProperty("clip-path","none","important");frame.style.setProperty("-webkit-clip-path","none","important");}}catch(_){}
+   reopen.remove();hidden=false;
+   root.classList.remove("lumi-hidden");root.style.display="block";
    syncLumiFrameSize();
-   requestAnimationFrame(()=>updateDragHitbox());
-   say("I'm back! What shall we learn? 💜");
-  });
+   requestAnimationFrame(()=>{resize();updateDragHitbox();say("I'm back! What shall we learn? 💜");});
+  },{once:true});
+ });
 
- });
 
 
 
@@ -1192,15 +1292,21 @@ if(renderer){
   }
   if(!dragState){
    const bounds=getPetBounds();
+   let guiding=!!guidedTargetElement&&now<guidedTargetUntil;
+   if(guiding){
+    if(!guidedTargetElement.isConnected){guidedTargetElement=null;guiding=false;}
+    else{const r=guidedTargetElement.getBoundingClientRect();const point=screenPointToWorld(r.left+r.width/2,r.top+r.height/2);if(point)roamTarget.set(THREE.MathUtils.clamp(point.x,-bounds.x,bounds.x),THREE.MathUtils.clamp(point.y,-bounds.y,bounds.y),0);}
+   }else if(guidedTargetElement){guidedTargetElement=null;}
    const dx=roamTarget.x-petPosition.x,dy=roamTarget.y-petPosition.y;
    const distance=Math.hypot(dx,dy);
-   if((petMode==="explore" || petMode==="play" || petMode==="flight") && (now>nextRoamAt || distance<.055)){
+   if(guiding&&distance<.18){const reached=guidedTargetElement;guidedTargetElement=null;petMode="settle";modeUntil=now+6500;roamTarget.copy(petPosition);roamVelocity.multiplyScalar(.15);if(reached){highlightHostTarget(reached);say(`Here it is, ${currentAccountName}! “${guidedTargetLabel}”. 👆`,4400);waveUntil=now+900;}}
+   if(!guiding&&(petMode==="explore" || petMode==="play" || petMode==="flight") && (now>nextRoamAt || distance<.055)){
     const angle=Math.random()*Math.PI*2;
     const radius=petMode==="play"?.035+Math.random()*.045:petMode==="flight"?.07+Math.random()*.08:.06+Math.random()*.09;
     roamTarget.set(THREE.MathUtils.clamp(petPosition.x+Math.cos(angle)*bounds.x*radius,-bounds.x,bounds.x),THREE.MathUtils.clamp(petPosition.y+Math.sin(angle)*bounds.y*radius*.38,-bounds.y,bounds.y),0);
     nextRoamAt=now+(petMode==="play"?2600+Math.random()*1600:petMode==="flight"?3200+Math.random()*1800:5200+Math.random()*3200);
    }
-   if(petMode==="rest" || petMode==="settle"){
+   if((petMode==="rest" || petMode==="settle")&&!guiding){
     roamTarget.copy(petPosition);roamVelocity.multiplyScalar(Math.exp(-3.8*dt));
    }else{
     const steerX=roamTarget.x-petPosition.x,steerY=roamTarget.y-petPosition.y;
@@ -1219,7 +1325,7 @@ if(renderer){
 
   // Lumi is chatty and curious, but never talks over an open chat.
   if(!root.classList.contains("assistant-open") && now>nextPetThoughtAt && now-lastUserInteraction>12000){
-   const thoughts=["Psst… may nakita akong interesting! ✨","Hello ulit! Nandito lang ako, your tiny robot buddy. 💜","I wonder what we're learning today? 🤔","May tiny rocket ako… gusto mo makita? 🚀","Nag-iikot lang ako dito. Ang cozy ng spot na 'to!","Don't mind me, just keeping you company. 😊","Fun fact: kaya kong mag-float… pero dahan-dahan lang! 🚀","Uy, remember to take a tiny stretch break! 🌱","I'm curious… anong ginagawa mo ngayon?","Boop! Just checking if you're still there. 👋","I practiced my little bounce. Did you see? ✨","If you need help, tap my chat button. I'm ready! 💜","Hmm… maybe we should explore a new lesson later?","I can wait. I like being your study buddy. 🌙","Rocket check… all systems cute and ready! 🚀"];
+   const thoughts=[`Psst, ${currentAccountName}… may nakita akong interesting! ✨`,`Hello ulit, ${currentAccountName}! Nandito lang ako, your tiny robot buddy. 💜`,"I wonder what we're learning today? 🤔","May tiny rocket ako… gusto mo makita? 🚀","Nag-iikot lang ako dito. Ang cozy ng spot na 'to!","Don't mind me, just keeping you company. 😊","Fun fact: kaya kong mag-float… pero dahan-dahan lang! 🚀","Uy, remember to take a tiny stretch break! 🌱","I'm curious… anong ginagawa mo ngayon?","Boop! Just checking if you're still there. 👋","I practiced my little bounce. Did you see? ✨","If you need help, tap my chat button. I'm ready! 💜","Hmm… maybe we should explore a new lesson later?","I can wait. I like being your study buddy. 🌙","Rocket check… all systems cute and ready! 🚀"];
    say(thoughts[Math.floor(Math.random()*thoughts.length)],4300);
    nextPetThoughtAt=now+22000+Math.random()*13000;
   }
@@ -1231,16 +1337,22 @@ if(renderer){
   }
   const mood=petMode==="rest"?"Sleepy":autoMood;
   const isWaving=now<waveUntil;
-  const isWalking=!dragState && petMode!=="flight" && Math.hypot(roamVelocity.x,roamVelocity.y)>.012;
-  const isFlying=!dragState && petMode==="flight";
+  const movementSpeed=dragState?0:Math.hypot(roamVelocity.x,roamVelocity.y);
+  const isWalking=!dragState && petMode!=="flight" && movementSpeed>.012;
+  const isFlying=!dragState && petMode==="flight" && movementSpeed>.008;
+  const isMoving=isWalking||isFlying;
   const walkCycle=isWalking?Math.sin(t*7.0):0;
   const idleBob=Math.sin(t*.62)*.014;
   const sleepyBob=Math.sin(t*.28)*.008;
   const playSway=petMode==="play"?Math.sin(t*2.6)*.025:0;
-  flameGroup.visible=isFlying;
-  rocketGlow.intensity=isFlying?2.1+Math.sin(t*18)*.55:0;
-  flameGroup.scale.set(isFlying?(.92+Math.sin(t*13)*.08):.001,isFlying?(.88+Math.sin(t*17)*.22):.001,isFlying?(.92+Math.sin(t*15)*.08):.001);
-  flameGroup.rotation.z=isFlying?Math.sin(t*11)*.045:0;
+  // Rocket exhaust is visible during every actual movement, then switches
+  // off immediately when Lumi settles. Flying uses a longer flame.
+  const flameFlicker=.88+Math.sin(t*(isFlying?17:12))*(isFlying?.16:.10);
+  flameGroup.visible=isMoving;
+  rocketGlow.intensity=isMoving?(isFlying?2.2:1.25)+Math.sin(t*16)*.32:0;
+  const flameLength=isMoving?(isFlying?1:.62):.001;
+  flameGroup.scale.set(isMoving?(.92+Math.sin(t*13)*.08):.001,flameLength*flameFlicker,isMoving?(.92+Math.sin(t*15)*.08):.001);
+  flameGroup.rotation.z=isMoving?Math.sin(t*(isFlying?11:8))*.045:0;
   lumi.position.x=petPosition.x;
   lumi.position.y=petPosition.y+idleBob+(mood==="Sleepy"?sleepyBob:0)+(isWalking?Math.abs(walkCycle)*.035:0)+(isFlying?.12+Math.sin(t*3.2)*.055:0)+playSway;
   const spin=mood==="Spin"?(t*1.65)%(Math.PI*2):0;

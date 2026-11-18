@@ -1,3 +1,4 @@
+
 import { auth, db } from "./firebase-config.js";
 
 import { notifySectionStudents } from "./notification-service.js";
@@ -5,6 +6,14 @@ import { notifySectionStudents } from "./notification-service.js";
 import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
+
+import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+  deleteObject
+} from "https://www.gstatic.com/firebasejs/12.17.0/firebase-storage.js";
 
 import {
   collection,
@@ -47,11 +56,11 @@ const currentFile = $("currentFile");
 // CONFIGURATION
 // ==========================================
 
-// Firestore has a 1 MiB document limit.
-// Base64 increases the original file size.
-// 500 KB is the maximum raw attachment size.
-
-const MAX_FILE_SIZE = 500 * 1024;
+// Store file binaries in Firebase Storage, never in Firestore documents.
+// Firestore stores only file URL, path, name, MIME type, and size.
+// Client-side limit: 500 MB per attachment. Storage Rules must allow this too.
+const storage = getStorage();
+const MAX_FILE_SIZE = 500 * 1024 * 1024;
 
 const ALLOWED_EXTENSIONS = new Set([
   "pdf",
@@ -65,7 +74,12 @@ const ALLOWED_EXTENSIONS = new Set([
   "jpg",
   "jpeg",
   "png",
-  "webp"
+  "webp",
+  "csv",
+  "mp4",
+  "webm",
+  "mov",
+  "zip"
 ]);
 
 // ==========================================
@@ -87,7 +101,7 @@ let existingFileData = "";
 let existingFileMime = "";
 let existingFileSize = 0;
 
-let activeReader = null;
+let activeUploadTask = null;
 let uploadCancelled = false;
 let isBusy = false;
 
@@ -352,12 +366,12 @@ function renderLessons() {
     const hasFirestoreFile =
       Boolean(lesson.fileDataBase64);
 
-    const hasLegacyFile =
+    const hasStorageFile =
       Boolean(lesson.fileUrl);
 
     let fileHTML = "";
 
-    if (hasFirestoreFile || hasLegacyFile) {
+    if (hasFirestoreFile || hasStorageFile) {
       fileHTML = `
         <div class="file-info">
           <strong>
@@ -374,7 +388,7 @@ function renderLessons() {
           </a>
           <br>
           <small>
-            ${hasFirestoreFile ? "Stored in Firestore" : "Legacy attachment"}
+            ${hasFirestoreFile ? "Legacy attachment" : "Firebase Storage"}
           </small>
         </div>
       `;
@@ -428,7 +442,7 @@ function renderLessons() {
 }
 
 // ==========================================
-// ATTACHMENT DATA URL
+// ATTACHMENT URL
 // ==========================================
 
 function getLessonFileURL(lesson) {
@@ -440,7 +454,6 @@ function getLessonFileURL(lesson) {
     return `data:${mime};base64,${lesson.fileDataBase64}`;
   }
 
-  // Support existing Storage-based lesson records.
   return lesson.fileUrl || "";
 }
 
@@ -709,29 +722,93 @@ saveLesson?.addEventListener("click", async () => {
   uploadCancelled = false;
 
   try {
+    // Keep existing attachments unless the teacher selects a replacement.
     let fileDataBase64 = existingFileData;
     let fileMimeType = existingFileMime;
     let fileName = existingFileName;
     let fileSize = existingFileSize;
-
     let fileUrl = existingFileUrl;
     let filePath = existingFilePath;
 
     if (file) {
-      const attachment = await readFileAsBase64(file);
+      const safeFileName = file.name
+        .replace(/[^\w.-]/g, "_")
+        .slice(-140);
+
+      const newStoragePath =
+        `lessons/${currentUser.uid}/${Date.now()}_${safeFileName}`;
+
+      const fileRef = ref(storage, newStoragePath);
+
+      uploadPanel.hidden = false;
+
+      lessonUploadTitle.textContent =
+        "Uploading attachment";
+
+      setUploadProgress(
+        0,
+        `Starting ${file.name}...`
+      );
+
+      activeUploadTask = uploadBytesResumable(
+        fileRef,
+        file,
+        {
+          contentType:
+            file.type || "application/octet-stream",
+
+          customMetadata: {
+            uploadedBy: currentUser.uid,
+            originalFileName: file.name
+          }
+        }
+      );
+
+      const uploadedSnapshot = await new Promise(
+        (resolve, reject) => {
+          activeUploadTask.on(
+            "state_changed",
+
+            snapshot => {
+              const percent = snapshot.totalBytes
+                ? Math.round(
+                    (snapshot.bytesTransferred /
+                      snapshot.totalBytes) * 100
+                  )
+                : 0;
+
+              setUploadProgress(
+                percent,
+                `${formatFileSize(snapshot.bytesTransferred)} of ${formatFileSize(snapshot.totalBytes)}`
+              );
+            },
+
+            error => reject(error),
+
+            () => resolve(activeUploadTask.snapshot)
+          );
+        }
+      );
 
       if (uploadCancelled) {
         throw new Error("Upload cancelled.");
       }
 
-      fileDataBase64 = attachment.base64;
-      fileMimeType = attachment.mime;
+      fileUrl = await getDownloadURL(
+        uploadedSnapshot.ref
+      );
+
+      filePath = newStoragePath;
+
+      // New files are stored in Firebase Storage.
+      // Keep this empty to avoid Firestore document-size problems.
+      fileDataBase64 = "";
+
+      fileMimeType =
+        file.type || "application/octet-stream";
+
       fileName = file.name;
       fileSize = file.size;
-
-      // New attachments are saved in Firestore.
-      fileUrl = "";
-      filePath = "";
     }
 
     if (uploadCancelled) {
@@ -760,10 +837,19 @@ saveLesson?.addEventListener("click", async () => {
       videoUrl: youtube,
       status: "active",
       reviewStatus: "approved",
-      sectionIds: Array.isArray(selectedModule.sectionIds) ? selectedModule.sectionIds : [],
+
+      sectionIds: Array.isArray(selectedModule.sectionIds)
+        ? selectedModule.sectionIds
+        : [],
+
       createdBy: currentUser.uid,
       createdByRole: currentRole,
-      createdByName: currentUser.displayName || currentUser.email || "Teacher",
+
+      createdByName:
+        currentUser.displayName ||
+        currentUser.email ||
+        "Teacher",
+
       updatedAt: serverTimestamp()
     };
 
@@ -798,6 +884,24 @@ saveLesson?.addEventListener("click", async () => {
 
       await updateDoc(lessonRef, payload);
 
+      // Remove the replaced Storage object only after the lesson record is saved.
+      if (
+        file &&
+        existingFilePath &&
+        existingFilePath !== filePath
+      ) {
+        try {
+          await deleteObject(
+            ref(storage, existingFilePath)
+          );
+        } catch (cleanupError) {
+          console.warn(
+            "Old lesson attachment cleanup failed:",
+            cleanupError
+          );
+        }
+      }
+
       const index = lessons.findIndex(
         (item) => item.id === editingLessonId
       );
@@ -818,35 +922,51 @@ saveLesson?.addEventListener("click", async () => {
         }
       );
 
-      const targetSectionIds = Array.isArray(selectedModule.sectionIds)
-        ? selectedModule.sectionIds
-        : [];
+      const targetSectionIds =
+        Array.isArray(selectedModule.sectionIds)
+          ? selectedModule.sectionIds
+          : [];
 
       if (targetSectionIds.length > 0) {
         try {
-          const notificationResult = await notifySectionStudents({
-            db,
-            auth,
-            sectionIds: targetSectionIds,
-            contentType: "lesson",
-            contentId: created.id,
-            contentTitle: titleValue,
-            teacherName: currentUser.displayName || currentUser.email || "Your teacher",
-            targetUrl: selectedModule?.id
-              ? `lesson.html?module=${encodeURIComponent(selectedModule.id)}`
-              : "modules.html"
-          });
+          const notificationResult =
+            await notifySectionStudents({
+              db,
+              auth,
+              sectionIds: targetSectionIds,
+              contentType: "lesson",
+              contentId: created.id,
+              contentTitle: titleValue,
 
-          console.info("LESSON NOTIFICATIONS:", notificationResult);
+              teacherName:
+                currentUser.displayName ||
+                currentUser.email ||
+                "Your teacher",
+
+              targetUrl: selectedModule?.id
+                ? `lesson.html?module=${encodeURIComponent(selectedModule.id)}`
+                : "modules.html"
+            });
+
+          console.info(
+            "LESSON NOTIFICATIONS:",
+            notificationResult
+          );
+
         } catch (notificationError) {
-          console.error("LESSON NOTIFICATION ERROR:", notificationError);
+          console.error(
+            "LESSON NOTIFICATION ERROR:",
+            notificationError
+          );
         }
       }
 
       lessons.unshift({
         id: created.id,
         ...payload,
+
         createdBy: currentUser.uid,
+
         createdAt: {
           seconds: Math.floor(Date.now() / 1000)
         }
@@ -873,84 +993,12 @@ saveLesson?.addEventListener("click", async () => {
     );
 
   } finally {
-    activeReader = null;
+    activeUploadTask = null;
     uploadCancelled = false;
 
     setBusy(false);
   }
 });
-
-// ==========================================
-// READ FILE AND CONVERT TO BASE64
-// ==========================================
-
-function readFileAsBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-
-    activeReader = reader;
-
-    uploadPanel.hidden = false;
-
-    lessonUploadTitle.textContent =
-      "Reading attachment";
-
-    setUploadProgress(
-      0,
-      `Preparing ${file.name}...`
-    );
-
-    reader.onprogress = (event) => {
-      if (!event.lengthComputable) return;
-
-      const percent = Math.round(
-        (event.loaded / event.total) * 85
-      );
-
-      setUploadProgress(
-        percent,
-        `${formatFileSize(event.loaded)} of ${formatFileSize(event.total)}`
-      );
-    };
-
-    reader.onload = () => {
-      if (uploadCancelled) {
-        reject(new Error("Upload cancelled."));
-        return;
-      }
-
-      const result = String(reader.result || "");
-      const parts = result.split(",");
-      const base64 = parts[1];
-
-      if (!base64) {
-        reject(
-          new Error("Unable to convert attachment.")
-        );
-        return;
-      }
-
-      resolve({
-        base64,
-        mime: file.type || "application/octet-stream"
-      });
-    };
-
-    reader.onerror = () => {
-      reject(
-        new Error("Unable to read the selected file.")
-      );
-    };
-
-    reader.onabort = () => {
-      reject(
-        new Error("Upload cancelled.")
-      );
-    };
-
-    reader.readAsDataURL(file);
-  });
-}
 
 // ==========================================
 // CANCEL UPLOAD
@@ -961,14 +1009,11 @@ lessonCancelUpload?.addEventListener("click", () => {
 
   uploadCancelled = true;
 
-  if (
-    activeReader &&
-    activeReader.readyState === FileReader.LOADING
-  ) {
-    activeReader.abort();
+  if (activeUploadTask) {
+    activeUploadTask.cancel();
   } else {
     showLessonStatus(
-      "The file is already being saved to Firestore. Please wait for the operation to finish.",
+      "The lesson is being saved. Please wait for the operation to finish.",
       true
     );
   }
@@ -1042,15 +1087,27 @@ async function deleteLesson(id) {
 
     await deleteDoc(lessonRef);
 
+    // Delete a Storage attachment after the lesson record is removed.
+    if (data.filePath) {
+      try {
+        await deleteObject(
+          ref(storage, data.filePath)
+        );
+      } catch (storageError) {
+        console.warn(
+          "Lesson attachment cleanup failed:",
+          storageError
+        );
+      }
+    }
+
     lessons = lessons.filter(
       (item) => item.id !== id
     );
 
     renderLessons();
 
-    // Note:
-    // Legacy Storage files are not deleted here.
-    // This version does not require Firebase Storage.
+    // Legacy Base64 attachments disappear with their Firestore lesson record.
 
   } catch (error) {
     console.error("Delete lesson error:", error);
@@ -1068,18 +1125,15 @@ async function deleteLesson(id) {
 function closeLessonModal(force = false) {
   if (!force && isBusy) {
     const confirmed = confirm(
-      "An operation is still running. Cancel the file reading and close?"
+      "An upload or save is still running. Cancel the upload and close?"
     );
 
     if (!confirmed) return;
 
     uploadCancelled = true;
 
-    if (
-      activeReader &&
-      activeReader.readyState === FileReader.LOADING
-    ) {
-      activeReader.abort();
+    if (activeUploadTask) {
+      activeUploadTask.cancel();
     }
 
     return;
@@ -1128,7 +1182,7 @@ function resetForm() {
     "Waiting for file..."
   );
 
-  activeReader = null;
+  activeUploadTask = null;
   uploadCancelled = false;
 
   setBusy(false);
@@ -1254,7 +1308,7 @@ function readableUploadError(error) {
     uploadCancelled ||
     error?.message === "Upload cancelled."
   ) {
-    return "Attachment reading cancelled. The lesson was not saved.";
+    return "Attachment upload cancelled. The lesson was not saved.";
   }
 
   if (
@@ -1264,8 +1318,20 @@ function readableUploadError(error) {
     return "Firestore permission denied. Check your Firestore Rules.";
   }
 
+  if (error?.code === "storage/unauthorized") {
+    return "Firebase Storage denied this upload. Check your Storage Rules and file-size limit.";
+  }
+
+  if (error?.code === "storage/canceled") {
+    return "Attachment upload cancelled. The lesson was not saved.";
+  }
+
+  if (error?.code === "storage/quota-exceeded") {
+    return "Firebase Storage quota exceeded. Check your Firebase plan and available storage.";
+  }
+
   if (error?.code === "resource-exhausted") {
-    return "Firestore document or quota limit reached. Try a smaller attachment.";
+    return "Firestore quota limit reached while saving lesson details.";
   }
 
   if (error?.code === "invalid-argument") {

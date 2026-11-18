@@ -18,13 +18,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
-import {
-  getStorage,
-  ref,
-  uploadBytes,
-  getDownloadURL,
-  deleteObject
-} from "https://www.gstatic.com/firebasejs/12.17.0/firebase-storage.js";
+// Attachments are stored as small Base64 payloads in Firestore.
 
 // ======================================================
 // EQUALLEARN TEACHER ACTIVITY BUILDER
@@ -33,7 +27,7 @@ import {
 
 const $ = id => document.getElementById(id);
 
-const storage = getStorage();
+// Firebase Storage is not used for new activity attachments.
 
 const COLLECTIONS = {
   users: "users",
@@ -42,7 +36,9 @@ const COLLECTIONS = {
   activities: "teacherActivitiesV2"
 };
 
-const MAX_FILE_SIZE = 100 * 1024 * 1024;
+// Firestore documents have a 1 MiB hard limit. Keep conservative headroom.
+const MAX_FILE_SIZE = 400 * 1024;
+const MAX_DOCUMENT_BYTES = 900 * 1024;
 
 let currentUser = null;
 let profile = null;
@@ -92,9 +88,9 @@ function bindEvents() {
   });
 
   $("publishBtn")?.addEventListener("click", event => {
-  event.preventDefault();
-  saveActivity("published");
-});
+    event.preventDefault();
+    saveActivity("published");
+  });
 
   $("searchInput")?.addEventListener("input", renderItems);
   $("statusFilter")?.addEventListener("change", renderItems);
@@ -210,8 +206,6 @@ function updateTeacherInformation() {
 // SECTIONS
 // ======================================================
 
-
- 
 async function loadSections() {
   const sectionList = $("sectionList");
 
@@ -243,7 +237,6 @@ async function loadSections() {
         });
       });
     } else {
-      // Query using teacherId
       const teacherQuery = await getDocs(
         query(
           sectionRef,
@@ -258,7 +251,6 @@ async function loadSections() {
         });
       });
 
-      // Query using teacherIds
       const teacherArrayQuery = await getDocs(
         query(
           sectionRef,
@@ -273,7 +265,6 @@ async function loadSections() {
         });
       });
 
-      // Known BSIT-4L section: verify directly if not found
       const knownSectionId = "6VwLg5Brx8Biw5Qmeb4F";
 
       if (!found.has(knownSectionId)) {
@@ -334,8 +325,6 @@ async function loadSections() {
     );
   }
 }
-
-
 
 function sectionName(section) {
   const course =
@@ -429,7 +418,6 @@ function selectedSections() {
 // FIRESTORE LISTENERS
 // ======================================================
 
-
 function listenItems() {
   const role = String(profile?.role || "").toLowerCase();
 
@@ -514,7 +502,6 @@ function listenItems() {
   );
 }
 
-
 // ======================================================
 // ACTIVITY FORM CONTROLS
 // ======================================================
@@ -584,7 +571,6 @@ function openEditor(item = null) {
       noticeBox.textContent = "";
     }
 
-    // Modal opens even when no section is assigned.
     $("editorModal").classList.add("show");
 
     document.body.style.overflow = "hidden";
@@ -658,18 +644,14 @@ function renderTypeFields(data = {}) {
   typeFields.replaceChildren();
 
   const resourceArea = $("resourceArea");
-
-  if (resourceArea) {
-    resourceArea.style.display =
-      type === "module" ? "block" : "none";
-  }
+  if (resourceArea) resourceArea.style.display = "block";
 
   if (type === "module") {
     typeFields.innerHTML = `
       <div class="tm-field">
         <strong>Learning Module</strong>
         <p style="color:#aaa;font-size:12px;margin-top:8px">
-          Upload PDFs, documents, videos, or add external resource links.
+          Attach a small file (up to 400 KB) or paste a shareable link. Use links for larger files.
         </p>
       </div>
     `;
@@ -869,137 +851,173 @@ function addResource(resource = {}) {
   if (!container) return;
 
   const card = document.createElement("div");
-
   card.className = "tm-resource";
-
-  card.dataset.storagePath = resource.storagePath || "";
   card.dataset.existingUrl = resource.url || "";
   card.dataset.existingType = resource.type || "";
+  card.dataset.storagePath = resource.storagePath || "";
+  card.dataset.base64 = resource.base64 || "";
+  card.dataset.mimeType = resource.mimeType || "";
+  card.dataset.fileName = resource.fileName || "";
+  card.dataset.size = String(resource.size || "");
 
   const label = document.createElement("input");
-
   label.className = "resource-label";
-  label.placeholder = "Resource name";
+  label.placeholder = "Attachment title";
   label.value = resource.label || "";
 
   const url = document.createElement("input");
-
   url.className = "resource-url";
   url.type = "url";
-  url.placeholder = "External link (optional)";
-
-  url.value = resource.type === "link"
-    ? resource.url || ""
-    : "";
+  url.placeholder = "Paste a link (optional)";
+  url.value = resource.type === "link" ? (resource.url || "") : "";
 
   const file = document.createElement("input");
-
   file.className = "resource-file";
   file.type = "file";
+  file.accept = ".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.csv,.jpg,.jpeg,.png,.webp,.zip";
 
-  file.accept =
-    ".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.csv,.jpg,.jpeg,.png,.webp,.mp4,.webm,.mov,.zip";
+  const status = document.createElement("small");
+  status.className = "resource-status";
+  status.style.cssText = "display:block;grid-column:1/-1;opacity:.75;font-size:12px;";
+  if (resource.base64) {
+    status.textContent = `Saved file: ${resource.fileName || "attachment"} • ${formatBytes(resource.size || 0)}`;
+  } else if (resource.type === "link" && resource.url) {
+    status.textContent = "Saved link";
+  } else if (resource.storagePath && resource.url) {
+    status.textContent = `Previously uploaded file: ${resource.fileName || "attachment"} (legacy link)`;
+  } else {
+    status.textContent = "Choose a file OR paste a link. Maximum file size: 400 KB.";
+  }
 
   const remove = document.createElement("button");
-
   remove.type = "button";
   remove.className = "tm-danger";
   remove.textContent = "Remove";
-  remove.title = "Remove resource";
+  remove.title = "Remove attachment";
+  remove.addEventListener("click", () => card.remove());
 
-  remove.addEventListener("click", () => {
-    card.remove();
+  url.addEventListener("input", () => {
+    if (url.value.trim()) {
+      file.value = "";
+      status.textContent = "Link selected. A file cannot be selected in the same row.";
+    } else {
+      status.textContent = "Choose a file OR paste a link. Maximum file size: 400 KB.";
+    }
   });
 
-  card.append(label, url, remove, file);
+  file.addEventListener("change", () => {
+    const selected = file.files?.[0];
+    if (!selected) return;
+    if (selected.size > MAX_FILE_SIZE) {
+      file.value = "";
+      status.textContent = "File is too large. Maximum is 400 KB; use a shareable link instead.";
+      showFormNotice("This file is over 400 KB. Firestore is not suitable for large file storage. Please paste a shareable link instead.", "error");
+      return;
+    }
+    if (url.value.trim()) url.value = "";
+    status.textContent = `${selected.name} • ${formatBytes(selected.size)} • ready`;
+  });
 
+  card.append(label, url, remove, file, status);
   container.appendChild(card);
+}
+
+function formatBytes(bytes) {
+  const value = Number(bytes) || 0;
+  if (value < 1024) return `${value} B`;
+  if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
+  return `${(value / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+function fileToDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== "string") {
+        reject(new Error(`Unable to read ${file.name}.`));
+        return;
+      }
+      resolve(reader.result);
+    };
+    reader.onerror = () => reject(new Error(`Failed to read ${file.name}.`));
+    reader.readAsDataURL(file);
+  });
 }
 
 async function collectResources(documentId) {
   const resources = [];
-
-  const cards = [
-    ...document.querySelectorAll("#resourceEditor .tm-resource")
-  ];
+  const cards = [...document.querySelectorAll("#resourceEditor .tm-resource")];
 
   for (const card of cards) {
-    const label =
-      card.querySelector(".resource-label").value.trim();
+    const label = card.querySelector(".resource-label")?.value.trim() || "";
+    const urlValue = card.querySelector(".resource-url")?.value.trim() || "";
+    const file = card.querySelector(".resource-file")?.files?.[0] || null;
+    const existingBase64 = card.dataset.base64 || "";
+    const existingUrl = card.dataset.existingUrl || "";
+    const existingType = card.dataset.existingType || "";
+    const existingStoragePath = card.dataset.storagePath || "";
 
-    const urlValue =
-      card.querySelector(".resource-url").value.trim();
-
-    const file =
-      card.querySelector(".resource-file").files[0];
-
-    if (!label && !urlValue && !file) continue;
-
-    if (!label) {
-      throw new Error("Enter a name for each resource.");
-    }
+    if (!label && !urlValue && !file && !existingBase64 && !existingUrl) continue;
+    if (!label) throw new Error("Enter a title for each attachment.");
+    if (file && urlValue) throw new Error(`"${label}": choose either a file or a link, not both.`);
 
     if (file) {
       if (file.size > MAX_FILE_SIZE) {
-        throw new Error("Maximum file size is 100 MB.");
+        throw new Error(`"${file.name}" is over 400 KB. Use a shareable link for larger files.`);
       }
-
-      const path =
-        `modulesV2/${currentUser.uid}/${documentId}/${Date.now()}_${safeName(file.name)}`;
-
-      const fileRef = ref(storage, path);
-
-      await uploadBytes(fileRef, file, {
-        contentType: file.type || "application/octet-stream"
-      });
-
+      const dataUrl = await fileToDataURL(file);
+      const commaIndex = dataUrl.indexOf(",");
+      if (commaIndex < 0) throw new Error(`Could not encode ${file.name}.`);
       resources.push({
         label,
+        type: "file",
         fileName: file.name,
-        type: file.type || "file",
-        url: await getDownloadURL(fileRef),
-        storagePath: path,
-        size: file.size
+        mimeType: file.type || "application/octet-stream",
+        size: file.size,
+        base64: dataUrl.slice(commaIndex + 1)
       });
+      continue;
+    }
 
-    } else if (urlValue) {
+    if (urlValue) {
       let parsed;
-
       try {
         parsed = new URL(urlValue);
-
-        if (!["https:", "http:"].includes(parsed.protocol)) {
-          throw new Error();
-        }
-
+        if (!["https:", "http:"].includes(parsed.protocol)) throw new Error();
       } catch {
-        throw new Error(`Invalid resource URL for "${label}".`);
+        throw new Error(`Invalid link for "${label}". Use a valid http:// or https:// URL.`);
       }
+      resources.push({ label, type: "link", url: parsed.href });
+      continue;
+    }
 
+    if (existingBase64) {
       resources.push({
         label,
-        type: "link",
-        url: parsed.href,
-        storagePath: card.dataset.storagePath || ""
+        type: "file",
+        fileName: card.dataset.fileName || "attachment",
+        mimeType: card.dataset.mimeType || "application/octet-stream",
+        size: Number(card.dataset.size || 0),
+        base64: existingBase64
       });
+      continue;
+    }
 
-    } else if (
-      card.dataset.storagePath ||
-      card.dataset.existingUrl
-    ) {
+    // Preserve old Storage URLs so previously saved attachments remain accessible.
+    if (existingUrl) {
       resources.push({
         label,
-        type: card.dataset.existingType || "file",
-        url: card.dataset.existingUrl || "",
-        storagePath: card.dataset.storagePath || ""
+        type: existingType || "file",
+        fileName: card.dataset.fileName || "attachment",
+        url: existingUrl,
+        storagePath: existingStoragePath,
+        size: Number(card.dataset.size || 0)
       });
     }
   }
-
   return resources;
 }
 
-// ======================================================
 // COLLECT ACTIVITY DATA
 // ======================================================
 
@@ -1141,9 +1159,7 @@ async function saveActivity(status) {
     return;
   }
 
-  const isModule = type === "module";
-
-  const collectionName = isModule
+  const collectionName = type === "module"
     ? COLLECTIONS.modules
     : COLLECTIONS.activities;
 
@@ -1171,11 +1187,8 @@ async function saveActivity(status) {
   setSavingState(true);
 
   try {
-    let resources = existing?.resources || [];
-
-    if (isModule) {
-      resources = await collectResources(documentRef.id);
-    }
+    // All activity types can now have file or link attachments.
+    const resources = await collectResources(documentRef.id);
 
     const payload = {
       type,
@@ -1213,6 +1226,18 @@ async function saveActivity(status) {
       payload.publishedAt = serverTimestamp();
     }
 
+    // Keep a safety margin below Firestore's 1 MiB document limit.
+    const estimatedBytes = new TextEncoder().encode(JSON.stringify({
+      ...payload,
+      createdAt: existing ? undefined : "timestamp",
+      updatedAt: "timestamp",
+      publishedAt: status === "published" ? "timestamp" : undefined
+    })).length;
+
+    if (estimatedBytes > MAX_DOCUMENT_BYTES) {
+      throw new Error("This activity and its attachments are too large for one Firestore document. Remove some files or use shareable links instead.");
+    }
+
     if (existing) {
       await updateDoc(documentRef, payload);
     } else {
@@ -1242,8 +1267,6 @@ async function saveActivity(status) {
     saving = false;
     setSavingState(false);
   }
-
-  
 }
 
 function setSavingState(value) {
@@ -1474,17 +1497,19 @@ function previewItem(item) {
   resources.replaceChildren();
 
   (item.resources || []).forEach(resource => {
-    if (!resource.url) return;
-
     const link = document.createElement("a");
+    let href = resource.url || "";
 
-    link.href = resource.url;
+    if (resource.base64) {
+      href = `data:${resource.mimeType || "application/octet-stream"};base64,${resource.base64}`;
+      link.download = resource.fileName || resource.label || "attachment";
+    }
+
+    if (!href) return;
+    link.href = href;
     link.target = "_blank";
     link.rel = "noopener noreferrer";
-
-    link.textContent =
-      `${resource.label || "Open Resource"} ↗`;
-
+    link.textContent = `${resource.label || "Open Attachment"} ↗`;
     resources.appendChild(link);
   });
 
@@ -1548,18 +1573,8 @@ async function deleteActivity(item) {
       doc(db, item.collectionName, item.id)
     );
 
-    for (const resource of item.resources || []) {
-      if (!resource.storagePath) continue;
-
-      try {
-        await deleteObject(
-          ref(storage, resource.storagePath)
-        );
-      } catch (error) {
-        console.warn("Storage cleanup:", error);
-      }
-    }
-
+    // Base64 attachments are stored inside the activity document itself.
+    // Deleting the activity document also deletes its attachments.
     showNotice("Activity deleted.", "success");
 
   } catch (error) {
@@ -1702,9 +1717,6 @@ function errorMessage(error) {
     return "Permission denied. Check your Firestore rules.";
   }
 
-  if (error?.code === "storage/unauthorized") {
-    return "Storage upload denied. Check Firebase Storage rules.";
-  }
 
   return error?.message ||
     "An unexpected error occurred.";
