@@ -1,0 +1,702 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#635bff">
+  <title>Quiz Builder | EqualLearn</title>
+
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/equallearn.css">
+  <link rel="manifest" href="../manifest.webmanifest">
+  <link rel="icon" href="../assets/icons/equallearn-logo.png">
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #f1f1ff;
+      font-family: inherit;
+      color: #292940;
+    }
+
+    button, input, select, textarea { font: inherit; }
+
+    button { cursor: pointer; }
+
+    .page {
+      max-width: 1100px;
+      margin: auto;
+      padding: 30px 18px 60px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-bottom: 25px;
+    }
+
+    .header h1 {
+      margin: 0;
+      color: #635bff;
+      font-size: 28px;
+    }
+
+    .header p, .muted {
+      color: #77778b;
+      font-size: 14px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 18px;
+      padding: 23px;
+      margin-bottom: 18px;
+      box-shadow: 0 5px 22px rgba(30,30,70,.06);
+    }
+
+    .card h2 { margin: 0 0 17px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 15px;
+    }
+
+    .form-group { margin-bottom: 15px; }
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 7px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 12px 13px;
+      border: 1px solid #dedeea;
+      border-radius: 10px;
+      background: #fff;
+      color: #292940;
+      outline: none;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: #635bff;
+      box-shadow: 0 0 0 3px rgba(99,91,255,.1);
+    }
+
+    textarea {
+      min-height: 95px;
+      resize: vertical;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 10px;
+      padding: 12px 17px;
+      font-weight: 700;
+    }
+
+    .primary { background: #635bff; color: white; }
+    .secondary { background: #ededf8; color: #444; }
+    .danger { background: #ffe8e8; color: #b42318; }
+    .success { background: #e6f8ee; color: #167443; }
+
+    .btn:hover { filter: brightness(.97); }
+
+    .section-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 10px;
+      margin: 12px 0 18px;
+    }
+
+    .section-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid #e6e6f0;
+      border-radius: 11px;
+      padding: 12px;
+      cursor: pointer;
+      background: #fafaff;
+    }
+
+    .section-option input {
+      width: auto;
+      margin: 0;
+      accent-color: #635bff;
+    }
+
+    .section-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .question-editor {
+      border: 1px solid #e8e8f1;
+      border-radius: 15px;
+      padding: 18px;
+      margin-top: 15px;
+      background: #fcfcff;
+    }
+
+    .question-editor h3 { margin-top: 0; }
+
+    .question-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .question-item {
+      border: 1px solid #e7e7f0;
+      border-radius: 13px;
+      padding: 17px;
+    }
+
+    .question-item h3 {
+      margin: 0 0 12px;
+      font-size: 16px;
+    }
+
+    .question-item ol {
+      padding-left: 22px;
+      line-height: 1.8;
+    }
+
+    .question-meta {
+      color: #777;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+
+    .question-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .empty {
+      padding: 30px;
+      text-align: center;
+      color: #888;
+    }
+
+    .notice {
+      padding: 14px;
+      border-radius: 11px;
+      background: #f1efff;
+      color: #5147c9;
+      font-size: 13px;
+      margin-bottom: 15px;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #ededf8;
+    }
+
+    .status.active {
+      color: #167443;
+      background: #e6f8ee;
+    }
+
+    .status.draft {
+      color: #8b6500;
+      background: #fff5d8;
+    }
+
+    .message {
+      padding: 13px;
+      border-radius: 10px;
+      margin-top: 15px;
+      display: none;
+    }
+
+    .message.show { display: block; }
+    .message.error { background: #ffe9e9; color: #a52222; }
+    .message.ok { background: #e7f8ee; color: #167443; }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar button { flex: 1; min-width: 130px; }
+
+    .hidden { display: none !important; }
+
+    @media(max-width: 650px) {
+      .page { padding: 22px 14px 45px; }
+      .grid { grid-template-columns: 1fr; }
+      .header { align-items: flex-start; }
+      .header > div { width: 100%; }
+      .header button { width: 100%; }
+      .card { padding: 18px; }
+      .toolbar { flex-direction: column; }
+      .toolbar button { width: 100%; }
+    }
+
+
+/* =========================================
+   EQUALLEARN QUIZ BUILDER - COLOR FIX
+   Consistent Dark Navy + Purple Theme
+========================================= */
+
+body .page {
+  color: #f8fafc !important;
+}
+
+/* Cards and sections */
+body .page .card {
+  background: #111a2e !important;
+  border: 1px solid #263550 !important;
+  color: #f8fafc !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.16) !important;
+}
+
+body .page .card h1,
+body .page .card h2,
+body .page .card h3,
+body .page .header h1 {
+  color: #ffffff !important;
+}
+
+/* Descriptions and muted text */
+body .page .muted,
+body .page .header p,
+body .page .question-meta {
+  color: #aab7d0 !important;
+}
+
+/* Labels */
+body .page label,
+body .page .form-group label {
+  color: #dce5f5 !important;
+}
+
+/* Inputs, select and textarea */
+body .page input:not([type="checkbox"]),
+body .page select,
+body .page textarea {
+  background: #0b1427 !important;
+  color: #f8fafc !important;
+  border: 1px solid #30415f !important;
+  border-radius: 11px !important;
+}
+
+body .page input::placeholder,
+body .page textarea::placeholder {
+  color: #8291aa !important;
+  opacity: 1;
+}
+
+body .page input:focus,
+body .page select:focus,
+body .page textarea:focus {
+  border-color: #756bff !important;
+  box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.18) !important;
+  outline: none !important;
+}
+
+/* Dropdown options */
+body .page select option {
+  background: #111a2e !important;
+  color: #f8fafc !important;
+}
+
+/* Section assignment and checkbox containers */
+body .page .section-option {
+  background: #18243b !important;
+  border: 1px solid #30415f !important;
+  color: #e5ecf8 !important;
+  border-radius: 12px !important;
+}
+
+body .page .section-option:hover {
+  background: #202e4b !important;
+  border-color: #756bff !important;
+}
+
+body .page input[type="checkbox"] {
+  accent-color: #756bff !important;
+}
+
+/* Question editor */
+body .page .question-editor {
+  background: #17233a !important;
+  border: 1px solid #30415f !important;
+  color: #f8fafc !important;
+}
+
+body .page .question-editor label {
+  color: #e5ecf8 !important;
+}
+
+/* Question list */
+body .page .question-item {
+  background: #17233a !important;
+  border: 1px solid #30415f !important;
+  color: #f8fafc !important;
+}
+
+body .page .question-item h3,
+body .page .question-item p,
+body .page .question-item li {
+  color: #e5ecf8 !important;
+}
+
+/* Empty states */
+body .page .empty {
+  color: #aab7d0 !important;
+}
+
+/* Notices */
+body .page .notice {
+  background: #25204d !important;
+  border: 1px solid #49418c !important;
+  color: #dcd8ff !important;
+}
+
+/* Buttons */
+body .page .btn.primary {
+  background: #635bff !important;
+  color: #ffffff !important;
+}
+
+body .page .btn.secondary {
+  background: #25204d !important;
+  color: #c5beff !important;
+  border: 1px solid #39336f !important;
+}
+
+body .page .btn.danger {
+  background: #44202b !important;
+  color: #ffb7c0 !important;
+}
+
+body .page .btn.success {
+  background: #163b35 !important;
+  color: #a7f3d0 !important;
+}
+
+body .page .btn:hover {
+  filter: brightness(1.15) !important;
+}
+
+/* Status labels */
+body .page .status.active {
+  background: #163b35 !important;
+  color: #86efac !important;
+}
+
+body .page .status.draft {
+  background: #453719 !important;
+  color: #fcd879 !important;
+}
+
+/* Messages */
+body .page .message.error {
+  background: #44202b !important;
+  color: #ffb7c0 !important;
+}
+
+body .page .message.ok {
+  background: #163b35 !important;
+  color: #a7f3d0 !important;
+}
+
+/* Quiz count */
+body .page #selectedSectionCount,
+body .page #questionCount {
+  color: #aab7d0 !important;
+}
+
+/* Date and time picker */
+body .page input[type="datetime-local"] {
+  color-scheme: dark;
+}
+
+/* Improve text selection */
+body .page ::selection {
+  background: #635bff;
+  color: #ffffff;
+}
+
+  </style>
+    <link rel="stylesheet" href="../assets/css/responsive-layout.css">
+</head>
+
+<body>
+
+<main class="page">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div>
+      <h1>Quiz Builder</h1>
+      <p>Create, organize, and publish assessments for your students.</p>
+    </div>
+
+    <button class="btn secondary" id="backBtn" type="button">
+      ← Back to Dashboard
+    </button>
+  </header>
+
+  <!-- QUIZ INFORMATION -->
+  <section class="card">
+    <h2>Quiz Information</h2>
+
+    <div class="form-group">
+      <label for="quizTitle">Quiz Title *</label>
+      <input id="quizTitle" maxlength="120"
+        placeholder="Example: Gender Equality Assessment">
+    </div>
+
+    <div class="form-group">
+      <label for="quizDescription">Instructions / Description</label>
+      <textarea id="quizDescription"
+        placeholder="Enter instructions for your students..."></textarea>
+    </div>
+
+    <div class="grid">
+      <div class="form-group">
+        <label for="lessonSelect">Related Lesson *</label>
+        <select id="lessonSelect">
+          <option value="">Loading lessons...</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="quizMode">Quiz Type</label>
+        <select id="quizMode">
+          <option value="native">Built-in Quiz</option>
+          <option value="external">External Quiz Link</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- EXTERNAL QUIZ -->
+    <div id="externalFields" class="hidden">
+      <div class="form-group">
+        <label for="externalQuizUrl">External Quiz URL *</label>
+        <input id="externalQuizUrl" type="url"
+          placeholder="https://forms.google.com/...">
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION ASSIGNMENT -->
+  <section class="card">
+    <h2>Section Assignment</h2>
+    <p class="muted">
+      Choose which students can access this quiz.
+    </p>
+
+    <div class="section-actions">
+      <button class="btn secondary" id="selectAllSections" type="button">
+        Select All
+      </button>
+
+      <button class="btn secondary" id="clearSections" type="button">
+        Clear Selection
+      </button>
+    </div>
+
+    <div id="sectionList" class="section-list">
+      <div class="empty">Loading assigned sections...</div>
+    </div>
+
+    <p id="selectedSectionCount" class="muted">
+      0 sections selected
+    </p>
+  </section>
+
+  <!-- QUIZ SETTINGS -->
+  <section class="card">
+    <h2>Assessment Settings</h2>
+
+    <div class="grid">
+      <div class="form-group">
+        <label for="passingScore">Passing Score (%)</label>
+        <input id="passingScore" type="number"
+          min="1" max="100" value="75">
+      </div>
+
+      <div class="form-group">
+        <label for="timeLimit">Time Limit (minutes)</label>
+        <input id="timeLimit" type="number"
+          min="0" max="300" value="30">
+      </div>
+
+      <div class="form-group">
+        <label for="attemptLimit">Maximum Attempts</label>
+        <input id="attemptLimit" type="number"
+          min="1" max="20" value="1">
+      </div>
+
+      <div class="form-group">
+        <label for="availableAt">Available From</label>
+        <input id="availableAt" type="datetime-local">
+      </div>
+
+      <div class="form-group">
+        <label for="dueDate">Due Date</label>
+        <input id="dueDate" type="datetime-local">
+      </div>
+    </div>
+
+    <label class="section-option">
+      <input type="checkbox" id="shuffleQuestions">
+      Shuffle question order
+    </label>
+
+    <label class="section-option">
+      <input type="checkbox" id="shuffleChoices">
+      Shuffle answer choices
+    </label>
+  </section>
+
+  <!-- QUESTION EDITOR -->
+  <section class="card" id="questionEditor">
+    <h2>Question Builder</h2>
+
+    <p class="muted">
+      Add multiple questions to create one complete quiz.
+    </p>
+
+    <div class="question-editor">
+
+      <div class="form-group">
+        <label for="questionType">Question Type</label>
+        <select id="questionType">
+          <option value="multiple_choice">Multiple Choice</option>
+          <option value="true_false">True or False</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="question">Question *</label>
+        <textarea id="question"
+          placeholder="Enter your question..."></textarea>
+      </div>
+
+      <div id="multipleChoiceFields">
+        <div class="grid">
+          <div>
+            <label for="choiceA">Choice A *</label>
+            <input id="choiceA" placeholder="Enter choice A">
+          </div>
+
+          <div>
+            <label for="choiceB">Choice B *</label>
+            <input id="choiceB" placeholder="Enter choice B">
+          </div>
+
+          <div>
+            <label for="choiceC">Choice C *</label>
+            <input id="choiceC" placeholder="Enter choice C">
+          </div>
+
+          <div>
+            <label for="choiceD">Choice D *</label>
+            <input id="choiceD" placeholder="Enter choice D">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="correctAnswer">Correct Answer *</label>
+        <select id="correctAnswer">
+          <option value="">Select correct answer</option>
+          <option value="A">Choice A</option>
+          <option value="B">Choice B</option>
+          <option value="C">Choice C</option>
+          <option value="D">Choice D</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="questionPoints">Points</label>
+        <input id="questionPoints" type="number"
+          min="1" max="100" value="1">
+      </div>
+
+      <button class="btn primary" id="addQuestion" type="button">
+        + Add Question
+      </button>
+
+    </div>
+  </section>
+
+  <!-- QUESTION LIST -->
+  <section class="card">
+    <h2>Quiz Questions</h2>
+
+    <p id="questionCount" class="muted">0 questions · 0 total points</p>
+
+    <div id="questionList" class="question-list">
+      <div class="empty">No questions added yet.</div>
+    </div>
+  </section>
+
+  <!-- PUBLISH -->
+  <section class="card">
+    <h2>Publish Assessment</h2>
+
+    <div class="notice">
+      Review your quiz details, assigned sections, and questions before publishing.
+      Published quizzes will become visible to assigned students according to their availability schedule.
+    </div>
+
+    <div class="toolbar">
+      <button class="btn secondary" id="previewQuiz" type="button">
+        Preview Quiz
+      </button>
+
+      <button class="btn secondary" id="saveDraft" type="button">
+        Save as Draft
+      </button>
+
+      <button class="btn primary" id="publishQuiz" type="button">
+        Publish Quiz
+      </button>
+    </div>
+
+    <div id="builderMessage" class="message" role="status"></div>
+  </section>
+
+  <!-- MY QUIZZES -->
+  <section class="card">
+    <h2>My Quizzes</h2>
+
+    <div id="myQuizzes">
+      <div class="empty">Loading quizzes...</div>
+    </div>
+  </section>
+
+</main>
+
+<script type="module" src="../assets/js/quiz-builder.js"></script>
+<script type="module" src="../assets/js/ui-shell.js"></script>
+<script type="module" src="../assets/js/pwa.js"></script>
+<script type="module" src="../assets/js/theme.js"></script>
+
+</body>
+</html>

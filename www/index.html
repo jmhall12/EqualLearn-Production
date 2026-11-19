@@ -1,0 +1,2508 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#edf0fa">
+
+  <title>EqualLearn — Learning Without Limits</title>
+  <meta name="description" content="EqualLearn is a modern learning platform connecting students, teachers, and administrators through one seamless digital learning experience.">
+  <meta name="application-name" content="EqualLearn">
+
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icons/equallearn-logo.png">
+  <link rel="apple-touch-icon" href="assets/icons/equallearn-logo.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="assets/css/equallearn.css">
+
+<style>
+
+
+/* ==========================================================
+   EQUALLEARN — PREMIUM EDTECH VISUAL UPGRADE
+   Purple / Lavender / Modern SaaS / Glassmorphism
+========================================================== */
+
+:root {
+  --bg: #f7f6fc;
+  --surface: #ffffff;
+  --surface-soft: #f5f2ff;
+  --text: #211d38;
+  --muted: #77738f;
+  --purple: #7957e8;
+  --purple-dark: #5e40c6;
+  --purple-light: #eee9ff;
+  --green: #38b990;
+  --border: #eae6f5;
+  --shadow: 0 12px 35px rgba(55, 38, 111, .075);
+  --shadow-hover: 0 22px 55px rgba(65, 45, 130, .14);
+  --radius: 22px;
+  --font-heading: "Plus Jakarta Sans", sans-serif;
+  --font-body: "DM Sans", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 100px;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  font-family: var(--font-body);
+  background:
+    radial-gradient(ellipse at 8% 8%, rgba(159,130,255,.12), transparent 34%),
+    radial-gradient(ellipse at 95% 38%, rgba(195,173,255,.12), transparent 32%),
+    #f7f6fc;
+  overflow-x: hidden;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.premium-container {
+  width: min(1200px, calc(100% - 48px));
+  margin-inline: auto;
+}
+
+/* HEADER */
+
+.premium-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: rgba(249,248,253,.78);
+  border-bottom: 1px solid rgba(225,218,245,.8);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  transition: background .3s, box-shadow .3s;
+}
+
+.premium-nav {
+  min-height: 78px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.premium-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  flex-shrink: 0;
+  font-family: var(--font-heading);
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+.brand-icon {
+  width: 43px;
+  height: 43px;
+  display: block;
+  object-fit: cover;
+  border-radius: 14px;
+  box-shadow: 0 7px 20px rgba(110,80,210,.18);
+}
+
+.brand-name {
+  color: #28213e;
+}
+
+.brand-name span {
+  color: var(--purple);
+}
+
+.premium-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.premium-links > a:not(.premium-btn) {
+  position: relative;
+  color: #77718f;
+  font-size: 13px;
+  font-weight: 700;
+  transition: color .25s;
+}
+
+.premium-links > a:not(.premium-btn)::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -8px;
+  width: 0;
+  height: 2px;
+  border-radius: 5px;
+  background: var(--purple);
+  transition: width .25s;
+}
+
+.premium-links > a:not(.premium-btn):hover {
+  color: var(--purple);
+}
+
+.premium-links > a:not(.premium-btn):hover::after {
+  width: 100%;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* BUTTONS */
+
+.premium-btn {
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 0 21px;
+  border: 1px solid transparent;
+  border-radius: 13px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+  transition: background .25s, color .25s, border-color .25s,
+    transform .25s, box-shadow .25s;
+}
+
+.premium-btn:hover {
+  transform: translateY(-3px);
+}
+
+.premium-btn:active {
+  transform: translateY(-1px);
+}
+
+.premium-btn-primary {
+  color: white;
+  background: linear-gradient(125deg, #9274f5, #6e4bdc);
+  box-shadow: 0 9px 22px rgba(116,79,222,.25);
+}
+
+.premium-btn-primary:hover {
+  color: white;
+  background: linear-gradient(125deg, #805fe8, #5d3cc8);
+  box-shadow: 0 14px 28px rgba(116,79,222,.32);
+}
+
+.premium-btn-ghost {
+  color: #6549c5;
+  background: rgba(255,255,255,.85);
+  border-color: #e6e0f5;
+  box-shadow: 0 4px 13px rgba(50,35,100,.04);
+}
+
+.premium-btn-ghost:hover {
+  color: #5133b2;
+  background: #f0ebff;
+  border-color: #d9cdfb;
+}
+
+.mobile-menu-button {
+  width: 44px;
+  height: 44px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  color: var(--purple);
+  background: white;
+  cursor: pointer;
+  font-size: 21px;
+  box-shadow: var(--shadow);
+}
+
+/* HERO */
+
+.premium-hero {
+  position: relative;
+  min-height: 660px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 55px;
+  padding-top: 75px;
+  padding-bottom: 85px;
+}
+
+.premium-hero::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 5%;
+  left: -14%;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: rgba(167,139,250,.12);
+  filter: blur(85px);
+  pointer-events: none;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  animation: heroEnter .8s ease both;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 15px;
+  margin-bottom: 25px;
+  border: 1px solid #e1d8ff;
+  border-radius: 30px;
+  color: #694ac7;
+  background: linear-gradient(120deg,#f1edff,#fff);
+  box-shadow: 0 5px 17px rgba(100,72,180,.07);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+}
+
+.hero-badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #43c89b;
+  box-shadow: 0 0 0 4px rgba(67,200,155,.13);
+  animation: dotPulse 2s infinite;
+}
+
+.hero-title {
+  max-width: 650px;
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(43px,5.5vw,70px);
+  line-height: 1.08;
+  letter-spacing: -4px;
+  font-weight: 800;
+  color: #211b39;
+}
+
+.hero-title .highlight {
+  color: transparent;
+  background: linear-gradient(110deg,#9875f7,#6543d1 70%,#a47cf4);
+  background-clip: text;
+  -webkit-background-clip: text;
+}
+
+.hero-description {
+  max-width: 520px;
+  margin: 25px 0 31px;
+  color: #77728c;
+  font-size: 14px;
+  line-height: 1.95;
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 13px;
+}
+
+.hero-actions .premium-btn {
+  min-height: 51px;
+  padding-inline: 24px;
+}
+
+.hero-note {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-top: 26px;
+  color: #77728c;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.hero-note-icon {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  color: #32a982;
+  background: #e3f7ef;
+}
+
+/* DASHBOARD PREVIEW */
+
+.hero-visual {
+  position: relative;
+  min-width: 0;
+  perspective: 1200px;
+}
+
+.visual-glow {
+  position: absolute;
+  width: 370px;
+  height: 370px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  border-radius: 50%;
+  background: rgba(151,120,245,.2);
+  filter: blur(65px);
+  pointer-events: none;
+}
+
+.dashboard-preview {
+  position: relative;
+  z-index: 1;
+  padding: 23px;
+  border: 1px solid rgba(255,255,255,.9);
+  border-radius: 25px;
+  background: rgba(255,255,255,.88);
+  box-shadow: 0 30px 80px rgba(71,52,135,.14),
+    0 5px 18px rgba(71,52,135,.06);
+  transform: rotateY(-5deg) rotateX(2deg);
+  transition: transform .5s, box-shadow .5s;
+  animation: dashboardFloat 6s ease-in-out infinite;
+}
+
+.dashboard-preview:hover {
+  transform: rotateY(0) rotateX(0) translateY(-5px);
+  box-shadow: 0 36px 90px rgba(71,52,135,.19);
+}
+
+.preview-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.preview-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.preview-brand-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  color: white;
+  background: linear-gradient(140deg,#9c7cff,#6948d5);
+  box-shadow: 0 5px 12px rgba(117,79,222,.22);
+}
+
+.preview-avatar {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: white;
+  background: linear-gradient(145deg,#93a8ed,#6f80cb);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.preview-welcome {
+  padding: 21px;
+  margin-bottom: 19px;
+  border-radius: 17px;
+  background: linear-gradient(125deg,#9b7bf5,#694bd0);
+  color: white;
+  box-shadow: 0 10px 22px rgba(112,77,210,.19);
+}
+
+.preview-welcome small {
+  opacity: .85;
+  font-size: 10px;
+}
+
+.preview-welcome h3 {
+  margin: 8px 0 6px;
+  font-family: var(--font-heading);
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.preview-welcome p {
+  margin: 0;
+  font-size: 10px;
+  opacity: .9;
+}
+
+.preview-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 22px 0 13px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.preview-section-title span:last-child {
+  color: var(--purple);
+  font-size: 10px;
+}
+
+/* PREVIEW COURSE */
+
+.preview-course {
+  border: 1px solid #eeeaf7;
+  border-radius: 14px;
+  background: white;
+  transition: transform .25s, box-shadow .25s;
+}
+
+.preview-course:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 9px 22px rgba(70,48,130,.08);
+}
+
+/* SECTION HEADINGS */
+
+.section-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 13px;
+  margin-bottom: 16px;
+  border: 1px solid #e5dcff;
+  border-radius: 30px;
+  color: #7153cb;
+  background: #f0ebff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+section h2 {
+  font-family: var(--font-heading);
+  letter-spacing: -1.3px;
+}
+
+/* FEATURES */
+
+#features {
+  position: relative;
+  padding-top: 105px;
+  padding-bottom: 105px;
+  background:
+    radial-gradient(ellipse at 0 50%,rgba(163,137,245,.09),transparent 40%),
+    linear-gradient(180deg,rgba(255,255,255,.55),rgba(247,245,253,.95));
+  border-top: 1px solid rgba(229,222,246,.7);
+  border-bottom: 1px solid rgba(229,222,246,.7);
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 20px;
+}
+
+.feature-card {
+  position: relative;
+  overflow: hidden;
+  padding: 29px;
+  border: 1px solid #ebe6f6;
+  border-radius: 22px;
+  background: rgba(255,255,255,.88);
+  box-shadow: 0 8px 25px rgba(51,38,99,.045);
+  transition: transform .35s, border-color .35s, box-shadow .35s;
+}
+
+.feature-card::before {
+  content: "";
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: rgba(153,123,244,.055);
+  transition: transform .4s;
+}
+
+.feature-card:hover {
+  transform: translateY(-8px);
+  border-color: #d7cafa;
+  box-shadow: var(--shadow-hover);
+}
+
+.feature-card:hover::before {
+  transform: scale(1.5);
+}
+
+.feature-icon {
+  position: relative;
+  width: 57px;
+  height: 57px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 24px;
+  border: 1px solid #e8dfff;
+  border-radius: 17px;
+  color: #7656d8;
+  background: linear-gradient(145deg,#f5f1ff,#eae3ff);
+  box-shadow: 0 7px 16px rgba(119,86,216,.09);
+  font-size: 23px;
+  transition: transform .3s;
+}
+
+.feature-card:hover .feature-icon {
+  transform: translateY(-3px) rotate(-5deg);
+}
+
+.feature-card h3 {
+  margin: 0 0 11px;
+  color: #2a2342;
+  font-family: var(--font-heading);
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.feature-card p {
+  margin: 0;
+  color: #79748e;
+  font-size: 12px;
+  line-height: 1.9;
+}
+
+/* ANDROID */
+
+#android {
+  padding-top: 105px;
+  padding-bottom: 105px;
+}
+
+.android-section {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr .8fr;
+  align-items: center;
+  gap: 50px;
+  padding: 55px;
+  border: 1px solid #e9e2f7;
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 90% 10%,rgba(166,138,255,.18),transparent 35%),
+    linear-gradient(125deg,#fff,#f5f0ff);
+  box-shadow: 0 20px 60px rgba(70,48,130,.075);
+}
+
+.android-content h2 {
+  margin: 0;
+  color: #29213f;
+  font-family: var(--font-heading);
+  font-size: clamp(30px,4vw,45px);
+  line-height: 1.17;
+  letter-spacing: -2px;
+  font-weight: 800;
+}
+
+.android-content p {
+  max-width: 530px;
+  margin: 19px 0 25px;
+  color: #77718d;
+  font-size: 13px;
+  line-height: 1.95;
+}
+
+.android-points {
+  display: grid;
+  gap: 13px;
+  margin-bottom: 27px;
+}
+
+.android-point {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  color: #635d79;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.android-point span {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #d7f0e4;
+  border-radius: 50%;
+  color: #279d78;
+  background: #e6f8f0;
+  font-size: 10px;
+}
+
+/* PHONE MOCKUP */
+
+.phone-visual {
+  min-height: 360px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.phone-visual::before {
+  content: "";
+  position: absolute;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: rgba(146,113,237,.13);
+  filter: blur(45px);
+}
+
+.phone-frame {
+  position: relative;
+  z-index: 1;
+  width: 195px;
+  height: 340px;
+  padding: 10px;
+  border: 2px solid #e2d9f7;
+  border-radius: 32px;
+  background: #fff;
+  box-shadow: 0 25px 55px rgba(69,45,136,.19);
+  transform: rotate(4deg);
+  transition: transform .4s;
+  animation: phoneFloat 5s ease-in-out infinite;
+}
+
+.phone-frame:hover {
+  transform: rotate(0deg) translateY(-7px);
+}
+
+.phone-screen {
+  height: 100%;
+  padding: 17px 12px;
+  overflow: hidden;
+  border-radius: 23px;
+  background: linear-gradient(160deg,#f7f4ff,#f0eef8);
+}
+
+.phone-notch {
+  width: 58px;
+  height: 5px;
+  margin: 0 auto 22px;
+  border-radius: 10px;
+  background: #d8d2e9;
+}
+
+.phone-logo {
+  width: 39px;
+  height: 39px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 12px;
+  border-radius: 13px;
+  color: white;
+  background: linear-gradient(145deg,#9677f3,#6846d0);
+  box-shadow: 0 6px 14px rgba(110,73,210,.23);
+  font-weight: 800;
+}
+
+.phone-screen h4 {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-heading);
+  font-size: 12px;
+}
+
+.phone-screen > p {
+  margin: 6px 0 17px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.phone-mini-card {
+  padding: 12px;
+  margin-bottom: 9px;
+  border: 1px solid #eae5f4;
+  border-radius: 13px;
+  background: white;
+  box-shadow: 0 3px 10px rgba(55,40,100,.035);
+}
+
+.phone-mini-card strong {
+  display: block;
+  color: #38304f;
+  font-size: 9px;
+}
+
+.phone-mini-card small {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.phone-mini-bar {
+  height: 5px;
+  margin-top: 9px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #eae6f3;
+}
+
+.phone-mini-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg,#a58af9,#7350dc);
+}
+
+/* ABOUT */
+
+#about {
+  padding-top: 95px;
+  padding-bottom: 95px;
+  background:
+    radial-gradient(ellipse at 50% 100%,rgba(166,137,255,.12),transparent 50%),
+    #f0edf8;
+  border-top: 1px solid #e7e1f2;
+  border-bottom: 1px solid #e7e1f2;
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 20px;
+}
+
+.about-card {
+  position: relative;
+  padding: 31px 26px;
+  overflow: hidden;
+  border: 1px solid #e8e2f2;
+  border-radius: 22px;
+  background: rgba(255,255,255,.86);
+  box-shadow: 0 8px 25px rgba(60,45,110,.04);
+  text-align: center;
+  transition: transform .3s, box-shadow .3s;
+}
+
+.about-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-hover);
+}
+
+.about-card-icon {
+  width: 55px;
+  height: 55px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 17px;
+  border: 1px solid #e8dfff;
+  border-radius: 17px;
+  color: var(--purple);
+  background: linear-gradient(145deg,#f5f0ff,#eae3ff);
+  font-size: 22px;
+}
+
+.about-card h3 {
+  margin: 0 0 10px;
+  color: #302743;
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.about-card p {
+  margin: 0;
+  color: #79738b;
+  font-size: 12px;
+  line-height: 1.9;
+}
+
+/* CALL TO ACTION */
+
+.cta-wrap {
+  padding-top: 105px;
+  padding-bottom: 105px;
+}
+
+.premium-cta {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: 75px 30px;
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 30px;
+  color: white;
+  background:
+    radial-gradient(circle at 10% 0%,rgba(255,255,255,.2),transparent 28%),
+    radial-gradient(circle at 90% 100%,rgba(193,169,255,.35),transparent 32%),
+    linear-gradient(120deg,#8d6cef,#6744ce 55%,#5133b3);
+  box-shadow: 0 25px 65px rgba(91,59,178,.24);
+  text-align: center;
+}
+
+.premium-cta::before,
+.premium-cta::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.premium-cta::before {
+  width: 330px;
+  height: 330px;
+  top: -230px;
+  left: -80px;
+}
+
+.premium-cta::after {
+  width: 450px;
+  height: 450px;
+  right: -150px;
+  bottom: -340px;
+}
+
+.premium-cta .section-kicker {
+  color: white;
+  border-color: rgba(255,255,255,.22);
+  background: rgba(255,255,255,.13);
+}
+
+.premium-cta h2 {
+  position: relative;
+  max-width: 700px;
+  margin: 0 auto;
+  color: white;
+  font-family: var(--font-heading);
+  font-size: clamp(30px,4.5vw,47px);
+  line-height: 1.2;
+  letter-spacing: -2px;
+}
+
+.premium-cta p {
+  max-width: 530px;
+  margin: 18px auto 28px;
+  color: rgba(255,255,255,.82);
+  font-size: 13px;
+  line-height: 1.9;
+}
+
+.premium-cta .premium-btn {
+  color: #6543c5;
+  background: white;
+  box-shadow: 0 9px 24px rgba(30,15,75,.16);
+}
+
+.premium-cta .premium-btn:hover {
+  background: #f4efff;
+  box-shadow: 0 13px 28px rgba(30,15,75,.22);
+}
+
+/* FOOTER */
+
+.premium-footer {
+  padding: 55px 0 23px;
+  border-top: 1px solid #e7e1f2;
+  background: #eeebf6;
+}
+
+.footer-main {
+  display: grid;
+  grid-template-columns: 1.2fr .8fr;
+  gap: 40px;
+  padding-bottom: 35px;
+}
+
+.footer-description {
+  max-width: 390px;
+  margin: 16px 0 0;
+  color: #77718a;
+  font-size: 12px;
+  line-height: 1.9;
+}
+
+.footer-links {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 21px;
+}
+
+.footer-links a {
+  color: #716b85;
+  font-size: 12px;
+  font-weight: 700;
+  transition: color .2s;
+}
+
+.footer-links a:hover {
+  color: var(--purple);
+}
+
+.footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 20px;
+  border-top: 1px solid #ded8eb;
+  color: #89839b;
+  font-size: 10px;
+}
+
+/* REVEAL ANIMATIONS */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1);
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.feature-card:nth-child(2),
+.about-card:nth-child(2) {
+  transition-delay: .08s;
+}
+
+.feature-card:nth-child(3),
+.about-card:nth-child(3) {
+  transition-delay: .16s;
+}
+
+/* ANIMATION KEYFRAMES */
+
+@keyframes heroEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dashboardFloat {
+  0%,100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -9px;
+  }
+}
+
+@keyframes phoneFloat {
+  0%,100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -10px;
+  }
+}
+
+@keyframes dotPulse {
+  0%,100% {
+    box-shadow: 0 0 0 4px rgba(67,200,155,.13);
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgba(67,200,155,.06);
+  }
+}
+
+/* SELECTION AND FOCUS */
+
+::selection {
+  color: white;
+  background: #7957e8;
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 3px solid rgba(121,87,232,.45);
+  outline-offset: 4px;
+}
+
+/* TABLET */
+
+@media (max-width: 1000px) {
+  .premium-hero {
+    gap: 35px;
+  }
+
+  .hero-title {
+    font-size: clamp(40px,5.5vw,58px);
+  }
+
+  .feature-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+
+  .android-section {
+    padding: 38px;
+    gap: 25px;
+  }
+}
+
+/* MOBILE */
+
+@media (max-width: 760px) {
+  .premium-container {
+    width: min(100% - 34px, 600px);
+  }
+
+  .premium-nav {
+    min-height: 70px;
+  }
+
+  .mobile-menu-button {
+    display: flex;
+  }
+
+  .premium-links {
+    position: absolute;
+    top: calc(100% + 9px);
+    left: 17px;
+    right: 17px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 12px;
+    border: 1px solid #e9e2f7;
+    border-radius: 18px;
+    background: rgba(255,255,255,.97);
+    box-shadow: 0 20px 45px rgba(50,35,100,.15);
+    backdrop-filter: blur(18px);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-9px);
+    transition: opacity .25s, visibility .25s, transform .25s;
+  }
+
+  .premium-links.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .premium-links > a:not(.premium-btn) {
+    padding: 13px 12px;
+    border-radius: 10px;
+  }
+
+  .premium-links > a:not(.premium-btn):hover {
+    background: #f3efff;
+  }
+
+  .premium-links > a:not(.premium-btn)::after {
+    display: none;
+  }
+
+  .nav-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 10px 5px 4px;
+    border-top: 1px solid #eee9f7;
+  }
+
+  .premium-hero {
+    min-height: unset;
+    grid-template-columns: 1fr;
+    gap: 45px;
+    padding-top: 65px;
+    padding-bottom: 75px;
+  }
+
+  .hero-title {
+    font-size: clamp(43px,10vw,62px);
+    letter-spacing: -2.8px;
+  }
+
+  .hero-description {
+    font-size: 13px;
+  }
+
+  .hero-visual {
+    max-width: 560px;
+    width: 100%;
+    margin-inline: auto;
+  }
+
+  .dashboard-preview {
+    transform: none;
+    animation: none;
+  }
+
+  .dashboard-preview:hover {
+    transform: translateY(-3px);
+  }
+
+  #features,
+  #android,
+  #about {
+    padding-top: 75px;
+    padding-bottom: 75px;
+  }
+
+  .android-section {
+    grid-template-columns: 1fr;
+    padding: 30px 23px;
+    gap: 15px;
+  }
+
+  .phone-visual {
+    min-height: 340px;
+  }
+
+  .about-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cta-wrap {
+    padding-top: 75px;
+    padding-bottom: 75px;
+  }
+
+  .premium-cta {
+    padding: 55px 22px;
+    border-radius: 23px;
+  }
+
+  .footer-main {
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+
+  .footer-links {
+    justify-content: flex-start;
+  }
+}
+
+/* SMALL MOBILE */
+
+@media (max-width: 430px) {
+  .premium-brand {
+    font-size: 18px;
+  }
+
+  .brand-icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .hero-title {
+    font-size: 42px;
+  }
+
+  .hero-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .hero-actions .premium-btn {
+    width: 100%;
+  }
+
+  .dashboard-preview {
+    padding: 15px;
+    border-radius: 19px;
+  }
+
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .feature-card {
+    padding: 25px;
+  }
+
+  .android-content h2 {
+    font-size: 32px;
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+  }
+}
+
+/* REDUCED MOTION */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+
+/* ==========================================================
+   EQUALLEARN HOMEPAGE — LIGHT THEME COMPATIBILITY FIX
+   Keeps the landing page in the intended lavender design.
+========================================================== */
+
+html,
+body {
+  color: #211d38 !important;
+  background: #f7f6fc !important;
+  color-scheme: light;
+}
+
+body {
+  background:
+    radial-gradient(ellipse at 8% 8%, rgba(159,130,255,.12), transparent 34%),
+    radial-gradient(ellipse at 95% 38%, rgba(195,173,255,.12), transparent 32%),
+    #f7f6fc !important;
+}
+
+/* Header */
+.premium-header {
+  background: rgba(249,248,253,.88) !important;
+  border-color: #e9e2f5 !important;
+}
+
+.premium-brand,
+.brand-name {
+  color: #28213e !important;
+}
+
+.premium-links > a:not(.premium-btn) {
+  color: #77718f !important;
+}
+
+/* Hero */
+.premium-hero {
+  background: transparent !important;
+}
+
+.hero-title {
+  color: #211b39 !important;
+}
+
+.hero-title .highlight {
+  color: #7957e8 !important;
+}
+
+.hero-description,
+.hero-note {
+  color: #77728c !important;
+}
+
+.hero-badge {
+  color: #694ac7 !important;
+  background: #f0ebff !important;
+}
+
+/* Dashboard preview */
+.dashboard-preview {
+  color: #29243e !important;
+  background: #ffffff !important;
+  border-color: #e5e0ef !important;
+}
+
+.preview-brand,
+.preview-section-title,
+.course-info strong,
+.preview-stat strong {
+  color: #29243e !important;
+}
+
+.preview-course,
+.preview-stat {
+  color: #29243e !important;
+  background: #ffffff !important;
+  border-color: #eae5f4 !important;
+}
+
+.course-info small,
+.preview-stat small {
+  color: #77738f !important;
+}
+
+.preview-section-title span:first-child {
+  color: #38304f !important;
+}
+
+.preview-course .course-info,
+.preview-course .course-info *,
+.preview-stat * {
+  color: #38304f;
+}
+
+.preview-course .course-info small,
+.preview-stat small {
+  color: #77738f !important;
+}
+
+.preview-course .course-percent {
+  color: #7957e8 !important;
+}
+
+/* Features */
+#features {
+  color: #29243e !important;
+  background: #f7f5fc !important;
+}
+
+.feature-card,
+.about-card {
+  color: #29243e !important;
+  background: #ffffff !important;
+  border-color: #eae5f4 !important;
+}
+
+.feature-card h3,
+.about-card h3 {
+  color: #302743 !important;
+}
+
+.feature-card p,
+.about-card p {
+  color: #79748e !important;
+}
+
+/* Android */
+.android-section {
+  color: #29243e !important;
+  background: linear-gradient(125deg,#ffffff,#f5f0ff) !important;
+}
+
+.android-content h2 {
+  color: #29213f !important;
+}
+
+.android-content p,
+.android-point {
+  color: #77718d !important;
+}
+
+/* About */
+#about {
+  color: #29243e !important;
+  background: #f0edf8 !important;
+}
+
+/* Footer */
+.premium-footer {
+  color: #29243e !important;
+  background: #eeebf6 !important;
+}
+
+.footer-description,
+.footer-links a,
+.footer-bottom {
+  color: #77718a !important;
+}
+
+/* CTA retains its purple appearance */
+.premium-cta {
+  color: #ffffff !important;
+}
+
+.premium-cta h2,
+.premium-cta p,
+.premium-cta .section-kicker {
+  color: #ffffff !important;
+}
+
+/* Fix dark-theme inherited text inside preview */
+.dashboard-preview *,
+.preview-course *,
+.preview-stat * {
+  text-shadow: none !important;
+}
+
+.preview-welcome,
+.preview-welcome * {
+  color: #ffffff !important;
+}
+
+.premium-btn-primary {
+  color: #ffffff !important;
+}
+
+.premium-btn-ghost {
+  color: #6549c5 !important;
+  background: #ffffff !important;
+}
+
+/* Keep light theme when theme.js applies dark-theme classes */
+html[data-theme="dark"],
+html.dark,
+body.dark,
+body[data-theme="dark"] {
+  color-scheme: light !important;
+}
+
+
+/* =====================================================
+   EQUALLEARN — INTERACTIVE 3D HERO
+===================================================== */
+
+.hero-visual#equalLearn3D {
+  position: relative;
+  isolation: isolate;
+  min-height: 570px;
+  perspective: 1200px;
+}
+
+
+/* EQUALLEARN 3D VISIBILITY FIX */
+
+.hero-visual#equalLearn3D {
+  position: relative;
+  min-height: 590px;
+  isolation: isolate;
+  perspective: 1400px;
+}
+
+#equalLearn3DCanvas {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: auto;
+  overflow: visible;
+}
+
+#equalLearn3D .dashboard-preview {
+  position: relative;
+  z-index: 2;
+  transform-style: preserve-3d;
+  transition: transform .2s ease;
+  box-shadow:
+    0 35px 90px rgba(30,20,70,.24),
+    0 12px 30px rgba(120,90,220,.15);
+}
+
+#equalLearn3D .floating-note {
+  z-index: 7;
+}
+
+#equalLearn3D .tm-3d-hint {
+  z-index: 8;
+  pointer-events: none;
+}
+
+@media (max-width: 760px) {
+  .hero-visual#equalLearn3D {
+    min-height: 490px;
+  }
+}
+
+
+</style>
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <header class="premium-header">
+    <div class="premium-container premium-nav">
+
+      <a class="premium-brand" href="index.html" aria-label="EqualLearn home">
+  <img
+    class="brand-icon"
+    src="assets/icons/equallearn-logo.png"
+    alt="EqualLearn"
+  >
+  <span class="brand-name">Equal<span>Learn</span></span>
+</a>
+
+      <button
+        class="mobile-menu-button"
+        id="mobileMenuButton"
+        type="button"
+        aria-label="Toggle navigation"
+        aria-expanded="false"
+        aria-controls="mainNavigation"
+      >
+        <span id="menuIcon">☰</span>
+      </button>
+
+      <nav class="premium-links" id="mainNavigation" aria-label="Main navigation">
+        <a href="#features">Features</a>
+        <a href="#android">Android App</a>
+        <a href="#about">About</a>
+
+        <div class="nav-actions">
+          <a class="premium-btn premium-btn-ghost" href="login.html">Sign in</a>
+          <a class="premium-btn premium-btn-primary" href="register.html">Get started ↗</a>
+        </div>
+      </nav>
+
+    </div>
+  </header>
+
+  <main>
+
+    <!-- HERO -->
+    <section class="premium-container premium-hero">
+
+      <div class="hero-content reveal">
+
+        <div class="hero-badge">
+          <span class="hero-badge-dot"></span>
+          A smarter way to learn
+        </div>
+
+        <h1 class="hero-title">
+          Learning without
+          <span class="highlight">limits</span>
+          or barriers.
+        </h1>
+
+        <p class="hero-description">
+          A connected learning experience designed to bring students,
+          educators, and administrators together. Learn, collaborate,
+          and grow in one inclusive digital space.
+        </p>
+
+        <div class="hero-actions">
+          <a class="premium-btn premium-btn-primary" href="register.html">
+            Get started <span>↗</span>
+          </a>
+
+          <a class="premium-btn premium-btn-ghost" href="#features">
+            Explore platform <span>→</span>
+          </a>
+        </div>
+
+        <div class="hero-note">
+          <span class="hero-note-icon">✓</span>
+          <span>Designed for accessible and inclusive education</span>
+        </div>
+
+      </div>
+
+      <!-- Dashboard preview -->
+      <div class="hero-visual reveal" id="equalLearn3D">
+  <canvas id="equalLearn3DCanvas" aria-label="Interactive EqualLearn 3D scene"></canvas>
+
+  <div class="visual-glow"></div>
+
+        <div class="dashboard-preview">
+
+          <div class="preview-topbar">
+            <div class="preview-brand">
+              <span class="preview-brand-icon">E</span>
+              EqualLearn
+            </div>
+            <div class="preview-avatar">S</div>
+          </div>
+
+          <div class="preview-welcome">
+            <small>YOUR LEARNING SPACE</small>
+            <h3>Welcome back, Student!</h3>
+            <p>Keep moving forward. Every lesson counts.</p>
+          </div>
+
+          <div class="preview-section-title">
+            <span>Continue learning</span>
+            <span>View all →</span>
+          </div>
+
+          <div class="preview-course">
+            <div class="course-icon purple">✦</div>
+            <div class="course-info">
+              <strong>Gender Equality</strong>
+              <small>Learning module</small>
+              <div class="course-progress">
+                <span style="width:75%"></span>
+              </div>
+            </div>
+            <span class="course-percent">75%</span>
+          </div>
+
+          <div class="preview-course">
+            <div class="course-icon cyan">◎</div>
+            <div class="course-info">
+              <strong>Social Awareness</strong>
+              <small>Learning module</small>
+              <div class="course-progress">
+                <span style="width:48%"></span>
+              </div>
+            </div>
+            <span class="course-percent">48%</span>
+          </div>
+
+          <div class="preview-course">
+            <div class="course-icon orange">◇</div>
+            <div class="course-info">
+              <strong>Respect & Inclusion</strong>
+              <small>Learning module</small>
+              <div class="course-progress">
+                <span style="width:30%"></span>
+              </div>
+            </div>
+            <span class="course-percent">30%</span>
+          </div>
+
+          <div class="preview-stats">
+            <div class="preview-stat">
+              <small>Learning progress</small>
+              <strong>68%</strong>
+            </div>
+            <div class="preview-stat">
+              <small>Lessons completed</small>
+              <strong>12</strong>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="floating-note">
+          <div class="floating-note-icon">✓</div>
+          <div>
+            <strong>Keep it up!</strong>
+            <small>Progress matters</small>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="premium-section" id="features">
+      <div class="premium-container">
+
+        <div class="section-heading reveal">
+          <span class="section-kicker">One connected platform</span>
+          <h2>Everything you need to <span style="color:var(--purple)">learn and grow.</span></h2>
+          <p>
+            A learning environment that supports the different roles
+            in education through one organized digital experience.
+          </p>
+        </div>
+
+        <div class="feature-grid">
+
+          <article class="feature-card reveal">
+            <div class="feature-icon">✧</div>
+            <h3>For Students</h3>
+            <p>
+              Access learning materials, explore educational content,
+              participate in activities, and track your learning progress.
+            </p>
+          </article>
+
+          <article class="feature-card reveal">
+            <div class="feature-icon">▤</div>
+            <h3>For Teachers</h3>
+            <p>
+              Support learning activities, organize educational resources,
+              and guide students through their learning journey.
+            </p>
+          </article>
+
+          <article class="feature-card reveal">
+            <div class="feature-icon">⌘</div>
+            <h3>For Administrators</h3>
+            <p>
+              Manage the learning environment and help maintain an organized
+              platform for the academic community.
+            </p>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ANDROID APP -->
+    <section class="premium-container" id="android">
+
+      <div class="android-section reveal">
+
+        <div class="android-content">
+
+          <span class="section-kicker">Learn beyond the desktop</span>
+
+          <h2>Your learning space, <span style="color:var(--purple)">on the go.</span></h2>
+
+          <p>
+            EqualLearn is designed with a mobile learning experience in mind.
+            Access your educational platform through a convenient mobile interface.
+          </p>
+
+          <div class="android-points">
+            <div class="android-point">
+              <span>✓</span>
+              Mobile-friendly learning experience
+            </div>
+            <div class="android-point">
+              <span>✓</span>
+              Convenient access to learning resources
+            </div>
+            <div class="android-point">
+              <span>✓</span>
+              Designed for everyday use
+            </div>
+          </div>
+
+          <a class="premium-btn premium-btn-primary" href="MOBILE_APP.md">
+            Explore mobile app information ↗
+          </a>
+
+        </div>
+
+        <div class="phone-visual" aria-label="Illustration of the EqualLearn mobile interface">
+
+          <div class="phone-frame">
+            <div class="phone-screen">
+
+              <div class="phone-notch"></div>
+
+              <div class="phone-logo">E</div>
+              <h4>EqualLearn</h4>
+              <p>Your learning journey starts here</p>
+
+              <div class="phone-mini-card">
+                <strong>Gender Equality</strong>
+                <small>Continue your lesson</small>
+                <div class="phone-mini-bar">
+                  <span style="width:75%"></span>
+                </div>
+              </div>
+
+              <div class="phone-mini-card">
+                <strong>Social Awareness</strong>
+                <small>Learning module</small>
+                <div class="phone-mini-bar">
+                  <span style="width:48%"></span>
+                </div>
+              </div>
+
+              <div class="phone-mini-card">
+                <strong>Respect & Inclusion</strong>
+                <small>Learning module</small>
+                <div class="phone-mini-bar">
+                  <span style="width:30%"></span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section class="premium-section" id="about">
+      <div class="premium-container">
+
+        <div class="section-heading reveal">
+          <span class="section-kicker">Designed for education</span>
+          <h2>Learning should be <span style="color:var(--purple)">for everyone.</span></h2>
+          <p>
+            EqualLearn promotes a learning environment where access,
+            awareness, and participation matter.
+          </p>
+        </div>
+
+        <div class="about-grid">
+
+          <article class="about-card reveal">
+            <div class="about-card-icon">◎</div>
+            <h3>Inclusive Learning</h3>
+            <p>
+              Encourage an educational environment where everyone
+              can participate and learn.
+            </p>
+          </article>
+
+          <article class="about-card reveal">
+            <div class="about-card-icon">✦</div>
+            <h3>Awareness & Education</h3>
+            <p>
+              Support understanding through organized learning
+              materials and educational activities.
+            </p>
+          </article>
+
+          <article class="about-card reveal">
+            <div class="about-card-icon">↗</div>
+            <h3>Continuous Growth</h3>
+            <p>
+              Make learning a continuous journey through accessible
+              digital learning experiences.
+            </p>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- CALL TO ACTION -->
+    <section class="premium-container cta-wrap">
+
+      <div class="premium-cta reveal">
+
+        <span class="section-kicker">Your next step starts here</span>
+
+        <h2>Make every learning opportunity count.</h2>
+
+        <p>
+          Be part of a connected learning environment.
+          Start exploring EqualLearn today.
+        </p>
+
+        <a class="premium-btn" href="register.html">
+          Get started with EqualLearn ↗
+        </a>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="premium-footer">
+    <div class="premium-container">
+
+      <div class="footer-main">
+
+        <div>
+          <a class="premium-brand" href="index.html">
+            <span class="brand-icon">E</span>
+            <span class="brand-name">Equal<span>Learn</span></span>
+          </a>
+
+          <p class="footer-description">
+            A connected digital learning experience designed
+            to support inclusive education and awareness.
+          </p>
+        </div>
+
+        <nav class="footer-links" aria-label="Footer navigation">
+          <a href="#features">Features</a>
+          <a href="#android">Android</a>
+          <a href="#about">About</a>
+          <a href="login.html">Sign in</a>
+          <a href="register.html">Register</a>
+        </nav>
+
+      </div>
+
+      <div class="footer-bottom">
+        <span>© <span id="currentYear"></span> EqualLearn. All rights reserved.</span>
+        <span>Learning without limits or barriers.</span>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- EXISTING PROJECT SCRIPTS -->
+  <script type="module" src="assets/js/theme.js"></script>
+
+  <script type="module">
+    import { hydrateIcons } from "./assets/js/icons.js";
+
+    if (typeof hydrateIcons === "function") {
+      hydrateIcons();
+    }
+  </script>
+
+  <script type="module" src="assets/js/pwa.js"></script>
+
+  <script>
+    // Mobile navigation
+    const menuButton = document.getElementById("mobileMenuButton");
+    const navigation = document.getElementById("mainNavigation");
+    const menuIcon = document.getElementById("menuIcon");
+
+    if (menuButton && navigation) {
+      menuButton.addEventListener("click", () => {
+        const isOpen = navigation.classList.toggle("open");
+
+        menuButton.setAttribute("aria-expanded", String(isOpen));
+
+        if (menuIcon) {
+          menuIcon.textContent = isOpen ? "✕" : "☰";
+        }
+      });
+
+      navigation.querySelectorAll("a").forEach(link => {
+        link.addEventListener("click", () => {
+          navigation.classList.remove("open");
+          menuButton.setAttribute("aria-expanded", "false");
+
+          if (menuIcon) {
+            menuIcon.textContent = "☰";
+          }
+        });
+      });
+
+      document.addEventListener("click", event => {
+        if (
+          navigation.classList.contains("open") &&
+          !navigation.contains(event.target) &&
+          !menuButton.contains(event.target)
+        ) {
+          navigation.classList.remove("open");
+          menuButton.setAttribute("aria-expanded", "false");
+
+          if (menuIcon) {
+            menuIcon.textContent = "☰";
+          }
+        }
+      });
+    }
+
+    // Reveal animation
+    const revealElements = document.querySelectorAll(".reveal");
+
+    if ("IntersectionObserver" in window) {
+      const revealObserver = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+            revealObserver.unobserve(entry.target);
+          }
+        });
+      }, {
+        threshold: 0.12
+      });
+
+      revealElements.forEach(element => {
+        revealObserver.observe(element);
+      });
+    } else {
+      revealElements.forEach(element => {
+        element.classList.add("visible");
+      });
+    }
+
+    // Footer year
+    const yearElement = document.getElementById("currentYear");
+
+    if (yearElement) {
+      yearElement.textContent = new Date().getFullYear();
+    }
+
+
+    
+  </script>
+
+
+<script type="module">
+import * as THREE from
+  "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js";
+
+/* =====================================================
+   EQUALLEARN — INTERACTIVE 3D EXPERIENCE
+===================================================== */
+
+const container = document.getElementById("equalLearn3D");
+const canvas = document.getElementById("equalLearn3DCanvas");
+const dashboard = container?.querySelector(".dashboard-preview");
+
+if (
+  container &&
+  canvas &&
+  dashboard &&
+  !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+) {
+  let renderer;
+
+  try {
+    renderer = new THREE.WebGLRenderer({
+      canvas,
+      alpha: true,
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+  } catch (error) {
+    console.warn("EqualLearn 3D unavailable:", error);
+  }
+
+  if (renderer) {
+    const scene = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(
+      38,
+      1,
+      0.1,
+      100
+    );
+
+    camera.position.set(0, 0, 10);
+
+    renderer.setPixelRatio(
+      Math.min(window.devicePixelRatio || 1, 2)
+    );
+
+    renderer.setClearColor(0x000000, 0);
+
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+    /* LIGHTING */
+
+    scene.add(
+      new THREE.AmbientLight(0xffffff, 1.7)
+    );
+
+    const mainLight = new THREE.PointLight(
+      0xb69aff,
+      45,
+      30
+    );
+
+    mainLight.position.set(-4, 5, 7);
+    scene.add(mainLight);
+
+    const blueLight = new THREE.PointLight(
+      0x91c8ff,
+      28,
+      25
+    );
+
+    blueLight.position.set(5, -3, 4);
+    scene.add(blueLight);
+
+    /* MATERIALS */
+
+    const purpleMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x9575ed,
+      metalness: .25,
+      roughness: .22,
+      clearcoat: 1,
+      clearcoatRoughness: .15
+    });
+
+    const lavenderMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xc9baff,
+      metalness: .15,
+      roughness: .2,
+      clearcoat: 1
+    });
+
+    const blueMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x8dbbff,
+      metalness: .3,
+      roughness: .22,
+      clearcoat: 1
+    });
+
+    const whiteMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xffffff,
+      metalness: .1,
+      roughness: .18,
+      clearcoat: 1
+    });
+
+    /* 3D OBJECT GROUP */
+
+    const world = new THREE.Group();
+    scene.add(world);
+
+    const interactiveObjects = [];
+
+    function addInteractive(mesh, position, scale = 1) {
+      mesh.position.set(...position);
+      mesh.scale.setScalar(scale);
+
+      mesh.userData.baseY = mesh.position.y;
+      mesh.userData.phase = Math.random() * Math.PI * 2;
+
+      world.add(mesh);
+      interactiveObjects.push(mesh);
+
+      return mesh;
+    }
+
+    /* FLOATING TORUS */
+
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(1.05, .12, 24, 100),
+      lavenderMaterial
+    );
+
+    addInteractive(ring, [-3.2, 1.65, -.8], .75);
+
+    /* SECOND RING */
+
+    const ring2 = new THREE.Mesh(
+      new THREE.TorusGeometry(.62, .09, 20, 80),
+      purpleMaterial
+    );
+
+    addInteractive(ring2, [3.25, -1.65, -.6], .9);
+
+    /* 3D BOOK OBJECT */
+
+    const book = new THREE.Group();
+
+    const bookCover = new THREE.Mesh(
+      new THREE.BoxGeometry(1.05, 1.35, .18),
+      purpleMaterial
+    );
+
+    const bookPages = new THREE.Mesh(
+      new THREE.BoxGeometry(.94, 1.25, .1),
+      whiteMaterial
+    );
+
+    bookPages.position.z = .12;
+
+    book.add(bookCover, bookPages);
+
+    addInteractive(book, [-3.2, -1.3, .1], .75);
+
+    /* FLOATING CUBE */
+
+    const cube = new THREE.Mesh(
+      new THREE.BoxGeometry(.75, .75, .75),
+      blueMaterial
+    );
+
+    addInteractive(cube, [3.1, 1.65, -.5], .75);
+
+    /* FLOATING SPHERES */
+
+    const sphere1 = new THREE.Mesh(
+      new THREE.SphereGeometry(.25, 32, 32),
+      lavenderMaterial
+    );
+
+    addInteractive(sphere1, [-2.1, 2.6, -.2]);
+
+    const sphere2 = new THREE.Mesh(
+      new THREE.SphereGeometry(.18, 32, 32),
+      blueMaterial
+    );
+
+    addInteractive(sphere2, [2.1, -2.4, .2]);
+
+    const sphere3 = new THREE.Mesh(
+      new THREE.SphereGeometry(.13, 24, 24),
+      purpleMaterial
+    );
+
+    addInteractive(sphere3, [3.8, .1, -.4]);
+
+    /* PARTICLES */
+
+    const particleCount = 100;
+    const particlePositions = new Float32Array(
+      particleCount * 3
+    );
+
+    for (let i = 0; i < particleCount; i++) {
+      particlePositions[i * 3] =
+        (Math.random() - .5) * 10;
+
+      particlePositions[i * 3 + 1] =
+        (Math.random() - .5) * 7;
+
+      particlePositions[i * 3 + 2] =
+        -2 - Math.random() * 4;
+    }
+
+    const particleGeometry = new THREE.BufferGeometry();
+
+    particleGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(particlePositions, 3)
+    );
+
+    const particles = new THREE.Points(
+      particleGeometry,
+      new THREE.PointsMaterial({
+        color: 0x9b80ed,
+        size: .035,
+        transparent: true,
+        opacity: .65,
+        sizeAttenuation: true
+      })
+    );
+
+    scene.add(particles);
+
+    /* POINTER STATE */
+
+    const pointer = new THREE.Vector2(0, 0);
+    const targetRotation = new THREE.Vector2(0, 0);
+
+    const raycaster = new THREE.Raycaster();
+
+    let hoveredObject = null;
+    let active = true;
+    let frame = 0;
+
+    const clock = new THREE.Clock();
+
+    function resize() {
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+
+      if (!width || !height) return;
+
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+
+      renderer.setSize(width, height, false);
+    }
+
+    resize();
+
+    const resizeObserver = new ResizeObserver(resize);
+    resizeObserver.observe(container);
+
+    /* MOUSE / TOUCH */
+
+    function updatePointer(event) {
+      const rect = container.getBoundingClientRect();
+
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+
+      pointer.x = (x / rect.width) * 2 - 1;
+      pointer.y = -(y / rect.height) * 2 + 1;
+
+      targetRotation.x = pointer.y * .13;
+      targetRotation.y = pointer.x * .18;
+    }
+
+    container.addEventListener("pointermove", event => {
+      updatePointer(event);
+
+      dashboard.style.transform =
+        `rotateY(${-pointer.x * 3.5}deg) rotateX(${pointer.y * 2.5}deg)`;
+    });
+
+    container.addEventListener("pointerleave", () => {
+      pointer.set(0, 0);
+      targetRotation.set(0, 0);
+
+      dashboard.style.transform = "";
+      hoveredObject = null;
+      container.style.cursor = "";
+    });
+
+    /* CLICK INTERACTION */
+
+    container.addEventListener("click", event => {
+      const rect = container.getBoundingClientRect();
+
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+
+      pointer.x = (x / rect.width) * 2 - 1;
+      pointer.y = -(y / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(pointer, camera);
+
+      const hits = raycaster.intersectObjects(
+        interactiveObjects,
+        true
+      );
+
+      if (!hits.length) return;
+
+      let selected = hits[0].object;
+
+      while (
+        selected.parent &&
+        !interactiveObjects.includes(selected)
+      ) {
+        selected = selected.parent;
+      }
+
+      if (!interactiveObjects.includes(selected)) return;
+
+      selected.userData.phase += Math.PI * 1.5;
+
+      selected.scale.multiplyScalar(1.12);
+
+      setTimeout(() => {
+        selected.scale.divideScalar(1.12);
+      }, 180);
+
+      selected.rotation.y += .5;
+    });
+
+    /* HOVER DETECTION */
+
+    function updateHover() {
+      raycaster.setFromCamera(pointer, camera);
+
+      const hits = raycaster.intersectObjects(
+        interactiveObjects,
+        true
+      );
+
+      hoveredObject = hits.length
+        ? hits[0].object
+        : null;
+
+      container.style.cursor = hoveredObject
+        ? "pointer"
+        : "";
+    }
+
+    /* ANIMATION */
+
+    function animate() {
+      if (!active) return;
+
+      frame = requestAnimationFrame(animate);
+
+      const elapsed = clock.getElapsedTime();
+
+      world.rotation.y +=
+        (targetRotation.x - world.rotation.y) * .025;
+
+      world.rotation.x +=
+        (targetRotation.y - world.rotation.x) * .025;
+
+      interactiveObjects.forEach((object, index) => {
+        const phase = object.userData.phase;
+
+        object.position.y =
+          object.userData.baseY +
+          Math.sin(elapsed * .85 + phase) * .12;
+
+        if (object !== hoveredObject) {
+          object.rotation.x += .002 + index * .00005;
+          object.rotation.y += .003 + index * .00008;
+        }
+      });
+
+      particles.rotation.y = elapsed * .025;
+      particles.rotation.x = Math.sin(elapsed * .2) * .04;
+
+      updateHover();
+
+      renderer.render(scene, camera);
+    }
+
+    /* PAUSE WHEN OUTSIDE VIEWPORT */
+
+    const visibilityObserver = new IntersectionObserver(entries => {
+      active = entries[0].isIntersecting;
+
+      if (active) {
+        clock.start();
+        animate();
+      } else {
+        cancelAnimationFrame(frame);
+      }
+    }, {
+      threshold: 0.05
+    });
+
+    visibilityObserver.observe(container);
+
+    /* CLEANUP IF PAGE IS UNLOADED */
+
+    window.addEventListener("pagehide", () => {
+      cancelAnimationFrame(frame);
+      resizeObserver.disconnect();
+      visibilityObserver.disconnect();
+
+      scene.traverse(object => {
+        object.geometry?.dispose();
+
+        if (object.material) {
+          if (Array.isArray(object.material)) {
+            object.material.forEach(material => material.dispose());
+          } else {
+            object.material.dispose();
+          }
+        }
+      });
+
+      renderer.dispose();
+    }, { once: true });
+
+    console.info("EqualLearn Interactive 3D initialized.");
+  }
+}
+</script>
+
+
+
+
+<box border radius="lg" padding={3} gap={2}>
+  <row align="center" justify="between">
+    
+  </row>
+  <AsyncImage query="premium purple lavender three dimensional floating glass education dashboard UI laptop website hero scene glossy 3D rings cubes particles" aspectRatio="16:9" width="100%"/>
+ 
+</box>
+
+ 
+<!-- EQUALLEARN LUMI COMPANION -->
+<iframe
+  src="/assets/widgets/lumi.html"
+  title="Lumi — EqualLearn Companion"
+  id="equallearn-lumi-frame"
+  allow="autoplay"
+  style="
+    position: fixed;
+    right: 8px;
+    bottom: 8px;
+    width: 210px;
+    height: 255px;
+    border: 0;
+    background: transparent;
+    z-index: 99999;
+    overflow: hidden;
+    pointer-events: auto;
+  ">
+</iframe>
+
+
+</body>
+</html>

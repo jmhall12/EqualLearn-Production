@@ -1,0 +1,965 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#635bdb">
+
+  <title>EqualLearn Live - Admin</title>
+
+  <link rel="stylesheet" href="../assets/css/glass-dashboard.css">
+  <link rel="stylesheet" href="../assets/css/sidebar-skeuomorphism.css">
+
+  <style>
+    :root {
+      --live-primary: #635bdb;
+      --live-primary-dark: #5148c9;
+      --live-text: #20243a;
+      --live-muted: #858ba0;
+      --live-border: rgba(255,255,255,.75);
+      --live-shadow: 0 10px 30px rgba(35,38,75,.07);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--live-text);
+      background:
+        radial-gradient(circle at 10% 5%, rgba(99,91,219,.14), transparent 34%),
+        radial-gradient(circle at 90% 85%, rgba(120,170,255,.13), transparent 34%),
+        linear-gradient(135deg, #f4f5ff, #eceeff);
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+    }
+
+    /* ADMIN LIVE PAGE */
+
+    .admin-live-page {
+      width: min(1400px, 100%);
+      margin: auto;
+      padding: 28px;
+      animation: liveFadeIn .45s ease both;
+    }
+
+    .admin-live-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .admin-live-heading h1 {
+      margin: 0;
+      color: var(--live-text);
+      font-size: clamp(25px, 4vw, 34px);
+      font-weight: 850;
+      letter-spacing: -.7px;
+    }
+
+    .admin-live-heading p {
+      margin: 7px 0 0;
+      color: var(--live-muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    /* DASHBOARD STATISTICS */
+
+    .admin-live-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 15px;
+      margin-bottom: 22px;
+    }
+
+    .admin-stat,
+    .admin-live-panel {
+      border: 1px solid var(--live-border);
+      border-radius: 18px;
+      background: rgba(255,255,255,.65);
+      box-shadow: var(--live-shadow);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    .admin-stat {
+      position: relative;
+      overflow: hidden;
+      padding: 21px;
+      transition: transform .22s ease, box-shadow .22s ease;
+    }
+
+    .admin-stat::after {
+      content: "";
+      position: absolute;
+      top: -35px;
+      right: -35px;
+      width: 105px;
+      height: 105px;
+      border: 1px solid rgba(99,91,219,.12);
+      border-radius: 50%;
+      box-shadow: 0 0 0 17px rgba(99,91,219,.035);
+      pointer-events: none;
+    }
+
+    .admin-stat:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 15px 35px rgba(35,38,75,.1);
+    }
+
+    .admin-stat small {
+      position: relative;
+      z-index: 1;
+      color: var(--live-muted);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .admin-stat strong {
+      position: relative;
+      z-index: 1;
+      display: block;
+      margin-top: 9px;
+      color: var(--live-text);
+      font-size: 30px;
+      font-weight: 850;
+      letter-spacing: -.7px;
+    }
+
+    /* SESSION PANEL */
+
+    .admin-live-panel {
+      min-width: 0;
+      padding: 22px;
+      margin-bottom: 20px;
+    }
+
+    .admin-live-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 19px;
+    }
+
+    .admin-live-panel-header h2 {
+      margin: 0;
+      color: var(--live-text);
+      font-size: 18px;
+      font-weight: 850;
+    }
+
+    .admin-live-panel-header p {
+      margin: 5px 0 0;
+      color: var(--live-muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    /* SEARCH AND FILTERS */
+
+    .admin-live-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-bottom: 17px;
+    }
+
+    .admin-live-filters input,
+    .admin-live-filters select {
+      min-width: 150px;
+      min-height: 42px;
+      padding: 10px 13px;
+      border: 1px solid rgba(99,91,219,.15);
+      border-radius: 10px;
+      outline: none;
+      background: rgba(255,255,255,.75);
+      color: var(--live-text);
+      font: inherit;
+      font-size: 12px;
+      transition: border-color .2s ease, box-shadow .2s ease;
+    }
+
+    .admin-live-filters input {
+      flex: 1 1 220px;
+    }
+
+    .admin-live-filters input::placeholder {
+      color: #969bb0;
+    }
+
+    .admin-live-filters input:focus,
+    .admin-live-filters select:focus {
+      border-color: var(--live-primary);
+      box-shadow: 0 0 0 4px rgba(99,91,219,.09);
+    }
+
+    /* BUTTONS */
+
+    .admin-live-refresh,
+    .admin-join-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 10px 15px;
+      border: 1px solid rgba(99,91,219,.14);
+      border-radius: 10px;
+      background: rgba(255,255,255,.8);
+      color: var(--live-primary);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+    }
+
+    .admin-live-refresh:hover {
+      transform: translateY(-2px);
+      border-color: var(--live-primary);
+      background: #fff;
+      box-shadow: 0 6px 16px rgba(99,91,219,.1);
+    }
+
+    /* SESSION CARDS */
+
+    .admin-live-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 15px;
+    }
+
+    .admin-session-card {
+      min-width: 0;
+      padding: 18px;
+      border: 1px solid rgba(255,255,255,.85);
+      border-radius: 16px;
+      background: rgba(255,255,255,.72);
+      box-shadow: 0 7px 22px rgba(35,38,75,.05);
+      backdrop-filter: blur(13px);
+      -webkit-backdrop-filter: blur(13px);
+      transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+    }
+
+    .admin-session-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(99,91,219,.2);
+      box-shadow: 0 13px 28px rgba(35,38,75,.09);
+    }
+
+    .admin-session-card h3 {
+      margin: 0;
+      color: var(--live-text);
+      font-size: 16px;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .admin-session-card p {
+      margin: 9px 0;
+      color: var(--live-muted);
+      font-size: 12px;
+      line-height: 1.7;
+      overflow-wrap: anywhere;
+    }
+
+    .admin-session-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .admin-session-status {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid rgba(185,107,36,.1);
+      border-radius: 30px;
+      background: rgba(255,243,233,.95);
+      color: #b96b24;
+      font-size: 10px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .admin-session-status.live {
+      border-color: rgba(22,131,75,.1);
+      background: rgba(232,249,239,.95);
+      color: #16834b;
+    }
+
+    .admin-session-mode {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 9px;
+      border: 1px solid rgba(99,91,219,.1);
+      border-radius: 8px;
+      background: rgba(240,239,255,.95);
+      color: var(--live-primary);
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .admin-join-button {
+      width: 100%;
+      min-height: 40px;
+      margin-top: 12px;
+      border: 0;
+      background: linear-gradient(110deg, #635bdb, #8178ff);
+      color: white;
+      box-shadow: 0 5px 14px rgba(99,91,219,.18);
+    }
+
+    .admin-join-button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 18px rgba(99,91,219,.25);
+      background: linear-gradient(110deg, #5148c9, #7167ef);
+    }
+
+    .admin-join-button:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .admin-live-empty {
+      grid-column: 1 / -1;
+      padding: 38px 15px;
+      border: 1px dashed rgba(99,91,219,.2);
+      border-radius: 14px;
+      background: rgba(255,255,255,.4);
+      color: var(--live-muted);
+      text-align: center;
+      font-size: 12px;
+    }
+
+    #adminLiveMessage {
+      min-height: 18px;
+      margin-top: 14px;
+      color: var(--live-muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    /* MEETING ROOM */
+
+    #adminMeetingScreen {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: #101321;
+      color: white;
+    }
+
+    #adminMeetingScreen[hidden] {
+      display: none !important;
+    }
+
+    .admin-meeting-topbar {
+      min-height: 65px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 20px;
+      background: linear-gradient(120deg, #171b2b, #20263a);
+      border-bottom: 1px solid #30364a;
+      box-shadow: 0 4px 18px rgba(0,0,0,.15);
+    }
+
+    .admin-meeting-title {
+      font-size: 16px;
+      font-weight: 850;
+      overflow-wrap: anywhere;
+    }
+
+    .admin-meeting-subtitle {
+      display: block;
+      margin-top: 4px;
+      color: #a7aec3;
+      font-size: 11px;
+    }
+
+    .admin-meeting-layout {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 300px;
+    }
+
+    .admin-meeting-stage {
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 17px;
+      background:
+        radial-gradient(circle at 50% 40%, rgba(99,91,219,.07), transparent 55%),
+        #101321;
+    }
+
+    .admin-meeting-notice {
+      margin-bottom: 12px;
+      color: #aeb5c8;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .admin-meeting-grid {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-auto-rows: minmax(180px, 1fr);
+      gap: 12px;
+      overflow-y: auto;
+      align-content: start;
+    }
+
+    .admin-meeting-tile {
+      position: relative;
+      min-width: 0;
+      min-height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border: 1px solid #353c52;
+      border-radius: 15px;
+      background:
+        radial-gradient(circle at 50% 30%, rgba(99,91,219,.13), transparent 60%),
+        linear-gradient(145deg, #292f45, #1c2234);
+      box-shadow: 0 8px 22px rgba(0,0,0,.16);
+    }
+
+    .admin-meeting-tile video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #101321;
+    }
+
+    .admin-meeting-tile audio {
+      display: none;
+    }
+
+    .admin-meeting-name {
+      position: absolute;
+      left: 10px;
+      bottom: 10px;
+      z-index: 2;
+      max-width: calc(100% - 20px);
+      padding: 6px 10px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 8px;
+      background: rgba(0,0,0,.68);
+      color: white;
+      font-size: 11px;
+      overflow-wrap: anywhere;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    /* MEETING SIDEBAR */
+
+    .admin-meeting-sidebar {
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: linear-gradient(160deg, #1b2031, #151a29);
+      border-left: 1px solid #30364a;
+    }
+
+    .admin-meeting-section {
+      padding: 15px;
+      border-bottom: 1px solid #30364a;
+    }
+
+    .admin-meeting-section h3 {
+      margin: 0 0 10px;
+      color: #f0f2f8;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    #adminMeetingPeople {
+      max-height: 180px;
+      overflow-y: auto;
+      color: #c3c9d8;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    #adminMeetingChat {
+      flex: 1;
+      min-height: 100px;
+      overflow-y: auto;
+      padding: 14px;
+      color: #dce1ed;
+      font-size: 12px;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
+
+    .admin-chat-form {
+      display: flex;
+      gap: 7px;
+      padding: 12px;
+      border-top: 1px solid #30364a;
+    }
+
+    .admin-chat-form input {
+      flex: 1;
+      min-width: 0;
+      padding: 10px;
+      border: 1px solid #41485d;
+      border-radius: 9px;
+      outline: none;
+      background: #252b3e;
+      color: white;
+      font: inherit;
+      font-size: 12px;
+    }
+
+    .admin-chat-form input:focus {
+      border-color: #8178ff;
+      box-shadow: 0 0 0 3px rgba(99,91,219,.2);
+    }
+
+    .admin-chat-form input::placeholder {
+      color: #929bb0;
+    }
+
+    .admin-chat-form button {
+      padding: 9px 13px;
+      border: 0;
+      border-radius: 9px;
+      background: #635bdb;
+      color: white;
+      font-weight: 800;
+      cursor: pointer;
+      transition: background .2s ease;
+    }
+
+    .admin-chat-form button:hover {
+      background: #5148c9;
+    }
+
+    /* MEETING CONTROLS */
+
+    .admin-meeting-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 14px;
+      background: #171b2b;
+      border-top: 1px solid #30364a;
+      box-shadow: 0 -5px 18px rgba(0,0,0,.12);
+    }
+
+    .admin-meeting-controls button {
+      min-width: 105px;
+      min-height: 40px;
+      padding: 11px 14px;
+      border: 1px solid #41485d;
+      border-radius: 10px;
+      background: linear-gradient(145deg, #30374d, #242a3d);
+      color: white;
+      font: inherit;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform .2s ease, background .2s ease;
+    }
+
+    .admin-meeting-controls button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      background: #39425b;
+    }
+
+    .admin-meeting-controls button:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+    }
+
+    .admin-meeting-controls .admin-leave {
+      border-color: #d94355;
+      background: #d94355;
+    }
+
+    .admin-meeting-controls .admin-leave:hover:not(:disabled) {
+      background: #bd3043;
+    }
+
+    /* RESPONSIVE */
+
+    @media(max-width: 1000px) {
+      .admin-live-page {
+        padding: 22px;
+      }
+    }
+
+    @media(max-width: 850px) {
+      .admin-meeting-layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(0, 1fr) auto;
+      }
+
+      .admin-meeting-sidebar {
+        max-height: 230px;
+        border-left: 0;
+        border-top: 1px solid #30364a;
+      }
+
+      #adminMeetingPeople {
+        max-height: 65px;
+      }
+
+      #adminMeetingChat {
+        min-height: 65px;
+      }
+
+      .admin-meeting-grid {
+        grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+        grid-auto-rows: minmax(135px, 1fr);
+      }
+    }
+
+    @media(max-width: 600px) {
+      .admin-live-page {
+        padding: 18px 13px;
+      }
+
+      .admin-live-stats {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .admin-stat {
+        padding: 16px;
+      }
+
+      .admin-live-panel {
+        padding: 15px;
+      }
+
+      .admin-live-list {
+        grid-template-columns: 1fr;
+      }
+
+      .admin-live-filters {
+        flex-direction: column;
+      }
+
+      .admin-live-filters input,
+      .admin-live-filters select {
+        width: 100%;
+      }
+
+      .admin-meeting-topbar {
+        min-height: 58px;
+        padding: 10px 13px;
+      }
+
+      .admin-meeting-title {
+        font-size: 14px;
+      }
+
+      .admin-meeting-controls {
+        gap: 7px;
+        padding: 10px;
+      }
+
+      .admin-meeting-controls button {
+        min-width: 75px;
+        padding: 10px;
+        font-size: 10px;
+      }
+
+      .admin-meeting-stage {
+        padding: 10px;
+      }
+    }
+
+    @media(max-width: 380px) {
+      .admin-meeting-controls button {
+        flex: 1 1 calc(50% - 8px);
+      }
+
+      .admin-meeting-topbar > .admin-meeting-subtitle {
+        display: none;
+      }
+    }
+
+    @keyframes liveFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media(prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
+
+    @supports not (backdrop-filter: blur(10px)) {
+      .admin-stat,
+      .admin-live-panel,
+      .admin-session-card {
+        background: rgba(255,255,255,.96);
+      }
+    }
+  </style>
+    <link rel="stylesheet" href="../assets/css/responsive-layout.css">
+</head>
+
+<body>
+
+  <main class="admin-live-page">
+
+    <header class="admin-live-heading">
+      <div>
+        <h1>EqualLearn Live</h1>
+        <p>Monitor and join active classrooms across all sections.</p>
+      </div>
+
+      <a class="admin-live-refresh" href="dashboard.html">
+        ← Dashboard
+      </a>
+    </header>
+
+    <section class="admin-live-stats">
+
+      <article class="admin-stat">
+        <small>Total Sessions</small>
+        <strong id="adminTotalSessions">0</strong>
+      </article>
+
+      <article class="admin-stat">
+        <small>Live Now</small>
+        <strong id="adminActiveSessions">0</strong>
+      </article>
+
+      <article class="admin-stat">
+        <small>Scheduled</small>
+        <strong id="adminScheduledSessions">0</strong>
+      </article>
+
+    </section>
+
+    <section class="admin-live-panel">
+
+      <div class="admin-live-panel-header">
+        <div>
+          <h2>Classroom Sessions</h2>
+          <p>All sessions created by EqualLearn teachers.</p>
+        </div>
+
+        <button
+          class="admin-live-refresh"
+          id="adminRefreshLive"
+          type="button">
+          ↻ Refresh
+        </button>
+      </div>
+
+      <div class="admin-live-filters">
+
+        <input
+          type="search"
+          id="adminLiveSearch"
+          placeholder="Search title, teacher, section...">
+
+        <select id="adminLiveStatusFilter">
+          <option value="all">All statuses</option>
+          <option value="live">Live now</option>
+          <option value="scheduled">Scheduled</option>
+          <option value="ended">Ended</option>
+        </select>
+
+        <select id="adminLiveModeFilter">
+          <option value="all">All meeting types</option>
+          <option value="meeting">Interactive meeting</option>
+          <option value="livestream">Livestream</option>
+        </select>
+
+      </div>
+
+      <div id="adminLiveList" class="admin-live-list">
+        <div class="admin-live-empty">
+          Loading classroom sessions...
+        </div>
+      </div>
+
+      <p id="adminLiveMessage" role="status" aria-live="polite"></p>
+
+    </section>
+
+  </main>
+
+  <!-- ADMIN MEETING ROOM -->
+
+  <section id="adminMeetingScreen" hidden>
+
+    <header class="admin-meeting-topbar">
+
+      <div>
+        <div class="admin-meeting-title" id="adminMeetingTitle">
+          EqualLearn Live
+        </div>
+
+        <span class="admin-meeting-subtitle" id="adminMeetingStatus">
+          Connecting...
+        </span>
+      </div>
+
+      <span class="admin-meeting-subtitle">
+        Administrator participant
+      </span>
+
+    </header>
+
+    <div class="admin-meeting-layout">
+
+      <main class="admin-meeting-stage">
+
+        <div
+          class="admin-meeting-notice"
+          id="adminMeetingNotice">
+          Waiting for participants...
+        </div>
+
+        <div
+          class="admin-meeting-grid"
+          id="adminMeetingGrid">
+
+          <div class="admin-meeting-tile">
+            Connecting to classroom...
+          </div>
+
+        </div>
+
+      </main>
+
+      <aside class="admin-meeting-sidebar">
+
+        <section class="admin-meeting-section">
+          <h3>Participants</h3>
+
+          <div id="adminMeetingPeople">
+            Loading participants...
+          </div>
+        </section>
+
+        <section class="admin-meeting-section">
+          <h3>In-meeting chat</h3>
+        </section>
+
+        <div id="adminMeetingChat">
+          <p style="color:#929bb0">
+            Messages will appear here.
+          </p>
+        </div>
+
+        <form
+          class="admin-chat-form"
+          id="adminMeetingChatForm">
+
+          <input
+            id="adminMeetingChatInput"
+            type="text"
+            maxlength="500"
+            autocomplete="off"
+            placeholder="Send a message...">
+
+          <button type="submit">Send</button>
+
+        </form>
+
+      </aside>
+
+    </div>
+
+    <footer class="admin-meeting-controls">
+
+      <button type="button" id="adminMeetingMic" disabled>
+        🎙 Microphone
+      </button>
+
+      <button type="button" id="adminMeetingCamera" disabled>
+        📷 Camera
+      </button>
+
+      <button type="button" id="adminMeetingShare" disabled>
+        ▣ Share Screen
+      </button>
+
+      <button
+        type="button"
+        class="admin-leave"
+        id="adminMeetingLeave">
+        Leave Meeting
+      </button>
+
+    </footer>
+
+  </section>
+
+  <!-- APPLICATION SCRIPTS -->
+
+  <script type="module" src="../assets/js/admin_live.js"></script>
+  <script type="module" src="../assets/js/ui-shell.js"></script>
+  <script type="module" src="../assets/js/pwa.js"></script>
+  <script type="module" src="../assets/js/theme.js"></script>
+
+<!-- EQUALLEARN LUMI COMPANION -->
+<iframe
+  src="../assets/widgets/lumi.html"
+  title="Lumi — EqualLearn Companion"
+  id="equallearn-lumi-frame"
+  allow="autoplay"
+  style="
+    position: fixed;
+    right: 8px;
+    bottom: 8px;
+    width: 210px;
+    height: 255px;
+    border: 0;
+    background: transparent;
+    z-index: 99999;
+    overflow: hidden;
+    pointer-events: auto;
+  ">
+</iframe>
+
+
+</body>
+</html>

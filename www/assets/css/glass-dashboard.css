@@ -1,0 +1,272 @@
+body[data-theme="light"] .table-card,
+body[data-theme="light"] .settings-card,
+body[data-theme="light"] .form-card,
+body[data-theme="light"] .live-admin-stat,
+body[data-theme="light"] .live-session-item,
+body[data-theme="light"] .student-live-card,
+body[data-theme="light"] .admin-stat,
+body[data-theme="light"] .admin-session-card,
+body[data-theme="light"] .admin-live-panel,
+body[data-theme="light"] .el-page-header {
+  color: var(--glass-text) !important;
+  background: #ffffff !important;
+  border-color: var(--glass-border) !important;
+}
+body[data-theme="light"] .el-quick { color: var(--glass-text); background: #f7f8fd; }
+body[data-theme="light"] .el-quick strong,
+body[data-theme="light"] .el-card-title h3,
+body[data-theme="light"] .el-stat-value,
+body[data-theme="light"] .stat-value,
+body[data-theme="light"] .summary-card strong,
+body[data-theme="light"] .stat-card strong { color: var(--glass-text); }
+body[data-theme="light"] .el-page-content input:not([type="checkbox"]):not([type="radio"]),
+body[data-theme="light"] .el-page-content select,
+body[data-theme="light"] .el-page-content textarea,
+body[data-theme="light"] .container input:not([type="checkbox"]):not([type="radio"]),
+body[data-theme="light"] .container select,
+body[data-theme="light"] .container textarea,
+body[data-theme="light"] .reports-container input,
+body[data-theme="light"] .reports-container select,
+body[data-theme="light"] .settings-container input,
+body[data-theme="light"] .settings-container select,
+body[data-theme="light"] .settings-container textarea {
+  color: #252a40;
+  background: #ffffff;
+  border-color: #dfe3ef;
+}
+body[data-theme="light"] label { color: #414861; }
+body[data-theme="light"] thead th, body[data-theme="light"] th {
+  color: #626b84; background: #f0f2f8; border-color: #e1e4ef;
+}
+body[data-theme="light"] tbody td, body[data-theme="light"] td {
+  color: #343b53; border-color: #e9ebf2;
+}
+body[data-theme="light"] tbody tr:hover { background: #f5f3ff; }
+body[data-theme="light"] .modal { background: rgba(25,30,50,.45); }
+body[data-theme="light"] .modal-content {
+  color: #252a40; background: #ffffff; border-color: #e1e4ef;
+}
+body[data-theme="light"] .el-profile-item,
+body[data-theme="light"] .student-session-join {
+  color: #252a40; background: #ffffff !important; border-color: #e1e4ef !important;
+}
+
+/* 27. RESPONSIVE */
+@media(max-width:1100px) {
+  .el-grid-4 { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .summary-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:900px) {
+  .el-dashboard { width: min(100% - 36px,760px); }
+  .container, .reports-container, .settings-container, .page, .admin-live-page {
+    width: calc(100% - 30px);
+  }
+  .el-grid-3 { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:640px) {
+  .el-dashboard { width: calc(100% - 26px); padding-top: 17px; padding-bottom: 32px; }
+  .container, .reports-container, .settings-container, .page, .admin-live-page {
+    width: calc(100% - 24px); padding-top: 15px; padding-bottom: 28px;
+  }
+  .el-page-header { padding: 19px; border-radius: 16px; }
+  .el-page-header h1 { font-size: 25px; }
+  .el-card { padding: 17px; border-radius: 16px !important; }
+  .el-grid-2, .el-grid-3, .el-grid-4 { grid-template-columns: 1fr; }
+  .el-quick-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .live-admin-stats { grid-template-columns: 1fr !important; }
+  .live-session-meta { grid-template-columns: 1fr !important; }
+  .student-live-card-header { flex-wrap: wrap; }
+  .el-page-header > .el-btn { width: 100%; }
+  .form-row { grid-template-columns: 1fr; }
+  .summary-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .table-wrapper, .table-wrap { overflow-x: auto; }
+}
+@media(max-width:380px) {
+  .el-quick-grid, .summary-grid { grid-template-columns: 1fr; }
+  .el-page-header { padding: 16px; }
+}
+
+/* 28. REDUCED MOTION */
+@media(prefers-reduced-motion:reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+
+/* ==========================================================
+   EQUALLEARN — STUDENT DASHBOARD DARK PANEL FIX
+   Fix: Light glass panels appearing on dark dashboard
+========================================================== */
+
+body[data-theme="dark"] .el-dashboard {
+    --student-panel-bg: rgba(31, 35, 54, .94);
+    --student-panel-inner: rgba(43, 47, 70, .96);
+    --student-panel-border: rgba(157, 132, 255, .24);
+    --student-panel-text: #f1efff;
+    --student-panel-muted: #a9abc5;
+}
+
+/* Main dashboard panels */
+body[data-theme="dark"] .el-dashboard .el-card,
+body[data-theme="dark"] .el-dashboard .student-live-room {
+    color: var(--student-panel-text) !important;
+    background: var(--student-panel-bg) !important;
+    border: 1px solid var(--student-panel-border) !important;
+    box-shadow:
+        0 14px 38px rgba(0, 0, 0, .22),
+        inset 0 1px 0 rgba(255, 255, 255, .045) !important;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+
+/* Main panel headings */
+body[data-theme="dark"] .el-dashboard .el-card-title h3,
+body[data-theme="dark"] .el-dashboard .student-live-room h3 {
+    color: #f2efff !important;
+}
+
+body[data-theme="dark"] .el-dashboard .el-card-title > span {
+    color: var(--student-panel-muted) !important;
+}
+
+/* Class information cards */
+body[data-theme="dark"] .el-dashboard .el-profile-item {
+    color: var(--student-panel-text) !important;
+    background: var(--student-panel-inner) !important;
+    border: 1px solid rgba(157, 132, 255, .18) !important;
+    box-shadow: 0 7px 20px rgba(0, 0, 0, .14) !important;
+}
+
+body[data-theme="dark"] .el-dashboard .el-profile-item:hover {
+    background: #353451 !important;
+    border-color: rgba(157, 132, 255, .42) !important;
+}
+
+body[data-theme="dark"] .el-dashboard .el-profile-item span {
+    color: #aaa6cb !important;
+}
+
+body[data-theme="dark"] .el-dashboard .el-profile-item strong {
+    color: #f4f1ff !important;
+}
+
+/* Learning progress */
+body[data-theme="dark"] .el-dashboard .student-progress-copy strong,
+body[data-theme="dark"] .el-dashboard .student-progress-copy h4 {
+    color: #f3efff !important;
+}
+
+body[data-theme="dark"] .el-dashboard .student-progress-copy p {
+    color: #aaaac5 !important;
+}
+
+body[data-theme="dark"] .el-dashboard .student-progress-circle-inner {
+    background: #292d43 !important;
+    color: #f5f1ff !important;
+    border: 1px solid rgba(255, 255, 255, .12);
+}
+
+/* Progress bar */
+body[data-theme="dark"] .el-dashboard .student-progress-copy .el-progress {
+    background: rgba(255, 255, 255, .10) !important;
+}
+
+/* Live class join panel */
+body[data-theme="dark"] .el-dashboard .student-session-join {
+    color: #f2efff !important;
+    background: #292d43 !important;
+    border: 1px solid rgba(157, 132, 255, .20) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .15) !important;
+}
+
+body[data-theme="dark"] .el-dashboard .student-session-join h4 {
+    color: #f4f0ff !important;
+}
+
+body[data-theme="dark"] .el-dashboard .student-session-join > p {
+    color: #aaaac5 !important;
+}
+
+body[data-theme="dark"] .el-dashboard .student-session-join input {
+    color: #f4f0ff !important;
+    background: #1c2032 !important;
+    border: 1px solid #42445f !important;
+}
+
+body[data-theme="dark"] .el-dashboard .student-session-join input::placeholder {
+    color: #8588a5 !important;
+}
+
+body[data-theme="dark"] .el-dashboard .student-session-join input:focus {
+    border-color: #9678f0 !important;
+    box-shadow: 0 0 0 3px rgba(150, 120, 240, .15) !important;
+}
+
+/* Live class cards */
+body[data-theme="dark"] .el-dashboard .student-live-card {
+    color: #f2efff !important;
+    background: #292d43 !important;
+    border: 1px solid rgba(157, 132, 255, .20) !important;
+}
+
+body[data-theme="dark"] .el-dashboard .student-live-card:hover {
+    background: #33334f !important;
+}
+
+body[data-theme="dark"] .el-dashboard .student-live-card-header h4 {
+    color: #f5f1ff !important;
+}
+
+body[data-theme="dark"] .el-dashboard .student-live-meta,
+body[data-theme="dark"] .el-dashboard .student-live-description {
+    color: #aaaac5 !important;
+}
+
+/* Loading and empty states */
+body[data-theme="dark"] .el-dashboard .loading,
+body[data-theme="dark"] .el-dashboard .empty {
+    color: #aeb0ca !important;
+}
+
+/* Quick action cards */
+body[data-theme="dark"] .el-dashboard .el-quick {
+    color: #f2efff !important;
+    background: #292d43 !important;
+    border: 1px solid rgba(157, 132, 255, .20) !important;
+}
+
+body[data-theme="dark"] .el-dashboard .el-quick strong {
+    color: #f4f0ff !important;
+}
+
+body[data-theme="dark"] .el-dashboard .el-quick > span:last-child {
+    color: #aaaac5 !important;
+}
+
+body[data-theme="dark"] .el-dashboard .el-quick:hover {
+    background: #353451 !important;
+    border-color: rgba(157, 132, 255, .42) !important;
+}
+
+/* Smooth hover */
+body[data-theme="dark"] .el-dashboard .el-card:hover {
+    border-color: rgba(157, 132, 255, .42) !important;
+    box-shadow:
+        0 18px 42px rgba(0, 0, 0, .27),
+        0 0 22px rgba(130, 100, 220, .07) !important;
+}
+
+/* Mobile spacing */
+@media (max-width: 600px) {
+    body[data-theme="dark"] .el-dashboard .el-card {
+        padding: 17px !important;
+    }
+
+    body[data-theme="dark"] .el-dashboard .el-profile-item {
+        padding: 13px !important;
+    }
+}

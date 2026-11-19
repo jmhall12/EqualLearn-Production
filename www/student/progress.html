@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#635bff">
+
+<title>Progress</title>
+
+<link rel="stylesheet"
+href="../assets/css/style.css">
+
+
+<style>
+/* =========================================
+   EQUALLEARN — PROGRESS PAGE FIX
+========================================= */
+
+#progressContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+  margin-top: 24px;
+  color: #25243a;
+}
+
+.progress-card {
+  background: #ffffff !important;
+  color: #25243a !important;
+  padding: 24px;
+  border-radius: 18px;
+  border: 1px solid #e8e7f5;
+  box-shadow: 0 8px 25px rgba(0,0,0,.08);
+  margin-bottom: 0;
+}
+
+.progress-card h3 {
+  color: #24233a !important;
+  font-size: 21px;
+  margin: 14px 0;
+}
+
+.progress-card p {
+  color: #65647b !important;
+  margin: 12px 0;
+}
+
+.progress-card strong {
+  color: #292743 !important;
+}
+
+.progress-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.progress-type {
+  color: #7164d9 !important;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.progress-status {
+  display: inline-block;
+  padding: 7px 12px;
+  border-radius: 30px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.progress-status.passing {
+  background: #dcfce7;
+  color: #15803d !important;
+}
+
+.progress-status.failing {
+  background: #fee2e2;
+  color: #b91c1c !important;
+}
+
+.progress-status.pending {
+  background: #fef3c7;
+  color: #92400e !important;
+}
+
+.progress-date {
+  color: #9290a5 !important;
+  font-size: 13px;
+  margin-top: 20px !important;
+}
+
+.progress-empty,
+.progress-error,
+.progress-loading {
+  background: #ffffff;
+  color: #55536d !important;
+  padding: 25px;
+  border-radius: 16px;
+  border: 1px solid #e8e7f5;
+}
+
+.progress-empty h3,
+.progress-error h3 {
+  color: #292743 !important;
+}
+
+@media(max-width: 600px) {
+  #progressContainer {
+    grid-template-columns: 1fr;
+  }
+
+  .progress-card {
+    padding: 19px;
+  }
+}
+</style>
+    <link rel="stylesheet" href="../assets/css/responsive-layout.css">
+</head>
+
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="stylesheet" href="../assets/css/equallearn.css">
+<link rel="icon" href="../assets/icons/icon-192.png"></head>
+
+<body>
+
+<div class="phone">
+
+<h2>
+
+Learning Progress
+
+</h2>
+
+<div id="progressContainer">
+
+Loading...
+
+</div>
+
+</div>
+
+<script type="module"
+src="../assets/js/progress.js"></script>
+
+<script type="module" src="../assets/js/ui-shell.js"></script>
+<script type="module" src="../assets/js/pwa.js"></script>
+<script type="module" src="../assets/js/theme.js"></script>
+
+<!-- EQUALLEARN LUMI COMPANION -->
+<iframe
+  src="/assets/widgets/lumi.html"
+  title="Lumi — EqualLearn Companion"
+  id="equallearn-lumi-frame"
+  allow="autoplay"
+  style="
+    position: fixed;
+    right: 8px;
+    bottom: 8px;
+    width: 210px;
+    height: 255px;
+    border: 0;
+    background: transparent;
+    z-index: 99999;
+    overflow: hidden;
+    pointer-events: auto;
+  ">
+</iframe>
+
+</body>
+
+</html>

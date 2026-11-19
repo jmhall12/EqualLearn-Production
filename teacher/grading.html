@@ -1,0 +1,783 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#635bff">
+  <title>Activity Grading | EqualLearn</title>
+
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/equallearn.css">
+  
+
+  <style>
+    
+/* =========================================================
+   EQUALLEARN — TEACHER ACTIVITY GRADING
+   Dark Premium UI
+   Scoped styling — Lumi-safe
+========================================================= */
+
+.grading-page {
+  --grade-bg: #11111e;
+  --grade-surface: #191929;
+  --grade-surface-2: #202036;
+  --grade-border: rgba(255,255,255,.08);
+  --grade-text: #f4f2ff;
+  --grade-muted: #9998b2;
+  --grade-purple: #8275ff;
+  --grade-purple-light: #aaa1ff;
+  --grade-green: #35d39a;
+  --grade-orange: #ffb86b;
+  --grade-red: #ff777f;
+
+  width: min(100% - 48px, 1240px);
+  margin: 0 auto;
+  padding: 42px 0 70px;
+  color: var(--grade-text);
+  font-family: Inter, Arial, sans-serif;
+}
+
+.grading-page *,
+.grading-modal * {
+  box-sizing: border-box;
+}
+
+/* HEADER */
+
+.grading-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 22px;
+  flex-wrap: wrap;
+  margin-bottom: 34px;
+}
+
+.grading-header h1 {
+  margin: 5px 0 10px;
+  color: var(--grade-text);
+  font-size: clamp(28px, 4vw, 39px);
+  font-weight: 800;
+  letter-spacing: -1.4px;
+}
+
+.grading-header .muted {
+  color: var(--grade-muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 17px;
+  border: 1px solid var(--grade-border);
+  border-radius: 12px;
+  background: rgba(255,255,255,.04);
+  color: var(--grade-purple-light);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: .2s ease;
+}
+
+.back-link:hover {
+  background: rgba(130,117,255,.13);
+  border-color: rgba(130,117,255,.4);
+  transform: translateY(-2px);
+}
+
+/* STATISTICS */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 17px;
+  margin-bottom: 25px;
+}
+
+.stat {
+  position: relative;
+  overflow: hidden;
+  min-height: 145px;
+  padding: 23px;
+  border: 1px solid var(--grade-border);
+  border-radius: 19px;
+  background: linear-gradient(145deg, #202036, #181827);
+  box-shadow: 0 12px 35px rgba(0,0,0,.16);
+  transition: .25s ease;
+}
+
+.stat:hover {
+  transform: translateY(-4px);
+  border-color: rgba(130,117,255,.35);
+}
+
+.stat span {
+  display: block;
+  color: var(--grade-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.stat strong {
+  display: block;
+  margin-top: 13px;
+  color: var(--grade-text);
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+/* MAIN PANEL */
+
+.panel {
+  padding: 25px;
+  border: 1px solid var(--grade-border);
+  border-radius: 20px;
+  background: var(--grade-surface);
+  box-shadow: 0 18px 50px rgba(0,0,0,.17);
+}
+
+.panel > .toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+/* FORM ELEMENTS */
+
+.grading-page input,
+.grading-page select,
+.grading-page textarea,
+.grading-modal input,
+.grading-modal select,
+.grading-modal textarea {
+  width: 100%;
+  padding: 13px 15px;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 11px;
+  outline: none;
+  background: var(--grade-surface-2);
+  color: var(--grade-text);
+  font: inherit;
+  font-size: 13px;
+  transition: .2s ease;
+}
+
+.grading-page input::placeholder,
+.grading-page textarea::placeholder,
+.grading-modal textarea::placeholder {
+  color: #77768f;
+}
+
+.grading-page input:focus,
+.grading-page select:focus,
+.grading-page textarea:focus,
+.grading-modal input:focus,
+.grading-modal textarea:focus {
+  border-color: var(--grade-purple);
+  box-shadow: 0 0 0 3px rgba(130,117,255,.12);
+}
+
+.grading-page .toolbar input {
+  flex: 1;
+  min-width: 220px;
+}
+
+.grading-page .toolbar select {
+  width: auto;
+  min-width: 180px;
+  cursor: pointer;
+}
+
+/* SUBMISSION LIST */
+
+#submissionList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.submission {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding: 19px;
+  border: 1px solid var(--grade-border);
+  border-radius: 15px;
+  background: rgba(255,255,255,.025);
+  transition: .22s ease;
+}
+
+.submission:hover {
+  background: rgba(130,117,255,.055);
+  border-color: rgba(130,117,255,.28);
+  transform: translateY(-2px);
+}
+
+.submission h3 {
+  margin: 0 0 8px;
+  color: var(--grade-text);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.submission-meta {
+  color: var(--grade-muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+/* STATUS BADGES */
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 1px solid rgba(255,184,107,.17);
+  border-radius: 30px;
+  background: rgba(255,184,107,.1);
+  color: var(--grade-orange);
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.status.graded {
+  border-color: rgba(53,211,154,.17);
+  background: rgba(53,211,154,.1);
+  color: var(--grade-green);
+}
+
+/* BUTTONS */
+
+.grading-page button,
+.grading-modal button {
+  padding: 11px 16px;
+  border: 0;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: .2s ease;
+}
+
+.grading-page button:hover:not(:disabled),
+.grading-modal button:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.grading-page button:active:not(:disabled),
+.grading-modal button:active:not(:disabled) {
+  transform: scale(.98);
+}
+
+.grading-page .primary,
+.grading-modal .primary {
+  background: linear-gradient(135deg, #8275ff, #6255e9);
+  color: #fff;
+  box-shadow: 0 5px 17px rgba(99,91,255,.2);
+}
+
+.grading-page .primary:hover:not(:disabled),
+.grading-modal .primary:hover:not(:disabled) {
+  box-shadow: 0 7px 22px rgba(99,91,255,.35);
+}
+
+.grading-page .secondary,
+.grading-modal .secondary {
+  border: 1px solid rgba(255,255,255,.09);
+  background: rgba(255,255,255,.07);
+  color: #dedcff;
+}
+
+.grading-page .secondary:hover:not(:disabled),
+.grading-modal .secondary:hover:not(:disabled) {
+  background: rgba(255,255,255,.12);
+}
+
+.grading-page .danger,
+.grading-modal .danger {
+  background: rgba(255,119,127,.1);
+  color: #ff999f;
+}
+
+.grading-page button:disabled,
+.grading-modal button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+/* LOADING / EMPTY / ERROR */
+
+#submissionList .empty,
+#submissionList .error,
+#submissionList .loading {
+  padding: 42px 15px;
+  color: var(--grade-muted);
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+#submissionList .loading::before {
+  content: "";
+  display: block;
+  width: 25px;
+  height: 25px;
+  margin: 0 auto 14px;
+  border: 2px solid rgba(130,117,255,.2);
+  border-top-color: var(--grade-purple);
+  border-radius: 50%;
+  animation: grading-spin .8s linear infinite;
+}
+
+@keyframes grading-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* NOTIFICATION */
+
+#notice {
+  display: none;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  border-radius: 11px;
+  font-size: 13px;
+  line-height: 1.6;
+  font-weight: 600;
+}
+
+#notice.success {
+  display: block;
+  border: 1px solid rgba(53,211,154,.2);
+  background: rgba(53,211,154,.1);
+  color: #70e9bb;
+}
+
+#notice.error {
+  display: block;
+  border: 1px solid rgba(255,119,127,.2);
+  background: rgba(255,119,127,.1);
+  color: #ff999f;
+}
+
+/* GRADING MODAL */
+
+.grading-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: none;
+  overflow-y: auto;
+  padding: 22px;
+  background: rgba(5,5,15,.78);
+  backdrop-filter: blur(9px);
+}
+
+.grading-modal.open {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 850px;
+  margin: auto;
+  padding: 27px;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 20px;
+  background: #191929;
+  color: var(--grade-text);
+  box-shadow: 0 30px 100px rgba(0,0,0,.5);
+  animation: grading-modal-enter .22s ease;
+}
+
+@keyframes grading-modal-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--grade-border);
+}
+
+.modal-top .muted {
+  margin: 0 0 9px;
+  color: var(--grade-purple-light);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+.modal-top h2 {
+  margin: 0 0 7px;
+  color: var(--grade-text);
+  font-size: 22px;
+  letter-spacing: -.5px;
+}
+
+#modalQuiz {
+  color: var(--grade-muted);
+  font-size: 12px;
+}
+
+/* QUESTION REVIEW */
+
+.question-card {
+  padding: 19px;
+  margin: 13px 0;
+  border: 1px solid var(--grade-border);
+  border-radius: 14px;
+  background: rgba(255,255,255,.025);
+}
+
+.question-card h4 {
+  margin: 0 0 13px;
+  color: var(--grade-text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.answer-box {
+  padding: 15px;
+  margin: 11px 0;
+  border: 1px solid rgba(255,255,255,.055);
+  border-radius: 11px;
+  background: #11111e;
+  color: #d1cfe2;
+  font-size: 13px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.question-meta {
+  margin-bottom: 10px;
+  color: var(--grade-muted);
+  font-size: 11px;
+}
+
+.score-input {
+  max-width: 160px;
+  margin-top: 9px;
+}
+
+/* FEEDBACK */
+
+.feedback-area {
+  margin-top: 23px;
+}
+
+.feedback-area label {
+  display: block;
+  margin-bottom: 10px;
+  color: #e5e2ff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.feedback-area textarea {
+  min-height: 115px;
+  resize: vertical;
+  line-height: 1.7;
+}
+
+/* MODAL ACTIONS */
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 20px;
+  margin-top: 22px;
+  border-top: 1px solid var(--grade-border);
+}
+
+/* ACCESSIBILITY */
+
+.grading-page button:focus-visible,
+.grading-page a:focus-visible,
+.grading-modal button:focus-visible {
+  outline: 2px solid var(--grade-purple-light);
+  outline-offset: 3px;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 850px) {
+  .grading-page {
+    width: min(100% - 36px, 1240px);
+    padding-top: 30px;
+  }
+
+  .stat {
+    padding: 19px;
+  }
+
+  .panel {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 650px) {
+  .grading-page {
+    width: calc(100% - 28px);
+    padding: 24px 0 45px;
+  }
+
+  .grading-header {
+    align-items: flex-start;
+    margin-bottom: 25px;
+  }
+
+  .grading-header h1 {
+    font-size: 29px;
+  }
+
+  .back-link {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .stats {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .stat {
+    min-height: 120px;
+  }
+
+  .panel {
+    padding: 16px;
+  }
+
+  .grading-page .toolbar {
+    flex-direction: column;
+  }
+
+  .grading-page .toolbar input,
+  .grading-page .toolbar select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .submission {
+    align-items: flex-start;
+    padding: 16px;
+  }
+
+  .grading-modal {
+    padding: 12px;
+  }
+
+  .modal-card {
+    padding: 19px;
+    border-radius: 17px;
+  }
+
+  .modal-top h2 {
+    font-size: 19px;
+  }
+}
+
+@media (max-width: 380px) {
+  .grading-header h1 {
+    font-size: 25px;
+  }
+
+  .stat strong {
+    font-size: 29px;
+  }
+
+  .modal-actions button {
+    flex: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grading-page *,
+  .grading-modal * {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+
+/* FIX: STATUS FILTER DROPDOWN */
+
+#statusFilter {
+  color-scheme: dark;
+  background-color: #202036 !important;
+  color: #f4f2ff !important;
+  border: 1px solid rgba(130, 117, 255, .35);
+  cursor: pointer;
+}
+
+#statusFilter option {
+  background-color: #202036 !important;
+  color: #f4f2ff !important;
+  padding: 12px;
+}
+
+#statusFilter option:checked {
+  background-color: #6255e9 !important;
+  color: #ffffff !important;
+}
+
+#statusFilter:focus {
+  border-color: #8275ff;
+  box-shadow: 0 0 0 3px rgba(130, 117, 255, .15);
+}
+
+
+  </style>
+    <link rel="stylesheet" href="../assets/css/responsive-layout.css">
+</head>
+
+<body>
+  <main class="grading-page">
+
+    <header class="grading-header">
+      <div>
+        <p class="muted">EQUALLEARN · TEACHER WORKSPACE</p>
+        <h1>Activity Grading</h1>
+        <p class="muted">Review student submissions and assign grades.</p>
+      </div>
+
+      <a class="back-link" href="dashboard.html">
+        ← Back to Dashboard
+      </a>
+    </header>
+
+    <section class="stats">
+      <div class="stat">
+        <span>Total Submissions</span>
+        <strong id="totalSubmissions">0</strong>
+      </div>
+
+      <div class="stat">
+        <span>Pending Grading</span>
+        <strong id="pendingSubmissions">0</strong>
+      </div>
+
+      <div class="stat">
+        <span>Graded</span>
+        <strong id="gradedSubmissions">0</strong>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div id="notice"></div>
+
+      <div class="toolbar">
+        <input
+          id="searchSubmission"
+          type="search"
+          placeholder="Search student or quiz..."
+        >
+
+        <select id="statusFilter">
+          <option value="all">All submissions</option>
+          <option value="pending">Pending grading</option>
+          <option value="graded">Graded</option>
+        </select>
+      </div>
+
+      <div id="submissionList">
+        <div class="loading">Loading submissions...</div>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="grading-modal" id="gradingModal">
+    <section class="modal-card">
+
+      <div class="modal-top">
+        <div>
+          <p class="muted">STUDENT SUBMISSION</p>
+          <h2 id="modalStudent">Student</h2>
+          <p class="muted" id="modalQuiz"></p>
+        </div>
+
+        <button class="secondary" id="closeModal" type="button">
+          Close
+        </button>
+      </div>
+
+      <div id="questionReview"></div>
+
+      <div class="feedback-area">
+        <label for="teacherFeedback">Teacher Feedback</label>
+        <textarea
+          id="teacherFeedback"
+          placeholder="Write feedback for this student..."
+        ></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button class="secondary" id="cancelGrade" type="button">
+          Cancel
+        </button>
+
+        <button class="primary" id="saveGrade" type="button">
+          Save Final Grade
+        </button>
+      </div>
+
+    </section>
+  </div>
+
+  <script type="module" src="../assets/js/teacher-grading.js"></script>
+  <script type="module" src="../assets/js/ui-shell.js"></script>
+  <script type="module" src="../assets/js/pwa.js"></script>
+
+  <!-- EQUALLEARN LUMI COMPANION -->
+<iframe
+src="../assets/widgets/lumi.html"
+  title="Lumi — EqualLearn Companion"
+  id="equallearn-lumi-frame"
+  allow="autoplay"
+  style="
+    position: fixed;
+    right: 8px;
+    bottom: 8px;
+    width: 210px;
+    height: 255px;
+    border: 0;
+    background: transparent;
+    z-index: 99999;
+    overflow: hidden;
+    pointer-events: auto;
+  ">
+</iframe>
+
+</body>
+</html>

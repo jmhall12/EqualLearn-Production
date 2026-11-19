@@ -1,0 +1,1239 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#e9eaf5">
+
+    <title>Create Account | EqualLearn</title>
+    <meta name="description" content="Create your EqualLearn account and access your learning workspace.">
+    <meta name="application-name" content="EqualLearn">
+
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="assets/icons/equallearn-logo.png">
+
+    <link rel="stylesheet" href="assets/css/loading-screen.css">
+    <link rel="stylesheet" href="assets/css/equallearn.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --page: #e9eaf5;
+            --surface: #e9eaf5;
+            --text: #252744;
+            --muted: #898ba8;
+            --purple: #7063e9;
+            --purple-dark: #574bd0;
+            --green: #42a985;
+            --danger: #bd535a;
+            --success: #318b69;
+            --shadow-dark: #c9cad7;
+            --shadow-light: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            min-height: 100%;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 12% 15%, rgba(255,255,255,.75), transparent 28%),
+                radial-gradient(circle at 85% 80%, rgba(164,154,255,.15), transparent 32%),
+                var(--page);
+            font-family: "DM Sans", sans-serif;
+        }
+
+        a, button, input {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        button, input {
+            font: inherit;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        .el-public {
+            width: 100%;
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 1.02fr .98fr;
+        }
+
+        /* LEFT BRANDING PANEL */
+
+        .el-hero {
+            position: relative;
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+            padding: clamp(38px, 7vw, 105px);
+            color: white;
+            background:
+                radial-gradient(circle at 85% 12%, rgba(255,255,255,.20), transparent 31%),
+                radial-gradient(circle at 10% 90%, rgba(158,143,255,.35), transparent 36%),
+                linear-gradient(145deg, #6257dc, #786ce9 54%, #5145c4);
+        }
+
+        .el-hero::before,
+        .el-hero::after {
+            content: "";
+            position: absolute;
+            pointer-events: none;
+            border: 1px solid rgba(255,255,255,.16);
+            border-radius: 50%;
+        }
+
+        .el-hero::before {
+            width: 490px;
+            height: 490px;
+            right: -200px;
+            top: -175px;
+        }
+
+        .el-hero::after {
+            width: 355px;
+            height: 355px;
+            right: -125px;
+            top: -105px;
+        }
+
+        .el-brand {
+            position: absolute;
+            top: 38px;
+            left: clamp(35px, 7vw, 100px);
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            color: white;
+            font-family: "Plus Jakarta Sans", sans-serif;
+            font-size: 23px;
+            font-weight: 800;
+            letter-spacing: -.7px;
+        }
+
+        .el-brand-logo {
+            width: 45px;
+            height: 45px;
+            object-fit: cover;
+            border-radius: 14px;
+            background: white;
+            box-shadow:
+                5px 5px 12px rgba(40,31,120,.18),
+                -4px -4px 12px rgba(255,255,255,.18);
+        }
+
+        .el-hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 570px;
+            margin-top: 35px;
+        }
+
+        .el-hero-tag {
+            width: fit-content;
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 10px 15px;
+            border: 1px solid rgba(255,255,255,.26);
+            border-radius: 30px;
+            background: rgba(255,255,255,.13);
+            box-shadow:
+                inset 2px 2px 5px rgba(255,255,255,.09),
+                4px 4px 12px rgba(40,31,120,.09);
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+        }
+
+        .el-hero h1 {
+            max-width: 530px;
+            margin: 27px 0 18px;
+            font-family: "Plus Jakarta Sans", sans-serif;
+            font-size: clamp(40px, 5vw, 62px);
+            font-weight: 800;
+            line-height: 1.12;
+            letter-spacing: -2.5px;
+        }
+
+        .el-hero h1 span {
+            color: #d9d2ff;
+        }
+
+        .el-hero-description {
+            max-width: 470px;
+            margin: 0;
+            color: rgba(255,255,255,.82);
+            font-size: 15px;
+            line-height: 1.9;
+        }
+
+        /* FEATURES */
+
+        .el-feature-list {
+            display: grid;
+            gap: 19px;
+            margin-top: 43px;
+        }
+
+        .el-feature {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .el-feature-icon {
+            flex-shrink: 0;
+            width: 46px;
+            height: 46px;
+            display: grid;
+            place-items: center;
+            border: 1px solid rgba(255,255,255,.22);
+            border-radius: 15px;
+            background: rgba(255,255,255,.13);
+            box-shadow:
+                5px 5px 12px rgba(40,31,120,.13),
+                -4px -4px 12px rgba(255,255,255,.12);
+        }
+
+        .el-feature-icon svg {
+            width: 21px;
+            height: 21px;
+        }
+
+        .el-feature strong {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 13px;
+        }
+
+        .el-feature span {
+            color: rgba(255,255,255,.75);
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        /* RIGHT AUTH PANEL */
+
+        .el-auth-panel {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 45px clamp(20px, 5vw, 65px);
+            background: var(--page);
+        }
+
+        .el-auth-card {
+            width: 100%;
+            max-width: 520px;
+            padding: clamp(27px, 4vw, 43px);
+            border: 1px solid rgba(255,255,255,.65);
+            border-radius: 27px;
+            background: var(--surface);
+            box-shadow:
+                14px 14px 30px var(--shadow-dark),
+                -14px -14px 30px var(--shadow-light);
+            animation: cardAppear .65s ease both;
+        }
+
+        @keyframes cardAppear {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* BACK LINK */
+
+        .el-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+            transition: color .2s, transform .2s;
+        }
+
+        .el-back:hover {
+            color: var(--purple);
+            transform: translateX(-3px);
+        }
+
+        /* HEADING */
+
+        .el-auth-heading {
+            margin-top: 30px;
+            margin-bottom: 27px;
+        }
+
+        .el-heading-mark {
+            width: 47px;
+            height: 47px;
+            display: grid;
+            place-items: center;
+            margin-bottom: 20px;
+            border-radius: 15px;
+            color: var(--purple);
+            background: var(--surface);
+            box-shadow:
+                6px 6px 12px var(--shadow-dark),
+                -6px -6px 12px var(--shadow-light);
+            font-size: 21px;
+        }
+
+        .el-auth-heading h2 {
+            margin: 0 0 10px;
+            color: var(--text);
+            font-family: "Plus Jakarta Sans", sans-serif;
+            font-size: 30px;
+            font-weight: 800;
+            letter-spacing: -1.2px;
+        }
+
+        .el-auth-heading p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        /* MESSAGE */
+
+        #message:empty {
+            display: none;
+        }
+
+        #message {
+            overflow-wrap: anywhere;
+            white-space: pre-line;
+            margin: 14px 0 18px;
+            padding: 13px 15px;
+            border-radius: 12px;
+            font-size: 12px;
+            line-height: 1.6;
+            box-shadow:
+                inset 3px 3px 6px rgba(0,0,0,.035),
+                inset -3px -3px 6px rgba(255,255,255,.65);
+        }
+
+        #message.error {
+            display: block;
+            color: var(--danger);
+            border: 1px solid rgba(189,83,90,.15);
+            background: #f5e7e9;
+        }
+
+        #message.success {
+            display: block;
+            color: var(--success);
+            border: 1px solid rgba(49,139,105,.15);
+            background: #e2f2eb;
+        }
+
+        /* INPUT FIELDS */
+
+        .el-field {
+            margin-bottom: 20px;
+        }
+
+        .el-field label {
+            display: block;
+            margin-bottom: 10px;
+            color: #454762;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .el-field input {
+            width: 100%;
+            height: 54px;
+            padding: 0 17px;
+            border: 1px solid rgba(255,255,255,.48);
+            border-radius: 14px;
+            outline: none;
+            color: var(--text);
+            background: var(--page);
+            box-shadow:
+                inset 5px 5px 10px #cecfdb,
+                inset -5px -5px 10px #ffffff;
+            font-family: inherit;
+            font-size: 13px;
+            transition: box-shadow .25s, border-color .25s, background .25s;
+        }
+
+        .el-field input::placeholder {
+            color: #a3a5bb;
+        }
+
+        .el-field input:focus {
+            border-color: rgba(112,99,233,.55);
+            background: #f0f0fa;
+            box-shadow:
+                inset 3px 3px 7px #d0d1dd,
+                inset -3px -3px 7px #ffffff,
+                0 0 0 3px rgba(112,99,233,.10);
+        }
+
+        .el-field input:disabled {
+            opacity: .7;
+            cursor: not-allowed;
+        }
+
+        /* PASSWORD HINT */
+
+        .el-password-hint {
+            margin: 9px 0 0;
+            color: #999bb0;
+            font-size: 10px;
+        }
+
+        /* CREATE ACCOUNT BUTTON */
+
+        .el-register-btn {
+            width: 100%;
+            min-height: 55px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 25px;
+            border: 1px solid rgba(255,255,255,.24);
+            border-radius: 15px;
+            color: white;
+            background: linear-gradient(120deg, #7063e9, #897af3);
+            box-shadow:
+                7px 7px 15px rgba(112,99,233,.22),
+                -5px -5px 12px rgba(255,255,255,.7);
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform .2s, box-shadow .2s, opacity .2s;
+        }
+
+        .el-register-btn:hover {
+            transform: translateY(-2px);
+            box-shadow:
+                9px 10px 19px rgba(112,99,233,.27),
+                -5px -5px 12px rgba(255,255,255,.7);
+        }
+
+        .el-register-btn:active {
+            transform: translateY(1px);
+            box-shadow:
+                inset 3px 3px 7px rgba(44,35,140,.25),
+                inset -3px -3px 7px rgba(255,255,255,.12);
+        }
+
+        .el-register-btn:disabled {
+            opacity: .65;
+            cursor: wait;
+            transform: none;
+        }
+
+        /* DIVIDER */
+
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin: 25px 0;
+            color: #999bb0;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+        }
+
+        .auth-divider::before,
+        .auth-divider::after {
+            content: "";
+            height: 1px;
+            flex: 1;
+            background: rgba(255,255,255,.9);
+            box-shadow: 0 1px 2px rgba(0,0,0,.07);
+        }
+
+        /* GOOGLE BUTTON */
+
+        .google-btn {
+            width: 100%;
+            min-height: 55px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            border: 1px solid rgba(255,255,255,.65);
+            border-radius: 15px;
+            color: #454762;
+            background: var(--surface);
+            box-shadow:
+                6px 6px 12px var(--shadow-dark),
+                -6px -6px 12px var(--shadow-light);
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform .2s, box-shadow .2s, opacity .2s;
+        }
+
+        .google-btn:hover {
+            transform: translateY(-2px);
+            box-shadow:
+                8px 8px 16px var(--shadow-dark),
+                -8px -8px 16px var(--shadow-light);
+        }
+
+        .google-btn:active {
+            transform: translateY(1px);
+            box-shadow:
+                inset 4px 4px 8px var(--shadow-dark),
+                inset -4px -4px 8px var(--shadow-light);
+        }
+
+        .google-btn:disabled {
+            opacity: .6;
+            cursor: wait;
+            transform: none;
+        }
+
+        .google-logo {
+            width: 21px;
+            height: 21px;
+            flex-shrink: 0;
+        }
+
+        /* NOTE */
+
+        .auth-note {
+            margin: 20px 0 0;
+            color: #9294aa;
+            font-size: 11px;
+            line-height: 1.8;
+            text-align: center;
+        }
+
+        /* FOOTER */
+
+        .el-auth-footer {
+            margin-top: 27px;
+            padding-top: 21px;
+            border-top: 1px solid rgba(255,255,255,.7);
+            color: var(--muted);
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .el-auth-footer a {
+            color: var(--purple-dark);
+            font-weight: 800;
+        }
+
+        .el-auth-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .el-back:focus-visible,
+        .el-auth-footer a:focus-visible {
+            outline: 3px solid rgba(112,99,233,.35);
+            outline-offset: 4px;
+            border-radius: 5px;
+        }
+
+        /* RESPONSIVE */
+
+        @media (max-width: 850px) {
+            .el-public {
+                grid-template-columns: 1fr;
+            }
+
+            .el-hero {
+                min-height: 330px;
+                padding: 95px 35px 43px;
+            }
+
+            .el-brand {
+                top: 25px;
+                left: 35px;
+            }
+
+            .el-hero-content {
+                margin-top: 0;
+            }
+
+            .el-hero h1 {
+                max-width: 600px;
+                font-size: 43px;
+            }
+
+            .el-hero-description {
+                font-size: 14px;
+            }
+
+            .el-feature-list {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 13px;
+                margin-top: 28px;
+            }
+
+            .el-feature {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .el-auth-panel {
+                padding: 45px 22px 60px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .el-hero {
+                min-height: 300px;
+                padding: 86px 24px 30px;
+            }
+
+            .el-brand {
+                left: 24px;
+            }
+
+            .el-hero h1 {
+                font-size: 35px;
+                letter-spacing: -1.5px;
+            }
+
+            .el-hero-description {
+                font-size: 12px;
+                line-height: 1.75;
+            }
+
+            .el-feature-list {
+                grid-template-columns: 1fr;
+                gap: 13px;
+                margin-top: 25px;
+            }
+
+            .el-feature {
+                flex-direction: row;
+                align-items: center;
+            }
+
+            .el-feature-icon {
+                width: 38px;
+                height: 38px;
+            }
+
+            .el-auth-panel {
+                padding: 30px 16px 45px;
+            }
+
+            .el-auth-card {
+                padding: 27px 21px;
+                border-radius: 22px;
+            }
+
+            .el-auth-heading h2 {
+                font-size: 27px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                transition-duration: .01ms !important;
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+            }
+        }
+
+/* =========================================
+   EQUALLEARN REGISTER — SYSTEM DARK MODE
+========================================= */
+
+:root {
+  color-scheme: light;
+
+  --page: #f0f1f8;
+  --surface: #f7f7fc;
+  --text: #292940;
+  --muted: #77788f;
+  --purple: #7668df;
+  --purple-dark: #5d51c4;
+  --shadow-dark: #d5d5e2;
+  --shadow-light: #ffffff;
+}
+
+/* AUTOMATIC DARK MODE */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --page: #0b1020;
+    --surface: #151f33;
+    --text: #edf0fa;
+    --muted: #a2aec5;
+    --purple: #9588ff;
+    --purple-dark: #aa9fff;
+    --shadow-dark: #080d19;
+    --shadow-light: #202b40;
+  }
+
+  html,
+  body {
+    background: var(--page) !important;
+    color: var(--text) !important;
+  }
+
+  body {
+    background:
+      radial-gradient(
+        circle at 12% 12%,
+        rgba(111, 97, 210, .09),
+        transparent 32%
+      ),
+      var(--page) !important;
+  }
+
+  .el-auth-panel {
+    background: transparent !important;
+  }
+
+  /* CARD — REMOVE HARSH WHITE GLOW */
+  .el-auth-card {
+    background: #151f33 !important;
+    border: 1px solid #2d3b56 !important;
+
+    box-shadow:
+      0 18px 45px rgba(0, 0, 0, .28),
+      0 2px 8px rgba(0, 0, 0, .16) !important;
+  }
+
+  /* TEXT */
+  .el-back {
+    color: #aab5cc !important;
+  }
+
+  .el-back:hover {
+    color: #b5aaff !important;
+  }
+
+  .el-auth-heading h2 {
+    color: #f0f2fb !important;
+  }
+
+  .el-auth-heading p {
+    color: #a4b0c8 !important;
+  }
+
+  /* ICON */
+  .el-heading-mark {
+    background: #26334c !important;
+    color: #a99cff !important;
+
+    box-shadow:
+      0 5px 14px rgba(0, 0, 0, .22) !important;
+  }
+
+  /* FORM LABELS */
+  .el-field label {
+    color: #cbd3e6 !important;
+  }
+
+  /* INPUTS — NO WHITE INSET GLOW */
+  .el-field input {
+    background: #202c43 !important;
+    color: #f1f3fc !important;
+
+    border: 1px solid #394967 !important;
+
+    box-shadow:
+      inset 0 2px 5px rgba(0, 0, 0, .16) !important;
+  }
+
+  .el-field input::placeholder {
+    color: #8f9cb6 !important;
+  }
+
+  .el-field input:focus {
+    background: #25334d !important;
+    border-color: #887af0 !important;
+
+    box-shadow:
+      0 0 0 3px rgba(136, 122, 240, .15) !important;
+  }
+
+  .el-field input:disabled {
+    opacity: .65;
+  }
+
+  /* PASSWORD HINT */
+  .el-password-hint {
+    color: #929fba !important;
+  }
+
+  /* REGISTER BUTTON */
+  .el-register-btn {
+    color: #ffffff !important;
+
+    background: linear-gradient(
+      120deg,
+      #786ce0,
+      #6558c6
+    ) !important;
+
+    border: 1px solid rgba(183, 174, 255, .22) !important;
+
+    box-shadow:
+      0 7px 18px rgba(89, 72, 190, .20) !important;
+  }
+
+  .el-register-btn:hover {
+    background: linear-gradient(
+      120deg,
+      #897cf0,
+      #7467d8
+    ) !important;
+  }
+
+  /* DIVIDER */
+  .auth-divider {
+    color: #a0abc2 !important;
+  }
+
+  .auth-divider::before,
+  .auth-divider::after {
+    background: #35435e !important;
+    box-shadow: none !important;
+  }
+
+  /* GOOGLE BUTTON — SOFT DARK SURFACE */
+  .google-btn {
+    background: #202c43 !important;
+    color: #edf0fa !important;
+
+    border: 1px solid #394967 !important;
+
+    box-shadow:
+      0 5px 14px rgba(0, 0, 0, .18) !important;
+  }
+
+  .google-btn:hover {
+    background: #293751 !important;
+
+    box-shadow:
+      0 8px 18px rgba(0, 0, 0, .23) !important;
+  }
+
+  .google-btn:active {
+    box-shadow:
+      inset 0 2px 5px rgba(0, 0, 0, .20) !important;
+  }
+
+  /* NOTES */
+  .auth-note {
+    color: #929fba !important;
+  }
+
+  /* FOOTER */
+  .el-auth-footer {
+    color: #a2aec5 !important;
+    border-top-color: #35435e !important;
+  }
+
+  .el-auth-footer a {
+    color: #aa9fff !important;
+  }
+
+  /* ALERTS */
+  #message {
+    background: #202c43 !important;
+    color: #edf0fa !important;
+    box-shadow: none !important;
+  }
+
+  #message.error {
+    color: #ffabb2 !important;
+    background: rgba(184, 60, 78, .13) !important;
+    border-color: rgba(255, 120, 135, .25) !important;
+  }
+
+  #message.success {
+    color: #83e0b8 !important;
+    background: rgba(49, 139, 105, .13) !important;
+    border-color: rgba(83, 209, 156, .24) !important;
+  }
+
+  /* BROWSER AUTOFILL */
+  .el-field input:-webkit-autofill,
+  .el-field input:-webkit-autofill:hover,
+  .el-field input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #f1f3fc !important;
+
+    box-shadow:
+      0 0 0 1000px #202c43 inset !important;
+  }
+}
+
+/* LUMI — REGISTER PAGE TRANSPARENCY FIX */
+#equallearn-lumi-frame {
+    position: fixed !important;
+    right: 8px !important;
+    bottom: 8px !important;
+
+    width: 210px !important;
+    height: 255px !important;
+
+    display: block !important;
+    border: none !important;
+    outline: none !important;
+
+    background: transparent !important;
+    background-color: transparent !important;
+
+    color-scheme: normal !important;
+    box-shadow: none !important;
+
+    opacity: 1 !important;
+    z-index: 99999 !important;
+    overflow: hidden !important;
+    pointer-events: auto !important;
+}
+
+    </style>
+</head>
+
+<body>
+
+<div class="el-public">
+
+    <!-- BRANDING PANEL -->
+
+    <section class="el-hero">
+
+        <a class="el-brand" href="index.html">
+            <img
+                class="el-brand-logo"
+                src="assets/icons/equallearn-logo.png"
+                width="44"
+                height="44"
+                alt="EqualLearn logo"
+            >
+            <span>EqualLearn</span>
+        </a>
+
+        <div class="el-hero-content">
+
+            <div class="el-hero-tag">
+                <span>✦</span>
+                Learning without barriers
+            </div>
+
+            <h1>
+                Your learning journey
+                <span>starts here.</span>
+            </h1>
+
+            <p class="el-hero-description">
+                One account gives you access to your
+                EqualLearn courses, GAD learning materials,
+                activities, and academic resources.
+            </p>
+
+            <div class="el-feature-list">
+
+                <div class="el-feature">
+
+                    <div class="el-feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z"/>
+                            <path d="m9 12 2 2 4-4"/>
+                        </svg>
+                    </div>
+
+                    <div>
+                        <strong>Simple registration</strong>
+                        <span>Create an account using your email.</span>
+                    </div>
+
+                </div>
+
+
+                <div class="el-feature">
+
+                    <div class="el-feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M8 12h8M12 8v8"/>
+                        </svg>
+                    </div>
+
+                    <div>
+                        <strong>Google access</strong>
+                        <span>Continue with your Google account.</span>
+                    </div>
+
+                </div>
+
+
+                <div class="el-feature">
+
+                    <div class="el-feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="16" rx="3"/>
+                            <path d="M8 9h8M8 13h5"/>
+                        </svg>
+                    </div>
+
+                    <div>
+                        <strong>One learning space</strong>
+                        <span>Keep your learning progress organized.</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- REGISTRATION PANEL -->
+
+    <section class="el-auth-panel">
+
+        <div class="el-auth-card">
+
+            <a href="index.html" class="el-back">
+                <span aria-hidden="true">←</span>
+                Back to home
+            </a>
+
+
+            <div class="el-auth-heading">
+
+                <div class="el-heading-mark" aria-hidden="true">
+                    ✦
+                </div>
+
+                <h2>Create your account</h2>
+
+                <p>
+                    Join EqualLearn using your email or Google account.
+                </p>
+
+            </div>
+
+
+            <!-- EXISTING MESSAGE ELEMENT -->
+
+            <div
+                id="message"
+                role="alert"
+                aria-live="polite"
+            ></div>
+
+
+            <!-- EMAIL REGISTRATION -->
+
+            <form id="registerForm">
+
+                <div class="el-field">
+
+                    <label for="email">
+                        Email address
+                    </label>
+
+                    <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        placeholder="you@example.com"
+                        autocomplete="email"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="el-field">
+
+                    <label for="password">
+                        Password
+                    </label>
+
+                    <input
+                        id="password"
+                        name="password"
+                        type="password"
+                        minlength="6"
+                        placeholder="At least 6 characters"
+                        autocomplete="new-password"
+                        required
+                    >
+
+                    <p class="el-password-hint">
+                        Use at least 6 characters.
+                    </p>
+
+                </div>
+
+
+                <button
+                    id="registerButton"
+                    class="el-register-btn"
+                    type="submit"
+                >
+                    <span>Create account</span>
+
+                    <svg
+                        width="19"
+                        height="19"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
+                        <path d="M5 12h14"/>
+                        <path d="m12 5 7 7-7 7"/>
+                    </svg>
+                </button>
+
+            </form>
+
+
+            <!-- DIVIDER -->
+
+            <div class="auth-divider">
+                OR CONTINUE WITH
+            </div>
+
+
+            <!-- GOOGLE REGISTRATION -->
+
+            <button
+                id="googleSignIn"
+                class="google-btn"
+                type="button"
+            >
+
+                <svg
+                    class="google-logo"
+                    viewBox="0 0 48 48"
+                    aria-hidden="true"
+                >
+                    <path
+                        fill="#EA4335"
+                        d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+                    />
+
+                    <path
+                        fill="#4285F4"
+                        d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.73 7.18l7.31 5.67c4.27-3.94 7.46-9.74 7.46-17.32z"
+                    />
+
+                    <path
+                        fill="#FBBC05"
+                        d="M10.54 28.59A14.5 14.5 0 0 1 9.75 24c0-1.59.27-3.12.76-4.59l-7.98-6.19A23.9 23.9 0 0 0 0 24c0 3.87.93 7.52 2.56 10.78l7.98-6.19z"
+                    />
+
+                    <path
+                        fill="#34A853"
+                        d="M24 48c6.48 0 11.93-2.13 15.91-6.13l-7.31-5.67c-2.03 1.36-4.63 2.17-8.6 2.17-6.26 0-11.57-4.22-13.46-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+                    />
+                </svg>
+
+                Continue with Google
+
+            </button>
+
+
+            <p class="auth-note">
+                Personal Gmail and PTC institutional Google
+                accounts are welcome. Your account will be
+                created automatically after successful sign-in.
+            </p>
+
+
+            <!-- LOGIN LINK -->
+
+            <div class="el-auth-footer">
+
+                Already registered?
+
+                <a href="login.html">
+                    Sign in
+                </a>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+<!-- EXISTING PROJECT JAVASCRIPT -->
+<script type="module" src="assets/js/register.js"></script>
+<script type="module" src="assets/js/password-toggle.js"></script>
+<script type="module" src="assets/js/pwa.js"></script>
+<script type="module" src="assets/js/theme.js"></script>
+
+
+<!-- EQUALLEARN LUMI COMPANION -->
+<iframe
+  src="/assets/widgets/lumi.html"
+  title="Lumi — EqualLearn Companion"
+  id="equallearn-lumi-frame"
+  allow="autoplay"
+  style="
+    position: fixed;
+    right: 8px;
+    bottom: 8px;
+    width: 210px;
+    height: 255px;
+    border: 0;
+    background: transparent;
+    z-index: 99999;
+    overflow: hidden;
+    pointer-events: auto;
+  ">
+</iframe>
+
+
+</body>
+</html>

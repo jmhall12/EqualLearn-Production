@@ -1,0 +1,13 @@
+{
+  "name": "verification-worker",
+  "version": "1.0.0",
+  "description": "This is the missing Cloudflare Worker backend used by `admin-students.js`. It supports individual and batch approve/reject/restore requests and a scheduled cleanup for rejected student accounts after the 7-day grace period. It does not use Firebase Cloud Functions.",
+  "main": "worker.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module"
+}

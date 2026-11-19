@@ -1,0 +1,882 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111827">
+  <title>EqualLearn Live - Teacher</title>
+
+  <link rel="manifest" href="../manifest.webmanifest">
+  <link rel="stylesheet" href="../assets/css/equallearn.css">
+  <link rel="icon" href="../assets/icons/icon-192.png">
+
+  <style>
+    .live-page { max-width:1100px; margin:auto; }
+
+    .live-field {
+      width:100%;
+      box-sizing:border-box;
+      padding:12px;
+      border:1px solid #dbe1ea;
+      border-radius:10px;
+      margin-top:7px;
+      background:var(--el-card,#fff);
+      color:inherit;
+    }
+
+    .live-form-grid {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:16px;
+    }
+
+    .live-section { margin-top:16px; }
+    .live-help { font-size:12px; color:#64748b; margin-top:6px; }
+    .live-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+    .live-message { font-size:13px; margin-top:12px; }
+
+    .live-layout {
+      display:grid;
+      grid-template-columns:1.4fr .8fr;
+      gap:18px;
+      margin-top:20px;
+    }
+
+    .live-preview {
+      background:#111827;
+      min-height:280px;
+      border-radius:14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:white;
+      text-align:center;
+      overflow:hidden;
+    }
+
+    .live-status {
+      display:inline-flex;
+      align-items:center;
+      gap:7px;
+      padding:7px 12px;
+      border-radius:30px;
+      background:#eef2ff;
+      color:#4f46e5;
+      font-size:12px;
+      font-weight:700;
+    }
+
+    .live-dot {
+      width:8px;
+      height:8px;
+      border-radius:50%;
+      background:currentColor;
+    }
+
+    .live-info { display:grid; gap:15px; }
+    .live-info strong { display:block; overflow-wrap:anywhere; }
+    .live-hidden { display:none !important; }
+
+    /* Full-screen meeting */
+    #meetingScreen {
+      position:fixed;
+      inset:0;
+      z-index:99999;
+      background:#111827;
+      color:white;
+      display:none;
+      flex-direction:column;
+      font-family:Arial,sans-serif;
+    }
+
+    #meetingScreen.active { display:flex; }
+
+    .meeting-topbar {
+      min-height:58px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:10px 18px;
+      background:#1f2937;
+      box-sizing:border-box;
+    }
+
+    .meeting-brand { font-weight:700; }
+    .meeting-top-meta { font-size:12px; color:#cbd5e1; }
+
+    .meeting-main {
+      display:flex;
+      flex:1;
+      min-height:0;
+      overflow:hidden;
+    }
+
+    .meeting-stage {
+      flex:1;
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      padding:14px;
+      gap:12px;
+    }
+
+    #participantGrid {
+      flex:1;
+      min-height:0;
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+      gap:12px;
+      align-content:center;
+      overflow:auto;
+    }
+
+    .participant-tile {
+      position:relative;
+      min-height:170px;
+      aspect-ratio:16/9;
+      background:#374151;
+      border-radius:14px;
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .participant-tile video {
+      width:100%;
+      height:100%;
+      object-fit:cover;
+    }
+
+    .participant-tile audio { display:none; }
+
+    .participant-name {
+      position:absolute;
+      bottom:9px;
+      left:10px;
+      padding:5px 9px;
+      background:#0009;
+      border-radius:7px;
+      font-size:12px;
+    }
+
+    .participant-placeholder {
+      color:#d1d5db;
+      font-size:14px;
+      text-align:center;
+    }
+
+    .meeting-sidebar {
+      width:300px;
+      max-width:40vw;
+      background:#1f2937;
+      border-left:1px solid #374151;
+      display:none;
+      flex-direction:column;
+      min-height:0;
+    }
+
+    .meeting-sidebar.open { display:flex; }
+
+    .sidebar-header {
+      padding:15px;
+      border-bottom:1px solid #374151;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+
+    #meetingParticipants,
+    #meetingChatMessages {
+      padding:12px;
+      overflow:auto;
+      flex:1;
+    }
+
+    .meeting-person {
+      padding:10px;
+      border-bottom:1px solid #374151;
+      font-size:13px;
+    }
+
+    .meeting-chat-form {
+      display:flex;
+      gap:7px;
+      padding:10px;
+      border-top:1px solid #374151;
+    }
+
+    .meeting-chat-form input {
+      flex:1;
+      min-width:0;
+      padding:10px;
+      border-radius:8px;
+      border:1px solid #4b5563;
+      background:#111827;
+      color:white;
+    }
+
+    .chat-message {
+      padding:9px;
+      margin-bottom:8px;
+      background:#374151;
+      border-radius:9px;
+      overflow-wrap:anywhere;
+      font-size:13px;
+    }
+
+    .chat-message strong {
+      display:block;
+      margin-bottom:4px;
+    }
+
+    .meeting-controls {
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      flex-wrap:wrap;
+      gap:10px;
+      padding:13px;
+      background:#1f2937;
+      border-top:1px solid #374151;
+    }
+
+    .meeting-controls button,
+    .meeting-topbar button,
+    .meeting-sidebar button {
+      border:0;
+      border-radius:9px;
+      padding:11px 14px;
+      cursor:pointer;
+      font-weight:600;
+      background:#374151;
+      color:white;
+    }
+
+    .meeting-controls button:disabled {
+      opacity:.45;
+      cursor:not-allowed;
+    }
+
+    .meeting-controls .danger { background:#dc2626; }
+    .meeting-controls .active-control { background:#4f46e5; }
+    .meeting-controls .leave { background:#b91c1c; }
+
+    #meetingNotice {
+      font-size:12px;
+      color:#fbbf24;
+      text-align:center;
+      min-height:16px;
+    }
+
+    @media(max-width:800px) {
+      .live-layout,
+      .live-form-grid {
+        grid-template-columns:1fr;
+      }
+
+      .meeting-sidebar {
+        width:100%;
+        max-width:none;
+      }
+
+      .meeting-main { flex-direction:column; }
+
+      .meeting-sidebar.open {
+        height:40%;
+        border-left:0;
+        border-top:1px solid #374151;
+      }
+
+      #participantGrid {
+        grid-template-columns:repeat(auto-fit,minmax(145px,1fr));
+      }
+
+      .participant-tile { min-height:115px; }
+
+      .meeting-controls {
+        gap:7px;
+        padding:10px 5px;
+      }
+
+      .meeting-controls button {
+        padding:10px;
+        font-size:12px;
+      }
+    }
+
+    /* Icon meeting controls */
+.meeting-controls button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.meeting-controls button svg {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+}
+
+.meeting-controls .leave {
+  background: #374151;
+}
+
+.meeting-controls .leave:hover {
+  background: #4b5563;
+}
+
+/* Leave choices modal */
+.leave-choice-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100001;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0,0,0,.72);
+  backdrop-filter: blur(5px);
+}
+
+.leave-choice-overlay.open {
+  display: flex;
+}
+
+.leave-choice-dialog {
+  width: 100%;
+  max-width: 390px;
+  padding: 24px;
+  background: #1f2937;
+  color: white;
+  border: 1px solid #374151;
+  border-radius: 18px;
+  box-shadow: 0 20px 60px #0008;
+}
+
+.leave-choice-dialog h3 {
+  margin: 0 0 7px;
+  font-size: 20px;
+}
+
+.leave-choice-dialog p {
+  color: #cbd5e1;
+  font-size: 13px;
+  margin: 0 0 20px;
+}
+
+.leave-choice-dialog button {
+  width: 100%;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 15px;
+  margin-top: 10px;
+  border: 1px solid #4b5563;
+  border-radius: 11px;
+  background: #374151;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+
+.leave-choice-dialog button svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.leave-choice-dialog .end-everyone-choice {
+  background: #991b1b;
+  border-color: #dc2626;
+}
+
+.leave-choice-dialog .end-everyone-choice:hover {
+  background: #b91c1c;
+}
+
+.leave-choice-dialog .cancel-choice {
+  justify-content: center;
+  background: transparent;
+  border-color: transparent;
+  color: #cbd5e1;
+}
+
+@media(max-width:520px) {
+  .meeting-controls button {
+    font-size: 11px;
+    padding: 10px;
+  }
+}
+  
+/* EqualLearn Live responsive participant tiles, reactions and screen share */
+.live-reaction-bar {
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  flex:1 1 100%; order:-1; padding:2px 0; overflow-x:auto;
+}
+.live-reaction-button {
+  min-width:42px !important; width:42px; height:38px; padding:4px !important;
+  border-radius:999px !important; font-size:20px !important; line-height:1;
+}
+.participant-tile.screen-share-tile {
+  grid-column:1 / -1; min-height:min(62vh, 620px); aspect-ratio:16 / 9;
+  background:#080b12; border:1px solid #64748b;
+}
+.participant-tile.screen-share-tile video { object-fit:contain !important; background:#080b12; }
+.live-reaction-pop {
+  position:absolute; z-index:10; top:14px; right:14px; display:flex; flex-direction:column;
+  align-items:center; gap:2px; padding:8px 11px; border-radius:14px;
+  background:rgba(17,24,39,.92); box-shadow:0 8px 24px #0008;
+  animation:equalReactionFloat 2.4s ease forwards; pointer-events:none;
+}
+.live-reaction-emoji { font-size:32px; line-height:1.1; }
+.live-reaction-pop small { color:#fff; font-size:10px; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+@keyframes equalReactionFloat { 0%{opacity:0;transform:translateY(14px) scale(.7)} 15%{opacity:1;transform:translateY(0) scale(1)} 75%{opacity:1} 100%{opacity:0;transform:translateY(-24px) scale(.95)} }
+@media (max-width:800px) and (orientation:landscape) {
+  #meetingScreen .meeting-main { flex-direction:row; }
+  #meetingScreen .meeting-stage { min-width:0; flex:1; padding:8px; }
+  #meetingScreen .meeting-sidebar { width:230px; max-width:32vw; max-height:none; }
+  #participantGrid { grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); grid-auto-rows:minmax(90px,auto); }
+  .participant-tile { min-height:90px; }
+  .participant-tile.screen-share-tile { min-height:calc(100svh - 150px); }
+  #meetingScreen .meeting-controls { gap:6px; padding:7px; }
+  #meetingScreen .meeting-controls button { min-width:76px; padding:8px; font-size:11px; }
+}
+
+  
+.live-fullscreen-button {
+  min-width:105px; padding:9px 12px; border:1px solid #65728c;
+  border-radius:10px; background:#3b4962; color:#fff; font-weight:700;
+}
+
+  </style>
+<style>
+
+/* EqualLearn Live premium call controls, minimizable dock, camera mirror and effects */
+.equallearn-extra-control {
+  min-height:38px; padding:8px 12px; border:1px solid #46536b; border-radius:10px;
+  background:#263247; color:#f8fafc; font-size:12px; font-weight:700; cursor:pointer;
+}
+.equallearn-extra-control:hover { background:#35445f; border-color:#8292b2; }
+.equallearn-delete-session { margin-top:14px; background:#9f1239; color:#fff; border:0; padding:11px 14px; border-radius:10px; font-weight:700; cursor:pointer; }
+.equallearn-delete-session:disabled { opacity:.45; cursor:not-allowed; }
+.participant-tile video.is-selfie, .sm-tile video.is-selfie { transform:scaleX(-1); }
+.participant-tile video.is-local-camera, .sm-tile video.is-local-camera { will-change:transform; }
+.participant-tile.screen-share-tile video, .sm-tile.screen-share-tile video { transform:none !important; }
+.equallearn-floating-call[hidden] { display:none !important; }
+.equallearn-floating-call {
+  position:fixed; right:14px; bottom:14px; z-index:100200; width:min(390px,calc(100vw - 28px));
+  min-height:92px; display:grid; grid-template-columns:112px minmax(0,1fr); align-items:center; gap:12px;
+  padding:10px; border:1px solid rgba(148,163,184,.35); border-radius:18px;
+  background:rgba(15,23,42,.96); color:#f8fafc; box-shadow:0 18px 55px rgba(0,0,0,.42);
+  backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+}
+.equallearn-floating-preview {
+  position:relative; width:112px; aspect-ratio:16/10; overflow:hidden; border-radius:12px;
+  background:#263247; display:grid; place-items:center;
+}
+.equallearn-floating-video { width:100%; height:100%; object-fit:cover; }
+.equallearn-floating-fallback { font-size:22px; font-weight:900; color:#a5b4fc; }
+.equallearn-floating-details { min-width:0; display:flex; flex-direction:column; gap:5px; }
+.equallearn-floating-details strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; }
+.equallearn-floating-details span { color:#aab6cb; font-size:11px; }
+.equallearn-floating-actions { grid-column:1 / -1; display:flex; gap:8px; }
+.equallearn-floating-actions button { flex:1; min-height:36px; border:0; border-radius:10px; background:#4f46e5; color:white; font-weight:700; }
+.equallearn-floating-actions button.is-danger { background:#be123c; }
+#meetingScreen.is-minimized, #studentMeetingScreen.is-minimized { display:none !important; }
+@media(max-width:520px) {
+  .equallearn-floating-call { right:9px; bottom:9px; width:min(340px,calc(100vw - 18px)); }
+  .equallearn-extra-control { min-height:35px; padding:7px 9px; font-size:11px; }
+}
+
+</style>
+    <link rel="stylesheet" href="../assets/css/responsive-layout.css">
+</head>
+
+<body>
+<div class="el-dashboard live-page">
+
+  <div class="el-page-header">
+    <div>
+      <div class="el-page-kicker">Teaching workspace</div>
+      <h1>EqualLearn Live</h1>
+      <p>Create section-based classes or private student meetings.</p>
+    </div>
+
+    <a href="dashboard.html" class="el-btn">Back to dashboard</a>
+  </div>
+
+  <section class="el-card">
+    <div class="el-card-title">
+      <h3>Create Live Session</h3>
+      <span>Choose your classroom and participants</span>
+    </div>
+
+    <label for="liveTitle">Session title</label>
+    <input
+      id="liveTitle"
+      class="live-field"
+      maxlength="120"
+      placeholder="Example: Gender Equality - Lesson 1"
+    >
+
+    <div class="live-form-grid live-section">
+      <div>
+        <label for="meetingType">Meeting type</label>
+        <select id="meetingType" class="live-field">
+          <option value="batch">Batch Meeting - Entire section</option>
+          <option value="one_on_one">One-on-One Meeting - One student</option>
+          <option value="livestream">Livestream - Teacher broadcasts</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="sectionSelect">Assigned section</label>
+        <select id="sectionSelect" class="live-field">
+          <option value="">Loading assigned sections...</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="studentSelectWrap" class="live-section live-hidden">
+      <label for="studentSelect">Select one student</label>
+
+      <select id="studentSelect" class="live-field">
+        <option value="">Select a section first</option>
+      </select>
+
+      <p class="live-help">
+        Only the selected student and teacher can join this private meeting.
+      </p>
+    </div>
+
+    <div class="live-section">
+      <label for="liveDescription">Description</label>
+
+      <textarea
+        id="liveDescription"
+        class="live-field"
+        rows="3"
+        maxlength="500"
+        placeholder="Describe your live class..."
+      ></textarea>
+    </div>
+
+    <div class="live-actions">
+      <button
+        id="createLiveBtn"
+        class="el-btn el-btn-primary"
+        type="button"
+      >
+        Create Session
+      </button>
+    </div>
+
+    <p id="createMessage" class="live-message" role="status"></p>
+  </section>
+
+  <div class="live-layout">
+
+    <section class="el-card">
+      <div class="el-card-title">
+        <h3>Classroom Preview</h3>
+
+        <span id="liveStatus" class="live-status">
+          <span class="live-dot"></span> Not connected
+        </span>
+      </div>
+
+      <div class="live-preview" id="teacherPreview">
+        <div>
+          <div style="font-size:42px">🎥</div>
+          <h3>EqualLearn Live Room</h3>
+          <p id="previewMessage">
+            Create a session to prepare your classroom.
+          </p>
+        </div>
+      </div>
+
+      <div class="live-actions">
+        <button
+          id="startLiveBtn"
+          class="el-btn el-btn-primary"
+          type="button"
+          disabled
+        >
+          Start Meeting
+        </button>
+
+        <button id="micBtn" class="el-btn" type="button" disabled>
+          Microphone
+        </button>
+
+        <button id="cameraBtn" class="el-btn" type="button" disabled>
+          Camera
+        </button>
+
+        <button id="endLiveBtn" class="el-btn" type="button" disabled>
+          End Session
+        </button>
+      </div>
+
+      <p id="connectionMessage" class="live-message" role="status">
+        No active connection.
+      </p>
+    </section>
+
+    <section class="el-card">
+      <div class="el-card-title">
+        <h3>Session Information</h3>
+        <span>Current classroom</span>
+      </div>
+
+      <div class="live-info">
+        <div>
+          <small>Title</small>
+          <strong id="sessionTitle">Not created</strong>
+        </div>
+
+        <div>
+          <small>Session ID</small>
+          <strong id="sessionId">—</strong>
+        </div>
+
+        <div>
+          <small>Meeting type</small>
+          <strong id="sessionMode">—</strong>
+        </div>
+
+        <div>
+          <small>Section</small>
+          <strong id="sessionSection">—</strong>
+        </div>
+
+        <div>
+          <small>Participants</small>
+          <strong id="sessionParticipants">—</strong>
+        </div>
+
+        <div>
+          <small>Teacher</small>
+          <strong id="sessionTeacher">Loading...</strong>
+        </div>
+
+        <div>
+          <small>Status</small>
+          <strong id="sessionState">Not created</strong>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <a id="logout" href="../login.html" style="display:none">Logout</a>
+</div>
+
+<!-- Full-screen meeting interface -->
+<div id="meetingScreen" aria-label="EqualLearn meeting">
+
+  <div class="meeting-topbar">
+    <div>
+      <div class="meeting-brand">EqualLearn Live</div>
+      <div class="meeting-top-meta" id="meetingTitle">
+        Connecting...
+      </div>
+    </div>
+
+    <div>
+      <span id="meetingClock" class="meeting-top-meta">LIVE</span>
+
+      <button id="participantsToggle" type="button">
+        People
+      </button>
+
+      <button id="chatToggle" type="button">
+        Chat
+      </button>
+    </div>
+  </div>
+
+  <div class="meeting-main">
+
+    <main class="meeting-stage">
+      <div id="participantGrid">
+        <div class="participant-tile">
+          <div class="participant-placeholder">
+            Connecting to meeting...
+          </div>
+        </div>
+      </div>
+
+      <div id="meetingNotice" role="status"></div>
+    </main>
+
+    <aside class="meeting-sidebar" id="meetingSidebar">
+
+      <div class="sidebar-header">
+        <strong id="sidebarTitle">Participants</strong>
+
+        <button id="closeSidebar" type="button">
+          Close
+        </button>
+      </div>
+
+      <div id="meetingParticipants"></div>
+
+      <div id="meetingChatMessages" class="live-hidden"></div>
+
+      <form id="meetingChatForm" class="meeting-chat-form live-hidden">
+        <input
+          id="meetingChatInput"
+          maxlength="1000"
+          placeholder="Send a message..."
+          autocomplete="off"
+        >
+
+        <button type="submit">Send</button>
+      </form>
+
+    </aside>
+  </div>
+
+  <div class="meeting-controls">
+
+  <!-- Microphone -->
+  <button id="meetingMicBtn" type="button">
+    <svg viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round">
+      <rect x="9" y="2" width="6" height="12" rx="3"/>
+      <path d="M5 10a7 7 0 0 0 14 0"/>
+      <path d="M12 17v5M8 22h8"/>
+    </svg>
+    <span>Mute mic</span>
+  </button>
+
+  <!-- Camera -->
+  <button id="meetingCameraBtn" type="button">
+    <svg viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="6" width="13" height="12" rx="2"/>
+      <path d="m16 10 5-3v10l-5-3"/>
+    </svg>
+    <span>Turn camera off</span>
+  </button>
+
+  <!-- Screen share -->
+  <button id="screenShareBtn" type="button">
+    <svg viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="3" width="20" height="14" rx="2"/>
+      <path d="M8 21h8M12 17v4M12 13V7"/>
+      <path d="m9 10 3-3 3 3"/>
+    </svg>
+    <span>Share screen</span>
+  </button>
+
+  <!-- Participants -->
+  <button id="meetingPeopleBtn" type="button">
+    <svg viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/>
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+    <span>Participants</span>
+  </button>
+
+  <!-- Chat -->
+  <button id="meetingChatBtn" type="button">
+    <svg viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8z"/>
+    </svg>
+    <span>Chat</span>
+  </button>
+
+  <!-- One Leave button -->
+  <button id="meetingLeaveBtn" class="leave" type="button">
+    <svg viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+      <path d="m16 17 5-5-5-5"/>
+      <path d="M21 12H9"/>
+    </svg>
+    <span>Leave</span>
+  </button>
+
+  <!-- Retained for compatibility with existing JS -->
+  <button id="meetingEndBtn" type="button" hidden>
+    End for everyone
+  </button>
+
+</div>
+</div>
+
+<div
+  id="leaveChoiceModal"
+  class="leave-choice-overlay"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="leaveChoiceTitle"
+>
+  <div class="leave-choice-dialog">
+
+    <h3 id="leaveChoiceTitle">Leave meeting?</h3>
+    <p>Choose what you want to do.</p>
+
+    <button id="leaveOnlyChoice" type="button">
+      <svg viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <path d="m16 17 5-5-5-5"/>
+        <path d="M21 12H9"/>
+      </svg>
+      <span>
+        <strong>Leave only</strong>
+      </span>
+    </button>
+
+    <button
+      id="endEveryoneChoice"
+      class="end-everyone-choice"
+      type="button"
+    >
+      <svg viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 11h18v10H3z"/>
+        <path d="M5 11V7l7-4 7 4v4"/>
+        <path d="M9 15h6"/>
+      </svg>
+      <span>
+        <strong>End for everyone</strong>
+      </span>
+    </button>
+
+    <button id="cancelLeaveChoice" class="cancel-choice" type="button">
+      Cancel
+    </button>
+
+  </div>
+</div>
+
+<script type="module" src="../assets/js/teacher_live.js"></script>
+<script type="module" src="../assets/js/ui-shell.js"></script>
+<script type="module" src="../assets/js/pwa.js"></script>
+<script type="module" src="../assets/js/theme.js"></script>
+
+</body>
+</html>

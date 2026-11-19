@@ -1,0 +1,18 @@
+node_modules/
+web/dist/
+mobile/.expo/
+mobile/android/
+mobile/ios/
+*.log
+.env
+.env.*
+!.env.example
+.DS_Store
+
+# Expo generated export
+mobile/dist/
+
+/web/public/downloads/EqualLearn.apk
+
+# Firebase Android service configuration
+**/google-services.json

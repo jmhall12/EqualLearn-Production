@@ -1,0 +1,315 @@
+/* EqualLearn Responsive Layout Patch
+   Applies safe viewport, overflow, form, table and app-shell adjustments.
+   Loaded after each page's existing CSS so it can provide a consistent final layer.
+*/
+:root {
+  --el-responsive-gutter: clamp(12px, 3vw, 28px);
+}
+
+html {
+  width: 100%;
+  max-width: 100%;
+  min-height: 100%;
+  overflow-x: clip;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+img,
+svg,
+video,
+canvas,
+iframe {
+  max-width: 100%;
+}
+
+input,
+select,
+textarea,
+button {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.el-app-shell,
+.el-app-main,
+.el-page-content,
+.el-dashboard,
+.el-dashboard > *,
+.el-page-content > *,
+.container,
+.page,
+.reports-container,
+.settings-container {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.el-app-shell {
+  width: 100%;
+}
+
+.el-app-main {
+  min-width: 0;
+}
+
+.el-topbar,
+.el-topbar-title,
+.el-topbar-actions,
+.el-page-header,
+.el-user-pill {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.el-topbar-title,
+.el-topbar-actions,
+.el-page-header {
+  flex-wrap: wrap;
+}
+
+.el-user-pill strong,
+.el-student-name,
+.admin-student-details,
+.admin-student-details strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.table-wrapper,
+.table-wrap,
+.table-container,
+.table-responsive,
+.data-table-wrapper,
+#tableContainer {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+table {
+  max-width: 100%;
+}
+
+pre,
+code,
+.email,
+.uid,
+.student-id,
+.admin-student-details .muted {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+@media (max-width: 900px) {
+  .el-app-shell {
+    display: block !important;
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  .el-app-main {
+    display: block;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 16px var(--el-responsive-gutter) 32px !important;
+  }
+
+  .el-page-content,
+  .el-dashboard {
+    width: 100%;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .el-topbar {
+    width: 100%;
+    gap: 10px;
+  }
+
+  .el-topbar-title {
+    flex: 1 1 220px;
+  }
+
+  .el-topbar-actions {
+    flex: 0 1 auto;
+  }
+
+  .el-grid-4,
+  .grid-4,
+  .stats-grid.four,
+  .dashboard-grid.four {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .el-app-main {
+    padding: 12px 12px 28px !important;
+  }
+
+  .el-topbar {
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .el-topbar-title {
+    flex: 1 1 100%;
+    gap: 8px;
+  }
+
+  .el-topbar-actions {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+  }
+
+  .el-user-pill {
+    max-width: 100%;
+  }
+
+  .el-user-pill strong {
+    max-width: min(58vw, 220px);
+    white-space: normal;
+  }
+
+  .el-page-header {
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .el-page-header > .el-btn,
+  .el-page-header > .btn,
+  .el-page-header > button {
+    width: 100%;
+  }
+
+  .el-grid-2,
+  .el-grid-3,
+  .el-grid-4,
+  .grid-2,
+  .grid-3,
+  .grid-4,
+  .form-row,
+  .el-form-grid,
+  .toolbar,
+  .filter-grid,
+  .filter-card,
+  .search-row {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .stats,
+  .summary-grid,
+  .el-quick-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .actions,
+  .button-row,
+  .el-auth-actions,
+  .form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .actions > *,
+  .button-row > *,
+  .el-auth-actions > *,
+  .form-actions > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .container,
+  .page,
+  .reports-container,
+  .settings-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .panel,
+  .el-card,
+  .card {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  table {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  th,
+  td {
+    max-width: 280px;
+  }
+
+  input,
+  select,
+  textarea {
+    width: 100%;
+  }
+
+  button,
+  .btn,
+  .el-btn {
+    min-height: 42px;
+  }
+}
+
+@media (max-width: 380px) {
+  .stats,
+  .summary-grid,
+  .el-quick-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .el-app-main {
+    padding-left: 9px !important;
+    padding-right: 9px !important;
+  }
+
+  .el-page-title {
+    max-width: 65vw;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}

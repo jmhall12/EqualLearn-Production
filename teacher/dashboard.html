@@ -1,0 +1,204 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#edf0fa">
+
+    <title>Teacher Dashboard - EqualLearn</title>
+
+    <link rel="manifest" href="../manifest.webmanifest">
+    <link rel="icon" href="../assets/icons/icon-192.png">
+
+    <!-- Shared sidebar and application shell only -->
+    <link rel="stylesheet" href="../assets/css/sidebar-skeuomorphism.css">
+
+    <!-- Independent Teacher Dashboard styling -->
+    <link rel="stylesheet" href="../assets/css/teacher-dashboard.css">
+    <link rel="stylesheet" href="../assets/css/responsive-layout.css">
+</head>
+
+<body>
+
+<div class="el-dashboard">
+
+    <header class="el-page-header">
+        <div>
+            <div class="el-page-kicker">Teaching workspace</div>
+            <h1>Teacher dashboard</h1>
+            <p id="teacherName">Loading teacher...</p>
+        </div>
+
+        <a class="el-btn el-btn-primary" href="modules.html">
+            <span data-icon="plus"></span>
+            New module
+        </a>
+    </header>
+
+    <section class="el-grid el-grid-4">
+
+        <article class="el-card el-stat">
+            <div class="el-stat-icon"><span data-icon="modules"></span></div>
+            <div class="el-stat-label">Modules</div>
+            <div id="moduleCount" class="el-stat-value">0</div>
+            <div class="el-stat-meta">Learning units</div>
+        </article>
+
+        <article class="el-card el-stat">
+            <div class="el-stat-icon"><span data-icon="lesson"></span></div>
+            <div class="el-stat-label">Lessons</div>
+            <div id="lessonCount" class="el-stat-value">0</div>
+            <div class="el-stat-meta">Lesson content</div>
+        </article>
+
+        <article class="el-card el-stat">
+            <div class="el-stat-icon"><span data-icon="quiz"></span></div>
+            <div class="el-stat-label">Quizzes</div>
+            <div id="quizCount" class="el-stat-value">0</div>
+            <div class="el-stat-meta">Assessment questions</div>
+        </article>
+
+        <article class="el-card el-stat">
+            <div class="el-stat-icon"><span data-icon="users"></span></div>
+            <div class="el-stat-label">Students</div>
+            <div id="studentCount" class="el-stat-value">0</div>
+            <div class="el-stat-meta">Assigned learners</div>
+        </article>
+
+    </section>
+
+    <section class="el-grid el-grid-2" style="margin-top:18px">
+
+        <article class="el-card">
+            <div class="el-card-title">
+                <div>
+                    <h3>Quick actions</h3>
+                    <span>Create and manage learning content</span>
+                </div>
+            </div>
+
+            <div class="el-quick-grid">
+
+                <a class="el-quick" href="modules.html">
+                    <span class="icon"><span data-icon="modules"></span></span>
+                    <strong>Modules</strong>
+                    <span>Create and organize modules.</span>
+                </a>
+
+                <a class="el-quick" href="lessons.html">
+                    <span class="icon"><span data-icon="lesson"></span></span>
+                    <strong>Lessons</strong>
+                    <span>Add lesson material.</span>
+                </a>
+
+                <a class="el-quick" href="quiz_builder.html">
+                    <span class="icon"><span data-icon="quiz"></span></span>
+                    <strong>Quiz builder</strong>
+                    <span>Build assessments.</span>
+                </a>
+
+                <a class="el-quick" href="live.html">
+                    <span class="icon"><span data-icon="video"></span></span>
+                    <strong>Live Classes</strong>
+                    <span>Start livestream or interactive classroom meetings.</span>
+                </a>
+
+            </div>
+        </article>
+
+        <article class="el-card">
+            <div class="el-card-title">
+                <div>
+                    <h3>Class engagement</h3>
+                    <span>Example visualization</span>
+                </div>
+            </div>
+
+            <div class="teacher-engagement-list">
+
+                <div class="teacher-engagement-item">
+                    <div class="teacher-engagement-heading">
+                        <span>Module completion</span>
+                        <strong>78%</strong>
+                    </div>
+                    <div class="el-progress"><span style="width:78%"></span></div>
+                </div>
+
+                <div class="teacher-engagement-item">
+                    <div class="teacher-engagement-heading">
+                        <span>Quiz participation</span>
+                        <strong>64%</strong>
+                    </div>
+                    <div class="el-progress"><span style="width:64%"></span></div>
+                </div>
+
+                <div class="teacher-engagement-item">
+                    <div class="teacher-engagement-heading">
+                        <span>Lesson activity</span>
+                        <strong>86%</strong>
+                    </div>
+                    <div class="el-progress"><span style="width:86%"></span></div>
+                </div>
+
+            </div>
+        </article>
+
+    </section>
+
+    <section class="teacher-live-banner" style="margin-top:18px">
+
+        <div class="teacher-live-content">
+            <div class="teacher-live-label">
+                <span class="teacher-live-indicator"></span>
+                EqualLearn Live
+            </div>
+
+            <h2>Bring your classroom online.</h2>
+
+            <p>
+                Conduct live lessons, interact with students,
+                and manage your virtual classroom using EqualLearn Live.
+                Connect with your learners through interactive classroom sessions.
+            </p>
+        </div>
+
+        <div class="teacher-live-action">
+            <a href="live.html" class="el-btn el-btn-primary">
+                <span data-icon="video"></span>
+                Open Live Classes
+            </a>
+        </div>
+
+    </section>
+
+    <a id="logout" href="../login.html" style="display:none">Logout</a>
+
+</div>
+
+<script type="module" src="../assets/js/teacher_dashboard.js"></script>
+<script type="module" src="../assets/js/ui-shell.js"></script>
+<script type="module" src="../assets/js/pwa.js"></script>
+<script type="module" src="../assets/js/theme.js"></script>
+
+<iframe
+    src="../assets/widgets/lumi.html"
+    title="Lumi — EqualLearn Companion"
+    id="equallearn-lumi-frame"
+    allow="autoplay"
+    style="
+        position:fixed;
+        right:8px;
+        bottom:8px;
+        width:210px;
+        height:255px;
+        border:0;
+        background:transparent;
+        z-index:99999;
+        overflow:hidden;
+        pointer-events:auto;
+    ">
+</iframe>
+
+</body>
+</html>

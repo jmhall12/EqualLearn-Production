@@ -1,0 +1,1137 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#7865dc">
+
+    <title>Create Sections | EqualLearn</title>
+
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/sidebar-skeuomorphism.css">
+    <link rel="stylesheet" href="../assets/css/glass-dashboard.css">
+    <link rel="manifest" href="../manifest.webmanifest">
+    <link rel="icon" type="image/png" href="../assets/icons/equallearn-logo.png">
+
+    <style>
+        /* =========================================
+           EQUALLEARN CREATE SECTIONS
+           GLASSMORPHISM PAGE DESIGN
+        ========================================= */
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
+            min-height: 100%;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        body {
+            color: var(--glass-text, #252641);
+            background:
+                radial-gradient(circle at 10% 5%, rgba(120,101,220,.13), transparent 35%),
+                radial-gradient(circle at 90% 90%, rgba(120,160,255,.12), transparent 35%),
+                linear-gradient(135deg, #f4f5ff, #edf0fa 55%, #f8f8ff);
+            font-family: Inter, "Segoe UI", Arial, sans-serif;
+        }
+
+        /* =========================================
+           APPLICATION CONTENT ALIGNMENT
+           Sidebar is controlled by ui-shell.js.
+           Do not add extra sidebar spacing here.
+        ========================================= */
+
+        .el-app-shell {
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
+        }
+
+        .el-app-main {
+            min-width: 0;
+            max-width: 100%;
+            overflow-x: clip;
+        }
+
+        .el-page-content {
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
+            margin: 0;
+            padding: 0;
+            overflow-x: clip;
+        }
+
+        .page {
+            display: block;
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            margin: 0;
+            padding: 28px clamp(16px, 2.2vw, 32px) 45px;
+            box-sizing: border-box;
+        }
+
+        /* =========================================
+           PAGE HEADER
+        ========================================= */
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            width: 100%;
+            min-width: 0;
+            margin-bottom: 24px;
+        }
+
+        .header > div {
+            min-width: 0;
+        }
+
+        .header h1 {
+            margin: 0 0 8px;
+            color: var(--glass-text, #252641);
+            font-size: clamp(25px, 4vw, 34px);
+            font-weight: 850;
+            letter-spacing: -1px;
+        }
+
+        .muted {
+            color: var(--glass-muted, #777d96);
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        /* =========================================
+           PAGE CARDS
+        ========================================= */
+
+        .page .card {
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,.8);
+            border-radius: 20px;
+            background: rgba(255,255,255,.65);
+            box-shadow: 0 10px 30px rgba(44,45,90,.07);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+        }
+
+        .page .card h2 {
+            margin: 0 0 10px;
+            color: var(--glass-text, #252641);
+            font-size: 19px;
+            font-weight: 800;
+            letter-spacing: -.4px;
+        }
+
+        .el-card-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            min-width: 0;
+            margin-bottom: 17px;
+        }
+
+        .el-card-title > div {
+            min-width: 0;
+        }
+
+        .el-card-title span {
+            color: var(--glass-muted, #777d96);
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        /* =========================================
+           STATISTICS
+        ========================================= */
+
+        .stats {
+            display: grid;
+            width: 100%;
+            min-width: 0;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 21px;
+        }
+
+        .stats .stat-card {
+            position: relative;
+            min-width: 0;
+            min-height: 125px;
+            overflow: hidden;
+            padding: 21px;
+            border: 1px solid rgba(255,255,255,.85);
+            border-radius: 18px;
+            background: rgba(255,255,255,.7);
+            box-shadow: 0 8px 24px rgba(44,45,90,.06);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .stat-card::after {
+            content: "";
+            position: absolute;
+            right: -28px;
+            bottom: -38px;
+            width: 105px;
+            height: 105px;
+            border-radius: 50%;
+            background: rgba(120,101,220,.07);
+            pointer-events: none;
+        }
+
+        .stat-card span {
+            display: block;
+            color: var(--glass-muted, #777d96);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .stat-card strong {
+            display: block;
+            margin-top: 10px;
+            color: var(--glass-text, #252641);
+            font-size: 31px;
+            font-weight: 850;
+            letter-spacing: -1px;
+        }
+
+        /* =========================================
+           FORM GRID
+        ========================================= */
+
+        .form-grid {
+            display: grid;
+            width: 100%;
+            min-width: 0;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 19px;
+            margin-top: 22px;
+        }
+
+        .field {
+            min-width: 0;
+        }
+
+        .field.full {
+            grid-column: 1 / -1;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 9px;
+            color: #454a68;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .page input:not([type="checkbox"]):not([type="radio"]),
+        .page select {
+            display: block;
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
+            min-height: 46px;
+            padding: 12px 14px;
+            box-sizing: border-box;
+            border: 1px solid rgba(220,223,240,.85);
+            border-radius: 13px;
+            color: var(--glass-text, #252641);
+            background: rgba(255,255,255,.75);
+            font-family: Inter, "Segoe UI", Arial, sans-serif;
+            font-size: 13px;
+            outline: none;
+            transition:
+                border-color .2s ease,
+                box-shadow .2s ease,
+                background .2s ease;
+        }
+
+        .page select[multiple] {
+            min-height: 210px;
+            padding: 10px;
+        }
+
+        .page select[multiple] option {
+            padding: 9px 10px;
+            border-radius: 7px;
+            color: var(--glass-text, #252641);
+        }
+
+        .page input:focus,
+        .page select:focus {
+            border-color: rgba(120,101,220,.65);
+            background: rgba(255,255,255,.98);
+            box-shadow: 0 0 0 4px rgba(120,101,220,.10);
+        }
+
+        .page input::placeholder {
+            color: #a0a6ba;
+        }
+
+        .notice {
+            margin-top: 9px;
+            color: var(--glass-muted, #777d96);
+            font-size: 11px;
+            line-height: 1.7;
+        }
+
+        /* =========================================
+           STUDENT SELECTION SUMMARY
+        ========================================= */
+
+        .selection-summary {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            min-width: 0;
+            margin-top: 12px;
+            padding: 13px 15px;
+            border: 1px solid rgba(255,255,255,.85);
+            border-radius: 13px;
+            color: #554bb2;
+            background: rgba(235,232,255,.65);
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .selection-summary::before {
+            content: "✓";
+            flex-shrink: 0;
+            width: 22px;
+            height: 22px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            color: white;
+            background: var(--glass-purple, #7865dc);
+        }
+
+
+        /* FILTERABLE, STAGED STUDENT PICKER */
+        .student-filter-grid {
+            display: grid;
+            grid-template-columns: minmax(220px, 2fr) repeat(3, minmax(145px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .student-picker-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 14px 0 10px;
+        }
+        .student-picker-actions-left,
+        .student-picker-actions-right {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .student-picker-count {
+            color: var(--glass-muted, #777d96);
+            font-size: 12px;
+            font-weight: 750;
+        }
+        .student-picker-actions .btn {
+            min-height: 38px;
+            padding: 9px 13px;
+            font-size: 12px;
+        }
+        .student-options-list {
+            display: grid;
+            gap: 8px;
+            max-height: 330px;
+            overflow: auto;
+            padding: 9px;
+            border: 1px solid rgba(150,155,190,.2);
+            border-radius: 15px;
+            background: rgba(255,255,255,.38);
+        }
+        .student-option {
+            display: grid;
+            grid-template-columns: 22px minmax(0,1fr) auto;
+            align-items: center;
+            gap: 11px;
+            padding: 12px;
+            border: 1px solid rgba(145,151,185,.16);
+            border-radius: 12px;
+            background: rgba(255,255,255,.72);
+        }
+        .student-option input[type="checkbox"] {
+            width: 17px;
+            height: 17px;
+            accent-color: #7865dc;
+        }
+        .student-option-main {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+        .student-option-info { min-width: 0; }
+        .student-option-avatar,
+        .student-basket-avatar {
+            position: relative;
+            display: inline-grid;
+            place-items: center;
+            flex: 0 0 auto;
+            width: 42px;
+            height: 42px;
+            overflow: hidden;
+            border-radius: 50%;
+            color: #fff;
+            background: linear-gradient(135deg, #635bdb, #9a80ff);
+            border: 2px solid rgba(99,91,219,.18);
+            font-size: 12px;
+            font-weight: 850;
+        }
+        .student-basket-avatar {
+            width: 32px;
+            height: 32px;
+            font-size: 10px;
+        }
+        .student-option-avatar img,
+        .student-basket-avatar img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: inherit;
+        }
+        .student-avatar-fallback {
+            display: grid;
+            place-items: center;
+            width: 100%;
+            height: 100%;
+        }
+        .student-option-name {
+            display: block;
+            color: var(--glass-text, #252641);
+            font-size: 13px;
+            font-weight: 800;
+            overflow-wrap: anywhere;
+        }
+        .student-option-sub {
+            display: block;
+            margin-top: 3px;
+            color: var(--glass-muted, #777d96);
+            font-size: 11px;
+            overflow-wrap: anywhere;
+        }
+        .student-option-tags {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 5px;
+        }
+        .student-tag {
+            padding: 5px 8px;
+            border-radius: 20px;
+            color: #5a50ad;
+            background: rgba(232,229,255,.8);
+            font-size: 10px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+        .student-tag.muted-tag {
+            color: #777d96;
+            background: rgba(226,229,239,.8);
+        }
+        .student-option.is-added {
+            border-color: rgba(72,160,116,.25);
+            background: rgba(231,248,239,.72);
+        }
+        .student-option-empty {
+            padding: 22px 14px;
+            color: var(--glass-muted, #777d96);
+            text-align: center;
+            font-size: 12px;
+        }
+        .student-basket {
+            margin-top: 15px;
+            padding: 15px;
+            border: 1px solid rgba(120,101,220,.22);
+            border-radius: 15px;
+            background: rgba(235,232,255,.42);
+        }
+        .student-basket-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            color: #51489e;
+            font-size: 12px;
+            font-weight: 850;
+        }
+        .student-basket-list { display: grid; gap: 7px; }
+        .student-basket-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 9px 10px;
+            border-radius: 10px;
+            background: rgba(255,255,255,.72);
+            color: var(--glass-text, #252641);
+            font-size: 11px;
+        }
+        .student-basket-identity {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            min-width: 0;
+        }
+        .student-basket-name { min-width: 0; overflow-wrap: anywhere; }
+        .student-basket-row button {
+            flex: 0 0 auto;
+            padding: 5px 8px;
+            border: 0;
+            border-radius: 7px;
+            background: #fee2e2;
+            color: #991b1b;
+            font-size: 10px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+        .student-basket-empty {
+            color: var(--glass-muted, #777d96);
+            font-size: 11px;
+        }
+        @media (max-width: 850px) {
+            .student-filter-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+        }
+        @media (max-width: 560px) {
+            .student-filter-grid { grid-template-columns: minmax(0,1fr); }
+            .student-option { grid-template-columns: 22px minmax(0,1fr); }
+            .student-option-tags { grid-column: 2; justify-content: flex-start; }
+            .student-picker-actions { align-items: stretch; }
+            .student-picker-actions-left,
+            .student-picker-actions-right { width: 100%; }
+            .student-picker-actions .btn { flex: 1; }
+        }
+
+        /* =========================================
+           ACTION BUTTONS
+        ========================================= */
+
+        .actions {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 11px;
+            margin-top: 23px;
+        }
+
+        .btn {
+            min-height: 43px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 11px 17px;
+            border: 1px solid transparent;
+            border-radius: 12px;
+           font-family: Inter, "Segoe UI", Arial, sans-serif;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            text-decoration: none;
+            transition:
+                transform .2s ease,
+                box-shadow .2s ease,
+                background .2s ease;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        .btn:active:not(:disabled) {
+            transform: scale(.98);
+        }
+
+        .btn:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        .primary {
+            color: white;
+            background: linear-gradient(135deg, #9584f1, #6d58d0);
+            box-shadow: 0 8px 20px rgba(109,88,208,.23);
+        }
+
+        .primary:hover:not(:disabled) {
+            box-shadow: 0 12px 25px rgba(109,88,208,.32);
+        }
+
+        .secondary {
+            color: #555b78;
+            border-color: rgba(255,255,255,.9);
+            background: rgba(255,255,255,.75);
+            box-shadow: 0 5px 15px rgba(75,72,140,.07);
+        }
+
+        .danger {
+            color: #b42318;
+            background: rgba(255,232,232,.85);
+        }
+
+        .edit {
+            color: #315bc7;
+            background: rgba(233,239,255,.9);
+        }
+
+        /* =========================================
+           TABLE
+        ========================================= */
+
+        .table-wrap {
+            width: 100%;
+            min-width: 0;
+            overflow-x: auto;
+            margin-top: 18px;
+            border: 1px solid rgba(255,255,255,.85);
+            border-radius: 16px;
+            background: rgba(255,255,255,.4);
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .page table {
+            width: 100%;
+            min-width: 850px;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .page th {
+            padding: 15px 13px;
+            color: #777f98;
+            background: rgba(244,245,253,.94);
+            border-bottom: 1px solid #e8eaf3;
+            font-size: 10px;
+            font-weight: 850;
+            letter-spacing: .55px;
+            text-align: left;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .page td {
+            padding: 14px 13px;
+            color: #424862;
+            border-bottom: 1px solid rgba(225,228,239,.7);
+            font-size: 12px;
+            vertical-align: middle;
+        }
+
+        .page tbody tr {
+            transition: background .2s ease;
+        }
+
+        .page tbody tr:hover {
+            background: rgba(237,235,255,.58);
+        }
+
+        .page tbody tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .page .pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 11px;
+            border: 1px solid rgba(255,255,255,.8);
+            border-radius: 30px;
+            color: #554bb2;
+            background: rgba(235,232,255,.8);
+            font-size: 10px;
+            font-weight: 850;
+        }
+
+        .empty {
+            padding: 32px !important;
+            color: var(--glass-muted, #777d96) !important;
+            text-align: center !important;
+        }
+
+        /* =========================================
+           FORM MESSAGES
+        ========================================= */
+
+        .message {
+            display: none;
+            min-width: 0;
+            padding: 13px 15px;
+            margin-top: 17px;
+            border: 1px solid transparent;
+            border-radius: 12px;
+            font-size: 12px;
+            line-height: 1.6;
+            overflow-wrap: anywhere;
+        }
+
+        .message.error {
+            display: block;
+            color: #b42318;
+            border-color: rgba(255,210,210,.8);
+            background: rgba(255,240,240,.9);
+        }
+
+        .message.success {
+            display: block;
+            color: #027a48;
+            border-color: rgba(190,235,207,.8);
+            background: rgba(236,253,243,.9);
+        }
+
+        .section-divider {
+            height: 1px;
+            border: 0;
+            margin: 28px 0;
+            background: rgba(125,130,170,.15);
+        }
+
+        /* =========================================
+           RESPONSIVE
+        ========================================= */
+
+        @media (max-width: 1100px) {
+            .page {
+                padding: 24px 18px 40px;
+            }
+        }
+
+        @media (max-width: 850px) {
+            .stats {
+                grid-template-columns: repeat(3, minmax(0,1fr));
+            }
+
+            .page .card {
+                padding: 21px;
+            }
+        }
+
+        @media (max-width: 650px) {
+            .page {
+                width: 100%;
+                padding: 18px 13px 35px;
+            }
+
+            .header {
+                align-items: flex-start;
+            }
+
+            .header h1 {
+                font-size: 25px;
+            }
+
+            .header > button {
+                width: 100%;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .stats .stat-card {
+                min-height: 100px;
+            }
+
+            .form-grid {
+                grid-template-columns: minmax(0,1fr);
+                gap: 16px;
+            }
+
+            .field.full {
+                grid-column: auto;
+            }
+
+            .page .card {
+                padding: 18px;
+            }
+
+            .actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .actions .btn {
+                width: 100%;
+            }
+
+            .selection-summary {
+                align-items: flex-start;
+            }
+        }
+
+        /* ACCESSIBILITY */
+
+        button:focus-visible,
+        a:focus-visible,
+        input:focus-visible,
+        select:focus-visible {
+            outline: 3px solid rgba(120,101,220,.35);
+            outline-offset: 3px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: .01ms !important;
+                transition-duration: .01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+
+        @supports not (backdrop-filter: blur(10px)) {
+            .page .card,
+            .stats .stat-card {
+                background: rgba(255,255,255,.96);
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="../assets/css/responsive-layout.css">
+</head>
+
+<body>
+
+<main class="page">
+
+    <!-- PAGE HEADER -->
+
+    <header class="header">
+        <div>
+            <div class="el-page-kicker">Academic Management</div>
+
+            <h1>Create Sections</h1>
+
+            <p class="muted">
+                Create class sections and manage official student placement in one place.
+            </p>
+        </div>
+
+        <button
+            type="button"
+            class="btn secondary"
+            onclick="location.href='dashboard.html'">
+            ← Back to Dashboard
+        </button>
+    </header>
+
+    <!-- STATISTICS -->
+
+    <section class="stats" aria-label="Section statistics">
+
+        <article class="stat-card">
+            <span>Total Sections</span>
+            <strong id="totalSections">0</strong>
+        </article>
+
+        <article class="stat-card">
+            <span>Total Teachers</span>
+            <strong id="totalTeachers">0</strong>
+        </article>
+
+        <article class="stat-card">
+            <span>Total Students</span>
+            <strong id="totalStudents">0</strong>
+        </article>
+
+    </section>
+
+    <!-- CREATE / EDIT SECTION -->
+
+    <section class="card">
+
+        <div class="el-card-title">
+            <div>
+                <h2 id="formTitle">Create New Section</h2>
+
+                <span class="muted">
+                    Configure the section and assign its members.
+                </span>
+            </div>
+        </div>
+
+        <p class="muted">
+            Set the section details and choose one teacher. Add students in one or more filtered batches, then create the section once the member list is complete.
+        </p>
+
+        <form id="sectionForm">
+
+            <div class="form-grid">
+
+                <!-- SECTION NAME -->
+
+                <div class="field">
+                    <label for="sectionName">Section Name</label>
+
+                    <input
+                        type="text"
+                        id="sectionName"
+                        placeholder="Example: BSIT 1-A"
+                        required>
+                </div>
+
+                <!-- COURSE -->
+
+                <div class="field">
+                    <label for="course">Course / Program</label>
+
+                    <input
+                        type="text"
+                        id="course"
+                        placeholder="Example: BSIT"
+                        required>
+                </div>
+
+                <!-- YEAR LEVEL -->
+
+                <div class="field">
+                    <label for="sectionYearLevel">Year Level</label>
+
+                    <select id="sectionYearLevel" required>
+                        <option value="">Select Year Level</option>
+                        <option value="1">1st Year</option>
+                        <option value="2">2nd Year</option>
+                        <option value="3">3rd Year</option>
+                        <option value="4">4th Year</option>
+                        <option value="5">5th Year</option>
+                    </select>
+                </div>
+
+                <!-- ACADEMIC YEAR -->
+
+                <div class="field">
+                    <label for="academicYear">Academic Year</label>
+
+                    <input
+                        type="text"
+                        id="academicYear"
+                        placeholder="2026-2027"
+                        pattern="[0-9]{4}-[0-9]{4}"
+                        title="Use the format 2026-2027"
+                        required>
+                </div>
+
+                <!-- TEACHER ASSIGNMENT -->
+
+                <div class="field full">
+                    <label for="teacherId">Assign Teacher</label>
+
+                    <select id="teacherId" required>
+                        <option value="">Loading teachers...</option>
+                    </select>
+
+                    <div class="notice">
+                        One teacher will be assigned to this section.
+                    </div>
+                </div>
+
+                <!-- FILTERABLE, MULTI-BATCH STUDENT ASSIGNMENT -->
+                <div class="field full">
+                    <label>Find students for this section</label>
+                    <div class="notice">
+                        Filter or search the available students. Save each selection batch below, then change the filters to add more students to the same section. Students already assigned to another section are automatically hidden.
+                    </div>
+
+                    <div class="student-filter-grid">
+                        <div class="field">
+                            <label for="studentSearch">Search by name, email, or Student ID</label>
+                            <input id="studentSearch" type="search" placeholder="Type a name, email, or ID..." autocomplete="off">
+                        </div>
+                        <div class="field">
+                            <label for="studentCourseFilter">Course / Program</label>
+                            <select id="studentCourseFilter"><option value="all">All courses</option></select>
+                        </div>
+                        <div class="field">
+                            <label for="studentYearFilter">Year Level</label>
+                            <select id="studentYearFilter"><option value="all">All year levels</option></select>
+                        </div>
+                        <div class="field">
+                            <label for="studentAcademicYearFilter">Academic Year</label>
+                            <select id="studentAcademicYearFilter"><option value="all">All academic years</option></select>
+                        </div>
+                    </div>
+
+                    <div class="student-picker-actions">
+                        <div class="student-picker-actions-left">
+                            <span id="eligibleStudentCount" class="student-picker-count">Loading available students...</span>
+                            <span id="checkedStudentCount" class="student-picker-count">0 checked</span>
+                        </div>
+                        <div class="student-picker-actions-right">
+                            <button type="button" id="selectVisibleStudents" class="btn secondary">Select Visible</button>
+                            <button type="button" id="clearCurrentSelection" class="btn secondary">Clear Checks</button>
+                            <button type="button" id="addSelectedStudents" class="btn primary" disabled>Save Selected Students</button>
+                        </div>
+                    </div>
+
+                    <div id="studentOptionsList" class="student-options-list" role="group" aria-label="Available students">
+                        <div class="student-option-empty">Loading available students...</div>
+                    </div>
+
+                    <div class="student-basket">
+                        <div class="student-basket-header">
+                            <span>Students saved for this section</span>
+                            <span id="selectionSummary">0 selected</span>
+                        </div>
+                        <div id="selectedStudentsList" class="student-basket-list">
+                            <div class="student-basket-empty">No students added yet. Use the filters above to choose students.</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- FORM MESSAGE -->
+
+            <div
+                id="formMessage"
+                class="message"
+                aria-live="polite">
+            </div>
+
+            <!-- FORM ACTIONS -->
+
+            <div class="actions">
+
+                <button
+                    type="submit"
+                    id="saveSection"
+                    class="btn primary">
+                    Create Section &amp; Assign Students
+                </button>
+
+                <button
+                    type="button"
+                    id="cancelEdit"
+                    class="btn secondary"
+                    hidden>
+                    Cancel Edit
+                </button>
+
+            </div>
+
+        </form>
+
+    </section>
+
+    <!-- EXISTING SECTIONS -->
+
+    <section class="card">
+
+        <div class="el-card-title">
+            <div>
+                <h2>Existing Sections</h2>
+
+                <span>
+                    Manage sections, assigned teachers, and student counts.
+                </span>
+            </div>
+        </div>
+
+        <div class="table-wrap">
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Section</th>
+                        <th>Course</th>
+                        <th>Year</th>
+                        <th>Academic Year</th>
+                        <th>Teacher</th>
+                        <th>Students</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody id="sectionsTable">
+                    <tr>
+                        <td colspan="7" class="empty">
+                            Loading sections...
+                        </td>
+                    </tr>
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+</main>
+
+<!-- SECTION MANAGEMENT SCRIPT -->
+
+<script
+    type="module"
+    src="../assets/js/admin-sections.js">
+</script>
+
+<!-- EXISTING EQUALLEARN SCRIPTS -->
+
+<script
+    type="module"
+    src="../assets/js/ui-shell.js">
+</script>
+
+<script
+    type="module"
+    src="../assets/js/pwa.js">
+</script>
+
+<script
+    type="module"
+    src="../assets/js/theme.js">
+</script>
+
+<!-- EQUALLEARN LUMI COMPANION -->
+<iframe
+ src="../assets/widgets/lumi.html"
+  title="Lumi — EqualLearn Companion"
+  id="equallearn-lumi-frame"
+  allow="autoplay"
+  style="
+    position: fixed;
+    right: 8px;
+    bottom: 8px;
+    width: 210px;
+    height: 255px;
+    border: 0;
+    background: transparent;
+    z-index: 99999;
+    overflow: hidden;
+    pointer-events: auto;
+  ">
+</iframe>
+
+
+</body>
+</html>

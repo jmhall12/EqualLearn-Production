@@ -1,0 +1,768 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#635bff">
+
+    <title>Admin Settings | EqualLearn</title>
+
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/settings.css">
+    <link rel="stylesheet" href="../assets/css/glass-dashboard.css">
+    <link rel="stylesheet" href="../assets/css/sidebar-skeuomorphism.css">
+
+    <link rel="manifest" href="../manifest.webmanifest">
+    <link rel="icon" href="../assets/icons/equallearn-logo.png">
+
+    <style>
+        :root {
+            --settings-primary: #635bdb;
+            --settings-primary-dark: #5148c9;
+            --settings-text: #20243a;
+            --settings-muted: #858ba0;
+            --settings-border: rgba(255,255,255,.6);
+            --settings-glass: rgba(255,255,255,.64);
+            --settings-shadow: 0 12px 35px rgba(35,38,75,.08);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            color: var(--settings-text);
+            background:
+                radial-gradient(circle at 10% 5%, rgba(99,91,219,.15), transparent 33%),
+                radial-gradient(circle at 90% 85%, rgba(120,170,255,.15), transparent 32%),
+                linear-gradient(135deg, #f4f5ff, #edf0fa 55%, #f8f8ff);
+            font-family: Inter, "Segoe UI", Arial, sans-serif;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background-image:
+                radial-gradient(rgba(99,91,219,.05) 1px, transparent 1px);
+            background-size: 22px 22px;
+        }
+
+        /* MAIN CONTAINER */
+
+        .settings-container {
+            width: min(1100px, calc(100% - 40px));
+            margin: 30px auto;
+            padding: 28px;
+            border: 1px solid var(--settings-border);
+            border-radius: 24px;
+            background: var(--settings-glass);
+            box-shadow: var(--settings-shadow);
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
+            animation: settingsFadeIn .5s ease both;
+        }
+
+        /* HEADER */
+
+        .settings-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .settings-header h1 {
+            margin: 0;
+            color: var(--settings-text);
+            font-size: clamp(26px, 4vw, 34px);
+            font-weight: 850;
+            letter-spacing: -.8px;
+        }
+
+        .settings-header h1::after {
+            content: "";
+            display: block;
+            width: 45px;
+            height: 4px;
+            margin-top: 10px;
+            border-radius: 10px;
+            background: linear-gradient(90deg, #635bdb, #9b94ff);
+        }
+
+        .settings-header p {
+            margin: 9px 0 0;
+            color: var(--settings-muted);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .back-btn {
+            min-height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 17px;
+            border: 1px solid rgba(99,91,219,.15);
+            border-radius: 11px;
+            color: #514c83;
+            background: rgba(255,255,255,.65);
+            box-shadow: 0 5px 13px rgba(35,38,75,.05);
+            font-size: 12px;
+            font-weight: 750;
+            cursor: pointer;
+            transition: .2s ease;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            border-color: rgba(99,91,219,.4);
+            background: rgba(255,255,255,.95);
+            color: var(--settings-primary);
+        }
+
+        /* SETTINGS CARDS */
+
+        .settings-card {
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+            padding: 27px;
+            border: 1px solid rgba(255,255,255,.75);
+            border-radius: 19px;
+            background: rgba(255,255,255,.65);
+            box-shadow: 0 8px 25px rgba(35,38,75,.055);
+            backdrop-filter: blur(17px);
+            -webkit-backdrop-filter: blur(17px);
+            transition:
+                transform .22s ease,
+                box-shadow .22s ease;
+        }
+
+        .settings-card:hover {
+            box-shadow: 0 13px 32px rgba(35,38,75,.09);
+        }
+
+        .settings-card h2 {
+            margin: 0 0 22px;
+            color: var(--settings-text);
+            font-size: 19px;
+            font-weight: 850;
+            letter-spacing: -.3px;
+        }
+
+        .settings-card > p {
+            margin: -10px 0 22px;
+            color: var(--settings-muted);
+            font-size: 12px;
+            line-height: 1.7;
+        }
+
+        /* FORM GROUPS */
+
+        .form-group {
+            margin-bottom: 19px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #45455e;
+            font-size: 12px;
+            font-weight: 750;
+        }
+
+        .form-group input {
+            display: block;
+            width: 100%;
+            min-height: 47px;
+            padding: 12px 14px;
+            border: 1px solid rgba(99,91,219,.15);
+            border-radius: 11px;
+            outline: none;
+            background: rgba(255,255,255,.7);
+            color: var(--settings-text);
+            font: inherit;
+            font-size: 13px;
+            transition:
+                border-color .2s ease,
+                background .2s ease,
+                box-shadow .2s ease;
+        }
+
+        .form-group input::placeholder {
+            color: #a1a4b5;
+        }
+
+        .form-group input:hover:not(:disabled) {
+            border-color: rgba(99,91,219,.35);
+            background: #fff;
+        }
+
+        .form-group input:focus {
+            border-color: var(--settings-primary);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(99,91,219,.09);
+        }
+
+        .form-group input:disabled {
+            color: #777b91;
+            background: rgba(232,234,244,.65);
+            border-color: rgba(99,91,219,.08);
+            cursor: not-allowed;
+            opacity: 1;
+        }
+
+        /* BUTTONS */
+
+        .save-btn,
+        .reset-btn {
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 11px 19px;
+            border: 1px solid transparent;
+            border-radius: 11px;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            transition:
+                transform .2s ease,
+                box-shadow .2s ease,
+                background .2s ease;
+        }
+
+        .save-btn {
+            color: #fff;
+            background: linear-gradient(110deg, #635bdb, #776eff);
+            box-shadow: 0 6px 16px rgba(99,91,219,.2);
+        }
+
+        .save-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 22px rgba(99,91,219,.3);
+        }
+
+        .reset-btn {
+            color: #57517f;
+            border-color: rgba(99,91,219,.2);
+            background: rgba(255,255,255,.7);
+        }
+
+        .reset-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            border-color: rgba(99,91,219,.4);
+            background: #fff;
+            box-shadow: 0 7px 16px rgba(35,38,75,.07);
+        }
+
+        .save-btn:disabled,
+        .reset-btn:disabled {
+            opacity: .55;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* SECURITY ACTIONS */
+
+        .security-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        #securityMessage {
+            min-height: 0;
+            margin-top: 14px;
+            overflow-wrap: anywhere;
+            white-space: pre-line;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        #securityMessage:empty {
+            display: none;
+        }
+
+        /* ACCESSIBILITY */
+
+        button:focus-visible,
+        a:focus-visible,
+        input:focus-visible {
+            outline: 3px solid rgba(99,91,219,.3);
+            outline-offset: 3px;
+        }
+
+        /* ANIMATION */
+
+        @keyframes settingsFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* TABLET */
+
+        @media (max-width: 750px) {
+            .settings-container {
+                width: calc(100% - 30px);
+                padding: 22px;
+            }
+
+            .settings-card {
+                padding: 23px;
+            }
+        }
+
+        /* MOBILE */
+
+        @media (max-width: 520px) {
+            .settings-container {
+                width: calc(100% - 22px);
+                margin: 15px auto;
+                padding: 17px 13px;
+                border-radius: 19px;
+            }
+
+            .settings-header {
+                align-items: flex-start;
+            }
+
+            .settings-header h1 {
+                font-size: 26px;
+            }
+
+            .settings-header p {
+                font-size: 12px;
+            }
+
+            .back-btn {
+                min-height: 38px;
+                padding: 9px 12px;
+                font-size: 11px;
+            }
+
+            .settings-card {
+                padding: 20px 16px;
+                border-radius: 16px;
+            }
+
+            .settings-card h2 {
+                font-size: 17px;
+            }
+
+            .form-group input {
+                min-height: 45px;
+                font-size: 12px;
+            }
+
+            .security-actions {
+                flex-direction: column;
+            }
+
+            .security-actions button {
+                width: 100%;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .01ms !important;
+            }
+        }
+
+        @supports not (backdrop-filter: blur(10px)) {
+            .settings-container,
+            .settings-card {
+                background: rgba(255,255,255,.95);
+            }
+        }
+
+
+/* =====================================================
+   EQUALLEARN — ADMIN SETTINGS DARK MODE
+   ===================================================== */
+
+html[data-theme="dark"],
+body[data-theme="dark"] {
+    color-scheme: dark;
+
+    --settings-text: #eef0fa;
+    --settings-muted: #a5abc0;
+    --settings-glass: #202331;
+    --settings-border: #383e53;
+    --settings-shadow: 0 12px 35px rgba(0,0,0,.22);
+}
+
+html[data-theme="dark"] {
+    background: #151722 !important;
+}
+
+body[data-theme="dark"] {
+    color: #eef0fa !important;
+    background: #151722 !important;
+}
+
+/* Main settings container */
+body[data-theme="dark"] .settings-container {
+    color: #eef0fa !important;
+    background: #202331 !important;
+    border: 1px solid #383e53 !important;
+    box-shadow: 0 12px 35px rgba(0,0,0,.22) !important;
+}
+
+/* Header */
+body[data-theme="dark"] .settings-header h1 {
+    color: #f1f2fa !important;
+}
+
+body[data-theme="dark"] .settings-header p {
+    color: #a5abc0 !important;
+}
+
+/* Back button */
+body[data-theme="dark"] .back-btn {
+    color: #c3b6ff !important;
+    background: #30354a !important;
+    border: 1px solid #41475d !important;
+    box-shadow: none !important;
+}
+
+body[data-theme="dark"] .back-btn:hover {
+    color: #fff !important;
+    background: #403b60 !important;
+}
+
+/* Settings cards */
+body[data-theme="dark"] .settings-card {
+    color: #eef0fa !important;
+    background: #292e40 !important;
+    border: 1px solid #3a4055 !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,.2) !important;
+}
+
+body[data-theme="dark"] .settings-card:hover {
+    box-shadow: 0 13px 30px rgba(0,0,0,.28) !important;
+}
+
+/* Card headings and descriptions */
+body[data-theme="dark"] .settings-card h2 {
+    color: #eef0fa !important;
+}
+
+body[data-theme="dark"] .settings-card > p {
+    color: #a5abc0 !important;
+}
+
+/* Form labels */
+body[data-theme="dark"] .form-group label {
+    color: #dce0ef !important;
+}
+
+/* All form fields */
+body[data-theme="dark"] .form-group input {
+    color: #eef0fa !important;
+    background: #191e2d !important;
+    border: 1px solid #41475d !important;
+}
+
+body[data-theme="dark"] .form-group input::placeholder {
+    color: #858da7 !important;
+}
+
+body[data-theme="dark"] .form-group input:hover:not(:disabled) {
+    background: #202638 !important;
+    border-color: #7568c8 !important;
+}
+
+body[data-theme="dark"] .form-group input:focus {
+    color: #fff !important;
+    background: #22283a !important;
+    border-color: #9482ed !important;
+    box-shadow: 0 0 0 4px rgba(148,130,237,.13) !important;
+}
+
+/* Disabled email and role fields */
+body[data-theme="dark"] .form-group input:disabled {
+    color: #a5abc0 !important;
+    background: #252a3a !important;
+    border-color: #363d52 !important;
+    opacity: 1 !important;
+}
+
+/* Primary buttons */
+body[data-theme="dark"] .save-btn {
+    color: #fff !important;
+    background: linear-gradient(110deg, #7568df, #5548c6) !important;
+    border-color: transparent !important;
+    box-shadow: 0 6px 16px rgba(99,91,219,.22) !important;
+}
+
+body[data-theme="dark"] .save-btn:hover:not(:disabled) {
+    box-shadow: 0 10px 22px rgba(99,91,219,.32) !important;
+}
+
+/* Reset password button */
+body[data-theme="dark"] .reset-btn {
+    color: #c3b6ff !important;
+    background: #30354a !important;
+    border: 1px solid #484365 !important;
+}
+
+body[data-theme="dark"] .reset-btn:hover:not(:disabled) {
+    color: #fff !important;
+    background: #403b60 !important;
+}
+
+/* Security messages */
+body[data-theme="dark"] #securityMessage {
+    color: #c3c8dc !important;
+}
+
+body[data-theme="dark"] #securityMessage:empty {
+    display: none;
+}
+
+/* Disabled buttons */
+body[data-theme="dark"] button:disabled {
+    opacity: .45;
+}
+
+/* Smooth theme transition */
+body[data-theme="dark"] .settings-container,
+body[data-theme="dark"] .settings-card,
+body[data-theme="dark"] .form-group input,
+body[data-theme="dark"] .back-btn,
+body[data-theme="dark"] .reset-btn {
+    transition:
+        background .25s ease,
+        color .25s ease,
+        border-color .25s ease,
+        box-shadow .25s ease;
+}
+
+    </style>
+
+    <link rel="stylesheet" href="../assets/css/responsive-layout.css">
+</head>
+
+<body>
+
+<div class="settings-container">
+
+    <!-- HEADER -->
+
+    <div class="settings-header">
+
+        <div>
+            <h1>Settings</h1>
+
+            <p>
+                Manage your administrator account.
+            </p>
+        </div>
+
+        <button
+            type="button"
+            class="back-btn"
+            onclick="window.location.href='dashboard.html'">
+
+            ← Back
+
+        </button>
+
+    </div>
+
+    <!-- ACCOUNT INFORMATION -->
+
+    <div class="settings-card">
+
+        <h2>Account Information</h2>
+
+        <div class="form-group">
+
+            <label for="fullname">
+                Full Name
+            </label>
+
+            <input
+                id="fullname"
+                type="text"
+                placeholder="Full Name">
+
+        </div>
+
+        <div class="form-group">
+
+            <label for="email">
+                Email
+            </label>
+
+            <input
+                id="email"
+                type="email"
+                disabled>
+
+        </div>
+
+        <div class="form-group">
+
+            <label for="role">
+                Role
+            </label>
+
+            <input
+                id="role"
+                type="text"
+                disabled>
+
+        </div>
+
+        <button
+            id="saveBtn"
+            class="save-btn"
+            type="button">
+
+            Save Changes
+
+        </button>
+
+    </div>
+
+    <!-- SECURITY -->
+
+    <div class="settings-card">
+
+        <h2>Security</h2>
+
+        <p>
+            Change your password directly, or send a reset link
+            to your registered email.
+        </p>
+
+        <div class="form-group">
+
+            <label for="currentPassword">
+                Current Password
+            </label>
+
+            <input
+                id="currentPassword"
+                type="password"
+                autocomplete="current-password"
+                placeholder="Current password">
+
+        </div>
+
+        <div class="form-group">
+
+            <label for="newPassword">
+                New Password
+            </label>
+
+            <input
+                id="newPassword"
+                type="password"
+                autocomplete="new-password"
+                minlength="6"
+                placeholder="At least 6 characters">
+
+        </div>
+
+        <div class="form-group">
+
+            <label for="confirmPassword">
+                Confirm New Password
+            </label>
+
+            <input
+                id="confirmPassword"
+                type="password"
+                autocomplete="new-password"
+                minlength="6"
+                placeholder="Repeat new password">
+
+        </div>
+
+        <div class="security-actions">
+
+            <button
+                id="changePassword"
+                class="save-btn"
+                type="button">
+
+                Change Password
+
+            </button>
+
+            <button
+                id="resetPassword"
+                class="reset-btn"
+                type="button">
+
+                Email Reset Link
+
+            </button>
+
+        </div>
+
+        <div
+            id="securityMessage"
+            role="status"
+            aria-live="polite">
+        </div>
+
+    </div>
+
+</div>
+
+<script type="module" src="../assets/js/admin-settings.js"></script>
+<script type="module" src="../assets/js/ui-shell.js"></script>
+<script type="module" src="../assets/js/pwa.js"></script>
+<script type="module" src="../assets/js/theme.js"></script>
+
+<!-- EQUALLEARN LUMI COMPANION -->
+<iframe
+  src="../assets/widgets/lumi.html"
+  title="Lumi — EqualLearn Companion"
+  id="equallearn-lumi-frame"
+  allow="autoplay"
+  style="
+    position: fixed;
+    right: 8px;
+    bottom: 8px;
+    width: 210px;
+    height: 255px;
+    border: 0;
+    background: transparent;
+    z-index: 99999;
+    overflow: hidden;
+    pointer-events: auto;
+  ">
+</iframe>
+
+
+</body>
+</html>

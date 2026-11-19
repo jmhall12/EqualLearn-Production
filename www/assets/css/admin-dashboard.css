@@ -1,0 +1,742 @@
+
+/* =========================================================
+   EQUALLEARN — ADMIN DASHBOARD
+   External stylesheet
+========================================================= */
+
+/* =========================================================
+   1. THEME VARIABLES
+========================================================= */
+
+:root {
+  color-scheme: light;
+
+  --admin-page: #dedfe8;
+  --admin-surface: #e5e6ee;
+  --admin-surface-raised: #e9eaf1;
+  --admin-surface-soft: #d7d9e3;
+  --admin-text: #303247;
+  --admin-muted: #85869c;
+  --admin-border: rgba(70,72,100,.13);
+  --admin-purple: #7968c9;
+  --admin-shadow: 0 3px 12px rgba(38,40,68,.05);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --admin-page: #14151e;
+    --admin-surface: #20212c;
+    --admin-surface-raised: #252633;
+    --admin-surface-soft: #2b2c3a;
+    --admin-text: #e5e3ef;
+    --admin-muted: #a3a2b7;
+    --admin-border: rgba(190,188,225,.12);
+    --admin-purple: #ad9bf2;
+    --admin-shadow: 0 4px 14px rgba(0,0,0,.18);
+  }
+}
+
+/* =========================================================
+   2. BASE ADMIN LAYOUT
+========================================================= */
+
+.el-dashboard {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  color: var(--admin-text);
+}
+
+.el-dashboard *,
+.el-dashboard *::before,
+.el-dashboard *::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+  background: var(--admin-page);
+  color: var(--admin-text);
+}
+
+body {
+  background: var(--admin-page) !important;
+}
+
+/* =========================================================
+   3. PAGE HEADER
+========================================================= */
+
+.el-dashboard > .el-page-header {
+  width: 100%;
+  height: auto !important;
+  min-height: 0 !important;
+  margin: 0 0 24px !important;
+  padding: 24px 28px !important;
+
+  display: flex !important;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+
+  background: var(--admin-surface-raised) !important;
+  color: var(--admin-text);
+  border: 1px solid var(--admin-border) !important;
+  border-radius: 16px;
+  box-shadow: var(--admin-shadow) !important;
+
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.el-page-header h1 {
+  margin: 6px 0 10px;
+  color: var(--admin-text);
+}
+
+.el-page-header p {
+  margin: 0;
+  color: var(--admin-muted);
+}
+
+.el-page-kicker {
+  color: var(--admin-purple);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+/* =========================================================
+   4. DASHBOARD GRID
+========================================================= */
+
+.el-dashboard > .el-grid {
+  display: grid !important;
+  width: 100%;
+  min-width: 0;
+  height: auto !important;
+
+  gap: 20px !important;
+  margin: 0 0 24px !important;
+  padding: 0 !important;
+
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+/* Four statistics cards */
+.el-dashboard > .el-grid-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+
+/* Two-column sections */
+.el-dashboard > .el-grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+/* Prevent cards from stretching outside grid */
+.el-dashboard > .el-grid > * {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+}
+
+/* =========================================================
+   5. STATISTICS CARDS
+========================================================= */
+
+.el-dashboard .el-card,
+.el-dashboard .el-stat,
+.el-dashboard .el-quick {
+  background: var(--admin-surface) !important;
+  color: var(--admin-text) !important;
+  border: 1px solid var(--admin-border) !important;
+  box-shadow: var(--admin-shadow) !important;
+
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.el-dashboard .el-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  min-width: 0;
+  width: 100%;
+  min-height: 180px;
+  padding: 22px !important;
+
+  border-radius: 18px;
+}
+
+.el-stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 46px;
+  height: 46px;
+  margin-bottom: 16px;
+
+  background: var(--admin-surface-soft) !important;
+  color: var(--admin-purple);
+  border: 1px solid var(--admin-border) !important;
+  border-radius: 13px;
+
+  box-shadow: none !important;
+}
+
+.el-stat-label {
+  color: var(--admin-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.el-stat-value {
+  margin-top: 7px;
+  color: var(--admin-text);
+  font-size: 30px;
+  font-weight: 800;
+}
+
+.el-stat-meta {
+  margin-top: 7px;
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+/* =========================================================
+   6. LIVE MONITORING
+========================================================= */
+
+.admin-monitor-card {
+  width: 100%;
+  min-width: 0;
+  margin: 0 0 24px !important;
+  padding: 24px !important;
+
+  border-radius: 18px;
+  background: var(--admin-surface) !important;
+  color: var(--admin-text) !important;
+  border: 1px solid var(--admin-border) !important;
+  box-shadow: var(--admin-shadow) !important;
+}
+
+.el-card-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.el-card-title h3 {
+  margin: 0 0 5px;
+  color: var(--admin-text);
+}
+
+.el-card-title span {
+  color: var(--admin-muted);
+  font-size: 13px;
+}
+
+.live-admin-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.live-admin-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 15px;
+  margin-bottom: 22px;
+}
+
+.live-admin-stat {
+  min-width: 0;
+  padding: 21px;
+
+  border: 1px solid var(--admin-border);
+  border-radius: 18px;
+
+  background: var(--admin-surface-raised);
+  box-shadow: var(--admin-shadow);
+
+  transition: background .2s ease;
+}
+
+.live-admin-stat:hover {
+  background: var(--admin-surface-soft);
+}
+
+.live-admin-stat > span {
+  color: var(--admin-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.live-admin-stat strong {
+  display: block;
+  margin-top: 9px;
+  color: var(--admin-text);
+  font-size: 30px;
+  font-weight: 800;
+}
+
+.live-session-list {
+  display: grid;
+  gap: 13px;
+}
+
+.live-session-item {
+  display: grid;
+  gap: 13px;
+  min-width: 0;
+  padding: 19px;
+
+  border: 1px solid var(--admin-border);
+  border-radius: 18px;
+
+  background: var(--admin-surface-raised);
+  box-shadow: var(--admin-shadow);
+}
+
+.live-session-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.live-session-title {
+  color: var(--admin-text);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.live-session-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+.live-session-meta span {
+  overflow-wrap: anywhere;
+}
+
+.live-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+
+  border: 1px solid var(--admin-border);
+  border-radius: 30px;
+
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.live-status.live {
+  color: #d96b80;
+  background: rgba(205,75,102,.13);
+}
+
+.live-status.scheduled {
+  color: #c99b52;
+  background: rgba(201,155,82,.13);
+}
+
+.live-status.ended {
+  color: #62b99b;
+  background: rgba(75,166,132,.13);
+}
+
+.live-empty {
+  padding: 30px 20px;
+  border: 1px dashed var(--admin-border);
+  border-radius: 17px;
+  color: var(--admin-muted);
+  text-align: center;
+  background: var(--admin-surface-raised);
+}
+
+.live-error {
+  color: #d96b80;
+  font-size: 13px;
+}
+
+#liveSessionsMessage {
+  margin-bottom: 12px;
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+#liveLastUpdated {
+  margin-top: 6px;
+}
+
+/* =========================================================
+   7. ACTIVITY AND QUICK ACTIONS
+========================================================= */
+
+.admin-activity-card {
+  margin-top: 0 !important;
+}
+
+.admin-activity-card > article {
+  min-width: 0;
+  width: 100%;
+  padding: 22px;
+
+  border-radius: 18px;
+}
+
+.el-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.el-quick {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+
+  min-width: 0;
+  padding: 17px;
+
+  border-radius: 15px;
+  text-decoration: none;
+  transition: background .2s ease, transform .2s ease;
+}
+
+.el-quick:hover {
+  background: var(--admin-surface-soft) !important;
+  transform: translateY(-2px);
+}
+
+.el-quick strong {
+  color: var(--admin-text);
+}
+
+.el-quick > span:last-child {
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+.el-quick .icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 40px;
+  height: 40px;
+
+  color: var(--admin-purple);
+  background: var(--admin-surface-soft);
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+}
+
+/* =========================================================
+   8. CHART
+========================================================= */
+
+.el-chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  gap: 12px;
+
+  width: 100%;
+  min-height: 180px;
+  padding: 20px 12px 0;
+
+  background: var(--admin-surface-raised);
+  border-radius: 14px;
+}
+
+.el-bar {
+  display: block;
+  flex: 1;
+  min-width: 8px;
+  max-width: 45px;
+
+  background: var(--admin-purple);
+  border-radius: 8px 8px 0 0;
+}
+
+.el-chart-labels {
+  display: flex;
+  justify-content: space-around;
+  gap: 8px;
+  margin-top: 12px;
+
+  color: var(--admin-muted);
+  font-size: 11px;
+}
+
+/* =========================================================
+   9. TYPOGRAPHY
+========================================================= */
+
+.el-dashboard h1,
+.el-dashboard h2,
+.el-dashboard h3,
+.el-dashboard h4,
+.el-dashboard strong,
+.el-stat-value,
+.el-stat-label {
+  color: var(--admin-text);
+}
+
+.el-dashboard p,
+.el-page-header p,
+.el-stat-meta,
+.live-session-meta,
+.live-admin-stat > span {
+  color: var(--admin-muted);
+}
+
+/* =========================================================
+   10. DARK MODE
+========================================================= */
+
+@media (prefers-color-scheme: dark) {
+
+  html,
+  body {
+    color-scheme: dark !important;
+    background: #14151e !important;
+    color: #e5e3ef !important;
+  }
+
+  body,
+  .el-dashboard,
+  .el-app-shell,
+  .el-app-main,
+  .el-page-content {
+    background: #14151e !important;
+    color: #e5e3ef !important;
+  }
+
+  .el-page-header {
+    background: #20212e !important;
+    border-color: #343545 !important;
+    color: #e8e6f2 !important;
+    box-shadow: none !important;
+  }
+
+  .el-page-header h1,
+  .el-page-title,
+  .el-user-pill strong {
+    color: #e8e6f2 !important;
+  }
+
+  .el-page-kicker {
+    color: #ad9bf2 !important;
+  }
+
+  .el-dashboard .el-card,
+  .el-dashboard .el-stat,
+  .el-dashboard .el-quick,
+  .admin-monitor-card,
+  .live-admin-stat,
+  .live-session-item {
+    background: #22232f !important;
+    color: #e5e3ef !important;
+    border-color: #353646 !important;
+    box-shadow: none !important;
+  }
+
+  .el-dashboard h1,
+  .el-dashboard h2,
+  .el-dashboard h3,
+  .el-dashboard h4,
+  .el-dashboard strong,
+  .el-stat-value,
+  .el-stat-label,
+  .live-session-title {
+    color: #e8e6f2 !important;
+  }
+
+  .el-dashboard p,
+  .el-dashboard .el-stat-meta,
+  .el-dashboard .el-stat-label,
+  .live-admin-stat span,
+  .live-session-meta,
+  #liveSessionsMessage,
+  #liveLastUpdated {
+    color: #a5a4b9 !important;
+  }
+
+  .el-stat-icon,
+  .el-quick .icon {
+    background: #303044 !important;
+    color: #b7a7ff !important;
+    border-color: #414154 !important;
+    box-shadow: none !important;
+  }
+
+  .el-quick:hover,
+  .live-admin-stat:hover {
+    background: #2d2e3d !important;
+  }
+
+  .live-empty {
+    background: #22232f !important;
+    color: #aaa8be !important;
+    border-color: #454357 !important;
+  }
+
+  input,
+  select,
+  textarea {
+    background: #292a39 !important;
+    color: #e8e6f2 !important;
+    border-color: #414253 !important;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: #9998ad !important;
+  }
+
+  table,
+  th,
+  td {
+    background: #22232f !important;
+    color: #e5e3ef !important;
+    border-color: #38394a !important;
+  }
+
+  .el-chart {
+    background: #20212c !important;
+  }
+
+  .el-chart-labels {
+    color: #a5a4b9 !important;
+  }
+
+  tbody tr:hover {
+    background: #303144 !important;
+  }
+}
+
+/* =========================================================
+   11. RESPONSIVE TABLET
+========================================================= */
+
+@media (max-width: 1100px) {
+
+  .el-dashboard > .el-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+}
+
+/* =========================================================
+   12. RESPONSIVE MOBILE
+========================================================= */
+
+@media (max-width: 700px) {
+
+  .el-dashboard > .el-page-header {
+    padding: 18px !important;
+    gap: 14px;
+  }
+
+  .el-dashboard > .el-grid-4,
+  .el-dashboard > .el-grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .el-dashboard .el-quick-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .el-dashboard .el-stat {
+    min-height: 150px;
+  }
+
+  .admin-monitor-card {
+    padding: 16px !important;
+  }
+
+  .live-admin-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .live-session-meta {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+/* =========================================================
+   13. LUMI COMPANION
+========================================================= */
+
+#equallearn-lumi-frame {
+  position: fixed !important;
+  right: 12px !important;
+  bottom: 12px !important;
+
+  width: 230px !important;
+  height: 280px !important;
+
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+
+  border: 0 !important;
+  outline: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+
+  z-index: 2147483647 !important;
+  pointer-events: auto !important;
+  overflow: hidden !important;
+}
+
+@media (max-width: 600px) {
+  #equallearn-lumi-frame {
+    right: 4px !important;
+    bottom: 6px !important;
+    width: 145px !important;
+    height: 180px !important;
+  }
+}
+
+/* =========================================================
+   14. ACCESSIBILITY
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
