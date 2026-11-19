@@ -92,6 +92,19 @@ let shareEnabled = false;
 let canPublish = false;
 let joining = false;
 
+let cameraFacingMode = "user";
+let currentBackgroundProcessor = null;
+let backgroundModulePromise = null;
+let currentBackgroundMode = "disabled";
+let backgroundImageUrl = null;
+let floatingCallCard = null;
+let floatingVideoTrack = null;
+let floatingVideoElement = null;
+let raisedHands = new Set();
+let handRaised = false;
+
+
+
 const encoder = new TextEncoder();
 
 function text(element, value, fallback = "Not assigned") {
@@ -153,17 +166,28 @@ function showMeeting() {
   }
 
   meetingScreen.hidden = false;
+  meetingScreen.classList.remove("is-minimized");
   meetingScreen.classList.add("active");
+  ensureReactionControls();
+  restoreLiveCall();
 
   document.body.style.overflow = "hidden";
+  ensureReactionControls();
+  void enterMeetingFullscreenAndLandscape();
 }
 
 function hideMeeting() {
+  disposeFloatingCall();
   if (meetingScreen) {
-    meetingScreen.classList.remove("active");
+    meetingScreen.classList.remove("active", "has-screen-share", "is-minimized");
     meetingScreen.hidden = true;
   }
 
+  participantGrid?.classList.remove("has-screen-share");
+  try { screen.orientation?.unlock?.(); } catch (_) {}
+  if (document.fullscreenElement === meetingScreen) {
+    document.exitFullscreen?.().catch(() => {});
+  }
   document.body.style.overflow = "";
 }
 
@@ -171,10 +195,427 @@ function hideMeeting() {
 // PARTICIPANT VIDEO TILES
 // ======================================================
 
-function createTile(identity, name) {
+const LIVE_REACTIONS = ["👍", "❤️", "😂", "👏", "😮", "🎉"];
+
+function studentDisplayName() {
+  return String(
+    currentProfile?.fullname ||
+    currentProfile?.fullName ||
+    currentProfile?.displayName ||
+    currentStudent?.displayName ||
+    currentStudent?.email ||
+    "Student"
+  ).trim();
+}
+
+function ensureFloatingCallCard() {
+  if (floatingCallCard?.isConnected) return floatingCallCard;
+
+  floatingCallCard = document.createElement("section");
+  floatingCallCard.id = "equallearnFloatingCall";
+  floatingCallCard.className = "equallearn-floating-call";
+  floatingCallCard.hidden = true;
+  floatingCallCard.setAttribute("aria-label", "Minimized EqualLearn call");
+
+  const preview = document.createElement("div");
+  preview.className = "equallearn-floating-preview";
+  preview.id = "equallearnFloatingPreview";
+  const fallback = document.createElement("div");
+  fallback.className = "equallearn-floating-fallback";
+  fallback.textContent = "EL";
+  preview.appendChild(fallback);
+
+  const details = document.createElement("div");
+  details.className = "equallearn-floating-details";
+  const title = document.createElement("strong");
+  title.id = "equallearnFloatingTitle";
+  title.textContent = "EqualLearn Live";
+  const status = document.createElement("span");
+  status.id = "equallearnFloatingStatus";
+  status.textContent = "Connected · Minimized";
+  details.append(title, status);
+
+  const actions = document.createElement("div");
+  actions.className = "equallearn-floating-actions";
+  const restore = document.createElement("button");
+  restore.type = "button";
+  restore.textContent = "Return to call";
+  restore.addEventListener("click", restoreLiveCall);
+  const leave = document.createElement("button");
+  leave.type = "button";
+  leave.className = "is-danger";
+  leave.textContent = "Leave";
+  leave.addEventListener("click", () => leaveMeeting());
+  actions.append(restore, leave);
+
+  floatingCallCard.append(preview, details, actions);
+  document.body.appendChild(floatingCallCard);
+  return floatingCallCard;
+}
+
+function refreshFloatingCallVideo() {
+  if (!floatingCallCard || floatingCallCard.hidden || !currentRoom) return;
+  const preview = floatingCallCard.querySelector("#equallearnFloatingPreview");
+  if (!preview) return;
+
+  const participants = [
+    currentRoom.localParticipant,
+    ...Array.from(currentRoom.remoteParticipants.values())
+  ];
+  const tracks = [];
+  for (const participant of participants) {
+    for (const publication of participant.trackPublications.values()) {
+      if (publication.track?.kind === Track.Kind.Video) {
+        tracks.push({ track: publication.track, source: publication.source, local: participant === currentRoom.localParticipant });
+      }
+    }
+  }
+  tracks.sort((a, b) => {
+    const rank = item => item.source === Track.Source.ScreenShare ? 0 : (item.local ? 1 : 2);
+    return rank(a) - rank(b);
+  });
+  const chosen = tracks[0]?.track || null;
+  if (chosen === floatingVideoTrack && floatingVideoElement?.isConnected) return;
+
+  if (floatingVideoTrack && floatingVideoElement) {
+    try { floatingVideoTrack.detach(floatingVideoElement); } catch (_) { floatingVideoElement.remove(); }
+  }
+  floatingVideoTrack = chosen;
+  floatingVideoElement = null;
+  preview.replaceChildren();
+
+  if (chosen) {
+    const video = chosen.attach();
+    video.autoplay = true;
+    video.playsInline = true;
+    video.muted = true;
+    video.className = "equallearn-floating-video";
+    preview.appendChild(video);
+    floatingVideoElement = video;
+  } else {
+    const fallback = document.createElement("div");
+    fallback.className = "equallearn-floating-fallback";
+    fallback.textContent = "EL";
+    preview.appendChild(fallback);
+  }
+}
+
+function minimizeLiveCall() {
+  if (!currentRoom) return;
+  ensureFloatingCallCard();
+  const title = floatingCallCard.querySelector("#equallearnFloatingTitle");
+  const status = floatingCallCard.querySelector("#equallearnFloatingStatus");
+  if (title) title.textContent = currentSession?.title || "EqualLearn Live";
+  if (status) status.textContent = "Connected · Minimized";
+  floatingCallCard.hidden = false;
+  meetingScreen?.classList.add("is-minimized");
+  document.body.style.overflow = "";
+  try { screen.orientation?.unlock?.(); } catch (_) {}
+  if (document.fullscreenElement === meetingScreen) {
+    document.exitFullscreen?.().catch(() => {});
+  }
+  refreshFloatingCallVideo();
+}
+
+function restoreLiveCall() {
+  meetingScreen?.classList.remove("is-minimized");
+  if (currentRoom) document.body.style.overflow = "hidden";
+  if (floatingVideoTrack && floatingVideoElement) {
+    try { floatingVideoTrack.detach(floatingVideoElement); } catch (_) { floatingVideoElement.remove(); }
+  }
+  floatingVideoTrack = null;
+  floatingVideoElement = null;
+  if (floatingCallCard) floatingCallCard.hidden = true;
+}
+
+function disposeFloatingCall() {
+  if (floatingVideoTrack && floatingVideoElement) {
+    try { floatingVideoTrack.detach(floatingVideoElement); } catch (_) { floatingVideoElement.remove(); }
+  }
+  floatingVideoTrack = null;
+  floatingVideoElement = null;
+  if (floatingCallCard) floatingCallCard.hidden = true;
+  meetingScreen?.classList.remove("is-minimized");
+  currentBackgroundProcessor = null;
+  currentBackgroundMode = "disabled";
+  if (backgroundImageUrl) {
+    try { URL.revokeObjectURL(backgroundImageUrl); } catch (_) {}
+    backgroundImageUrl = null;
+  }
+}
+
+function getLocalCameraTrack() {
+  if (!currentRoom) return null;
+  for (const publication of currentRoom.localParticipant.trackPublications.values()) {
+    if (publication.source === Track.Source.Camera && publication.track) return publication.track;
+  }
+  return null;
+}
+
+async function flipCameraFacing() {
+  if (!currentRoom || !cameraEnabled) throw new Error("Turn on your camera first.");
+  const track = getLocalCameraTrack();
+  if (!track || typeof track.restartTrack !== "function") {
+    throw new Error("Camera switching is not supported by this device/browser.");
+  }
+  const nextFacing = cameraFacingMode === "user" ? "environment" : "user";
+  await track.restartTrack({ facingMode: nextFacing });
+  cameraFacingMode = nextFacing;
+  participantGrid?.querySelectorAll("video.is-local-camera").forEach(video => {
+    video.classList.toggle("is-selfie", cameraFacingMode === "user");
+  });
+}
+
+async function loadBackgroundProcessorModule() {
+  if (!backgroundModulePromise) {
+    backgroundModulePromise = import("https://cdn.jsdelivr.net/npm/@livekit/track-processors@0.8.3/+esm");
+  }
+  return backgroundModulePromise;
+}
+
+async function applyCameraBackground(mode, imagePath = null) {
+  if (!currentRoom || !cameraEnabled) throw new Error("Turn on your camera before changing the background.");
+  const track = getLocalCameraTrack();
+  if (!track || typeof track.setProcessor !== "function") {
+    throw new Error("Background effects are not supported by this browser/device.");
+  }
+  const toolkit = await loadBackgroundProcessorModule();
+  if (toolkit.supportsBackgroundProcessors && !toolkit.supportsBackgroundProcessors()) {
+    throw new Error("This browser does not support background effects. Try an updated Chrome browser.");
+  }
+  if (!currentBackgroundProcessor) {
+    currentBackgroundProcessor = toolkit.BackgroundProcessor({ mode: "disabled" });
+    await track.setProcessor(currentBackgroundProcessor);
+  }
+  if (mode === "virtual-background") {
+    await currentBackgroundProcessor.switchTo({ mode, imagePath });
+  } else if (mode === "background-blur") {
+    await currentBackgroundProcessor.switchTo({ mode, blurRadius: 12 });
+  } else {
+    await currentBackgroundProcessor.switchTo({ mode: "disabled" });
+  }
+  currentBackgroundMode = mode;
+}
+
+async function toggleBackgroundBlur() {
+  try {
+    const next = currentBackgroundMode === "background-blur" ? "disabled" : "background-blur";
+    await applyCameraBackground(next);
+    const button = meetingScreen?.querySelector("[data-live-action='blur']");
+    if (button) button.textContent = next === "background-blur" ? "Blur: On" : "Blur: Off";
+  } catch (error) {
+    const notice = document.getElementById("meetingNotice") || document.getElementById("studentMeetingNotice");
+    if (notice) notice.textContent = error.message || "Unable to apply background effect.";
+  }
+}
+
+async function chooseVirtualBackground(file) {
+  if (!file || !file.type.startsWith("image/")) return;
+  const nextUrl = URL.createObjectURL(file);
+  try {
+    await applyCameraBackground("virtual-background", nextUrl);
+    if (backgroundImageUrl) URL.revokeObjectURL(backgroundImageUrl);
+    backgroundImageUrl = nextUrl;
+    const notice = document.getElementById("meetingNotice") || document.getElementById("studentMeetingNotice");
+    if (notice) notice.textContent = "Your custom background is active for other participants.";
+  } catch (error) {
+    URL.revokeObjectURL(nextUrl);
+    const notice = document.getElementById("meetingNotice") || document.getElementById("studentMeetingNotice");
+    if (notice) notice.textContent = error.message || "Unable to apply this background.";
+  }
+}
+
+async function toggleRaiseHand() {
+  if (!currentRoom) return;
+  handRaised = !handRaised;
+  const payload = encoder.encode(JSON.stringify({
+    type: "hand",
+    raised: handRaised,
+    senderName: currentRoom.localParticipant.name || "Participant",
+    sentAt: new Date().toISOString()
+  }));
+  try {
+    await currentRoom.localParticipant.publishData(payload, { reliable: true });
+    const button = meetingScreen?.querySelector("[data-live-action='hand']");
+    if (button) button.textContent = handRaised ? "✋ Lower hand" : "✋ Raise hand";
+    const identity = currentRoom.localParticipant.identity;
+    if (handRaised) raisedHands.add(identity); else raisedHands.delete(identity);
+    if (typeof updateParticipantList === "function") updateParticipantList();
+    if (typeof renderParticipants === "function") renderParticipants();
+  } catch (error) {
+    handRaised = !handRaised;
+    const notice = document.getElementById("meetingNotice") || document.getElementById("studentMeetingNotice");
+    if (notice) notice.textContent = error.message || "Unable to update raised hand.";
+  }
+}
+
+function ensureExtraMeetingControls() {
+  const controls = meetingScreen?.querySelector(".meeting-controls");
+  if (!controls) return;
+  const add = (key, label, handler, title = label) => {
+    if (controls.querySelector(`[data-live-action='${key}']`)) return;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "equallearn-extra-control";
+    button.dataset.liveAction = key;
+    button.textContent = label;
+    button.title = title;
+    button.addEventListener("click", handler);
+    controls.appendChild(button);
+  };
+  add("minimize", "▁ Minimize", minimizeLiveCall, "Minimize the call without disconnecting");
+  add("flip", "↻ Flip camera", () => flipCameraFacing().catch(error => {
+    const notice = document.getElementById("meetingNotice") || document.getElementById("studentMeetingNotice");
+    if (notice) notice.textContent = error.message;
+  }));
+  add("blur", "Blur: Off", toggleBackgroundBlur);
+  add("background", "▧ Background", () => controls.querySelector("input[data-live-background-file]")?.click());
+  add("hand", "✋ Raise hand", toggleRaiseHand);
+
+  if (!controls.querySelector("input[data-live-background-file]")) {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.hidden = true;
+    input.dataset.liveBackgroundFile = "true";
+    input.addEventListener("change", () => {
+      const file = input.files?.[0];
+      if (file) chooseVirtualBackground(file);
+      input.value = "";
+    });
+    controls.appendChild(input);
+  }
+}
+
+function ensureReactionControls() {
+  const controls = meetingScreen?.querySelector(".meeting-controls");
+  if (!controls) return;
+  if (!controls.querySelector(".live-reaction-bar")) {
+    const bar = document.createElement("div");
+    bar.className = "live-reaction-bar";
+    bar.setAttribute("aria-label", "Send a live reaction");
+    LIVE_REACTIONS.forEach(reaction => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "live-reaction-button";
+      button.textContent = reaction;
+      button.title = `Send ${reaction}`;
+      button.setAttribute("aria-label", `Send ${reaction} reaction`);
+      button.addEventListener("click", () => sendLiveReaction(reaction));
+      bar.appendChild(button);
+    });
+    controls.prepend(bar);
+  }
+  if (!controls.querySelector(".live-fullscreen-button")) {
+    const fullscreenButton = document.createElement("button");
+    fullscreenButton.type = "button";
+    fullscreenButton.className = "live-fullscreen-button";
+    fullscreenButton.textContent = "⛶ Fullscreen";
+    fullscreenButton.addEventListener("click", () =>
+      enterMeetingFullscreenAndLandscape(Boolean(meetingScreen?.classList.contains("has-screen-share")))
+    );
+    controls.appendChild(fullscreenButton);
+  }
+  ensureExtraMeetingControls();
+  ensureFloatingCallCard();
+}
+function showLiveReaction(reaction, participant, fallbackName = "Participant") {
+  if (!participantGrid || !LIVE_REACTIONS.includes(reaction)) return;
+  const identity = participant?.identity || currentRoom?.localParticipant?.identity;
+  const name = participant?.name || fallbackName;
+  let tile = identity
+    ? participantGrid.querySelector(`[data-identity="${CSS.escape(identity)}"]`)
+    : null;
+
+  if (!tile && participant) tile = getTile(participant);
+  if (!tile) return;
+
+  const bubble = document.createElement("div");
+  bubble.className = "live-reaction-pop";
+  const emoji = document.createElement("span");
+  emoji.className = "live-reaction-emoji";
+  emoji.textContent = reaction;
+  const label = document.createElement("small");
+  label.textContent = name;
+  bubble.append(emoji, label);
+  tile.appendChild(bubble);
+  window.setTimeout(() => bubble.remove(), 2400);
+}
+
+async function sendLiveReaction(reaction) {
+  if (!currentRoom || !LIVE_REACTIONS.includes(reaction)) return;
+  try {
+    const payload = encoder.encode(JSON.stringify({
+      type: "reaction",
+      reaction,
+      senderName: studentDisplayName(),
+      sentAt: new Date().toISOString()
+    }));
+    await currentRoom.localParticipant.publishData(payload, { reliable: true });
+    showLiveReaction(reaction, currentRoom.localParticipant, studentDisplayName());
+  } catch (error) {
+    message(meetingNotice, `Unable to send reaction: ${error.message}`, true);
+  }
+}
+
+function isScreenShareSource(source) {
+  return source === Track.Source.ScreenShare || source === "screen_share";
+}
+
+async function enterMeetingFullscreenAndLandscape(lockLandscape = false) {
+  const target = meetingScreen;
+  if (!target) return false;
+
+  try {
+    if (!document.fullscreenElement && typeof target.requestFullscreen === "function") {
+      // Invoke this from a real user action (Join, Start, Share or Fullscreen button).
+      await target.requestFullscreen({ navigationUI: "hide" });
+    }
+  } catch (error) {
+    console.info("Meeting fullscreen was not granted by this browser.", error);
+  }
+
+  if (!lockLandscape) return true;
+
+  try {
+    if (document.fullscreenElement === target && screen.orientation?.lock) {
+      await screen.orientation.lock("landscape");
+      return true;
+    }
+  } catch (error) {
+    console.info("Landscape orientation lock was not granted by this browser.", error);
+  }
+
+  const messageText = "For a wider screen-share view, rotate your phone to landscape. Some browsers only allow automatic rotation in fullscreen mode.";
+  message(meetingNotice, messageText);
+  return false;
+}
+
+async function updateScreenShareLayout() {
+  const active = Boolean(participantGrid?.querySelector(".screen-share-tile video"));
+  meetingScreen?.classList.toggle("has-screen-share", active);
+  participantGrid?.classList.toggle("has-screen-share", active);
+
+  if (active) {
+    try {
+      if (document.fullscreenElement === meetingScreen && screen.orientation?.lock) {
+        await screen.orientation.lock("landscape");
+      } else {
+        throw new Error("Fullscreen orientation lock is unavailable.");
+      }
+    } catch (_) {
+      message(meetingNotice, "Screen sharing is active. Tap Fullscreen or rotate your phone to landscape for a wider view.");
+    }
+  } else {
+    try { screen.orientation?.unlock?.(); } catch (_) {}
+  }
+}
+
+function createTile(identity, name, isLocal = false) {
   const tile = document.createElement("div");
 
   tile.className = "sm-tile";
+  if (isLocal) tile.classList.add("is-local");
   tile.dataset.identity = identity;
 
   const placeholder = document.createElement("div");
@@ -206,14 +647,15 @@ function getTile(participant) {
   if (!tile) {
     tile = createTile(
       identity,
-      participant.name || identity
+      participant.name || identity,
+      participant === currentRoom?.localParticipant
     );
   }
 
   return tile;
 }
 
-function attachTrack(track, participant) {
+function attachTrack(track, participant, source = null) {
   if (!track || !participant || !participantGrid) {
     return;
   }
@@ -223,6 +665,7 @@ function attachTrack(track, participant) {
   if (!tile) return;
 
   if (track.kind === Track.Kind.Video) {
+    if (isScreenShareSource(source)) tile.classList.add("screen-share-tile");
     tile.querySelector(".sm-placeholder")?.remove();
 
     // Prevent duplicate video elements.
@@ -236,12 +679,19 @@ function attachTrack(track, participant) {
     video.playsInline = true;
     video.style.width = "100%";
     video.style.height = "100%";
-    video.style.objectFit = "cover";
+    video.style.objectFit = isScreenShareSource(source) ? "contain" : "cover";
+    if (!isScreenShareSource(source) && participant === currentRoom?.localParticipant) {
+      video.classList.add("is-local-camera");
+      video.classList.toggle("is-selfie", cameraFacingMode === "user");
+      tile.classList.add("is-local");
+    }
 
     tile.insertBefore(
       video,
       tile.querySelector(".sm-name")
     );
+    if (isScreenShareSource(source)) updateScreenShareLayout();
+    refreshFloatingCallVideo();
 
   } else if (track.kind === Track.Kind.Audio) {
     const audio = track.attach();
@@ -253,12 +703,16 @@ function attachTrack(track, participant) {
   }
 }
 
-function detachTrack(track) {
+function detachTrack(track, source = null) {
   if (!track) return;
-
+  const isShare = isScreenShareSource(source || track.source);
   track.detach().forEach(element => {
+    const tile = element.closest(".sm-tile");
     element.remove();
+    if (isShare) tile?.classList.remove("screen-share-tile");
   });
+  if (isShare) updateScreenShareLayout();
+  refreshFloatingCallVideo();
 }
 
 function renderExistingParticipants() {
@@ -270,7 +724,7 @@ function renderExistingParticipants() {
 
   for (const publication of local.trackPublications.values()) {
     if (publication.track) {
-      attachTrack(publication.track, local);
+      attachTrack(publication.track, local, publication.source);
     }
   }
 
@@ -279,7 +733,7 @@ function renderExistingParticipants() {
 
     for (const publication of participant.trackPublications.values()) {
       if (publication.track) {
-        attachTrack(publication.track, participant);
+        attachTrack(publication.track, participant, publication.source);
       }
     }
   }
@@ -318,6 +772,7 @@ function renderParticipants() {
         ? "You"
         : "Connected";
 
+    if (raisedHands.has(participant.identity)) status.textContent += " · ✋ Raised hand";
     row.append(name, status);
 
     peopleContainer.appendChild(row);
@@ -534,13 +989,7 @@ async function loadLiveSessions(uid) {
         id: item.id,
         ...item.data()
       }))
-      .filter(session =>
-  ["scheduled", "live", "ended"].includes(session.status)
-)
-.filter(session =>
-  session.status !== "ended" ||
-  ["batch", "livestream"].includes(session.meetingType)
-)
+      .filter(session => ["scheduled", "live", "ended"].includes(session.status))
       .filter(session => {
         if (
           session.meetingType === "one_on_one" &&
@@ -548,7 +997,6 @@ async function loadLiveSessions(uid) {
         ) {
           return false;
         }
-
         return true;
       })
       .sort((a, b) => {
@@ -966,21 +1414,22 @@ async function joinMeeting(session) {
     room.on(
       RoomEvent.TrackSubscribed,
       (track, publication, participant) => {
-        attachTrack(track, participant);
+        attachTrack(track, participant, publication?.source);
         renderParticipants();
       }
     );
 
     room.on(
       RoomEvent.TrackUnsubscribed,
-      track => {
-        detachTrack(track);
+      (track, publication) => {
+        detachTrack(track, publication?.source);
       }
     );
 
     room.on(
       RoomEvent.ParticipantConnected,
-      () => {
+      participant => {
+        if (participant) getTile(participant);
         renderParticipants();
       }
     );
@@ -1002,7 +1451,8 @@ async function joinMeeting(session) {
         if (publication.track) {
           attachTrack(
             publication.track,
-            room.localParticipant
+            room.localParticipant,
+            publication.source
           );
         }
       }
@@ -1012,7 +1462,7 @@ async function joinMeeting(session) {
       RoomEvent.LocalTrackUnpublished,
       publication => {
         if (publication.track) {
-          detachTrack(publication.track);
+          detachTrack(publication.track, publication.source);
         }
       }
     );
@@ -1030,12 +1480,18 @@ async function joinMeeting(session) {
             typeof data.message === "string"
           ) {
             addChatMessage(
-              participant?.name ||
-              participant?.identity ||
-              data.sender ||
-              "Participant",
+              participant?.name || data.senderName || data.sender || participant?.identity || "Participant",
               data.message
             );
+          } else if (data.type === "reaction") {
+            showLiveReaction(data.reaction, participant, data.senderName || "Participant");
+          } else if (data.type === "hand") {
+            const identity = participant?.identity;
+            if (identity) {
+              if (data.raised) raisedHands.add(identity);
+              else raisedHands.delete(identity);
+              renderParticipants();
+            }
           }
 
         } catch (error) {
@@ -1049,12 +1505,31 @@ async function joinMeeting(session) {
 
     room.on(
       RoomEvent.Disconnected,
-      () => {
+      reason => {
+        if (currentRoom !== room) return;
+        currentRoom = null;
+        micEnabled = false;
+        cameraEnabled = false;
+        shareEnabled = false;
+        canPublish = false;
+        hideMeeting();
+        if (participantGrid) participantGrid.replaceChildren();
+        if (peopleContainer) peopleContainer.replaceChildren();
+        if (chatContainer) chatContainer.replaceChildren();
+        const wasRoomDeleted = String(reason) === "ROOM_DELETED" || String(reason?.toString?.()) === "ROOM_DELETED";
         message(
           meetingNotice,
-          "Disconnected from meeting.",
-          true
+          wasRoomDeleted
+            ? "The teacher ended this meeting for everyone. You have been disconnected."
+            : "You were disconnected from the meeting. You can rejoin while the session is live.",
+          !wasRoomDeleted
         );
+        if (currentStudent) {
+          // The teacher updates the Firestore status immediately after deleting the LiveKit room.
+          // Refresh once now and once shortly after to avoid showing a stale LIVE badge.
+          void loadLiveSessions(currentStudent.uid);
+          setTimeout(() => loadLiveSessions(currentStudent.uid), 900);
+        }
       }
     );
 
@@ -1237,6 +1712,18 @@ async function toggleCamera() {
 // SCREEN SHARING
 // ======================================================
 
+
+async function flipCamera() {
+  try {
+    await flipCameraFacing();
+    const notice = document.getElementById("meetingNotice") || document.getElementById("studentMeetingNotice");
+    if (notice) notice.textContent = cameraFacingMode === "environment" ? "Back camera is active." : "Front camera is active.";
+  } catch (error) {
+    const notice = document.getElementById("meetingNotice") || document.getElementById("studentMeetingNotice");
+    if (notice) notice.textContent = error.message || "Unable to switch camera.";
+  }
+}
+
 async function toggleShareScreen() {
   if (!currentRoom || !canPublish || !shareBtn) {
     return;
@@ -1245,10 +1732,10 @@ async function toggleShareScreen() {
   const nextState = !shareEnabled;
 
   try {
+    if (nextState) void enterMeetingFullscreenAndLandscape(true);
     await currentRoom.localParticipant.setScreenShareEnabled(
       nextState
     );
-
     shareEnabled = nextState;
 
     shareBtn.textContent =
@@ -1333,7 +1820,7 @@ async function sendChat(event) {
       }
     );
 
-    addChatMessage("You", content);
+    addChatMessage(`${studentDisplayName()} (You)`, content);
 
     chatInput.value = "";
 
@@ -1386,9 +1873,11 @@ function closeSidebar() {
 // ======================================================
 
 async function leaveMeeting() {
+  const roomToLeave = currentRoom;
+  currentRoom = null;
   try {
-    if (currentRoom) {
-      await currentRoom.disconnect();
+    if (roomToLeave) {
+      await roomToLeave.disconnect();
     }
 
   } catch (error) {

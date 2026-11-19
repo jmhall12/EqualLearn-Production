@@ -253,6 +253,33 @@ function normalize(value) {
   return String(value ?? "").trim().toLowerCase();
 }
 
+function getParticipantDisplayName(user, firebaseUser, role) {
+  const candidates = [
+    user?.fullname,
+    user?.fullName,
+    user?.displayName,
+    user?.name,
+    firebaseUser?.name,
+    user?.email,
+    firebaseUser?.email
+  ];
+
+  for (const candidate of candidates) {
+    const value = String(candidate ?? "")
+      .replace(/[\u0000-\u001F\u007F]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (value) return value.slice(0, 80);
+  }
+
+  return role === "teacher"
+    ? "EqualLearn Teacher"
+    : role === "student"
+      ? "EqualLearn Student"
+      : "EqualLearn Admin";
+}
+
 /* =========================================
    LIVEKIT TOKEN GENERATOR
 ========================================= */
@@ -263,7 +290,8 @@ async function createLiveKitToken(env, options) {
     role,
     room,
     mode,
-    canPublish
+    canPublish,
+    displayName
   } = options;
 
   const now = Math.floor(Date.now() / 1000);
@@ -279,7 +307,7 @@ async function createLiveKitToken(env, options) {
     nbf: now,
     iat: now,
     exp: now + 600,
-    name: `EqualLearn ${role}`,
+    name: String(displayName || `EqualLearn ${role}`).slice(0, 80),
 
     video: {
       room,
@@ -303,6 +331,7 @@ async function createLiveKitToken(env, options) {
     metadata: JSON.stringify({
       role,
       mode,
+      displayName: String(displayName || `EqualLearn ${role}`).slice(0, 80),
       platform: "equallearn"
     })
   };
@@ -916,13 +945,15 @@ if (url.pathname === "/end") {
       ===================================== */
 
       const room = `el-${roomId}`;
+      const displayName = getParticipantDisplayName(user, firebaseUser, role);
 
       const token = await createLiveKitToken(env, {
         uid,
         role,
         room,
         mode,
-        canPublish
+        canPublish,
+        displayName
       });
 
       /* =====================================
@@ -936,6 +967,7 @@ if (url.pathname === "/end") {
         room,
         roomId,
         role,
+        displayName,
         mode,
         meetingType,
         canPublish,
