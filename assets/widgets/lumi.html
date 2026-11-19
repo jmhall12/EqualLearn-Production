@@ -50,7 +50,7 @@ body{font-family:Inter,"Segoe UI",Arial,sans-serif}
 
 .lumi-control{width:34px;height:34px;flex:0 0 auto;border:1px solid rgba(255,255,255,.96);border-radius:50%;background:linear-gradient(145deg,#fff,#eee8ff);color:#6849c7;box-shadow:0 5px 14px rgba(56,37,115,.15);font-size:13px;cursor:pointer;display:grid;place-items:center;pointer-events:auto;transition:transform .18s,background .18s,box-shadow .18s}
 
-.lumi-control:hover{transform:translateY(-3px);background:#e8ddff}.lumi-control:active{transform:scale(.94)}#lumi-drag-hitbox{position:absolute;width:96px;height:116px;left:50%;top:50%;transform:translate(-50%,-50%);border:0;background:transparent;border-radius:48%;pointer-events:auto;touch-action:none;cursor:grab;z-index:6;outline:none}#lumi-drag-hitbox:active{cursor:grabbing}#lumi-drag-hitbox:focus-visible{outline:2px dashed #9b7bea;outline-offset:4px}
+.lumi-control:hover{transform:translateY(-3px);background:#e8ddff}.lumi-control:active{transform:scale(.94)}#lumi-drag-hitbox{position:absolute;width:154px;height:190px;left:50%;top:50%;transform:translate(-50%,-50%);border:0;background:transparent;border-radius:48%;pointer-events:auto;touch-action:none;cursor:grab;z-index:30;outline:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}#lumi-drag-hitbox:active{cursor:grabbing}#lumi-drag-hitbox:focus-visible{outline:2px dashed #9b7bea;outline-offset:4px}
 
 #lumi-label{position:fixed;left:50%;bottom:max(68px,calc(env(safe-area-inset-bottom) + 58px));transform:translateX(-50%);padding:6px 12px;border:1px solid rgba(255,255,255,.92);border-radius:30px;background:rgba(255,255,255,.86);backdrop-filter:blur(12px);color:#6345bd;font-size:10px;font-weight:850;letter-spacing:.2px;white-space:nowrap;box-shadow:0 7px 19px rgba(65,43,130,.13);pointer-events:none}
 
@@ -149,6 +149,7 @@ body{font-family:Inter,"Segoe UI",Arial,sans-serif}
 #lumi-game-feedback{min-height:30px;padding:7px 8px;margin-top:7px;border-radius:9px;background:#fff;color:#55466f;font-size:10px;line-height:1.4}#lumi-game-next,#lumi-game-retry,#lumi-game-menu-back{border:0;border-radius:20px;padding:8px 13px;background:#7653d3;color:#fff;font-size:10px;font-weight:850;cursor:pointer;margin:5px 5px 0 0}#lumi-game-menu-back{background:#e8e0fa;color:#5c43a1}.lumi-game-trophy{text-align:center;font-size:34px;margin:8px 0}#lumi-game-result{text-align:center;padding:8px}
 @media(max-width:420px){.lumi-game-cards button{min-height:58px;padding:7px}}
 
+@keyframes lumiZzzFloat{0%,100%{margin-top:0}50%{margin-top:-9px}}
 </style>
 
 </head>
@@ -255,6 +256,11 @@ let hidden=false;
 let dragState=null;
 let suppressNextCanvasClick=false;
 let autoMood="Idle";
+let isSleeping=false;
+let sleepStartedAt=0;
+let outfitTransition=null;
+let nextOutfitAt=performance.now()+65000;
+let currentOutfit=0;
 let petMode="rest"; // curious companion: gentle strolls, little play moments, occasional rocket flights
 let modeUntil=performance.now()+18000;
 let nextMoodAt=performance.now()+9000;
@@ -271,6 +277,12 @@ let dragPlane=null;
 let dragRaycaster=null;
 let dragOffset=null;
 const dragHitbox=document.getElementById("lumi-drag-hitbox");
+// Visible sleep effect; kept outside the 3D canvas so the Zzz remains crisp.
+const zzzBadge=document.createElement("div");
+zzzBadge.id="lumi-zzz";zzzBadge.textContent="Z z z…";
+Object.assign(zzzBadge.style,{position:"fixed",left:"50%",top:"50%",zIndex:"40",font:"900 19px Inter,Arial",letterSpacing:"2px",color:"#8b68ee",textShadow:"0 2px 0 #fff,0 4px 12px #6544bd66",pointerEvents:"none",opacity:"0",transform:"translate(-50%,-50%) rotate(-9deg)",transition:"opacity .35s"});
+root.appendChild(zzzBadge);
+
 // Responsive companion scale: deliberately compact so Lumi never dominates the page.
 function getResponsiveLumiScale(){
  const width=window.visualViewport?.width||window.innerWidth||360;
@@ -328,7 +340,7 @@ try{
  const frame=window.frameElement;
  if(frame && window.parent && window.parent.document){
   const frameObserver=new MutationObserver(()=>{if(!hidden)syncLumiFrameSize();});
-  frameObserver.observe(frame,{attributes:true,attributeFilter:["style","class"]});
+  frameObserver.observe(frame,{attributes:true,attributeFilter:["class"]});
   window.addEventListener("pagehide",()=>frameObserver.disconnect(),{once:true});
  }
 }catch(_){/* Cross-origin parents cannot be observed; initial sizing still applies. */}
@@ -351,6 +363,12 @@ function updateDragHitbox(){
  const y=(-projected.y*.5+.5)*h;
  dragHitbox.style.left=`${x}px`;
  dragHitbox.style.top=`${y}px`;
+ if(zzzBadge){
+  zzzBadge.style.left=`${Math.max(20,Math.min(w-20,x+58))}px`;
+  zzzBadge.style.top=`${Math.max(18,Math.min(h-36,y-78))}px`;
+  zzzBadge.style.opacity=isSleeping?"1":"0";
+  zzzBadge.style.animation=isSleeping?"lumiZzzFloat 1.35s ease-in-out infinite":"none";
+ }
  speech.style.left=`${Math.max(92,Math.min(w-92,x))}px`;
  speech.style.top=`${Math.max(12,Math.min(h-70,y-126))}px`;
  const controls=document.getElementById("lumi-controls");
@@ -369,9 +387,9 @@ function updateDragHitbox(){
    // to include the speech bubble and its bottom edge to include the controls.
    // A circular clip used to cut the bubble in half because it sits above her.
    const mobile=(window.innerWidth||w)<=600;
-   const halfWidth=mobile?104:118;
-   const topExtent=mobile?166:174;
-   const bottomExtent=mobile?158:166;
+   const halfWidth=mobile?148:166;
+   const topExtent=mobile?194:205;
+   const bottomExtent=mobile?184:196;
    const left=Math.max(0,x-halfWidth), right=Math.min(w,x+halfWidth);
    const top=Math.max(0,y-topExtent), bottom=Math.min(h,y+bottomExtent);
    const px=n=>`${(n/w)*100}%`;
@@ -404,41 +422,46 @@ function getPetBounds(){
   y:Math.max(.08,halfH-1.62)
  };
 }
+let petDragStart=null;
 dragHitbox.addEventListener("pointerdown",event=>{
- if(!webglAvailable||root.classList.contains("assistant-open"))return;
+ if(!webglAvailable||root.classList.contains("assistant-open")||hidden)return;
  const point=getWorldPoint(event);
  if(!point)return;
+ petDragStart={x:event.clientX,y:event.clientY,moved:false};
  dragState={pointerId:event.pointerId,offset:new THREE.Vector3().subVectors(lumi.position,point)};
- dragHitbox.setPointerCapture(event.pointerId);
+ try{dragHitbox.setPointerCapture(event.pointerId);}catch(_){}
  markUserInteraction();
  event.preventDefault();
 });
 dragHitbox.addEventListener("pointermove",event=>{
  if(!dragState||dragState.pointerId!==event.pointerId)return;
+ if(petDragStart&&Math.hypot(event.clientX-petDragStart.x,event.clientY-petDragStart.y)>5)petDragStart.moved=true;
  const point=getWorldPoint(event);
  if(!point)return;
  const bounds=getPetBounds();
  const next=point.add(dragState.offset);
  const x=THREE.MathUtils.clamp(next.x,-bounds.x,bounds.x);
  const y=THREE.MathUtils.clamp(next.y,-bounds.y,bounds.y);
- petPosition.set(x,y,0);
- lumi.position.set(x,y,0);
+ petPosition.set(x,y,0);lumi.position.set(x,y,0);
  if(roamTarget)roamTarget.set(x,y,0);
  if(roamVelocity)roamVelocity.set(0,0,0);
- markUserInteraction();
- event.preventDefault();
+ markUserInteraction();event.preventDefault();
 });
 function finishPetDrag(event){
  if(!dragState||dragState.pointerId!==event.pointerId)return;
- dragState=null;
- petPosition.copy(lumi.position);
+ const wasTap=petDragStart&&!petDragStart.moved;
+ dragState=null;petPosition.copy(lumi.position);
  if(roamTarget)roamTarget.copy(petPosition);
  if(roamVelocity)roamVelocity.set(0,0,0);
  try{localStorage.setItem("equallearn-lumi-pet-position",JSON.stringify({x:lumi.position.x,y:lumi.position.y}));}catch(_){}
- markUserInteraction();
+ if(wasTap){lastPetTapAt=performance.now();waveUntil=lastPetTapAt+1100;clickPulse=1;autoMood="Bounce";say(["Boop! Hehe! 💜","Yay, you tapped me! ✨","Hi hi! Need a tiny hug? 🤗","That tickles! 🤖💜"][Math.floor(Math.random()*4)],2500);}
+ petDragStart=null;markUserInteraction();
 }
 dragHitbox.addEventListener("pointerup",finishPetDrag);
 dragHitbox.addEventListener("pointercancel",finishPetDrag);
+dragHitbox.addEventListener("lostpointercapture",finishPetDrag);
+let lastPetTapAt=0;
+dragHitbox.addEventListener("click",event=>{const now=performance.now();if(now-lastPetTapAt<450)return;lastPetTapAt=now;if(isSleeping){return;}markUserInteraction();clickPulse=1;waveUntil=now+950;const reactions=["Hehe! That tickles! 💜","Boop boop! I felt that! ✨","Yippee! You found my boop button! 🤖","A tiny hug back for you! 🤗","I like when you visit! 🌟","Wheee! One more tap? 🚀"];const line=reactions[Math.floor(Math.random()*reactions.length)];say(line,2600);});
 
 
 
@@ -614,6 +637,35 @@ if(renderer){
   // Side-mounted rocket. Keep the nozzle and exhaust outside Lumi's silhouette
   // so the flame is clearly visible from the normal front camera angle.
   const rocketShell=mat(0x7652cf,.2,.32),rocketNozzleMat=mat(0x343047,.22,.42);
+  // Gradual outfit palettes. These recolor Lumi's existing materials in place,
+  // so the 3D model, rig, animations, and game renderer remain unchanged.
+  const outfitMaterialMap={shell,shellShade,purple,purpleDark,cyan,gold,rocketShell};
+  const outfitPalettes=[
+   {name:"Violet Dream",shell:0xf2ecff,shellShade:0xc8b5ff,purple:0x8059df,purpleDark:0x432b91,cyan:0x7dd5ff,gold:0xf5d9a4,rocketShell:0x7652cf},
+   {name:"Rose Bloom",shell:0xfff0f6,shellShade:0xffc4dc,purple:0xed79b5,purpleDark:0x8e3b78,cyan:0x91dcff,gold:0xffd36f,rocketShell:0xd85d9b},
+   {name:"Ocean Glow",shell:0xeafaff,shellShade:0xa9e5f3,purple:0x42a6c7,purpleDark:0x245b82,cyan:0x70e6ff,gold:0xc4f1e5,rocketShell:0x328ebd},
+   {name:"Mint Breeze",shell:0xeffff7,shellShade:0xb8ecd8,purple:0x58b997,purpleDark:0x276b58,cyan:0x8fe9d0,gold:0xf3d984,rocketShell:0x389878},
+   {name:"Sunny Star",shell:0xfffff0,shellShade:0xffe7a1,purple:0xf2b94b,purpleDark:0x9a6721,cyan:0x8cdaff,gold:0xffe18b,rocketShell:0xe39a24}
+  ].map(palette=>({name:palette.name,colors:Object.fromEntries(Object.entries(palette).filter(([key])=>key!=="name").map(([key,value])=>[key,new THREE.Color(value)]))}));
+  function startOutfitChange(index,now=performance.now()){
+   const nextIndex=((index%outfitPalettes.length)+outfitPalettes.length)%outfitPalettes.length;
+   if(nextIndex===currentOutfit||outfitTransition)return;
+   const target=outfitPalettes[nextIndex];
+   const from={};
+   for(const [key,material] of Object.entries(outfitMaterialMap))from[key]=material.color.clone();
+   outfitTransition={from,to:target.colors,start:now,duration:2800,index:nextIndex};
+   say(`Ooh! Time for a new look… ${target.name}! ✨`,3600);
+  }
+  function updateOutfit(now){
+   if(!outfitTransition)return;
+   const progress=THREE.MathUtils.clamp((now-outfitTransition.start)/outfitTransition.duration,0,1);
+   const eased=progress<.5?4*progress*progress*progress:1-Math.pow(-2*progress+2,3)/2;
+   for(const [key,material] of Object.entries(outfitMaterialMap)){
+    const from=outfitTransition.from[key],to=outfitTransition.to[key];
+    material.color.copy(from).lerp(to,eased);
+   }
+   if(progress>=1){currentOutfit=outfitTransition.index;outfitTransition=null;}
+  }
   roundedBox(.24,.49,.25,.07,rocketShell,torso,[.73,-.48,.08]);
   const nozzle=new THREE.Mesh(new THREE.CylinderGeometry(.078,.105,.17,24),rocketNozzleMat);
   nozzle.position.set(.75,-.82,.10);nozzle.rotation.z=-.10;torso.add(nozzle);
@@ -1260,6 +1312,11 @@ async function handleQuestion(raw){
   addMessage(q,"user");chatInput.value="";
 
   const text=normalize(q);
+  if(isSleeping){
+   isSleeping=false;markUserInteraction();petMode="settle";autoMood="Bounce";modeUntil=performance.now()+5200;nextMoodAt=modeUntil;
+   addMessage(`Gising na ako, ${currentAccountName}! 💜 I heard you. What shall we do?`);
+   say(`I'm awake, ${currentAccountName}! ☀️`,3200);waveUntil=performance.now()+2200;clickPulse=1;return;
+  }
   if(/\b(list|show|what are|anong)\b/.test(text)&&/\b(buttons|controls|pindutan)\b/.test(text)){listVisibleButtons();return;}
   if(/\b(find|locate|show me|where is|take me|go to|guide me|hanapin|hanapin mo|punta|puntahan|dalhin mo|ituro|ipakita)\b/.test(text)&&/(button|btn|save|cancel|submit|create|add|edit|delete|back|next|search|filter|upload|publish|approve|reject|profile|settings|menu)/.test(text)){
    const targetPhrase=q.replace(/\b(lumi|please|paki|hanapin mo|hanapin|find|locate|show me|where is|take me to|go to|guide me to|punta ka sa|puntahan mo|dalhin mo ako sa|ituro mo|ipakita mo|button|btn|yung|na|sa|the|me|ako|mo)\b/gi," ").trim();
@@ -1326,8 +1383,10 @@ async function handleQuestion(raw){
    waveUntil=actionNow+3000;autoMood="Idle";nextMoodAt=actionNow+3000;return;
   }
   if(/\b(sleep|sleepy|matulog|pahinga|rest)\b/.test(text)){
-   doAnimationReply("Okay, I'll take a little rest. Wake me up when you want to play again. 🌙");
-   petMode="rest";autoMood="Sleepy";modeUntil=actionNow+30000;roamTarget.copy(petPosition);return;
+   isSleeping=true;sleepStartedAt=actionNow;petMode="rest";autoMood="Sleepy";modeUntil=Infinity;
+   roamTarget.copy(petPosition);roamVelocity.set(0,0,0);waveUntil=0;
+   addMessage("Sige, matutulog muna ako… good night! 🌙 Type **wake up** or chat mo lang ako ulit para magising ako. 💜");
+   say("Good night… Z z z… 🌙",3600);return;
   }
   if(/\b(stop|stop moving|tigil|hinto|freeze|stay still)\b/.test(text)){
    doAnimationReply("Okay, I'll stay right here. My rocket is powering down. 💜");
@@ -1405,6 +1464,7 @@ async function handleQuestion(raw){
  // Open chat from a mascot click as well as from the talk button.
 
  dragHitbox.addEventListener("dblclick",()=>openAssistant());
+dragHitbox.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();waveUntil=performance.now()+1500;autoMood="Bounce";say("Boop boop! I'm right here! 💜",2600);}});
 
  document.getElementById("lumi-hide").addEventListener("click",()=>{
   if(hidden)return;
@@ -1435,12 +1495,37 @@ async function handleQuestion(raw){
   });
   hostDoc.body.appendChild(reopen);
   reopen.addEventListener("click",()=>{
-   reopen.remove();hidden=false;
-   root.classList.remove("lumi-hidden");root.style.display="block";
-   syncLumiFrameSize();
-   requestAnimationFrame(()=>{resize();updateDragHitbox();say("I'm back! What shall we learn? 💜");});
+   reopen.remove();restoreLumi("I'm back! Try dragging me anywhere! 💜");
   },{once:true});
  });
+
+ function restoreLumi(message="Yay! You called me! I'm back! 💜"){
+  if(!hidden)return;
+  hidden=false;
+  root.classList.remove("lumi-hidden");
+  root.style.display="block";
+  const frame=window.frameElement;
+  if(frame){
+   frame.style.setProperty("display","block","important");
+   frame.style.setProperty("visibility","visible","important");
+   frame.style.setProperty("pointer-events","auto","important");
+   frame.style.setProperty("clip-path","none","important");
+   frame.style.setProperty("-webkit-clip-path","none","important");
+  }
+  syncLumiFrameSize();
+  requestAnimationFrame(()=>{
+   if(webglAvailable)canvas.style.display="block";
+   resize();
+   updateDragHitbox();
+   requestAnimationFrame(()=>{
+    syncLumiFrameSize();
+    resize();
+    updateDragHitbox();
+    if(webglAvailable)renderer.render(scene,camera);
+    say(message,3200);
+   });
+  });
+ }
 
 
 
@@ -1470,14 +1555,14 @@ async function handleQuestion(raw){
   pointer.x+=(target.x-pointer.x)*.055;pointer.y+=(target.y-pointer.y)*.055;
 
   // Curious-companion rhythm: calm walking, brief playful moments and occasional gentle rocket flights.
-  if(!dragState && now>modeUntil){
+  if(!isSleeping && !dragState && now>modeUntil){
    const roll=Math.random();
    if(petMode==="rest" || petMode==="settle"){
     petMode=roll<.58?"explore":roll<.82?"play":"flight";
     modeUntil=now+(petMode==="explore"?10500+Math.random()*7500:petMode==="play"?5000+Math.random()*3000:4200+Math.random()*2600);
    }else{petMode="rest";modeUntil=now+17000+Math.random()*15000;}
   }
-  if(!dragState){
+  if(!isSleeping && !dragState){
    const bounds=getPetBounds();
    let guiding=!!guidedTargetElement&&now<guidedTargetUntil;
    if(guiding){
@@ -1511,24 +1596,30 @@ async function handleQuestion(raw){
   }
 
   // Lumi is chatty and curious, but never talks over an open chat.
-  if(!root.classList.contains("assistant-open") && now>nextPetThoughtAt && now-lastUserInteraction>12000){
+  if(!isSleeping && !root.classList.contains("assistant-open") && now>nextPetThoughtAt && now-lastUserInteraction>12000){
    const thoughts=[`Psst, ${currentAccountName}… may nakita akong interesting! ✨`,`Hello ulit, ${currentAccountName}! Nandito lang ako, your tiny robot buddy. 💜`,"I wonder what we're learning today? 🤔","May tiny rocket ako… gusto mo makita? 🚀","Nag-iikot lang ako dito. Ang cozy ng spot na 'to!","Don't mind me, just keeping you company. 😊","Fun fact: kaya kong mag-float… pero dahan-dahan lang! 🚀","Uy, remember to take a tiny stretch break! 🌱","I'm curious… anong ginagawa mo ngayon?","Boop! Just checking if you're still there. 👋","I practiced my little bounce. Did you see? ✨","If you need help, tap my chat button. I'm ready! 💜","Hmm… maybe we should explore a new lesson later?","I can wait. I like being your study buddy. 🌙","Rocket check… all systems cute and ready! 🚀"];
    say(thoughts[Math.floor(Math.random()*thoughts.length)],4300);
    nextPetThoughtAt=now+22000+Math.random()*13000;
   }
 
-  if(now>nextMoodAt){
+  if(!isSleeping && !root.classList.contains("assistant-open") && now>nextOutfitAt && now-lastUserInteraction>28000){
+   startOutfitChange((currentOutfit+1)%outfitPalettes.length,now);
+   nextOutfitAt=now+78000+Math.random()*42000;
+  }
+  updateOutfit(now);
+
+  if(now>nextMoodAt && !isSleeping){
    const choices=petMode==="rest"?["Idle","Sleepy","Idle"]:petMode==="play"?["Play","Idle","Bounce"]:petMode==="flight"?["Idle","Idle","Play"]:["Idle","Bounce","Idle"];
    autoMood=choices[Math.floor(Math.random()*choices.length)];
    nextMoodAt=now+9000+Math.random()*9000;
   }
-  const mood=petMode==="rest"?"Sleepy":autoMood;
+  const mood=isSleeping?"Sleepy":petMode==="rest"?"Sleepy":autoMood;
   const inGame=root.classList.contains("game-open");lumi.visible=!inGame;gameGroup.visible=inGame;
   if(inGame){gameGroup.rotation.y=Math.sin(t*.18)*.018;gameGroup.rotation.z=Math.sin(t*.35)*.008;gStar.rotation.y=t*.8;gStar.rotation.x=Math.sin(t*.7)*.18;gOrbL.rotation.x=t*.45;gOrbR.rotation.y=-t*.5;gPanL.position.y=-.72+Math.sin(t*1.4)*.035;gPanR.position.y=-.72-Math.sin(t*1.4)*.035;gFloaters.forEach(o=>{o.mesh.rotation.x=t*.7+o.phase;o.mesh.rotation.y=-t*.6+o.phase;o.mesh.position.y=o.baseY+Math.sin(t+o.phase)*.08;});gameTokenMeshes.forEach((m,i)=>{if(!m.userData.done){m.position.y=m.userData.baseY+Math.sin(t*1.5+i*.8)*.055;m.rotation.y=Math.sin(t*.65+i)*.07;}});zoneLeft.rotation.z=Math.sin(t*.7)*.035;zoneRight.rotation.z=-Math.sin(t*.7)*.035;}
   const isWaving=now<waveUntil;
-  const movementSpeed=dragState?0:Math.hypot(roamVelocity.x,roamVelocity.y);
-  const isWalking=!dragState && petMode!=="flight" && movementSpeed>.012;
-  const isFlying=!dragState && petMode==="flight" && movementSpeed>.008;
+  const movementSpeed=(dragState||isSleeping)?0:Math.hypot(roamVelocity.x,roamVelocity.y);
+  const isWalking=!isSleeping && !dragState && petMode!=="flight" && movementSpeed>.012;
+  const isFlying=!isSleeping && !dragState && petMode==="flight" && movementSpeed>.008;
   const isMoving=isWalking||isFlying;
   const walkCycle=isWalking?Math.sin(t*7.0):0;
   const idleBob=Math.sin(t*.62)*.014;
@@ -1549,9 +1640,14 @@ async function handleQuestion(raw){
   lumi.rotation.x=-pointer.y*.08+(mood==="Sleepy"?.13:0);
   const travelTilt=dragState?0:THREE.MathUtils.clamp(-roamVelocity.x*.10,-.045,.045);
   lumi.rotation.z=(petMode==="play"?Math.sin(t*2.6)*.035:isFlying?Math.sin(t*2.1)*.018:Math.sin(t*.35)*.006)+travelTilt;
+  // Sleep pose: gently lower and tilt the whole body as if lying down.
+  const sleepBlend=isSleeping?1:0;
+  headPivot.rotation.z+=( (isSleeping?.10:0)-headPivot.rotation.z )*(1-Math.exp(-3*dt));
   headPivot.rotation.y=pointer.x*.12+Math.sin(t*.35)*.018;
   headPivot.rotation.x=-pointer.y*.08+Math.sin(t*.45)*.012+(mood==="Sleepy"?.16:0);
-  torso.rotation.z=(mood==="Dance"?Math.sin(t*4.2)*.10:mood==="Wiggle"?Math.sin(t*8)*.12:mood==="Heart"?Math.sin(t*3)*.035:0);
+  const expressiveTorso=mood==="Dance"?Math.sin(t*4.2)*.10:mood==="Wiggle"?Math.sin(t*8)*.12:mood==="Heart"?Math.sin(t*3)*.035:0;
+  const torsoTarget=isSleeping?-.92:expressiveTorso;
+  torso.rotation.z+=(torsoTarget-torso.rotation.z)*(1-Math.exp(-(isSleeping?3.8:5)*dt));
   if(mood==="Stretch"){armL.rotation.z=-.45+Math.sin(t*2)*.06;armR.rotation.z=.48+Math.sin(t*2)*.06;}
   if(mood==="Pose"){armL.rotation.z=-.34;armR.rotation.z=1.02;}
   if(mood==="Peek"){armL.rotation.z=-.18;armR.rotation.z=.28+Math.sin(t*5)*.08;}
@@ -1564,7 +1660,7 @@ async function handleQuestion(raw){
   if(clickPulse>0){lumi.scale.setScalar(.58*(1+clickPulse*.035));clickPulse*=.88;if(clickPulse<.01)clickPulse=0;}
   else lumi.scale.setScalar(.58*(1+(mood==="Bounce"?Math.abs(Math.sin(t*4.2))*.018:0)));
 
-  const blink=(mood==="Sleepy"?(Math.sin(t*.65)>.72?.18:1):(Math.sin(t*1.15+Math.sin(t*.27))>.985?.12:1));
+  const blink=isSleeping?.035:(mood==="Sleepy"?(Math.sin(t*.65)>.72?.18:1):(Math.sin(t*1.15+Math.sin(t*.27))>.985?.12:1));
   eyeGroups.forEach(g=>g.scale.y+=(blink-g.scale.y)*.42);
   halo.rotation.z=t*(mood==="Spin"?.55:.012);
   orbit.rotation.z=-t*(mood==="Dance"?.28:.008);
@@ -1587,6 +1683,30 @@ async function handleQuestion(raw){
  window.addEventListener("pagehide",()=>{cancelAnimationFrame(raf);ro.disconnect();renderer.dispose();scene.traverse(o=>{o.geometry?.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}});},{once:true});
 
  say("Hi! I'm Lumi, your 3D learning buddy. 💜",4200);
+
+  // Parent-page launcher bridge. It works while this iframe is display:none,
+  // and does not cancel the host page's own click handler.
+  try{
+   const hostDoc=(window.parent && window.parent!==window)?window.parent.document:document;
+   hostDoc.addEventListener("click",(event)=>{
+    if(!hidden)return;
+    const path=typeof event.composedPath==="function"?event.composedPath():[event.target];
+    for(const node of path){
+     if(!node || node.nodeType!==1)continue;
+     if(node.id==="lumi-reopen" || node.id==="lumi-hide")return;
+     const tag=String(node.tagName||"").toLowerCase();
+     if(["html","body","main","section"].includes(tag))continue;
+     const attributes=[node.id,node.getAttribute?.("aria-label"),node.getAttribute?.("title"),node.getAttribute?.("data-lumi"),typeof node.className==="string"?node.className:""].join(" ");
+     const visibleText=String(node.innerText||node.textContent||"").replace(/\s+/g," ").trim();
+     const label=(attributes+" "+visibleText).toLowerCase();
+     if(!label.includes("lumi"))continue;
+     const isClickable=["button","a","summary"].includes(tag) || node.getAttribute?.("role")==="button" || node.hasAttribute?.("onclick") || node.hasAttribute?.("tabindex") || /lumi.*(launcher|toggle|open)|(?:launcher|toggle|open).*lumi/i.test(attributes);
+     if(!isClickable && visibleText.length>160)continue;
+     restoreLumi();
+     return;
+    }
+   },true);
+  }catch(error){console.warn("Lumi launcher bridge unavailable",error);}
 
   // Start every page visit hidden; the host-page ✦ Lumi launcher is the opt-in.
   // This also removes the full-screen iframe from hit-testing until opened.
