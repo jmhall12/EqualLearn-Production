@@ -205,46 +205,6 @@
       margin-bottom: 15px;
     }
 
-    /* Keep student identity private until hover, focus, or explicit reveal. */
-    .student-private-card .student-card-name,
-    .student-private-card .student-card-email,
-    .student-private-card .student-card-details,
-    .student-private-card .student-live-progress {
-      filter: blur(6px);
-      user-select: none;
-      transition: filter .2s ease;
-    }
-
-    .student-private-card:hover .student-card-name,
-    .student-private-card:hover .student-card-email,
-    .student-private-card:hover .student-card-details,
-    .student-private-card:hover .student-live-progress,
-    .student-private-card:focus-within .student-card-name,
-    .student-private-card:focus-within .student-card-email,
-    .student-private-card:focus-within .student-card-details,
-    .student-private-card:focus-within .student-live-progress,
-    .student-private-card.student-revealed .student-card-name,
-    .student-private-card.student-revealed .student-card-email,
-    .student-private-card.student-revealed .student-card-details,
-    .student-private-card.student-revealed .student-live-progress {
-      filter: none;
-      user-select: text;
-    }
-
-    .student-reveal-toggle {
-      border: 1px solid var(--directory-border);
-      border-radius: 9px;
-      padding: 7px 10px;
-      background: var(--el-surface);
-      color: var(--directory-primary);
-      font: inherit;
-      font-size: 11px;
-      font-weight: 750;
-      cursor: pointer;
-    }
-
-    .student-reveal-toggle:hover { background: #f2f0ff; }
-
     .student-card-name {
       font-size: 17px;
       font-weight: 800;
@@ -326,6 +286,179 @@
       color: var(--el-muted);
     }
 
+
+    /* Collapsible student profile cards */
+    #teacherStudentCards > .el-card.student-directory-card {
+      padding: 0;
+      border-radius: 20px;
+      overflow: hidden;
+      background: var(--el-surface);
+      border: 1px solid var(--directory-border);
+      box-shadow: 0 8px 28px rgba(30, 35, 65, .045);
+      transition: border-color .22s ease, box-shadow .22s ease, transform .22s ease;
+    }
+
+    #teacherStudentCards > .el-card.student-directory-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(99, 91, 255, .28);
+      box-shadow: 0 16px 34px rgba(30, 35, 65, .085);
+    }
+
+    .student-card-reveal {
+      appearance: none;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 20px;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      text-align: left;
+      font: inherit;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .student-card-reveal:focus-visible {
+      outline: 3px solid rgba(99, 91, 255, .35);
+      outline-offset: -4px;
+      border-radius: 18px;
+    }
+
+    .student-card-summary-main {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .student-card-summary-main .student-avatar {
+      width: 58px;
+      height: 58px;
+      min-width: 58px;
+      margin: 0;
+      border-radius: 17px;
+      font-size: 18px;
+    }
+
+    .student-card-summary-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .student-card-name-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .student-card-name {
+      color: var(--el-text);
+      font-size: 15px;
+      line-height: 1.3;
+      font-weight: 800;
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .student-card-email {
+      display: block;
+      color: var(--el-muted);
+      font-size: 12px;
+      line-height: 1.4;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .student-card-summary-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px 12px;
+      margin-top: 2px;
+      color: var(--el-muted);
+      font-size: 10px;
+      font-weight: 650;
+    }
+
+    .student-card-open-label {
+      color: var(--directory-primary);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .1px;
+    }
+
+    .student-card-chevron {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      min-width: 34px;
+      border-radius: 11px;
+      color: var(--directory-primary);
+      background: rgba(99, 91, 255, .09);
+      font-size: 19px;
+      transition: transform .22s ease, background .22s ease;
+    }
+
+    .student-directory-card.is-expanded .student-card-chevron {
+      transform: rotate(180deg);
+      background: rgba(99, 91, 255, .15);
+    }
+
+    .student-card-expanded {
+      padding: 0 20px 20px;
+      animation: studentDetailsIn .22s ease both;
+    }
+
+    .student-card-expanded[hidden] {
+      display: none !important;
+    }
+
+    .student-card-expanded .student-card-details {
+      margin-top: 0;
+      padding-top: 17px;
+    }
+
+    .student-card-expanded .student-live-progress {
+      margin-top: 16px;
+    }
+
+    .student-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 15px;
+      padding-top: 13px;
+      border-top: 1px solid var(--directory-border);
+    }
+
+    @keyframes studentDetailsIn {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 520px) {
+      .student-card-reveal { padding: 16px; gap: 10px; }
+      .student-card-summary-main { gap: 11px; }
+      .student-card-summary-main .student-avatar {
+        width: 50px; height: 50px; min-width: 50px; border-radius: 15px;
+      }
+      .student-card-expanded { padding: 0 16px 16px; }
+      .student-card-name { font-size: 14px; }
+      .student-verification { font-size: 9px; padding: 5px 8px; }
+    }
+
     @media(max-width: 760px) {
       .directory-stats {
         grid-template-columns: 1fr 1fr;
@@ -354,8 +487,6 @@
       }
     }
   </style>
-    <link rel="stylesheet" href="../assets/css/responsive-layout.css">
-    <link rel="stylesheet" href="../assets/css/responsive-auto-fit.css">
 </head>
 
 <body>
@@ -460,7 +591,7 @@
 
 <!-- EQUALLEARN LUMI COMPANION -->
 <iframe
-  src="../assets/widgets/lumi.html"
+  src="/assets/widgets/lumi.html"
   title="Lumi — EqualLearn Companion"
   id="equallearn-lumi-frame"
   allow="autoplay"
