@@ -1991,6 +1991,55 @@ body > .premium-footer {
   .page-3d-canvas { display: none; }
 }
 
+
+
+/* ==========================================================
+   MOBILE NAVIGATION STACKING FIX
+   Keep the sticky header and its dropdown above the page content.
+   The previous body-child rule reset the header to z-index: 1
+   and position: relative, allowing <main> to paint over the menu.
+========================================================== */
+body > .premium-header {
+  position: sticky !important;
+  top: 0;
+  z-index: 1000 !important;
+  isolation: isolate;
+}
+
+body > main,
+body > .premium-footer {
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 760px) {
+  .premium-header {
+    z-index: 1000 !important;
+  }
+
+  .premium-header .premium-nav {
+    position: relative;
+    z-index: 1001;
+  }
+
+  .premium-links {
+    z-index: 1002 !important;
+    background: #222733 !important;
+    border: 1px solid #41495a !important;
+    box-shadow: 0 22px 48px rgba(0, 0, 0, .42) !important;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .premium-links.open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+}
+
 </style>
 </head>
 
