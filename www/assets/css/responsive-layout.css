@@ -313,3 +313,347 @@ code,
     transition-duration: .01ms !important;
   }
 }
+
+/* ==========================================================
+   EQUALLEARN FLUID AUTO-RESIZE LAYER — 2026-11
+   Follow-up responsive pass for desktop, laptop, tablet and phone.
+   This layer intentionally follows page styles to override fixed widths.
+========================================================== */
+
+:root {
+  --el-fluid-gutter: clamp(12px, 2.4vw, 42px);
+  --el-fluid-radius: clamp(13px, 1.4vw, 22px);
+}
+
+html,
+body {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+body {
+  min-width: 320px;
+}
+
+.el-app-shell,
+.el-app-main,
+.el-page-content,
+.el-page-content > *,
+.el-dashboard,
+.el-dashboard > *,
+.el-card,
+.el-stat,
+.el-quick,
+.reports-container,
+.table-card,
+.filter-card {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Fluid page widths: use the available content area instead of a narrow
+   fixed desktop canvas. Keep a readable maximum on ultra-wide monitors. */
+.el-dashboard,
+.reports-container,
+.settings-container,
+.admin-live-page,
+.page {
+  width: calc(100% - clamp(24px, 3vw, 72px)) !important;
+  max-width: 2200px !important;
+  min-width: 0 !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.el-dashboard {
+  padding-left: clamp(12px, 2.2vw, 40px);
+  padding-right: clamp(12px, 2.2vw, 40px);
+}
+
+/* Reports page: expand across the usable workspace on wide screens and
+   continuously shrink its cards and filters with the available width. */
+.reports-container {
+  padding: clamp(14px, 2vw, 32px) !important;
+  border-radius: var(--el-fluid-radius);
+}
+
+.reports-header,
+.table-heading,
+.el-page-header,
+.el-card-title,
+.header-actions,
+.toolbar,
+.actions,
+.button-row {
+  min-width: 0;
+  max-width: 100%;
+  flex-wrap: wrap;
+}
+
+.reports-header > *,
+.table-heading > *,
+.el-page-header > *,
+.el-card-title > *,
+.header-actions > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.summary-grid,
+.stats-grid,
+.el-grid,
+.el-quick-grid,
+.dashboard-grid,
+.grid-2,
+.grid-3,
+.grid-4 {
+  min-width: 0;
+}
+
+.summary-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 165px), 1fr));
+}
+
+.filter-card {
+  grid-template-columns: minmax(180px, 1.5fr) repeat(4, minmax(145px, 1fr));
+}
+
+/* Keep wide data tables readable without widening the entire page.
+   The horizontal scroll is contained by the table panel only. */
+.table-card,
+.table-wrapper,
+.table-wrap,
+.table-container,
+.table-responsive,
+.data-table-wrapper,
+#tableContainer {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.table-wrapper,
+.table-wrap,
+.table-container,
+.table-responsive,
+.data-table-wrapper,
+#tableContainer {
+  display: block;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-wrapper table,
+.table-wrap table,
+.table-container table,
+.table-responsive table,
+.data-table-wrapper table,
+#tableContainer table {
+  width: max(100%, 980px);
+  max-width: none;
+}
+
+@media (min-width: 1800px) {
+  .reports-container {
+    padding: clamp(26px, 2.1vw, 44px) !important;
+  }
+
+  .summary-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: clamp(12px, .9vw, 20px);
+  }
+}
+
+@media (max-width: 1250px) {
+  .summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .filter-card {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .filter-card input {
+    grid-column: 1 / -1;
+  }
+
+  .el-grid-4,
+  .grid-4,
+  .stats-grid.four,
+  .dashboard-grid.four {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .el-app-shell {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .el-app-main,
+  body.el-sidebar-collapsed .el-app-main {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin-left: 0 !important;
+  }
+
+  .el-page-content {
+    width: 100%;
+    padding: 0;
+  }
+
+  .el-dashboard,
+  .reports-container,
+  .settings-container,
+  .admin-live-page,
+  .page {
+    width: calc(100% - 28px) !important;
+    max-width: 100% !important;
+  }
+
+  .el-topbar {
+    width: 100%;
+    min-width: 0;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-left: clamp(12px, 2vw, 20px);
+    padding-right: clamp(12px, 2vw, 20px);
+  }
+
+  .el-topbar-title,
+  .el-topbar-actions,
+  .el-user-pill {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 700px) {
+  .reports-container {
+    width: calc(100% - 20px) !important;
+    margin-top: 10px !important;
+    margin-bottom: 20px !important;
+    padding: 15px 12px !important;
+  }
+
+  .reports-header {
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  .summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+  }
+
+  .filter-card {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .filter-card input {
+    grid-column: 1 / -1;
+  }
+
+  .el-grid-3,
+  .grid-3,
+  .form-row,
+  .el-form-grid,
+  .toolbar,
+  .filter-grid,
+  .search-row {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .el-topbar-title {
+    flex: 1 1 100%;
+  }
+
+  .el-topbar-actions {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+  }
+
+  .el-page-header {
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .el-page-header > button,
+  .el-page-header > .el-btn,
+  .el-page-header > .btn {
+    max-width: 100%;
+  }
+
+  input,
+  select,
+  textarea {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .summary-grid,
+  .stats-grid,
+  .el-quick-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .filter-card {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .filter-card input {
+    grid-column: auto;
+  }
+
+  .reports-header h1,
+  .el-page-header h1 {
+    overflow-wrap: anywhere;
+  }
+
+  .el-dashboard,
+  .reports-container,
+  .settings-container,
+  .admin-live-page,
+  .page {
+    width: calc(100% - 16px) !important;
+  }
+
+  .el-card,
+  .el-stat,
+  .panel,
+  .card {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .actions > *,
+  .button-row > *,
+  .form-actions > * {
+    flex: 1 1 auto;
+  }
+}
+
+@media (max-width: 360px) {
+  .summary-grid,
+  .stats-grid,
+  .el-quick-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .reports-container {
+    padding: 12px 9px !important;
+  }
+}

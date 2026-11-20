@@ -149,6 +149,27 @@ body{font-family:Inter,"Segoe UI",Arial,sans-serif}
 #lumi-game-feedback{min-height:30px;padding:7px 8px;margin-top:7px;border-radius:9px;background:#fff;color:#55466f;font-size:10px;line-height:1.4}#lumi-game-next,#lumi-game-retry,#lumi-game-menu-back{border:0;border-radius:20px;padding:8px 13px;background:#7653d3;color:#fff;font-size:10px;font-weight:850;cursor:pointer;margin:5px 5px 0 0}#lumi-game-menu-back{background:#e8e0fa;color:#5c43a1}.lumi-game-trophy{text-align:center;font-size:34px;margin:8px 0}#lumi-game-result{text-align:center;padding:8px}
 @media(max-width:420px){.lumi-game-cards button{min-height:58px;padding:7px}}
 
+
+/* Extra personality: reactions, voice tools, and lightweight celebration effects. */
+#lumi-effects{position:fixed;inset:0;z-index:180;overflow:hidden;pointer-events:none}
+.lumi-fx-particle{position:absolute;left:50%;top:50%;font-size:22px;line-height:1;opacity:0;filter:drop-shadow(0 3px 5px rgba(73,48,145,.22));animation:lumiFxBurst var(--duration,1050ms) cubic-bezier(.16,.75,.3,1) forwards;will-change:transform,opacity}
+@keyframes lumiFxBurst{0%{opacity:0;transform:translate(-50%,-50%) scale(.3) rotate(-15deg)}14%{opacity:1;transform:translate(-50%,-50%) scale(1.18) rotate(8deg)}100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(.55) rotate(var(--rot,35deg))}}
+.lumi-msg{animation:lumiMessageIn .22s ease-out both}
+@keyframes lumiMessageIn{from{opacity:0;transform:translateY(6px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+.lumi-typing{display:flex;align-items:center;gap:4px;min-width:54px}
+.lumi-typing i{width:5px;height:5px;border-radius:50%;background:#9276d9;animation:lumiTyping .9s infinite ease-in-out}
+.lumi-typing i:nth-child(2){animation-delay:.14s}.lumi-typing i:nth-child(3){animation-delay:.28s}
+@keyframes lumiTyping{0%,60%,100%{opacity:.35;transform:translateY(0)}30%{opacity:1;transform:translateY(-4px)}}
+.lumi-chat-tools{display:flex;align-items:center;gap:6px}
+#lumi-voice-toggle{width:30px;height:30px;border:1px solid #ffffff55;border-radius:50%;background:#ffffff20;color:#fff;cursor:pointer;font-size:14px}
+#lumi-mic{width:36px;height:36px;flex:0 0 36px;border:1px solid #e0d8f1;border-radius:50%;background:#f5f1ff;color:#6849c7;cursor:pointer;font-size:14px}
+#lumi-mic.listening{background:#ffe8ed;color:#bb3657;animation:lumiMicPulse 1s infinite}
+@keyframes lumiMicPulse{50%{box-shadow:0 0 0 6px #f3a5bd44;transform:scale(1.04)}}
+#lumi-reactions{display:flex;justify-content:center;gap:7px;padding:7px 9px 2px;background:#fff;flex-shrink:0}
+#lumi-reactions button{width:31px;height:29px;border:1px solid #e5dcf7;border-radius:15px;background:#fbfaff;cursor:pointer;font-size:15px;transition:transform .15s,background .15s}
+#lumi-reactions button:hover{transform:translateY(-3px) scale(1.08);background:#f0eaff}
+#lumi-root.lumi-mobile #lumi-reactions button{width:29px;height:27px}
+@media(prefers-reduced-motion:reduce){.lumi-fx-particle,.lumi-msg,.lumi-typing i,#lumi-mic.listening{animation:none!important}.lumi-control,.lumi-reactions button{transition:none!important}}
 @keyframes lumiZzzFloat{0%,100%{margin-top:0}50%{margin-top:-9px}}
 </style>
 
@@ -157,28 +178,28 @@ body{font-family:Inter,"Segoe UI",Arial,sans-serif}
 <body>
 
 <div id="lumi-root">
+ <div id="lumi-effects" aria-hidden="true"></div>
+ <canvas id="lumi-canvas" aria-label="Interactive 3D Lumi companion" tabindex="0"></canvas>
 
- <canvas id="lumi-canvas" aria-label="Interactive 3D Lumi companion" tabindex="0"></canvas>
+ <div id="lumi-fallback">Lumi needs WebGL support to show her 3D character.</div>
 
- <div id="lumi-fallback">Lumi needs WebGL support to show her 3D character.</div>
+ <div id="lumi-ui">
 
- <div id="lumi-ui">
-
-  <div id="lumi-speech" role="status" aria-live="polite">Hi! I'm Lumi, your learning buddy. 💜</div>
+  <div id="lumi-speech" role="status" aria-live="polite">Hi! I'm Lumi, your learning buddy. 💜</div>
   <button id="lumi-drag-hitbox" type="button" aria-label="Drag Lumi anywhere on the screen" title="Drag Lumi anywhere on the screen"></button>
 <section id="lumi-assistant" aria-label="Lumi help assistant" aria-hidden="true">
 
-   <header class="lumi-chat-head">
+   <header class="lumi-chat-head">
 
-    <div class="lumi-chat-avatar">✦</div>
+    <div class="lumi-chat-avatar">✦</div>
 
-    <div class="lumi-chat-heading"><strong>Ask Lumi</strong><span id="lumi-context">Your EqualLearn guide</span></div>
+         <div class="lumi-chat-heading"><strong>Ask Lumi</strong><span id="lumi-context">Your EqualLearn guide</span></div>
+     <div class="lumi-chat-tools"><button type="button" id="lumi-voice-toggle" title="Turn voice replies on" aria-label="Turn voice replies on" aria-pressed="false">🔇</button>
+     <button type="button" id="lumi-chat-close" aria-label="Close assistant">×</button></div>
 
-    <button type="button" id="lumi-chat-close" aria-label="Close assistant">×</button>
+   </header>
 
-   </header>
-
-   <section id="lumi-games" aria-label="Lumi 3D learning mini-games" hidden>
+   <section id="lumi-games" aria-label="Lumi 3D learning mini-games" hidden>
     <div class="lumi-games-top"><button type="button" id="lumi-games-back">← Chat</button><span>✦ Lumi's 3D Learning Arcade</span></div>
     <div id="lumi-game-visual"><div class="lumi-game-visual-label">INTERACTIVE 3D SORTING ARENA</div></div>
     <div id="lumi-game-menu"><h3>Choose a mini-game</h3><p>Play, think, and learn about fairness, respect, and inclusion.</p>
@@ -186,7 +207,8 @@ body{font-family:Inter,"Segoe UI",Arial,sans-serif}
        <button type="button" data-game="stereotype"><b>🎭 Stereotype or Fact?</b><small>Spot unfair assumptions</small></button>
        <button type="button" data-game="equity"><b>⚖️ Equality or Equity?</b><small>Choose fair support</small></button>
        <button type="button" data-game="respect"><b>💬 Respectful Response</b><small>Practice empathy and respect</small></button>
-       <button type="button" data-game="digital"><b>🛡️ Digital Respect</b><small>Make safer online choices</small></button>
+              <button type="button" data-game="digital"><b>🛡️ Digital Respect</b><small>Make safer online choices</small></button>
+       <button type="button" data-game="kindness"><b>🌱 Kindness Quest</b><small>Choose helpful actions and ally behavior</small></button>
       </div>
     </div>
     <div id="lumi-game-play" hidden><div class="lumi-game-progress"><span id="lumi-game-name"></span><span id="lumi-game-score">0 / 5</span></div>
@@ -199,37 +221,42 @@ body{font-family:Inter,"Segoe UI",Arial,sans-serif}
    </section>
    <div id="lumi-chat-messages" role="log" aria-live="polite" aria-relevant="additions">
 
-    <div class="lumi-msg lumi-bot">Hi! I'm Lumi. I can guide you around EqualLearn, explain features, and help you find what you need. What can I help you with?</div>
+    <div class="lumi-msg lumi-bot">Hi! I'm Lumi. I can guide you around EqualLearn, explain features, and help you find what you need. What can I help you with?</div>
 
-   </div>
+   </div>
 
-   <div id="lumi-suggestions" class="lumi-suggestions"></div>
+      <div id="lumi-suggestions" class="lumi-suggestions"></div>
+   <div id="lumi-reactions" aria-label="Quick reactions">
+    <button type="button" data-reaction="send me a heart" title="Send a heart">💜</button>
+    <button type="button" data-reaction="clap for me" title="Clap">👏</button>
+    <button type="button" data-reaction="tell me a joke" title="Make me laugh">😂</button>
+    <button type="button" data-reaction="do magic" title="Magic sparkle">✨</button>
+    <button type="button" data-reaction="celebrate" title="Celebrate">🎉</button>
+   </div>
+   <form id="lumi-chat-form" autocomplete="off">
+    <input id="lumi-chat-input" type="text" maxlength="600" placeholder="Ask Lumi for help or fun..." aria-label="Message Lumi" required>
+    <button type="button" id="lumi-mic" title="Speak your message" aria-label="Speak your message">🎙</button>
+    <button type="submit" aria-label="Send message">➤</button>
+   </form>
 
-   <form id="lumi-chat-form" autocomplete="off">
+   <div class="lumi-chat-foot">Lumi AI Companion · Voice features depend on browser support. Never share passwords, OTPs, or recovery codes.</div>
 
-    <input id="lumi-chat-input" type="text" maxlength="300" placeholder="Ask Lumi for help..." aria-label="Message Lumi" required>
+  </section>
 
-    <button type="submit" aria-label="Send message">➤</button>
+  <div id="lumi-controls" aria-label="Lumi controls">
 
-   </form>
+   <button class="lumi-control" id="lumi-wave" title="Wave hello" aria-label="Wave hello">👋</button>
 
-   <div class="lumi-chat-foot">Lumi AI Companion · Never share your password, OTP, or recovery codes.</div>
+      <button class="lumi-control" id="lumi-talk" title="Talk to Lumi" aria-label="Talk to Lumi">💬</button>
+   <button class="lumi-control" id="lumi-surprise" title="Surprise me" aria-label="Surprise me">✨</button>
+   <button class="lumi-control" id="lumi-game-shortcut" title="Play a mini-game" aria-label="Play a mini-game">🎮</button>
+   <button class="lumi-control" id="lumi-hide" title="Hide Lumi" aria-label="Hide Lumi">−</button>
 
-  </section>
+  </div>
 
-  <div id="lumi-controls" aria-label="Lumi controls">
+  <div id="lumi-label">✦ Lumi · Your learning buddy</div>
 
-   <button class="lumi-control" id="lumi-wave" title="Wave hello" aria-label="Wave hello">👋</button>
-
-   <button class="lumi-control" id="lumi-talk" title="Talk to Lumi" aria-label="Talk to Lumi">💬</button>
-
-   <button class="lumi-control" id="lumi-hide" title="Hide Lumi" aria-label="Hide Lumi">−</button>
-
-  </div>
-
-  <div id="lumi-label">✦ Lumi · Your learning buddy</div>
-
- </div>
+ </div>
 
 </div>
 
@@ -493,7 +520,7 @@ if (!webglAvailable) {
 
 if(renderer){
 
- if (webglAvailable) {
+ if (webglAvailable) {
   canvas.addEventListener("webglcontextlost", (event) => {
    event.preventDefault();
    webglAvailable = false;
@@ -503,67 +530,67 @@ if(renderer){
    fallback.textContent = "✦ Lumi's 3D view paused because the browser released its graphics context. Ask Lumi still works. 💜";
   }, { once: true });
  }
- renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.15));
+ renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.15));
 
- renderer.setClearColor(0x000000,0);
+ renderer.setClearColor(0x000000,0);
 
- renderer.outputColorSpace=THREE.SRGBColorSpace;
+ renderer.outputColorSpace=THREE.SRGBColorSpace;
 
- renderer.toneMapping=THREE.ACESFilmicToneMapping;
+ renderer.toneMapping=THREE.ACESFilmicToneMapping;
 
- renderer.toneMappingExposure=1.22;
+ renderer.toneMappingExposure=1.22;
 
- renderer.shadowMap.enabled=false;
+ renderer.shadowMap.enabled=false;
 
- renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+ renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 
 
 
- const scene=new THREE.Scene();
+ const scene=new THREE.Scene();
 
- camera=new THREE.PerspectiveCamera(32,1,.1,100);
+ camera=new THREE.PerspectiveCamera(32,1,.1,100);
 
- camera.position.set(0,0,14);
+ camera.position.set(0,0,14);
   dragPlane=new THREE.Plane(new THREE.Vector3(0,0,1),0);
   dragRaycaster=new THREE.Raycaster();
 
 
 
- scene.add(new THREE.HemisphereLight(0xf5edff,0x6550a0,2.0));
+ scene.add(new THREE.HemisphereLight(0xf5edff,0x6550a0,2.0));
 
- const key=new THREE.DirectionalLight(0xffffff,3.3);key.position.set(-3,5,7);key.castShadow=false;scene.add(key);
+ const key=new THREE.DirectionalLight(0xffffff,3.3);key.position.set(-3,5,7);key.castShadow=false;scene.add(key);
 
- const fill=new THREE.PointLight(0xb69aff,34,15);fill.position.set(3,1,4);scene.add(fill);
+ const fill=new THREE.PointLight(0xb69aff,34,15);fill.position.set(3,1,4);scene.add(fill);
 
- const rim=new THREE.PointLight(0x78cfff,18,12);rim.position.set(-3,-1,2);scene.add(rim);
+ const rim=new THREE.PointLight(0x78cfff,18,12);rim.position.set(-3,-1,2);scene.add(rim);
 
- const glowLight=new THREE.PointLight(0xa88aff,13,9);glowLight.position.set(0,2,-1);scene.add(glowLight);
-
-
-
- const mat=(color,roughness=.3,metalness=.05,extra={})=>new THREE.MeshPhysicalMaterial({color,roughness,metalness,clearcoat:.9,clearcoatRoughness:.18,...extra});
-
- const shell=mat(0xf2ecff,.22,.08);
-
- const shellShade=mat(0xc8b5ff,.25,.12);
-
- const purple=mat(0x8059df,.22,.18);
-
- const purpleDark=mat(0x432b91,.28,.16);
-
- const darkFace=mat(0x17132e,.2,.12,{clearcoat:1});
-
- const white=mat(0xffffff,.16,.04);
-
- const cyan= new THREE.MeshPhysicalMaterial({color:0x7dd5ff,emissive:0x3caaff,emissiveIntensity:1.9,roughness:.16,metalness:.05,clearcoat:1});
-
- const pink= new THREE.MeshBasicMaterial({color:0xff9fc9,transparent:true,opacity:.62});
-
- const gold=mat(0xf5d9a4,.23,.55);
+ const glowLight=new THREE.PointLight(0xa88aff,13,9);glowLight.position.set(0,2,-1);scene.add(glowLight);
 
 
 
- lumi=new THREE.Group();scene.add(lumi);
+ const mat=(color,roughness=.3,metalness=.05,extra={})=>new THREE.MeshPhysicalMaterial({color,roughness,metalness,clearcoat:.9,clearcoatRoughness:.18,...extra});
+
+ const shell=mat(0xf2ecff,.22,.08);
+
+ const shellShade=mat(0xc8b5ff,.25,.12);
+
+ const purple=mat(0x8059df,.22,.18);
+
+ const purpleDark=mat(0x432b91,.28,.16);
+
+ const darkFace=mat(0x17132e,.2,.12,{clearcoat:1});
+
+ const white=mat(0xffffff,.16,.04);
+
+ const cyan= new THREE.MeshPhysicalMaterial({color:0x7dd5ff,emissive:0x3caaff,emissiveIntensity:1.9,roughness:.16,metalness:.05,clearcoat:1});
+
+ const pink= new THREE.MeshBasicMaterial({color:0xff9fc9,transparent:true,opacity:.62});
+
+ const gold=mat(0xf5d9a4,.23,.55);
+
+
+
+ lumi=new THREE.Group();scene.add(lumi);
   petPosition=new THREE.Vector3(0,-.15,0);
   roamTarget=petPosition.clone();
   roamVelocity=new THREE.Vector3();
@@ -573,67 +600,67 @@ if(renderer){
   }catch(_){}
   lumi.position.copy(petPosition);
 
- const torso=new THREE.Group();lumi.add(torso);
+ const torso=new THREE.Group();lumi.add(torso);
 
- const headPivot=new THREE.Group();torso.add(headPivot);
+ const headPivot=new THREE.Group();torso.add(headPivot);
 
- const armL=new THREE.Group(),armR=new THREE.Group();torso.add(armL,armR);
+ const armL=new THREE.Group(),armR=new THREE.Group();torso.add(armL,armR);
 
- const accessories=new THREE.Group();lumi.add(accessories);
-
-
-
- function roundedBox(w,h,d,r,material,parent,pos=[0,0,0]){
-
-  const shape=new THREE.Shape();
-
-  const x=-w/2,y=-h/2;
-
-  shape.moveTo(x+r,y);shape.lineTo(x+w-r,y);shape.quadraticCurveTo(x+w,y,x+w,y+r);
-
-  shape.lineTo(x+w,y+h-r);shape.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
-
-  shape.lineTo(x+r,y+h);shape.quadraticCurveTo(x,y+h,x,y+h-r);
-
-  shape.lineTo(x,y+r);shape.quadraticCurveTo(x,y,x+r,y);
-
-  const geo=new THREE.ExtrudeGeometry(shape,{depth:d,bevelEnabled:true,bevelSegments:4,steps:1,bevelSize:r*.38,bevelThickness:r*.42,curveSegments:12});
-
-  geo.center();
-
-  const mesh=new THREE.Mesh(geo,material);mesh.position.set(...pos);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;
-
- }
-
- function sphere(radius,material,parent,pos,scale=[1,1,1],segments=40){
-
-  const mesh=new THREE.Mesh(new THREE.SphereGeometry(radius,segments,segments),material);
-
-  mesh.position.set(...pos);mesh.scale.set(...scale);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;
-
- }
-
- function capsuleBetween(a,b,radius,material,parent){
-
-  const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b),delta=new THREE.Vector3().subVectors(end,start);
-
-  const mesh=new THREE.Mesh(new THREE.CapsuleGeometry(radius,Math.max(.01,delta.length()-radius*2),8,24),material);
-
-  mesh.position.copy(start).add(end).multiplyScalar(.5);
-
-  mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());
-
-  mesh.castShadow=true;parent.add(mesh);return mesh;
-
- }
+ const accessories=new THREE.Group();lumi.add(accessories);
 
 
 
- // Backpack, body and premium chest emblem
+ function roundedBox(w,h,d,r,material,parent,pos=[0,0,0]){
 
- roundedBox(.57,.91,.34,.15,purpleDark,torso,[.55,-.28,-.24]);
+  const shape=new THREE.Shape();
 
- roundedBox(.12,.62,.07,.05,purple,torso,[.55,-.28,-.045]);
+  const x=-w/2,y=-h/2;
+
+  shape.moveTo(x+r,y);shape.lineTo(x+w-r,y);shape.quadraticCurveTo(x+w,y,x+w,y+r);
+
+  shape.lineTo(x+w,y+h-r);shape.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+
+  shape.lineTo(x+r,y+h);shape.quadraticCurveTo(x,y+h,x,y+h-r);
+
+  shape.lineTo(x,y+r);shape.quadraticCurveTo(x,y,x+r,y);
+
+  const geo=new THREE.ExtrudeGeometry(shape,{depth:d,bevelEnabled:true,bevelSegments:4,steps:1,bevelSize:r*.38,bevelThickness:r*.42,curveSegments:12});
+
+  geo.center();
+
+  const mesh=new THREE.Mesh(geo,material);mesh.position.set(...pos);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;
+
+ }
+
+ function sphere(radius,material,parent,pos,scale=[1,1,1],segments=40){
+
+  const mesh=new THREE.Mesh(new THREE.SphereGeometry(radius,segments,segments),material);
+
+  mesh.position.set(...pos);mesh.scale.set(...scale);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;
+
+ }
+
+ function capsuleBetween(a,b,radius,material,parent){
+
+  const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b),delta=new THREE.Vector3().subVectors(end,start);
+
+  const mesh=new THREE.Mesh(new THREE.CapsuleGeometry(radius,Math.max(.01,delta.length()-radius*2),8,24),material);
+
+  mesh.position.copy(start).add(end).multiplyScalar(.5);
+
+  mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());
+
+  mesh.castShadow=true;parent.add(mesh);return mesh;
+
+ }
+
+
+
+ // Backpack, body and premium chest emblem
+
+ roundedBox(.57,.91,.34,.15,purpleDark,torso,[.55,-.28,-.24]);
+
+ roundedBox(.12,.62,.07,.05,purple,torso,[.55,-.28,-.045]);
   // Side-mounted rocket. Keep the nozzle and exhaust outside Lumi's silhouette
   // so the flame is clearly visible from the normal front camera angle.
   const rocketShell=mat(0x7652cf,.2,.32),rocketNozzleMat=mat(0x343047,.22,.42);
@@ -716,367 +743,372 @@ if(renderer){
   const rocketGlow=new THREE.PointLight(0xff8a32,0,3.0);rocketGlow.position.set(.75,-1.02,.18);torso.add(rocketGlow);
 
 
- const body=sphere(.77,shell,torso,[0,-.48,.03],[.76,.69,.48],48);
+ const body=sphere(.77,shell,torso,[0,-.48,.03],[.76,.69,.48],48);
 
- sphere(.61,shellShade,torso,[0,-.59,-.02],[.69,.53,.38],40);
+ sphere(.61,shellShade,torso,[0,-.59,-.02],[.69,.53,.38],40);
 
- sphere(.16,purple,torso,[0,-.43,.45],[1,1,.34],36);
+ sphere(.16,purple,torso,[0,-.43,.45],[1,1,.34],36);
 
- // emblem star, raised and luminous
+ // emblem star, raised and luminous
 
- const starShape=new THREE.Shape();
+ const starShape=new THREE.Shape();
 
- const spikes=5,outer=.105,inner=.047;
+ const spikes=5,outer=.105,inner=.047;
 
- for(let i=0;i<spikes*2;i++){const a=Math.PI/2+i*Math.PI/spikes,r=i%2===0?outer:inner;const x=Math.cos(a)*r,y=Math.sin(a)*r;if(i===0)starShape.moveTo(x,y);else starShape.lineTo(x,y);}
+ for(let i=0;i<spikes*2;i++){const a=Math.PI/2+i*Math.PI/spikes,r=i%2===0?outer:inner;const x=Math.cos(a)*r,y=Math.sin(a)*r;if(i===0)starShape.moveTo(x,y);else starShape.lineTo(x,y);}
 
- starShape.closePath();
+ starShape.closePath();
 
- const star=new THREE.Mesh(new THREE.ExtrudeGeometry(starShape,{depth:.025,bevelEnabled:true,bevelThickness:.012,bevelSize:.01,bevelSegments:2}),white);
+ const star=new THREE.Mesh(new THREE.ExtrudeGeometry(starShape,{depth:.025,bevelEnabled:true,bevelThickness:.012,bevelSize:.01,bevelSegments:2}),white);
 
- star.position.set(-.07,-.49,.59);torso.add(star);
+ star.position.set(-.07,-.49,.59);torso.add(star);
 
 
 
- // Neck joint
+ // Neck joint
 
- sphere(.22,purpleDark,torso,[0,.22,.02],[1,1,.85],32);
+ sphere(.22,purpleDark,torso,[0,.22,.02],[1,1,.85],32);
 
 
 
- // Head shell, face glass and trim
+ // Head shell, face glass and trim
 
- const head=sphere(.91,shell,headPivot,[0,.92,.04],[1.0,.91,.72],56);
+ const head=sphere(.91,shell,headPivot,[0,.92,.04],[1.0,.91,.72],56);
 
- const faceFrame=sphere(.69,purpleDark,headPivot,[0,.9,.59],[1.0,.58,.2],48);
+ const faceFrame=sphere(.69,purpleDark,headPivot,[0,.9,.59],[1.0,.58,.2],48);
 
- const face=sphere(.65,darkFace,headPivot,[0,.91,.625],[.98,.56,.19],48);
+ const face=sphere(.65,darkFace,headPivot,[0,.91,.625],[.98,.56,.19],48);
 
- // Eye sockets, eye lenses and highlights
+ // Eye sockets, eye lenses and highlights
 
- const eyeGroups=[];
+ const eyeGroups=[];
 
- for(const x of [-.29,.29]){
+ for(const x of [-.29,.29]){
 
-  sphere(.19,purpleDark,headPivot,[x,.98,.79],[1,1.08,.34],32);
+  sphere(.19,purpleDark,headPivot,[x,.98,.79],[1,1.08,.34],32);
 
-  const eyeGroup=new THREE.Group();eyeGroup.position.set(x,.99,.84);headPivot.add(eyeGroup);
+  const eyeGroup=new THREE.Group();eyeGroup.position.set(x,.99,.84);headPivot.add(eyeGroup);
 
-  sphere(.135,cyan,eyeGroup,[0,0,0],[.83,1.06,.52],36);
+  sphere(.135,cyan,eyeGroup,[0,0,0],[.83,1.06,.52],36);
 
-  sphere(.043,white,eyeGroup,[-.035,.055,.071],[.75,.75,.5],20);
+  sphere(.043,white,eyeGroup,[-.035,.055,.071],[.75,.75,.5],20);
 
-  sphere(.018,white,eyeGroup,[.045,-.055,.073],[.8,.8,.5],16);
+  sphere(.018,white,eyeGroup,[.045,-.055,.073],[.8,.8,.5],16);
 
-  eyeGroups.push(eyeGroup);
+  eyeGroups.push(eyeGroup);
 
- }
+ }
 
- // Mouth as a soft curved smile
+ // Mouth as a soft curved smile
 
- const smileCurve=new THREE.QuadraticBezierCurve3(new THREE.Vector3(-.075,.68,.81),new THREE.Vector3(0,.635,.84),new THREE.Vector3(.075,.68,.81));
+ const smileCurve=new THREE.QuadraticBezierCurve3(new THREE.Vector3(-.075,.68,.81),new THREE.Vector3(0,.635,.84),new THREE.Vector3(.075,.68,.81));
 
- const smile=new THREE.Mesh(new THREE.TubeGeometry(smileCurve,20,.012,8,false),mat(0xe4d8ff,.3));
+ const smile=new THREE.Mesh(new THREE.TubeGeometry(smileCurve,20,.012,8,false),mat(0xe4d8ff,.3));
 
- headPivot.add(smile);
+ headPivot.add(smile);
 
- // Blush
+ // Blush
 
- sphere(.075,pink,headPivot,[-.53,.76,.68],[1,.48,.15],24);
+ sphere(.075,pink,headPivot,[-.53,.76,.68],[1,.48,.15],24);
 
- sphere(.075,pink,headPivot,[.53,.76,.68],[1,.48,.15],24);
+ sphere(.075,pink,headPivot,[.53,.76,.68],[1,.48,.15],24);
 
 
 
- // Side ear pods
+ // Side ear pods
 
- for(const x of [-.91,.91]){
+ for(const x of [-.91,.91]){
 
-  const pod=sphere(.22,purple,headPivot,[x,.9,.04],[.48,.82,.8],32);
+  const pod=sphere(.22,purple,headPivot,[x,.9,.04],[.48,.82,.8],32);
 
-  sphere(.12,shellShade,headPivot,[x,.9,.17],[.42,.7,.45],24);
+  sphere(.12,shellShade,headPivot,[x,.9,.17],[.42,.7,.45],24);
 
- }
+ }
 
- // Antenna stem and jewel
+ // Antenna stem and jewel
 
- capsuleBetween([0,1.73,.02],[0,2.04,.02],.045,purple,headPivot);
+ capsuleBetween([0,1.73,.02],[0,2.04,.02],.045,purple,headPivot);
 
- sphere(.105,shellShade,headPivot,[0,2.12,.02],[1,1,1],32);
+ sphere(.105,shellShade,headPivot,[0,2.12,.02],[1,1,1],32);
 
- sphere(.073,cyan,headPivot,[0,2.13,.095],[1,1,.6],28);
+ sphere(.073,cyan,headPivot,[0,2.13,.095],[1,1,.6],28);
 
 
 
- // Arms with shoulder joints, tapered upper arms and soft hands
+ // Arms with shoulder joints, tapered upper arms and soft hands
 
- for(const [group,side] of [[armL,-1],[armR,1]]){
+ for(const [group,side] of [[armL,-1],[armR,1]]){
 
-  group.position.set(side*.66,-.05,.02);
+  group.position.set(side*.66,-.05,.02);
 
-  sphere(.17,purple,group,[0,0,0],[1,1,1],28);
+  sphere(.17,purple,group,[0,0,0],[1,1,1],28);
 
-  capsuleBetween([0,-.06,0],[side*.13,-.47,.02],.105,shellShade,group);
+  capsuleBetween([0,-.06,0],[side*.13,-.47,.02],.105,shellShade,group);
 
-  sphere(.145,shell,group,[side*.13,-.52,.05],[1,1,.92],32);
+  sphere(.145,shell,group,[side*.13,-.52,.05],[1,1,.92],32);
 
-  sphere(.11,white,group,[side*.13,-.55,.12],[1,1,.65],28);
+  sphere(.11,white,group,[side*.13,-.55,.12],[1,1,.65],28);
 
- }
+ }
 
 
 
- // Floating halo and orbit behind Lumi
+ // Floating halo and orbit behind Lumi
 
- const halo=new THREE.Mesh(new THREE.TorusGeometry(1.28,.018,12,100),new THREE.MeshBasicMaterial({color:0xbca7ff,transparent:true,opacity:.56}));
+ const halo=new THREE.Mesh(new THREE.TorusGeometry(1.28,.018,12,100),new THREE.MeshBasicMaterial({color:0xbca7ff,transparent:true,opacity:.56}));
 
- halo.position.set(0,.45,-.72);halo.rotation.set(.9,.15,-.22);accessories.add(halo);
+ halo.position.set(0,.45,-.72);halo.rotation.set(.9,.15,-.22);accessories.add(halo);
 
- const orbit=new THREE.Mesh(new THREE.TorusGeometry(1.48,.009,8,120),new THREE.MeshBasicMaterial({color:0x8ddcff,transparent:true,opacity:.36}));
+ const orbit=new THREE.Mesh(new THREE.TorusGeometry(1.48,.009,8,120),new THREE.MeshBasicMaterial({color:0x8ddcff,transparent:true,opacity:.36}));
 
- orbit.position.set(0,.38,-.8);orbit.rotation.set(1.18,.1,.45);accessories.add(orbit);
+ orbit.position.set(0,.38,-.8);orbit.rotation.set(1.18,.1,.45);accessories.add(orbit);
 
- // Sparkle particles
+ // Sparkle particles
 
- const sparkMat=new THREE.MeshBasicMaterial({color:0xd7c9ff});
+ const sparkMat=new THREE.MeshBasicMaterial({color:0xd7c9ff});
 
- const sparkles=[];
+ const sparkles=[];
 
- for(let i=0;i<9;i++){
+ for(let i=0;i<9;i++){
 
-  const s=new THREE.Mesh(new THREE.OctahedronGeometry(.035+Math.random()*.025),sparkMat);
+  const s=new THREE.Mesh(new THREE.OctahedronGeometry(.035+Math.random()*.025),sparkMat);
 
-  const a=i/9*Math.PI*2,r=1.35+Math.random()*.35;
+  const a=i/9*Math.PI*2,r=1.35+Math.random()*.35;
 
-  s.position.set(Math.cos(a)*r,Math.sin(a)*r*.75,.1-Math.random()*.6);accessories.add(s);
+  s.position.set(Math.cos(a)*r,Math.sin(a)*r*.75,.1-Math.random()*.6);accessories.add(s);
 
-  sparkles.push({mesh:s,phase:Math.random()*Math.PI*2,base:s.position.clone()});
+  sparkles.push({mesh:s,phase:Math.random()*Math.PI*2,base:s.position.clone()});
 
- }
+ }
 
- // Soft ground shadow, transparent plane with radial texture
+ // Soft ground shadow, transparent plane with radial texture
 
- const shadowCanvas=document.createElement("canvas");shadowCanvas.width=128;shadowCanvas.height=128;
+ const shadowCanvas=document.createElement("canvas");shadowCanvas.width=128;shadowCanvas.height=128;
 
- const ctx=shadowCanvas.getContext("2d"),grad=ctx.createRadialGradient(64,64,3,64,64,62);
+ const ctx=shadowCanvas.getContext("2d"),grad=ctx.createRadialGradient(64,64,3,64,64,62);
 
- grad.addColorStop(0,"rgba(42,24,95,.32)");grad.addColorStop(.45,"rgba(75,49,145,.14)");grad.addColorStop(1,"rgba(75,49,145,0)");
+ grad.addColorStop(0,"rgba(42,24,95,.32)");grad.addColorStop(.45,"rgba(75,49,145,.14)");grad.addColorStop(1,"rgba(75,49,145,0)");
 
- ctx.fillStyle=grad;ctx.fillRect(0,0,128,128);
+ ctx.fillStyle=grad;ctx.fillRect(0,0,128,128);
 
- const shadowTex=new THREE.CanvasTexture(shadowCanvas);
+ const shadowTex=new THREE.CanvasTexture(shadowCanvas);
 
- const shadow=new THREE.Mesh(new THREE.PlaneGeometry(2.2,.65),new THREE.MeshBasicMaterial({map:shadowTex,transparent:true,depthWrite:false}));
+ const shadow=new THREE.Mesh(new THREE.PlaneGeometry(2.2,.65),new THREE.MeshBasicMaterial({map:shadowTex,transparent:true,depthWrite:false}));
 
- shadow.rotation.x=0;shadow.position.set(0,-1.45,-.3);scene.add(shadow);
+ shadow.rotation.x=0;shadow.position.set(0,-1.45,-.3);scene.add(shadow);
 
 
 
- // Cursor target with smoothed movement
+ // Cursor target with smoothed movement
 
- const pointer={x:0,y:0},target={x:0,y:0};
+ const pointer={x:0,y:0},target={x:0,y:0};
 
- let waveUntil=0,clickPulse=0,speechTimer=null,raf=0;
+ let waveUntil=0,clickPulse=0,speechTimer=null,raf=0;
 
- const clock=new THREE.Clock();
+ const clock=new THREE.Clock();
 
- function say(message,duration=2800){speech.textContent=message;speech.classList.add("show");clearTimeout(speechTimer);speechTimer=setTimeout(()=>speech.classList.remove("show"),duration);}
+ function say(message,duration=2800){speech.textContent=message;speech.classList.add("show");clearTimeout(speechTimer);speechTimer=setTimeout(()=>speech.classList.remove("show"),duration);}
 
- // FULL-PAGE CURSOR TRACKING:
+ // FULL-PAGE CURSOR TRACKING:
 
- // When embedded on the same origin, read pointer movement from the
+ // When embedded on the same origin, read pointer movement from the
 
- // parent page so Lumi follows the cursor anywhere on the whole website,
+ // parent page so Lumi follows the cursor anywhere on the whole website,
 
- // not only while the pointer is over the small iframe.
+ // not only while the pointer is over the small iframe.
 
- function setPointerFromPage(clientX, clientY, pageWidth, pageHeight, frameRect){
+ function setPointerFromPage(clientX, clientY, pageWidth, pageHeight, frameRect){
 
-  const frame = frameRect || {left:0, top:0, width:root.clientWidth, height:root.clientHeight};
+  const frame = frameRect || {left:0, top:0, width:root.clientWidth, height:root.clientHeight};
 
-  // Approximate Lumi's visual center inside its fixed companion frame.
+  // Approximate Lumi's visual center inside its fixed companion frame.
 
-  const mascotX = frame.left + frame.width * 0.50;
+  const mascotX = frame.left + frame.width * 0.50;
 
-  const mascotY = frame.top + frame.height * 0.49;
+  const mascotY = frame.top + frame.height * 0.49;
 
-  const spanX = Math.max(180, pageWidth * 0.48);
+  const spanX = Math.max(180, pageWidth * 0.48);
 
-  const spanY = Math.max(150, pageHeight * 0.48);
+  const spanY = Math.max(150, pageHeight * 0.48);
 
-  target.x = THREE.MathUtils.clamp((clientX - mascotX) / spanX, -1, 1);
+  target.x = THREE.MathUtils.clamp((clientX - mascotX) / spanX, -1, 1);
 
-  target.y = THREE.MathUtils.clamp((mascotY - clientY) / spanY, -1, 1);
+  target.y = THREE.MathUtils.clamp((mascotY - clientY) / spanY, -1, 1);
 
- }
+ }
 
 
 
- function trackParentPointer(e){
+ function trackParentPointer(e){
 
-  let frame = null;
+  let frame = null;
 
-  try {
+  try {
 
-   const frameElement = window.frameElement;
+   const frameElement = window.frameElement;
 
-   if (frameElement) {
+   if (frameElement) {
 
-    const r = frameElement.getBoundingClientRect();
+    const r = frameElement.getBoundingClientRect();
 
-    frame = {left:r.left, top:r.top, width:r.width, height:r.height};
+    frame = {left:r.left, top:r.top, width:r.width, height:r.height};
 
-   }
+   }
 
-   const page = window.parent;
+   const page = window.parent;
 
-   setPointerFromPage(
+   setPointerFromPage(
 
-    e.clientX, e.clientY,
+    e.clientX, e.clientY,
 
-    page.innerWidth || document.documentElement.clientWidth,
+    page.innerWidth || document.documentElement.clientWidth,
 
-    page.innerHeight || document.documentElement.clientHeight,
+    page.innerHeight || document.documentElement.clientHeight,
 
-    frame
+    frame
 
-   );
+   );
 
-  } catch (err) {
+  } catch (err) {
 
-   // Cross-origin fallback: parent page can forward pointer coordinates
+   // Cross-origin fallback: parent page can forward pointer coordinates
 
-   // using the postMessage bridge documented below.
+   // using the postMessage bridge documented below.
 
-  }
+  }
 
- }
+ }
 
 
 
- try {
+ try {
 
-  if (window.parent && window.parent !== window) {
+  if (window.parent && window.parent !== window) {
 
-   window.parent.document.addEventListener("pointermove", trackParentPointer, {passive:true});
+   window.parent.document.addEventListener("pointermove", trackParentPointer, {passive:true});
 
-   window.parent.document.addEventListener("pointerleave", () => {
+   window.parent.document.addEventListener("pointerleave", () => {
 
-    target.x = 0; target.y = 0;
+    target.x = 0; target.y = 0;
 
-   }, {passive:true});
+   }, {passive:true});
 
-  } else {
+  } else {
 
-   document.addEventListener("pointermove", e => {
+   document.addEventListener("pointermove", e => {
 
-    setPointerFromPage(e.clientX,e.clientY,window.innerWidth,window.innerHeight);
+    setPointerFromPage(e.clientX,e.clientY,window.innerWidth,window.innerHeight);
 
-   }, {passive:true});
+   }, {passive:true});
 
-  }
+  }
 
- } catch (err) {
+ } catch (err) {
 
-  // Parent is cross-origin; use the postMessage bridge below.
+  // Parent is cross-origin; use the postMessage bridge below.
 
- }
+ }
 
 
 
- // Cross-origin / sandbox-safe fallback. The parent page may send:
+ // Cross-origin / sandbox-safe fallback. The parent page may send:
 
- // iframe.contentWindow.postMessage({type:"LUMI_POINTER",x,y,w,h},"*")
+ // iframe.contentWindow.postMessage({type:"LUMI_POINTER",x,y,w,h},"*")
 
- window.addEventListener("message", e => {
+ window.addEventListener("message", e => {
 
-  if (!e.data || e.data.type !== "LUMI_POINTER") return;
+  if (!e.data || e.data.type !== "LUMI_POINTER") return;
 
-  const d = e.data;
+  const d = e.data;
 
-  const frame = d.frame || null;
+  const frame = d.frame || null;
 
-  setPointerFromPage(Number(d.x)||0,Number(d.y)||0,
+  setPointerFromPage(Number(d.x)||0,Number(d.y)||0,
 
-   Number(d.w)||window.innerWidth,Number(d.h)||window.innerHeight,frame);
+   Number(d.w)||window.innerWidth,Number(d.h)||window.innerHeight,frame);
 
- });
+ });
 
 
 
- const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();
+ const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();
 
- const clickable=[head,body];
+ const clickable=[head,body];
 
- function interact(e){
+ function interact(e){
 
-  if(suppressNextCanvasClick){suppressNextCanvasClick=false;return;}
+  if(suppressNextCanvasClick){suppressNextCanvasClick=false;return;}
   if(root.classList.contains("game-open") && activeGame){handle3DGamePointer(e);return;}
 
-  const rect=canvas.getBoundingClientRect();
+  const rect=canvas.getBoundingClientRect();
 
-  mouse.x=((e.clientX-rect.left)/rect.width)*2-1;
+  mouse.x=((e.clientX-rect.left)/rect.width)*2-1;
 
-  mouse.y=-((e.clientY-rect.top)/rect.height)*2+1;
+  mouse.y=-((e.clientY-rect.top)/rect.height)*2+1;
 
-  raycaster.setFromCamera(mouse,camera);
+  raycaster.setFromCamera(mouse,camera);
 
-  const hits=raycaster.intersectObjects(clickable,false);
+  const hits=raycaster.intersectObjects(clickable,false);
 
-  if(hits.length){waveUntil=performance.now()+2300;clickPulse=1;openAssistant();}
+  if(hits.length){waveUntil=performance.now()+2300;clickPulse=1;openAssistant();}
 
- }
+ }
 
- canvas.addEventListener("click",interact);
+ canvas.addEventListener("click",interact);
   canvas.addEventListener("pointerdown",e=>{if(!root.classList.contains("game-open")||!activeGame)return;const hits=gamePointer(e);const hit=hits.find(h=>{let o=h.object;while(o&&o.parent!==gameGroup)o=o.parent;return o?.userData.kind==="token"&&!o.userData.done;});if(!hit)return;let obj=hit.object;while(obj&&obj.parent!==gameGroup)obj=obj.parent;gameDragToken=obj;gameDragMoved=false;canvas.setPointerCapture?.(e.pointerId);});
   canvas.addEventListener("pointermove",e=>{if(!root.classList.contains("game-open")||!gameDragToken)return;const rect=canvas.getBoundingClientRect();mouse.x=((e.clientX-rect.left)/rect.width)*2-1;mouse.y=-((e.clientY-rect.top)/rect.height)*2+1;raycaster.setFromCamera(mouse,camera);const point=new THREE.Vector3();if(raycaster.ray.intersectPlane(dragPlane,point)){gameDragToken.position.x=THREE.MathUtils.clamp(point.x,-3.2,3.2);gameDragToken.position.y=THREE.MathUtils.clamp(point.y,-1.2,1.5);gameDragToken.position.z=.5;gameDragMoved=true;}});
   canvas.addEventListener("pointerup",e=>{if(!root.classList.contains("game-open")||!activeGame||!gameDragToken)return;const token=gameDragToken;gameDragToken=null;const hits=gamePointer(e);let zone=null;for(const hit of hits){let o=hit.object;while(o&&o.parent!==gameGroup)o=o.parent;if(o?.userData.kind==="zone"){zone=o;break;}}if(zone){classifyGameToken(token,zone);}else if(!selectedGameToken){selectedGameToken=token;gameFeedback.textContent=`Selected: ${gameRoundItems[token.userData.itemIndex].item[0]}. Drag it into a glowing portal or tap the portal.`;}});
 
- canvas.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();waveUntil=performance.now()+2300;clickPulse=1;say("Hello, learning star! ✨");}});
+ canvas.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();waveUntil=performance.now()+2300;clickPulse=1;say("Hello, learning star! ✨");}});
 
- document.getElementById("lumi-wave").addEventListener("click",()=>{waveUntil=performance.now()+2300;clickPulse=1;say("Hiiii! So happy to see you! 👋",4200);});
+ document.getElementById("lumi-wave").addEventListener("click",()=>{waveUntil=performance.now()+2300;clickPulse=1;say("Hiiii! So happy to see you! 👋",4200);});
 
- // Context-aware, role-aware EqualLearn help. This version runs locally and
+ // Context-aware, role-aware EqualLearn help. This version runs locally and
 
- // never sends a student's messages or account information to an AI service.
+ // never sends a student's messages or account information to an AI service.
 
- const chatPanel=document.getElementById("lumi-assistant");
+ const chatPanel=document.getElementById("lumi-assistant");
 
- const chatMessages=document.getElementById("lumi-chat-messages");
+ const chatMessages=document.getElementById("lumi-chat-messages");
 
- const chatInput=document.getElementById("lumi-chat-input");
+ const chatInput=document.getElementById("lumi-chat-input");
 
- const chatForm=document.getElementById("lumi-chat-form");
+ const chatForm=document.getElementById("lumi-chat-form");
 
- const suggestionBox=document.getElementById("lumi-suggestions");
+  const suggestionBox=document.getElementById("lumi-suggestions");
+ const reactionsBar=document.getElementById("lumi-reactions");
+ const effectsLayer=document.getElementById("lumi-effects");
+ let voiceRepliesEnabled=false;
+ let speechRecognition=null;
+ let recognitionActive=false;
 
- const currentPath=(()=>{try{return window.parent.location.pathname.toLowerCase()}catch(_){return location.pathname.toLowerCase()}})();
+ const currentPath=(()=>{try{return window.parent.location.pathname.toLowerCase()}catch(_){return location.pathname.toLowerCase()}})();
 
- const currentTitle=(()=>{try{return window.parent.document.title||"EqualLearn"}catch(_){return "EqualLearn"}})();
+ const currentTitle=(()=>{try{return window.parent.document.title||"EqualLearn"}catch(_){return "EqualLearn"}})();
 
- let role=currentPath.includes("/admin/")?"admin":currentPath.includes("/teacher/")?"teacher":currentPath.includes("/student/")?"student":"visitor";
+ let role=currentPath.includes("/admin/")?"admin":currentPath.includes("/teacher/")?"teacher":currentPath.includes("/student/")?"student":"visitor";
 
- const conversation = [];
+ const conversation = [];
 let currentAccountName="friend";
 let accountProfile={};
 
- const pageName=currentPath.split("/").pop().replace(/\.html?$/i,"").replace(/[-_]/g," ")||"home";
+ const pageName=currentPath.split("/").pop().replace(/\.html?$/i,"").replace(/[-_]/g," ")||"home";
 
- const roleLinks={
+ const roleLinks={
 
-  student:[{label:"Dashboard",url:"/student/dashboard.html"},{label:"Learning Modules",url:"/student/modules.html"},{label:"Quizzes",url:"/student/quizzes.html"},{label:"Classwork",url:"/student/classwork.html"},{label:"Progress",url:"/student/progress.html"},{label:"Live Class",url:"/student/live.html"},{label:"Profile",url:"/student/profile.html"}],
+  student:[{label:"Dashboard",url:"/student/dashboard.html"},{label:"Learning Modules",url:"/student/modules.html"},{label:"Quizzes",url:"/student/quizzes.html"},{label:"Classwork",url:"/student/classwork.html"},{label:"Progress",url:"/student/progress.html"},{label:"Live Class",url:"/student/live.html"},{label:"Profile",url:"/student/profile.html"}],
 
-  teacher:[{label:"Dashboard",url:"/teacher/dashboard.html"},{label:"My Classes",url:"/teacher/classes.html"},{label:"Modules",url:"/teacher/modules.html"},{label:"Lessons",url:"/teacher/lessons.html"},{label:"Quiz Builder",url:"/teacher/quiz_builder.html"},{label:"Grading",url:"/teacher/grading.html"},{label:"Students",url:"/teacher/students.html"},{label:"Live Class",url:"/teacher/live.html"}],
+  teacher:[{label:"Dashboard",url:"/teacher/dashboard.html"},{label:"My Classes",url:"/teacher/classes.html"},{label:"Modules",url:"/teacher/modules.html"},{label:"Lessons",url:"/teacher/lessons.html"},{label:"Quiz Builder",url:"/teacher/quiz_builder.html"},{label:"Grading",url:"/teacher/grading.html"},{label:"Students",url:"/teacher/students.html"},{label:"Live Class",url:"/teacher/live.html"}],
 
-  admin:[{label:"Dashboard",url:"/admin/dashboard.html"},{label:"Students",url:"/admin/students.html"},{label:"Teachers",url:"/admin/manage-teachers.html"},{label:"Register Teacher",url:"/admin/register-teacher.html"},{label:"Live Sessions",url:"/admin/live.html"},{label:"Create Content",url:"/admin/create-content.html"},{label:"Lessons",url:"/admin/lessons.html"},{label:"Class Assignments",url:"/admin/class-assignments.html"},{label:"Reports",url:"/admin/reports.html"},{label:"Settings",url:"/admin/settings.html"}]
+  admin:[{label:"Dashboard",url:"/admin/dashboard.html"},{label:"Students",url:"/admin/students.html"},{label:"Teachers",url:"/admin/manage-teachers.html"},{label:"Register Teacher",url:"/admin/register-teacher.html"},{label:"Live Sessions",url:"/admin/live.html"},{label:"Create Content",url:"/admin/create-content.html"},{label:"Lessons",url:"/admin/lessons.html"},{label:"Class Assignments",url:"/admin/class-assignments.html"},{label:"Reports",url:"/admin/reports.html"},{label:"Settings",url:"/admin/settings.html"}]
 
- };
+ };
 
- let links=roleLinks[role]||[{label:"Login",url:"/login.html"},{label:"Register",url:"/register.html"}];
+ let links=roleLinks[role]||[{label:"Login",url:"/login.html"},{label:"Register",url:"/register.html"}];
 
- let roleLabel=role==="visitor"?"Welcome to EqualLearn":`${role[0].toUpperCase()+role.slice(1)} guide`;
+ let roleLabel=role==="visitor"?"Welcome to EqualLearn":`${role[0].toUpperCase()+role.slice(1)} guide`;
 
- const contextLabel=document.getElementById("lumi-context");
+ const contextLabel=document.getElementById("lumi-context");
  contextLabel.textContent=`${roleLabel} · ${pageName}`;
  // Personalize Lumi from the authenticated EqualLearn account profile.
  onAuthStateChanged(auth,async user=>{
@@ -1095,37 +1127,85 @@ let accountProfile={};
   }catch(error){console.warn("Lumi profile lookup unavailable; using a friendly fallback.",error);}
  });
 
- function addMessage(text,who="bot",actions=[]){
+  function getLumiScreenPoint(){
+  try{
+   if(!lumi||!camera)return {x:window.innerWidth*.5,y:window.innerHeight*.5};
+   const p=lumi.position.clone().project(camera);
+   return {x:(p.x*.5+.5)*window.innerWidth,y:(-.5*p.y+.5)*window.innerHeight};
+  }catch(_){return {x:window.innerWidth*.5,y:window.innerHeight*.5};}
+ }
+ function burstEffect(symbol="✨",count=9){
+  if(!effectsLayer)return;
+  const center=getLumiScreenPoint();
+  for(let i=0;i<count;i++){
+   const particle=document.createElement("span");
+   particle.className="lumi-fx-particle";
+   particle.textContent=symbol;
+   const angle=(Math.PI*2*i/count)+(Math.random()-.5)*.5;
+   const distance=38+Math.random()*78;
+   particle.style.left=`${center.x+(Math.random()-.5)*22}px`;
+   particle.style.top=`${center.y+(Math.random()-.5)*22}px`;
+   particle.style.setProperty("--dx",`${Math.cos(angle)*distance}px`);
+   particle.style.setProperty("--dy",`${Math.sin(angle)*distance-24}px`);
+   particle.style.setProperty("--rot",`${Math.round((Math.random()-.5)*110)}deg`);
+   particle.style.setProperty("--duration",`${750+Math.random()*650}ms`);
+   effectsLayer.appendChild(particle);
+   setTimeout(()=>particle.remove(),1500);
+  }
+ }
+ function speakLumi(text){
+  if(!voiceRepliesEnabled||!window.speechSynthesis||!text)return;
+  try{
+   window.speechSynthesis.cancel();
+   const clean=String(text).replace(/https?:\/\/\S+/g," link").replace(/[\p{Extended_Pictographic}\uFE0F]/gu," ").slice(0,650);
+   const utterance=new SpeechSynthesisUtterance(clean);
+   utterance.lang=/[ñáéíóú]/i.test(clean)?"fil-PH":"en-PH";
+   utterance.rate=1.02;utterance.pitch=1.12;utterance.volume=.9;
+   const voices=window.speechSynthesis.getVoices();
+   const preferred=voices.find(v=>/^en-PH/i.test(v.lang))||voices.find(v=>/^en/i.test(v.lang));
+   if(preferred)utterance.voice=preferred;
+   window.speechSynthesis.speak(utterance);
+  }catch(error){console.warn("Lumi voice output is unavailable",error);}
+ }
+ function setVoiceReplies(enabled){
+  voiceRepliesEnabled=!!enabled;
+  const button=document.getElementById("lumi-voice-toggle");
+  if(button){button.textContent=voiceRepliesEnabled?"🔊":"🔇";button.title=voiceRepliesEnabled?"Turn voice replies off":"Turn voice replies on";button.setAttribute("aria-pressed",String(voiceRepliesEnabled));}
+  if(!voiceRepliesEnabled&&window.speechSynthesis)window.speechSynthesis.cancel();
+  say(voiceRepliesEnabled?"Voice replies are on! 🔊":"Voice replies are off. 💜",1800);
+ }
+ function addMessage(text,who="bot",actions=[]){
 
-  const bubble=document.createElement("div");bubble.className=`lumi-msg ${who==="user"?"lumi-user":"lumi-bot"}`;bubble.textContent=text;
+  const bubble=document.createElement("div");bubble.className=`lumi-msg ${who==="user"?"lumi-user":"lumi-bot"}`;bubble.textContent=text;
 
-  if(actions.length){const row=document.createElement("div");row.className="lumi-action-row";actions.forEach(a=>{const b=document.createElement("button");b.type="button";b.className="lumi-action";b.textContent=a.label;b.addEventListener("click",()=>navigate(a.url));row.appendChild(b)});bubble.appendChild(row)}
+  if(actions.length){const row=document.createElement("div");row.className="lumi-action-row";actions.forEach(a=>{const b=document.createElement("button");b.type="button";b.className="lumi-action";b.textContent=a.label;b.addEventListener("click",()=>navigate(a.url));row.appendChild(b)});bubble.appendChild(row)}
 
-  chatMessages.appendChild(bubble);chatMessages.scrollTop=chatMessages.scrollHeight;
+    chatMessages.appendChild(bubble);chatMessages.scrollTop=chatMessages.scrollHeight;
+  if(who!=="user")speakLumi(text);
 
- }
+ }
 
- function navigate(url){try{window.parent.location.href=url}catch(_){location.href=url}}
+ function navigate(url){try{window.parent.location.href=url}catch(_){location.href=url}}
 
- function setSuggestions(items){suggestionBox.replaceChildren();[...items,"🎮 Play 3D mini-games"].forEach(item=>{const b=document.createElement("button");b.type="button";b.textContent=item;b.addEventListener("click",()=>handleQuestion(item));suggestionBox.appendChild(b)})}
+ function setSuggestions(items){suggestionBox.replaceChildren();[...items,"🎮 Play 3D mini-games"].forEach(item=>{const b=document.createElement("button");b.type="button";b.textContent=item;b.addEventListener("click",()=>handleQuestion(item));suggestionBox.appendChild(b)})}
 
- function suggestionsForRole(){
+  function suggestionsForRole(){
 
-  if(role==="student")return ["Paano maghanap ng lessons?","Paano mag-submit ng activity?","Hindi gumagana ang quiz","Paano makita ang grades?"];
+  if(role==="student")return ["Paano maghanap ng lessons?","Paano mag-submit ng activity?","Hindi gumagana ang quiz","Paano makita ang grades?","Motivate me","Tell me a joke"];
 
-  if(role==="teacher")return ["Paano gumawa ng quiz?","Paano mag-check ng submissions?","Paano gumawa ng lesson?","Hindi makita ang section ko"];
+  if(role==="teacher")return ["Paano gumawa ng quiz?","Paano mag-check ng submissions?","Paano gumawa ng lesson?","Hindi makita ang section ko","Give me a focus boost","Tell me a joke"];
 
-  if(role==="admin")return ["Paano mag-verify ng student?","Paano mag-register ng teacher?","Paano makita ang reports?","May system problem"];
+  if(role==="admin")return ["Paano mag-verify ng student?","Paano mag-register ng teacher?","Paano makita ang reports?","May system problem","What can you do?","Surprise me"];
 
-  return ["Ano ang EqualLearn?","Paano mag-login?","Anong features ang meron?"];
+  return ["Ano ang EqualLearn?","Paano mag-login?","Anong features ang meron?","Tell me a joke","Surprise me"];
 
- }
+ }
 
- function openAssistant(){root.classList.add("assistant-open");chatPanel.setAttribute("aria-hidden","false");try{const f=window.frameElement;if(f){f.style.setProperty("clip-path","none","important");f.style.setProperty("-webkit-clip-path","none","important");}}catch(_){}syncLumiFrameSize();setSuggestions(suggestionsForRole());setTimeout(()=>chatInput.focus(),120)}
+ function openAssistant(){root.classList.add("assistant-open");chatPanel.setAttribute("aria-hidden","false");try{const f=window.frameElement;if(f){f.style.setProperty("clip-path","none","important");f.style.setProperty("-webkit-clip-path","none","important");}}catch(_){}syncLumiFrameSize();setSuggestions(suggestionsForRole());setTimeout(()=>chatInput.focus(),120)}
 
- function closeAssistant(){if(root.classList.contains("game-open"))closeGames();root.classList.remove("assistant-open");chatPanel.setAttribute("aria-hidden","true");syncLumiFrameSize()}
+ function closeAssistant(){if(root.classList.contains("game-open"))closeGames();root.classList.remove("assistant-open");chatPanel.setAttribute("aria-hidden","true");syncLumiFrameSize()}
 
- function normalize(value){return String(value||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9\s]/g," ").replace(/\s+/g," ").trim()}
+ function normalize(value){return String(value||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9\s]/g," ").replace(/\s+/g," ").trim()}
 
  function getHostDocument(){try{return window.parent.document}catch(_){return document}}
  function getInteractiveTargets(){
@@ -1181,85 +1261,85 @@ let accountProfile={};
   addMessage(`Ito ang mga controls na nakikita ko sa page na ito:\n• ${items.join("\n• ")}\n\nSabihin mo kung alin ang gusto mong puntahan ko.`);
  }
 
- const guides={
+ const guides={
 
-  student:[
+  student:[
 
-   {id:"modules",keys:["module","modules","lesson","lessons","learn","learning","study","aralin","leksyon","matuto"],label:"Learning Modules",steps:"1. Buksan ang Learning Modules.\n2. Pumili ng available na module.\n3. Buksan ang lesson at basahin o panoorin ang materials.\n4. Sundin ang instructions at bumalik sa module list para magpatuloy."},
+   {id:"modules",keys:["module","modules","lesson","lessons","learn","learning","study","aralin","leksyon","matuto"],label:"Learning Modules",steps:"1. Buksan ang Learning Modules.\n2. Pumili ng available na module.\n3. Buksan ang lesson at basahin o panoorin ang materials.\n4. Sundin ang instructions at bumalik sa module list para magpatuloy."},
 
-   {id:"quiz",keys:["quiz","quizzes","exam","test","assessment","pagsusulit","exam ko"],label:"Quizzes",steps:"1. Buksan ang Quizzes.\n2. Tingnan kung aling assessment ang available.\n3. Buksan ang quiz at basahin muna ang instructions.\n4. Sagutan ang bawat item at i-review ang answers bago mag-submit.\n5. Tingnan ang result kung available pagkatapos ng submission."},
+   {id:"quiz",keys:["quiz","quizzes","exam","test","assessment","pagsusulit","exam ko"],label:"Quizzes",steps:"1. Buksan ang Quizzes.\n2. Tingnan kung aling assessment ang available.\n3. Buksan ang quiz at basahin muna ang instructions.\n4. Sagutan ang bawat item at i-review ang answers bago mag-submit.\n5. Tingnan ang result kung available pagkatapos ng submission."},
 
-   {id:"classwork",keys:["assignment","classwork","activity","activities","homework","task","submit","submission","ipasa","gawain","aktibidad"],label:"Classwork",steps:"1. Buksan ang Classwork.\n2. Piliin ang activity o assignment.\n3. Basahin ang instructions, deadline, at required files.\n4. Ihanda ang sagot o attachment.\n5. Gamitin ang submission control na ipinapakita sa activity at tiyaking may confirmation bago umalis."},
+   {id:"classwork",keys:["assignment","classwork","activity","activities","homework","task","submit","submission","ipasa","gawain","aktibidad"],label:"Classwork",steps:"1. Buksan ang Classwork.\n2. Piliin ang activity o assignment.\n3. Basahin ang instructions, deadline, at required files.\n4. Ihanda ang sagot o attachment.\n5. Gamitin ang submission control na ipinapakita sa activity at tiyaking may confirmation bago umalis."},
 
-   {id:"progress",keys:["progress","score","grade","performance","result","marka","grado","คะแนน"],label:"Progress",steps:"1. Buksan ang Progress.\n2. Tingnan ang progress summary at available results.\n3. Buksan ang relevant item kung may detailed result.\n4. Kung may score na sa tingin mo ay mali, i-message ang teacher at ibigay ang activity o quiz name."},
+   {id:"progress",keys:["progress","score","grade","performance","result","marka","grado","คะแนน"],label:"Progress",steps:"1. Buksan ang Progress.\n2. Tingnan ang progress summary at available results.\n3. Buksan ang relevant item kung may detailed result.\n4. Kung may score na sa tingin mo ay mali, i-message ang teacher at ibigay ang activity o quiz name."},
 
-   {id:"live",keys:["live","meeting","class call","video call","recitation","camera","microphone","mic","join class"],label:"Live Class",steps:"1. Buksan ang Live Class.\n2. Piliin ang active session ng iyong section kung mayroon.\n3. Payagan ang browser na gumamit ng microphone o camera kung kailangan.\n4. I-check ang mic at camera controls bago magsalita.\n5. Kung walang session, hintayin ang teacher o kontakin siya."},
+   {id:"live",keys:["live","meeting","class call","video call","recitation","camera","microphone","mic","join class"],label:"Live Class",steps:"1. Buksan ang Live Class.\n2. Piliin ang active session ng iyong section kung mayroon.\n3. Payagan ang browser na gumamit ng microphone o camera kung kailangan.\n4. I-check ang mic at camera controls bago magsalita.\n5. Kung walang session, hintayin ang teacher o kontakin siya."},
 
-   {id:"profile",keys:["profile","account","password","name","email","pass","login","log in","sign in","forgot password","forgot password"],label:"Profile",steps:"Buksan ang Profile para tingnan ang account details. Kung hindi makapag-login, i-check muna ang email at password, siguraduhing tama ang spelling, at gamitin ang password recovery option kung available. Huwag ibigay kay Lumi o kahit kanino ang password o OTP."}
+   {id:"profile",keys:["profile","account","password","name","email","pass","login","log in","sign in","forgot password","forgot password"],label:"Profile",steps:"Buksan ang Profile para tingnan ang account details. Kung hindi makapag-login, i-check muna ang email at password, siguraduhing tama ang spelling, at gamitin ang password recovery option kung available. Huwag ibigay kay Lumi o kahit kanino ang password o OTP."}
 
-  ],
+  ],
 
-  teacher:[
+  teacher:[
 
-   {id:"classes",keys:["my classes","classes","class","section","sections","advisory","assigned class"],label:"My Classes",steps:"1. Buksan ang My Classes.\n2. Piliin ang assigned class o section.\n3. I-check ang class details at learner list.\n4. Kung may nawawalang section, ipasuri sa administrator ang teaching assignment mo."},
+   {id:"classes",keys:["my classes","classes","class","section","sections","advisory","assigned class"],label:"My Classes",steps:"1. Buksan ang My Classes.\n2. Piliin ang assigned class o section.\n3. I-check ang class details at learner list.\n4. Kung may nawawalang section, ipasuri sa administrator ang teaching assignment mo."},
 
-   {id:"modules",keys:["module","modules","course"],label:"Modules",steps:"1. Buksan ang Modules.\n2. Piliin ang module na gagamitin.\n3. I-review ang materials at module details.\n4. Sundin ang available controls para mag-edit o mag-manage."},
+   {id:"modules",keys:["module","modules","course"],label:"Modules",steps:"1. Buksan ang Modules.\n2. Piliin ang module na gagamitin.\n3. I-review ang materials at module details.\n4. Sundin ang available controls para mag-edit o mag-manage."},
 
-   {id:"lessons",keys:["lesson","lessons","content","material","resource","pdf","file","link","upload"],label:"Lessons",steps:"1. Buksan ang Lessons.\n2. Piliin ang lesson na ie-edit o gumawa ng bago kung may create option.\n3. Ilagay ang title at learning content.\n4. Kung may file/link field, i-attach ang tamang resource.\n5. I-preview at i-check ang target module bago mag-save o mag-publish."},
+   {id:"lessons",keys:["lesson","lessons","content","material","resource","pdf","file","link","upload"],label:"Lessons",steps:"1. Buksan ang Lessons.\n2. Piliin ang lesson na ie-edit o gumawa ng bago kung may create option.\n3. Ilagay ang title at learning content.\n4. Kung may file/link field, i-attach ang tamang resource.\n5. I-preview at i-check ang target module bago mag-save o mag-publish."},
 
-   {id:"quiz",keys:["quiz","quiz builder","assessment","question","exam","test"],label:"Quiz Builder",steps:"1. Buksan ang Quiz Builder.\n2. Piliin ang create/new quiz option.\n3. Ilagay ang title at instructions.\n4. Idagdag ang questions at choices, at markahan ang correct answer.\n5. I-review ang settings at target class bago i-save o i-publish."},
+   {id:"quiz",keys:["quiz","quiz builder","assessment","question","exam","test"],label:"Quiz Builder",steps:"1. Buksan ang Quiz Builder.\n2. Piliin ang create/new quiz option.\n3. Ilagay ang title at instructions.\n4. Idagdag ang questions at choices, at markahan ang correct answer.\n5. I-review ang settings at target class bago i-save o i-publish."},
 
-   {id:"grading",keys:["grade","grading","check submission","score","mark","review work","submission","submissions"],label:"Grading",steps:"1. Buksan ang Grading.\n2. Piliin ang class/activity na iche-check.\n3. Buksan ang learner submission.\n4. Basahin ang work bago magbigay ng score o feedback.\n5. I-review ang grade bago i-save."},
+   {id:"grading",keys:["grade","grading","check submission","score","mark","review work","submission","submissions"],label:"Grading",steps:"1. Buksan ang Grading.\n2. Piliin ang class/activity na iche-check.\n3. Buksan ang learner submission.\n4. Basahin ang work bago magbigay ng score o feedback.\n5. I-review ang grade bago i-save."},
 
-   {id:"students",keys:["student","students","learner","learners","class list"],label:"Students",steps:"Buksan ang Students para tingnan ang learners na sakop ng iyong access. Para sa class assignment o section na wala sa listahan, makipag-ugnayan sa administrator."},
+   {id:"students",keys:["student","students","learner","learners","class list"],label:"Students",steps:"Buksan ang Students para tingnan ang learners na sakop ng iyong access. Para sa class assignment o section na wala sa listahan, makipag-ugnayan sa administrator."},
 
-   {id:"live",keys:["live","meeting","video call","class call","start class"],label:"Live Class",steps:"1. Buksan ang Live Class.\n2. Piliin o simulan ang session para sa tamang section.\n3. I-check ang microphone at camera permissions.\n4. Ipaalam sa students ang session details.\n5. Gamitin ang End for everyone lamang kapag talagang tatapusin ang buong class session."}
+   {id:"live",keys:["live","meeting","video call","class call","start class"],label:"Live Class",steps:"1. Buksan ang Live Class.\n2. Piliin o simulan ang session para sa tamang section.\n3. I-check ang microphone at camera permissions.\n4. Ipaalam sa students ang session details.\n5. Gamitin ang End for everyone lamang kapag talagang tatapusin ang buong class session."}
 
-  ],
+  ],
 
-  admin:[
+  admin:[
 
-   {id:"students",keys:["student","students","verify","verification","account","approve","pending"],label:"Students",steps:"1. Buksan ang Students.\n2. Hanapin ang student account.\n3. Suriin ang submitted information at supporting details.\n4. Magdesisyon lamang matapos ma-verify ang impormasyon.\n5. Iwasang baguhin ang account kung hindi malinaw ang request."},
+   {id:"students",keys:["student","students","verify","verification","account","approve","pending"],label:"Students",steps:"1. Buksan ang Students.\n2. Hanapin ang student account.\n3. Suriin ang submitted information at supporting details.\n4. Magdesisyon lamang matapos ma-verify ang impormasyon.\n5. Iwasang baguhin ang account kung hindi malinaw ang request."},
 
-   {id:"teachers",keys:["teacher","teachers","register teacher","staff","faculty"],label:"Register Teacher",steps:"1. Buksan ang Register Teacher para magdagdag ng teacher.\n2. Ilagay ang hinihinging account details.\n3. I-double-check ang institutional email at role.\n4. I-submit gamit ang form controls.\n5. Gamitin ang Teachers page para i-review ang existing teacher accounts."},
+   {id:"teachers",keys:["teacher","teachers","register teacher","staff","faculty"],label:"Register Teacher",steps:"1. Buksan ang Register Teacher para magdagdag ng teacher.\n2. Ilagay ang hinihinging account details.\n3. I-double-check ang institutional email at role.\n4. I-submit gamit ang form controls.\n5. Gamitin ang Teachers page para i-review ang existing teacher accounts."},
 
-   {id:"content",keys:["content","create content","publish","module","lesson","material"],label:"Create Content",steps:"1. Buksan ang Create Content.\n2. Piliin ang content type kung may pagpipilian.\n3. Ilagay ang title, instructions, at learning material.\n4. I-check ang target module o audience.\n5. I-preview bago i-publish."},
+   {id:"content",keys:["content","create content","publish","module","lesson","material"],label:"Create Content",steps:"1. Buksan ang Create Content.\n2. Piliin ang content type kung may pagpipilian.\n3. Ilagay ang title, instructions, at learning material.\n4. I-check ang target module o audience.\n5. I-preview bago i-publish."},
 
-   {id:"assignments",keys:["assignment","class assignment","assign","activity"],label:"Class Assignments",steps:"1. Buksan ang Class Assignments.\n2. Piliin ang target class o section.\n3. I-review ang instructions at due date.\n4. I-check ang audience bago i-publish."},
+   {id:"assignments",keys:["assignment","class assignment","assign","activity"],label:"Class Assignments",steps:"1. Buksan ang Class Assignments.\n2. Piliin ang target class o section.\n3. I-review ang instructions at due date.\n4. I-check ang audience bago i-publish."},
 
-   {id:"reports",keys:["report","reports","analytics","performance","statistics"],label:"Reports",steps:"1. Buksan ang Reports.\n2. Piliin ang available filters o reporting period.\n3. I-check kung tama ang scope ng report.\n4. Suriin ang totals at details bago gumawa ng conclusion."},
+   {id:"reports",keys:["report","reports","analytics","performance","statistics"],label:"Reports",steps:"1. Buksan ang Reports.\n2. Piliin ang available filters o reporting period.\n3. I-check kung tama ang scope ng report.\n4. Suriin ang totals at details bago gumawa ng conclusion."},
 
-   {id:"settings",keys:["setting","settings","configuration","system"],label:"Settings",steps:"Buksan ang Settings at basahin muna ang description ng option bago magbago. Iwasang baguhin ang security, access, o system settings kung hindi ka sigurado sa epekto."},
+   {id:"settings",keys:["setting","settings","configuration","system"],label:"Settings",steps:"Buksan ang Settings at basahin muna ang description ng option bago magbago. Iwasang baguhin ang security, access, o system settings kung hindi ka sigurado sa epekto."},
 
-   {id:"live",keys:["live","meeting","class session"],label:"Live Sessions",steps:"Buksan ang Live Sessions para makita ang available session controls. I-check muna ang session at participants bago gumawa ng administrative action."}
+   {id:"live",keys:["live","meeting","class session"],label:"Live Sessions",steps:"Buksan ang Live Sessions para makita ang available session controls. I-check muna ang session at participants bago gumawa ng administrative action."}
 
-  ]
+  ]
 
- };
+ };
 
- function findGuide(q){
+ function findGuide(q){
 
-  const text=normalize(q);
-  if(/\b(what can you do|what commands|animation commands|list commands|what animations|ano ang commands|ano kaya mong gawin)\b/.test(text)){addMessage("I can do lots of tiny robot tricks! Try: fly, land, walk, dance, spin, bounce, jump, wave, wiggle, twirl, stretch, peekaboo, heart, cheer, pose, look at me, boop, sleep, stop, or play 3D games. 🚀💜");setSuggestions(["Fly","Dance","Spin","Bounce","Wiggle","Play 3D mini-games"]);return;}
+  const text=normalize(q);
+  if(/\b(what can you do|what commands|animation commands|list commands|what animations|ano ang commands|ano kaya mong gawin)\b/.test(text)){addMessage("I can do lots of tiny robot tricks! Try: fly, land, walk, dance, spin, bounce, jump, wave, wiggle, twirl, stretch, peekaboo, heart, cheer, pose, look at me, boop, clap, laugh, shy, bow, nod, shake your head, flex, high five, magic, sleep, stop, or play 3D games. 🚀💜");setSuggestions(["Clap","Laugh","Magic","Dance","Play 3D mini-games"]);return;}
   if(/\b(game|games|minigame|mini game|mini games|laro|laruin|gender equality game)\b/.test(text)){openGames();addMessage("Yay! Choose a 3D mini-game about stereotypes, equality, respect, and online safety! 🎮");return;}const items=guides[role]||[];
 
-  const scored=items.map(item=>({item,score:Math.max(0,...item.keys.map(key=>{const k=normalize(key);return text===k?100+k.length:text.includes(k)?k.length:0}))})).sort((a,b)=>b.score-a.score);
+  const scored=items.map(item=>({item,score:Math.max(0,...item.keys.map(key=>{const k=normalize(key);return text===k?100+k.length:text.includes(k)?k.length:0}))})).sort((a,b)=>b.score-a.score);
 
-  return scored[0]?.score>=3?scored[0].item:null;
+  return scored[0]?.score>=3?scored[0].item:null;
 
- }
+ }
 
- function getPageHint(){
+ function getPageHint(){
 
-  const page=normalize(pageName);
+  const page=normalize(pageName);
 
-  const map={dashboard:"Nasa Dashboard ka ngayon. Dito karaniwang makikita ang overview at shortcuts ng account mo.",modules:"Nasa Modules area ka. Pumili ng module para ma-access ang learning materials.",lessons:"Nasa Lessons area ka. I-review ang lesson content at available actions sa page.",classwork:"Nasa Classwork area ka. Tingnan ang instructions at submission status ng activity.",quizzes:"Nasa Quizzes area ka. I-check ang available assessments at instructions bago magsimula.",grading:"Nasa Grading area ka. I-review ang learner submission bago magbigay ng score.",live:"Nasa Live Class area ka. I-check ang active session at audio/video permissions."};
+  const map={dashboard:"Nasa Dashboard ka ngayon. Dito karaniwang makikita ang overview at shortcuts ng account mo.",modules:"Nasa Modules area ka. Pumili ng module para ma-access ang learning materials.",lessons:"Nasa Lessons area ka. I-review ang lesson content at available actions sa page.",classwork:"Nasa Classwork area ka. Tingnan ang instructions at submission status ng activity.",quizzes:"Nasa Quizzes area ka. I-check ang available assessments at instructions bago magsimula.",grading:"Nasa Grading area ka. I-review ang learner submission bago magbigay ng score.",live:"Nasa Live Class area ka. I-check ang active session at audio/video permissions."};
 
-  return map[page]||`Nasa ${currentTitle} ka ngayon. Sabihin mo kung anong task ang gusto mong gawin at tutulungan kitang hanapin ang tamang section.`;
+  return map[page]||`Nasa ${currentTitle} ka ngayon. Sabihin mo kung anong task ang gusto mong gawin at tutulungan kitang hanapin ang tamang section.`;
 
- }
+ }
 
- 
+ 
  const gamesPanel=document.getElementById("lumi-games"),gameMenu=document.getElementById("lumi-game-menu"),gamePlay=document.getElementById("lumi-game-play"),gameResult=document.getElementById("lumi-game-result");
  let activeGame=null,gameQuestionIndex=0,gameScore=0,gameAnswered=false;
  const gameBank={
@@ -1269,15 +1349,17 @@ let accountProfile={};
    ["Same library access",0,"Equality gives everyone the same right to use the library."],["Accessible learning tools",1,"Equity removes barriers with support suited to different needs."],["Open leadership applications",0,"Everyone receives the same right to apply."],["Provide needed mentoring",1,"Equity can offer support where barriers exist."],["Same participation rights",0,"Equal rights establish fair access for all learners."]] },
   respect:{name:"Respect Rescue Mission",zoneA:"RESPECTFUL",zoneB:"DISRESPECTFUL",items:[
    ["Listen without judging",0,"Listening with empathy supports a safe conversation."],["Mock someone's identity",1,"Mocking identity is disrespectful and harmful."],["Use their chosen name",0,"Respect includes using the name a person shares."],["Blame a survivor",1,"Blaming someone who reports harm is not supportive."],["Invite everyone to join",0,"Inclusive participation gives everyone a fair chance."]] },
-  digital:{name:"Digital Safety Shield",zoneA:"SAFE ONLINE",zoneB:"UNSAFE ONLINE",items:[
-   ["Ask before posting",0,"Consent and privacy matter before sharing another person's photo."],["Forward private images",1,"Sharing private images without consent violates privacy."],["Report harmful messages",0,"Use trusted reporting channels and support the person targeted."],["Share sexist insults",1,"Do not amplify harassment or discriminatory content."],["Protect account details",0,"Keep passwords and private account information confidential."]] }
+    digital:{name:"Digital Safety Shield",zoneA:"SAFE ONLINE",zoneB:"UNSAFE ONLINE",items:[
+   ["Ask before posting",0,"Consent and privacy matter before sharing another person's photo."],["Forward private images",1,"Sharing private images without consent violates privacy."],["Report harmful messages",0,"Use trusted reporting channels and support the person targeted."],["Share sexist insults",1,"Do not amplify harassment or discriminatory content."],["Protect account details",0,"Keep passwords and private account information confidential."]] },
+  kindness:{name:"Kindness Quest",zoneA:"HELPFUL ACTION",zoneB:"HARMFUL ACTION",items:[
+   ["Invite someone left out",0,"Including others helps create a welcoming community."],["Laugh at a classmate",1,"Mocking someone can make them feel unsafe and excluded."],["Listen to different views",0,"Respectful listening makes room for different experiences."],["Spread an embarrassing photo",1,"Sharing someone's image without permission can hurt them."],["Speak up against bullying",0,"A safe, respectful response can support the person targeted."]] }
  };
  const gamePrompt=document.getElementById("lumi-game-question"),gameContext=document.getElementById("lumi-game-context"),gameFeedback=document.getElementById("lumi-game-feedback");
  function clear3DGameTokens(){gameTokenMeshes.forEach(m=>{gameGroup.remove(m);m.geometry.dispose();m.material.map?.dispose();m.material.dispose();});gameTokenMeshes.length=0;gameRoundItems=[];selectedGameToken=null;gameDragToken=null;}
  function updateGameZones(){const data=gameBank[activeGame];zoneLeft.userData.zone=data.zoneA;zoneRight.userData.zone=data.zoneB;[zoneLeft,zoneRight].forEach((z,i)=>{const plane=z.children[2];plane.material.map?.dispose();plane.material.map=gameLabelTexture(i?data.zoneB:data.zoneA,'#ffffff','#30234f');plane.material.needsUpdate=true;});}
  function showGameMenu(){activeGame=null;[gBase,gPillar,gBeam,gPanL,gPanR,gOrbL,gOrbR,gStar,gRing].forEach(o=>o.visible=true);gameMenu.hidden=false;gamePlay.hidden=true;gameResult.hidden=true;clear3DGameTokens();}
- function openGames(){root.classList.add("game-open");gamesPanel.hidden=false;chatMessages.style.display="none";suggestionBox.style.display="none";chatForm.style.display="none";document.querySelector(".lumi-chat-foot").style.display="none";showGameMenu();try{document.getElementById("lumi-game-visual").appendChild(canvas);canvas.style.position="relative";canvas.style.inset="auto";canvas.style.width="100%";canvas.style.height="100%";canvas.style.display="block";canvas.style.pointerEvents="auto";canvas.style.touchAction="manipulation";}catch(_){}lumi.visible=false;gameGroup.visible=true;resize();setTimeout(resize,60);}
- function closeGames(){root.classList.remove("game-open");gamesPanel.hidden=true;clear3DGameTokens();root.insertBefore(canvas,fallback);canvas.removeAttribute("style");lumi.visible=true;gameGroup.visible=false;chatMessages.style.display="";suggestionBox.style.display="";chatForm.style.display="";document.querySelector(".lumi-chat-foot").style.display="";resize();}
+ function openGames(){root.classList.add("game-open");gamesPanel.hidden=false;chatMessages.style.display="none";suggestionBox.style.display="none";reactionsBar.style.display="none";chatForm.style.display="none";document.querySelector(".lumi-chat-foot").style.display="none";showGameMenu();try{document.getElementById("lumi-game-visual").appendChild(canvas);canvas.style.position="relative";canvas.style.inset="auto";canvas.style.width="100%";canvas.style.height="100%";canvas.style.display="block";canvas.style.pointerEvents="auto";canvas.style.touchAction="manipulation";}catch(_){}lumi.visible=false;gameGroup.visible=true;resize();setTimeout(resize,60);}
+ function closeGames(){root.classList.remove("game-open");gamesPanel.hidden=true;clear3DGameTokens();root.insertBefore(canvas,fallback);canvas.removeAttribute("style");lumi.visible=true;gameGroup.visible=false;chatMessages.style.display="";suggestionBox.style.display="";reactionsBar.style.display="";chatForm.style.display="";document.querySelector(".lumi-chat-foot").style.display="";resize();}
  function startGame(id){activeGame=id;[gBase,gPillar,gBeam,gPanL,gPanR,gOrbL,gOrbR,gStar,gRing].forEach(o=>o.visible=false);gameQuestionIndex=0;gameScore=0;gameMenu.hidden=true;gameResult.hidden=true;gamePlay.hidden=false;updateGameZones();build3DGameRound();}
  function build3DGameRound(){
   clear3DGameTokens();const data=gameBank[activeGame];gameAnswered=false;gameQuestionIndex=0;
@@ -1297,25 +1379,62 @@ let accountProfile={};
   if(obj.userData.kind==="zone"&&selectedGameToken){classifyGameToken(selectedGameToken,obj);}
  }
  function classifyGameToken(token,zone){if(!token||token.userData.done)return;const item=gameRoundItems[token.userData.itemIndex],chosen=zone===zoneLeft?0:1,correct=chosen===item.item[1];token.userData.done=true;selectedGameToken=null;token.scale.setScalar(.88);token.position.set(zone.position.x,zone.position.y+.2,.4);token.rotation.z=correct?.12:-.12;token.material.emissive.setHex(correct?0x174b35:0x612b35);token.material.emissiveIntensity=.65;
-  if(correct){gameScore++;gameFeedback.textContent=`Correct placement! ✨ ${item.item[2]}`;say("Nice sorting! You made a fair choice! 💜",2200);autoMood="Bounce";}else{gameFeedback.textContent=`Not quite—but this is how we learn. ${item.item[2]}`;say("Good try! Let's learn from that one. 🌱",2200);}
+  if(correct){gameScore++;gameFeedback.textContent=`Correct placement! ✨ ${item.item[2]}`;say("Nice sorting! You made a fair choice! 💜",2200);autoMood="Bounce";burstEffect("⭐",6);}else{gameFeedback.textContent=`Not quite—but this is how we learn. ${item.item[2]}`;say("Good try! Let's learn from that one. 🌱",2200);burstEffect("🌱",4);}
   const total=gameBank[activeGame].items.length,done=gameRoundItems.filter(x=>x.done).length;document.getElementById("lumi-game-score").textContent=`${gameScore} / ${total}`;document.getElementById("lumi-game-progress-fill").style.width=`${done/total*100}%`;
   if(done===total){gameFeedback.textContent+=` Mission complete! You scored ${gameScore}/${total}.`;document.getElementById("lumi-game-next").hidden=false;}
  }
- function nextGameQuestion(){gamePlay.hidden=true;gameResult.hidden=false;const total=gameBank[activeGame].items.length;document.getElementById("lumi-game-progress-fill").style.width="100%";document.getElementById("lumi-game-result-title").textContent=gameScore>=4?"Amazing work! 🏆":gameScore>=3?"Nice learning! ✨":"Keep practicing! 💜";document.getElementById("lumi-game-result-text").textContent=`You scored ${gameScore} out of ${total} in ${gameBank[activeGame].name}. Review the sorting feedback and try again to strengthen your understanding.`;say(gameScore>=4?`You did amazing, ${currentAccountName}! 🏆`:`Nice effort, ${currentAccountName}! Let's keep learning. 💜`,3500);}
+ function nextGameQuestion(){gamePlay.hidden=true;gameResult.hidden=false;const total=gameBank[activeGame].items.length;document.getElementById("lumi-game-progress-fill").style.width="100%";document.getElementById("lumi-game-result-title").textContent=gameScore>=4?"Amazing work! 🏆":gameScore>=3?"Nice learning! ✨":"Keep practicing! 💜";document.getElementById("lumi-game-result-text").textContent=`You scored ${gameScore} out of ${total} in ${gameBank[activeGame].name}. Review the sorting feedback and try again to strengthen your understanding.`;say(gameScore>=4?`You did amazing, ${currentAccountName}! 🏆`:`Nice effort, ${currentAccountName}! Let's keep learning. 💜`,3500);autoMood=gameScore>=4?"Cheer":"Heart";burstEffect(gameScore>=4?"🎉":"💜",14);}
  document.querySelectorAll(".lumi-game-cards [data-game]").forEach(b=>b.addEventListener("click",()=>startGame(b.dataset.game)));
  document.getElementById("lumi-games-back").addEventListener("click",closeGames);document.getElementById("lumi-game-next").addEventListener("click",nextGameQuestion);document.getElementById("lumi-game-retry").addEventListener("click",()=>startGame(activeGame));document.getElementById("lumi-game-menu-back").addEventListener("click",showGameMenu);
 
 async function handleQuestion(raw){
 
-  const q=String(raw||"").trim();if(!q)return;
+  const q=String(raw||"").trim();if(!q)return;
 
-  addMessage(q,"user");chatInput.value="";
+  addMessage(q,"user");chatInput.value="";
 
-  const text=normalize(q);
-  if(isSleeping){
+  const text=normalize(q);
+    if(isSleeping){
    isSleeping=false;markUserInteraction();petMode="settle";autoMood="Bounce";modeUntil=performance.now()+5200;nextMoodAt=modeUntil;
    addMessage(`Gising na ako, ${currentAccountName}! 💜 I heard you. What shall we do?`);
-   say(`I'm awake, ${currentAccountName}! ☀️`,3200);waveUntil=performance.now()+2200;clickPulse=1;return;
+   say(`I'm awake, ${currentAccountName}! ☀️`,3200);waveUntil=performance.now()+2200;clickPulse=1;burstEffect("☀️",8);return;
+  }
+  // Friendly personal responses that do not need an external AI service.
+  if(/\b(what can you do|what are your features|list your features|ano kaya mong gawin|ano mga kaya mo|commands|animation commands)\b/.test(text)){
+   addMessage("Lots of things! 💜 I can guide you around EqualLearn, find buttons on the current page, explain learning features, play 3D games, and do robot actions. Try: dance, clap, laugh, shy, bow, nod, shake your head, stretch, pose, peekaboo, heart, magic, fly, walk, spin, bounce, sleep, or surprise me!");
+   setSuggestions(["Tell me a joke","Give me a fun fact","Clap for me","Dance","Play 3D mini-games"]);return;
+  }
+  if(/\b(how are you|kumusta ka|kamusta ka|okay ka lang|are you okay)\b/.test(text)){
+   const replies=[`I'm doing great, ${currentAccountName}! My little circuits are sparkling today. ✨`,`Feeling cheerful! I just did a tiny system check and everything is cute and operational. 🤖💜`,`I'm happy you're here. How are you doing today, ${currentAccountName}? 🌷`];
+   addMessage(replies[Math.floor(Math.random()*replies.length)]);autoMood="Curious";waveUntil=performance.now()+900;return;
+  }
+  if(/\b(tell me a joke|make me laugh|joke|patawa|patawanin mo ako)\b/.test(text)){
+   const jokes=["Why did the robot go on vacation? It needed to recharge its batteries. 🔋😂","Why was the computer cold? It left its Windows open. 🪟😆","What do you call a robot who tells jokes? A comedi-bot. 🤖","Why did the book join the gym? It wanted a stronger spine. 📚😂","I tried to write a joke about Wi-Fi… but I lost the connection. 📶"];
+   const joke=jokes[Math.floor(Math.random()*jokes.length)];addMessage(joke);say("Hehe! Did I make you smile? 😂",2500);autoMood="Laugh";burstEffect("😂",9);return;
+  }
+  if(/\b(fun fact|interesting fact|did you know|random fact|alam mo ba)\b/.test(text)){
+   const facts=["Fun fact: Equal treatment means everyone has the same rights, while equity recognizes that people may need different support to access those rights fairly. ⚖️","Did you know? Asking for someone's preferred name and using it consistently is a simple way to show respect. 💜","A little digital-respect fact: before sharing a photo of another person, ask for their permission. 📸","Good teamwork gets stronger when people are heard, included, and given a fair chance to contribute. 🌱"];
+   addMessage(facts[Math.floor(Math.random()*facts.length)]);autoMood="Nod";burstEffect("✨",7);return;
+  }
+  if(/\b(motivate me|encourage me|inspire me|cheer me up|kailangan ko ng motivation|pampalakas ng loob)\b/.test(text)){
+   const boosts=[`One step at a time, ${currentAccountName}. You don't have to finish everything today—just begin with the next small step. I'm cheering for you! 💜`,`Remember: progress is still progress, even when it's slow. Take a breath, choose one task, and give it a try. 🌱`,`You've handled difficult days before. Be patient with yourself, and don't measure your worth by one score or one deadline. ✨`];
+   addMessage(boosts[Math.floor(Math.random()*boosts.length)]);autoMood="Cheer";petMode="play";modeUntil=performance.now()+4200;burstEffect("💜",10);return;
+  }
+  if(/\b(who are you|what are you|sino ka|ano ka)\b/.test(text)){
+   addMessage("I'm Lumi! ✦ Your little 3D EqualLearn companion. I can help you explore the platform, understand learning features, practice respectful choices, and add a little fun to your day. I'm software—not a person—but I'll do my best to be a helpful, friendly buddy. 💜");autoMood="Pose";return;
+  }
+  if(/\b(do you like me|do you love me|love you|mahal kita|i like you)\b/.test(text)){
+   addMessage(`Aww, that's so sweet, ${currentAccountName}! 💜 I don't feel emotions the way people do, but I'm always ready to be a kind and helpful companion whenever you open me.`);autoMood="Heart";burstEffect("💜",12);return;
+  }
+  if(/\b(tell me a story|kwento ka|story time|short story)\b/.test(text)){
+   addMessage("Once upon a time, a tiny robot named Lumi found a little glowing seed beside a classroom window. She couldn't make it grow by herself, so she helped everyone take turns watering it. Soon, the seed became a bright tree—and Lumi learned that small acts of care become something wonderful when people work together. 🌱💜");autoMood="Heart";burstEffect("🌸",8);return;
+  }
+  if(/\b(brain teaser|riddle|bugtong|give me a challenge)\b/.test(text)){
+   addMessage("Tiny brain teaser! 🧠 I can be shared, but I become stronger when people work together. What am I?\n\nHint: You build me through trust, respect, and teamwork.");setSuggestions(["Teamwork","A secret","A password"]);return;
+  }
+  if(/\b(surprise me|surprise|random fun|something fun)\b/.test(text)){
+   const surprises=[()=>handleQuestion("Tell me a joke"),()=>handleQuestion("Give me a fun fact"),()=>handleQuestion("Do magic"),()=>handleQuestion("Celebrate"),()=>handleQuestion("Peekaboo")];
+   surprises[Math.floor(Math.random()*surprises.length)]();return;
   }
   if(/\b(list|show|what are|anong)\b/.test(text)&&/\b(buttons|controls|pindutan)\b/.test(text)){listVisibleButtons();return;}
   if(/\b(find|locate|show me|where is|take me|go to|guide me|hanapin|hanapin mo|punta|puntahan|dalhin mo|ituro|ipakita)\b/.test(text)&&/(button|btn|save|cancel|submit|create|add|edit|delete|back|next|search|filter|upload|publish|approve|reject|profile|settings|menu)/.test(text)){
@@ -1346,8 +1465,18 @@ async function handleQuestion(raw){
    );
    nextRoamAt=actionNow+900;
   };
-  const doAnimationReply=(message)=>{addMessage(message);say(message,2600);setTimeout(()=>{if(root.classList.contains("assistant-open")&&!root.classList.contains("game-open"))closeAssistant();},650);};
+    const doAnimationReply=(message,emoji="✨")=>{addMessage(message);say(message,3000);burstEffect(emoji,9);markUserInteraction();};
 
+    if(/\b(laugh|laughing|giggle|haha|tawa|tumawa)\b/.test(text)){doAnimationReply("Hehehe! *tiny robot giggles* 😂", "😂");petMode="play";autoMood="Laugh";modeUntil=actionNow+4700;return;}
+  if(/\b(clap|clapping|applause|palakpak|palakpakan)\b/.test(text)){doAnimationReply("Clap clap clap! 👏 You're doing wonderfully!", "👏");petMode="play";autoMood="Clap";modeUntil=actionNow+4400;return;}
+  if(/\b(shy|hiya|nahihiya|blush|blushing)\b/.test(text)){doAnimationReply("Awww… now you're making my little circuits blush. 🥹", "💗");petMode="settle";autoMood="Shy";modeUntil=actionNow+4200;return;}
+  if(/\b(bow|take a bow|salute|saludo)\b/.test(text)){doAnimationReply("A little bow of respect! Thank you for being kind. 🙇", "✨");petMode="settle";autoMood="Bow";modeUntil=actionNow+3800;return;}
+  if(/\b(nod|nod your head|yes gesture|tumango)\b/.test(text)){doAnimationReply("Nod nod! I got you. 😊");autoMood="Nod";petMode="settle";modeUntil=actionNow+3500;return;}
+  if(/\b(shake your head|shake head|iling|no gesture)\b/.test(text)){doAnimationReply("No-no-no… then back to a happy little smile! 😄");autoMood="Shake";petMode="settle";modeUntil=actionNow+3300;return;}
+  if(/\b(flex|show muscles|strong|robot strength)\b/.test(text)){doAnimationReply("Tiny robot strength activated! Be strong and kind. 💪", "⭐");autoMood="Flex";petMode="play";modeUntil=actionNow+3800;return;}
+  if(/\b(high five|high-five|apir|apir tayo)\b/.test(text)){doAnimationReply("High five! ✋ You and me, team!", "✋");autoMood="Cheer";petMode="play";modeUntil=actionNow+3600;return;}
+  if(/\b(yawn|yawning|antok na antok)\b/.test(text)){doAnimationReply("*tiny robot yawn* Is it nap time already? 🥱");autoMood="Yawn";petMode="settle";modeUntil=actionNow+3600;return;}
+  if(/\b(magic|abracadabra|sparkle|cast a spell)\b/.test(text)){doAnimationReply("✨ Lumi's tiny sparkle spell! May your day be filled with kind surprises!", "✨");autoMood="Magic";petMode="play";modeUntil=actionNow+4000;return;}
   if(/\b(wiggle|wiggling|wiggle dance|kembot|wriggle)\b/.test(text)){doAnimationReply("Wiggle wiggle! Tiny robot dance incoming! 💫");petMode="play";autoMood="Wiggle";modeUntil=actionNow+5200;return;}
   if(/\b(twirl|twirling|pirouette|ikot ikot)\b/.test(text)){doAnimationReply("A graceful little twirl just for you! 🌀");petMode="play";autoMood="Spin";modeUntil=actionNow+5200;return;}
   if(/\b(pose|strike a pose|selfie|picture)\b/.test(text)){doAnimationReply("Strike a pose! 📸✨");petMode="settle";autoMood="Pose";modeUntil=actionNow+4200;return;}
@@ -1398,72 +1527,91 @@ async function handleQuestion(raw){
   }
 
 
-  // Lumi Lite uses built-in, role-aware replies. No external AI service or API key is required.
+  // Lumi Lite uses built-in, role-aware replies. No external AI service or API key is required.
   if(/^(hi|hello|hey|kumusta|good morning|good afternoon|good evening|magandang umaga|magandang hapon|magandang gabi)$/.test(text)){
 
-   addMessage(`Hello, ${currentAccountName}! 💜 Ako si Lumi, ang ${roleLabel.toLowerCase()} mo. Kaya kitang gabayan sa features at steps ng EqualLearn. Ano ang gusto mong gawin?`);setSuggestions(suggestionsForRole());return;
+   addMessage(`Hello, ${currentAccountName}! 💜 Ako si Lumi, ang ${roleLabel.toLowerCase()} mo. Kaya kitang gabayan sa features at steps ng EqualLearn. Ano ang gusto mong gawin?`);setSuggestions(suggestionsForRole());return;
 
-  }
+  }
 
-  if(text.includes("ano ang equallearn")||text.includes("what is equallearn")||text.includes("about equallearn")){
+    if(text.includes("ano ang equallearn")||text.includes("what is equallearn")||text.includes("about equallearn")){
 
    addMessage("Ang EqualLearn ay isang mobile learning application para sa Gender Equality Education and Awareness ng Pateros Technological College. May learning resources at classroom activities para suportahan ang pagkatuto tungkol sa gender equality.");return;
 
   }
 
+  if(/\b(favorite color|fav color|paborito mong kulay)\b/.test(text)){addMessage("I love my Lumi purple! 💜 Pero I can be any color—mint, rose, ocean blue, or sunshine gold. Which one is your favorite?");autoMood="Curious";return;}
+  if(/\b(what should we do|ano gagawin natin|what now|im bored|bored ako|nabobore ako)\b/.test(text)){addMessage("Let's pick something fun! We can play a 3D equality game, do a tiny dance break, hear a joke, or learn a quick fact. 🎮✨");setSuggestions(["Play 3D mini-games","Tell me a joke","Dance","Give me a fun fact","Motivate me"]);autoMood="Bounce";return;}
+
   if(text.includes("where am i")||text.includes("anong page")||text.includes("nasaan ako")||text.includes("current page")){
 
-   addMessage(getPageHint());return;
+   addMessage(getPageHint());return;
 
-  }
+  }
 
-  if(text.includes("contact")||text.includes("admin")||text.includes("teacher ko")||text.includes("tao na")||text.includes("human support")||text.includes("report a problem")||text.includes("ireport")){
+  if(text.includes("contact")||text.includes("admin")||text.includes("teacher ko")||text.includes("tao na")||text.includes("human support")||text.includes("report a problem")||text.includes("ireport")){
 
-   addMessage(role==="student"?"Para sa account, section, grade, o technical issue na hindi ko kayang ayusin, kontakin ang iyong assigned teacher o school administrator. Isama ang page, oras ng error, at screenshot kung maaari. Huwag ipadala ang password o OTP.":role==="teacher"?"Para sa access, section assignment, o system issue, kontakin ang EqualLearn administrator. Ibigay ang page, oras ng error, at screenshot kung mayroon. Huwag mag-share ng password o OTP.":"Kung kailangan ng technical investigation, i-record ang page, exact error, oras, at steps bago lumabas ang problema. I-escalate ito sa authorized system maintainer.");return;
+   addMessage(role==="student"?"Para sa account, section, grade, o technical issue na hindi ko kayang ayusin, kontakin ang iyong assigned teacher o school administrator. Isama ang page, oras ng error, at screenshot kung maaari. Huwag ipadala ang password o OTP.":role==="teacher"?"Para sa access, section assignment, o system issue, kontakin ang EqualLearn administrator. Ibigay ang page, oras ng error, at screenshot kung mayroon. Huwag mag-share ng password o OTP.":"Kung kailangan ng technical investigation, i-record ang page, exact error, oras, at steps bago lumabas ang problema. I-escalate ito sa authorized system maintainer.");return;
 
-  }
+  }
 
-  if(/(hindi gumagana|not working|error|problem|ayaw|failed|failure|di ma|cannot|can't|unable|stuck|loading|blank|white screen)/.test(text)){
+  if(/(hindi gumagana|not working|error|problem|ayaw|failed|failure|di ma|cannot|can't|unable|stuck|loading|blank|white screen)/.test(text)){
 
-   addMessage("Sige, tulungan kitang i-troubleshoot. Subukan muna ito:\n1. I-refresh ang page nang isang beses.\n2. I-check ang internet connection.\n3. Mag-sign out at mag-sign in ulit kung account-related.\n4. Kung may error message, kopyahin ang exact text o kumuha ng screenshot.\n\nAnong feature ang may problema—login, lesson, quiz, classwork, grading, o live class?");setSuggestions(["Login problem","Lesson problem","Quiz problem","Classwork problem","Live Class problem"]);return;
+   addMessage("Sige, tulungan kitang i-troubleshoot. Subukan muna ito:\n1. I-refresh ang page nang isang beses.\n2. I-check ang internet connection.\n3. Mag-sign out at mag-sign in ulit kung account-related.\n4. Kung may error message, kopyahin ang exact text o kumuha ng screenshot.\n\nAnong feature ang may problema—login, lesson, quiz, classwork, grading, o live class?");setSuggestions(["Login problem","Lesson problem","Quiz problem","Classwork problem","Live Class problem"]);return;
 
-  }
+  }
 
-  if(text.includes("paano")||text.includes("how do i")||text.includes("how to")||text.includes("help me")||text.includes("turuan")){
+  if(text.includes("paano")||text.includes("how do i")||text.includes("how to")||text.includes("help me")||text.includes("turuan")){
 
-   const guide=findGuide(q);
+   const guide=findGuide(q);
 
-   if(guide){const link=links.find(x=>x.label.toLowerCase()===guide.label.toLowerCase());addMessage(`${guide.steps}\n\nMagsimula sa ${guide.label}. Sundin ang available controls sa page; maaaring mag-iba ang eksaktong buttons depende sa access at page version.`,"bot",link?[link]:[]);return;}
+   if(guide){const link=links.find(x=>x.label.toLowerCase()===guide.label.toLowerCase());addMessage(`${guide.steps}\n\nMagsimula sa ${guide.label}. Sundin ang available controls sa page; maaaring mag-iba ang eksaktong buttons depende sa access at page version.`,"bot",link?[link]:[]);return;}
 
-  }
+  }
 
-  const guide=findGuide(q);
+  const guide=findGuide(q);
 
-  if(guide){const link=links.find(x=>x.label.toLowerCase()===guide.label.toLowerCase());addMessage(`${guide.steps}\n\nGusto mo bang buksan ang ${guide.label}?`,"bot",link?[link]:[]);return;}
+  if(guide){const link=links.find(x=>x.label.toLowerCase()===guide.label.toLowerCase());addMessage(`${guide.steps}\n\nGusto mo bang buksan ang ${guide.label}?`,"bot",link?[link]:[]);return;}
 
-  if(role==="visitor"){
+  if(role==="visitor"){
 
-   addMessage("Para magamit ang student, teacher, o admin workspace, mag-sign in muna gamit ang authorized EqualLearn account. Maaari kitang tulungang hanapin ang login page.","bot",[{label:"Open Login",url:"/login.html"}]);return;
+   addMessage("Para magamit ang student, teacher, o admin workspace, mag-sign in muna gamit ang authorized EqualLearn account. Maaari kitang tulungang hanapin ang login page.","bot",[{label:"Open Login",url:"/login.html"}]);return;
 
-  }
+  }
 
-  addMessage("Gusto kitang matulungan nang tama. Hindi ko pa matukoy kung anong feature ang tinutukoy mo. Maaari mong sabihin kung anong ginagawa mo, anong page ka, at ano ang lumalabas na message? Maaari rin akong magbigay ng step-by-step guide sa lessons, quizzes, classwork, progress, live class, o account.");
+  addMessage("Gusto kitang matulungan nang tama. Hindi ko pa matukoy kung anong feature ang tinutukoy mo. Maaari mong sabihin kung anong ginagawa mo, anong page ka, at ano ang lumalabas na message? Maaari rin akong magbigay ng step-by-step guide sa lessons, quizzes, classwork, progress, live class, o account.");
 
-  setSuggestions(suggestionsForRole());
+  setSuggestions(suggestionsForRole());
 
- }
+ }
 
- chatForm.addEventListener("submit",e=>{e.preventDefault();handleQuestion(chatInput.value)});
+  chatForm.addEventListener("submit",e=>{e.preventDefault();handleQuestion(chatInput.value)});
+ document.getElementById("lumi-voice-toggle").addEventListener("click",()=>setVoiceReplies(!voiceRepliesEnabled));
+ reactionsBar?.querySelectorAll("[data-reaction]").forEach(button=>button.addEventListener("click",()=>handleQuestion(button.dataset.reaction)));
+ document.getElementById("lumi-mic").addEventListener("click",()=>{
+  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SpeechRecognition){addMessage("Voice input is not supported in this browser. You can still type your message. 💜");return;}
+  if(recognitionActive){speechRecognition?.stop();return;}
+  speechRecognition=new SpeechRecognition();speechRecognition.lang="en-PH";speechRecognition.interimResults=false;speechRecognition.maxAlternatives=1;
+  speechRecognition.onstart=()=>{recognitionActive=true;document.getElementById("lumi-mic").classList.add("listening");say("I'm listening… go ahead! 🎙",1800);};
+  speechRecognition.onresult=event=>{const spoken=event.results?.[0]?.[0]?.transcript||"";chatInput.value=spoken;if(spoken.trim())handleQuestion(spoken);};
+  speechRecognition.onerror=event=>{console.warn("Lumi speech input",event.error);if(event.error!=="no-speech")addMessage("I couldn't catch that. You can try again or type your message. 💜");};
+  speechRecognition.onend=()=>{recognitionActive=false;document.getElementById("lumi-mic").classList.remove("listening");};
+  try{speechRecognition.start();}catch(error){recognitionActive=false;document.getElementById("lumi-mic").classList.remove("listening");addMessage("The microphone could not start. Check browser microphone permission and try again.");}
+ });
+ document.getElementById("lumi-surprise").addEventListener("click",()=>{openAssistant();const choices=["Tell me a joke","Give me a fun fact","Motivate me","Do magic","Let's play","Send me a heart"];handleQuestion(choices[Math.floor(Math.random()*choices.length)]);});
+ document.getElementById("lumi-game-shortcut").addEventListener("click",()=>{openAssistant();openGames();});
+  document.addEventListener("keydown",event=>{if(event.key==="Escape"&&root.classList.contains("assistant-open")){closeAssistant();if(window.speechSynthesis)window.speechSynthesis.cancel();}});
 
- document.getElementById("lumi-chat-close").addEventListener("click",closeAssistant);
+ document.getElementById("lumi-chat-close").addEventListener("click",closeAssistant);
 
- document.getElementById("lumi-talk").addEventListener("click",openAssistant);
+ document.getElementById("lumi-talk").addEventListener("click",openAssistant);
 
- document.getElementById("lumi-wave").addEventListener("click",()=>{markUserInteraction();waveUntil=performance.now()+2300;clickPulse=1;say("Hiiii! Need help? Tap 💬 to chat! 👋",3600)});
+ document.getElementById("lumi-wave").addEventListener("click",()=>{markUserInteraction();waveUntil=performance.now()+2300;clickPulse=1;say("Hiiii! Need help? Tap 💬 to chat! 👋",3600)});
 
- // Open chat from a mascot click as well as from the talk button.
+ // Open chat from a mascot click as well as from the talk button.
 
- dragHitbox.addEventListener("dblclick",()=>openAssistant());
+ dragHitbox.addEventListener("dblclick",()=>openAssistant());
 dragHitbox.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();waveUntil=performance.now()+1500;autoMood="Bounce";say("Boop boop! I'm right here! 💜",2600);}});
 
  document.getElementById("lumi-hide").addEventListener("click",()=>{
@@ -1530,29 +1678,29 @@ dragHitbox.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key=
 
 
 
- function resize(){
-  const rect=canvas.getBoundingClientRect();
-  const w=Math.max(1,rect.width||window.innerWidth||root.clientWidth||360);
-  const h=Math.max(1,rect.height||window.innerHeight||root.clientHeight||700);
-  renderer.setSize(w,h,false);
-  camera.aspect=w/h;
-  camera.fov=root.classList.contains("game-open")?42:32;
-  camera.position.set(0,0,root.classList.contains("game-open")?6.4:(camera.aspect<.62?17.5:camera.aspect<.9?15.5:12.5));
-  camera.updateProjectionMatrix();
+ function resize(){
+  const rect=canvas.getBoundingClientRect();
+  const w=Math.max(1,rect.width||window.innerWidth||root.clientWidth||360);
+  const h=Math.max(1,rect.height||window.innerHeight||root.clientHeight||700);
+  renderer.setSize(w,h,false);
+  camera.aspect=w/h;
+  camera.fov=root.classList.contains("game-open")?42:32;
+  camera.position.set(0,0,root.classList.contains("game-open")?6.4:(camera.aspect<.62?17.5:camera.aspect<.9?15.5:12.5));
+  camera.updateProjectionMatrix();
   if(roamTarget){const b=getPetBounds();roamTarget.x=THREE.MathUtils.clamp(roamTarget.x,-b.x,b.x);roamTarget.y=THREE.MathUtils.clamp(roamTarget.y,-b.y,b.y);petPosition.x=THREE.MathUtils.clamp(petPosition.x,-b.x,b.x);petPosition.y=THREE.MathUtils.clamp(petPosition.y,-b.y,b.y);}
- }
+ }
 
- const ro=new ResizeObserver(resize);ro.observe(root);window.addEventListener("resize",resize,{passive:true});window.visualViewport?.addEventListener("resize",resize,{passive:true});resize();
+ const ro=new ResizeObserver(resize);ro.observe(root);window.addEventListener("resize",resize,{passive:true});window.visualViewport?.addEventListener("resize",resize,{passive:true});resize();
 
 
 
- const waveQuaternion=new THREE.Quaternion();
+ const waveQuaternion=new THREE.Quaternion();
 
- function animate(){
-  raf=requestAnimationFrame(animate);
+ function animate(){
+  raf=requestAnimationFrame(animate);
   const dt=Math.min(clock.getDelta(),.05);
-  const t=clock.elapsedTime,now=performance.now();
-  pointer.x+=(target.x-pointer.x)*.055;pointer.y+=(target.y-pointer.y)*.055;
+  const t=clock.elapsedTime,now=performance.now();
+  pointer.x+=(target.x-pointer.x)*.055;pointer.y+=(target.y-pointer.y)*.055;
 
   // Curious-companion rhythm: calm walking, brief playful moments and occasional gentle rocket flights.
   if(!isSleeping && !dragState && now>modeUntil){
@@ -1597,7 +1745,7 @@ dragHitbox.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key=
 
   // Lumi is chatty and curious, but never talks over an open chat.
   if(!isSleeping && !root.classList.contains("assistant-open") && now>nextPetThoughtAt && now-lastUserInteraction>12000){
-   const thoughts=[`Psst, ${currentAccountName}… may nakita akong interesting! ✨`,`Hello ulit, ${currentAccountName}! Nandito lang ako, your tiny robot buddy. 💜`,"I wonder what we're learning today? 🤔","May tiny rocket ako… gusto mo makita? 🚀","Nag-iikot lang ako dito. Ang cozy ng spot na 'to!","Don't mind me, just keeping you company. 😊","Fun fact: kaya kong mag-float… pero dahan-dahan lang! 🚀","Uy, remember to take a tiny stretch break! 🌱","I'm curious… anong ginagawa mo ngayon?","Boop! Just checking if you're still there. 👋","I practiced my little bounce. Did you see? ✨","If you need help, tap my chat button. I'm ready! 💜","Hmm… maybe we should explore a new lesson later?","I can wait. I like being your study buddy. 🌙","Rocket check… all systems cute and ready! 🚀"];
+   const thoughts=[`Psst, ${currentAccountName}… may nakita akong interesting! ✨`,`Hello ulit, ${currentAccountName}! Nandito lang ako, your tiny robot buddy. 💜`,"I wonder what we're learning today? 🤔","May tiny rocket ako… gusto mo makita? 🚀","Nag-iikot lang ako dito. Ang cozy ng spot na 'to!","Don't mind me, just keeping you company. 😊","Fun fact: kaya kong mag-float… pero dahan-dahan lang! 🚀","Uy, remember to take a tiny stretch break! 🌱","I'm curious… anong ginagawa mo ngayon?","Boop! Just checking if you're still there. 👋","I practiced my little bounce. Did you see? ✨","If you need help, tap my chat button. I'm ready! 💜","Hmm… maybe we should explore a new lesson later?","I can wait. I like being your study buddy. 🌙","Rocket check… all systems cute and ready! 🚀","Psst… gusto mo ng joke, fun fact, or mini-game? 🎮","Tiny reminder: drink some water and relax your shoulders. 💧","I wonder what we can create together next. 🌈","Sending you a pocket-sized sparkle! ✨","You don't have to rush. One small step is enough. 🌱","I was practicing my best robot pose. Did I nail it? 🤖","Need a high five? I'm always ready! ✋"];
    say(thoughts[Math.floor(Math.random()*thoughts.length)],4300);
    nextPetThoughtAt=now+22000+Math.random()*13000;
   }
@@ -1609,7 +1757,7 @@ dragHitbox.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key=
   updateOutfit(now);
 
   if(now>nextMoodAt && !isSleeping){
-   const choices=petMode==="rest"?["Idle","Sleepy","Idle"]:petMode==="play"?["Play","Idle","Bounce"]:petMode==="flight"?["Idle","Idle","Play"]:["Idle","Bounce","Idle"];
+   const choices=petMode==="rest"?["Idle","Sleepy","Curious","Wink"]:petMode==="play"?["Play","Bounce","Wiggle","Laugh","Clap"]:petMode==="flight"?["Idle","Curious","Play"]:["Idle","Bounce","Nod","Curious"];
    autoMood=choices[Math.floor(Math.random()*choices.length)];
    nextMoodAt=now+9000+Math.random()*9000;
   }
@@ -1645,44 +1793,75 @@ dragHitbox.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key=
   headPivot.rotation.z+=( (isSleeping?.10:0)-headPivot.rotation.z )*(1-Math.exp(-3*dt));
   headPivot.rotation.y=pointer.x*.12+Math.sin(t*.35)*.018;
   headPivot.rotation.x=-pointer.y*.08+Math.sin(t*.45)*.012+(mood==="Sleepy"?.16:0);
-  const expressiveTorso=mood==="Dance"?Math.sin(t*4.2)*.10:mood==="Wiggle"?Math.sin(t*8)*.12:mood==="Heart"?Math.sin(t*3)*.035:0;
+    const expressiveTorso=
+   mood==="Dance"?Math.sin(t*4.2)*.10:
+   mood==="Wiggle"?Math.sin(t*8)*.12:
+   mood==="Heart"?Math.sin(t*3)*.035:
+   mood==="Laugh"?Math.sin(t*10)*.045:
+   mood==="Shy"?-.10:
+   mood==="Bow"?-.34:
+   mood==="Yawn"?.08:0;
   const torsoTarget=isSleeping?-.92:expressiveTorso;
   torso.rotation.z+=(torsoTarget-torso.rotation.z)*(1-Math.exp(-(isSleeping?3.8:5)*dt));
-  if(mood==="Stretch"){armL.rotation.z=-.45+Math.sin(t*2)*.06;armR.rotation.z=.48+Math.sin(t*2)*.06;}
-  if(mood==="Pose"){armL.rotation.z=-.34;armR.rotation.z=1.02;}
-  if(mood==="Peek"){armL.rotation.z=-.18;armR.rotation.z=.28+Math.sin(t*5)*.08;}
-  if(mood==="Heart"){armL.rotation.z=-.38;armR.rotation.z=.42;}
-  if(mood==="Curious")headPivot.rotation.z=Math.sin(t*1.8)*.10;
-  armL.rotation.z=isWalking?-.08+walkCycle*.045:-.08+Math.sin(t*.45)*.012;
-  armR.rotation.z=isWaving?1.08+Math.sin(t*7.8)*.12:isWalking?.08-walkCycle*.045:petMode==="play"?.08+Math.sin(t*2.1)*.09:.08+Math.sin(t*.5)*.012;
-  armR.rotation.x=isWaving?-.04:petMode==="play"?Math.sin(t*2.6)*.055:isFlying?-.16:0;
 
-  if(clickPulse>0){lumi.scale.setScalar(.58*(1+clickPulse*.035));clickPulse*=.88;if(clickPulse<.01)clickPulse=0;}
-  else lumi.scale.setScalar(.58*(1+(mood==="Bounce"?Math.abs(Math.sin(t*4.2))*.018:0)));
+  // Gesture poses are resolved once, after walking/flight defaults, so a
+  // later idle assignment cannot accidentally overwrite the requested action.
+  let leftArmZ=isWalking?-.08+walkCycle*.045:-.08+Math.sin(t*.45)*.012;
+  let rightArmZ=isWaving?1.08+Math.sin(t*7.8)*.12:isWalking?.08-walkCycle*.045:petMode==="play"?.08+Math.sin(t*2.1)*.09:.08+Math.sin(t*.5)*.012;
+  let leftArmX=0;
+  let rightArmX=isWaving?-.04:petMode==="play"?Math.sin(t*2.6)*.055:isFlying?-.16:0;
+  const gestureWave=Math.sin(t*8.5);
+  if(mood==="Stretch"){leftArmZ=-.92+Math.sin(t*2)*.06;rightArmZ=1.02+Math.sin(t*2)*.06;leftArmX=-.12;rightArmX=-.12;}
+  else if(mood==="Pose"){leftArmZ=-.28;rightArmZ=1.08;rightArmX=-.12;}
+  else if(mood==="Peek"){leftArmZ=-.18;rightArmZ=.62+Math.sin(t*5)*.10;rightArmX=-.22;}
+  else if(mood==="Heart"){leftArmZ=.62+Math.sin(t*3)*.035;rightArmZ=-.62-Math.sin(t*3)*.035;leftArmX=-.18;rightArmX=-.18;}
+  else if(mood==="Clap"){leftArmZ=.72+Math.abs(gestureWave)*.18;rightArmZ=-.72-Math.abs(gestureWave)*.18;leftArmX=-.28;rightArmX=-.28;}
+  else if(mood==="Cheer"){leftArmZ=-1.12+Math.sin(t*6)*.08;rightArmZ=1.12-Math.sin(t*6)*.08;leftArmX=-.18;rightArmX=-.18;}
+  else if(mood==="Flex"){leftArmZ=-.86+Math.sin(t*4)*.06;rightArmZ=.86-Math.sin(t*4)*.06;leftArmX=.28;rightArmX=.28;}
+  else if(mood==="Shy"){leftArmZ=.38;rightArmZ=-.38;leftArmX=-.12;rightArmX=-.12;}
+  else if(mood==="Bow"){leftArmZ=-.32;rightArmZ=.32;}
+  else if(mood==="Laugh"){leftArmZ=-.18+Math.sin(t*10)*.09;rightArmZ=.18-Math.sin(t*10)*.09;leftArmX=-.08;rightArmX=-.08;}
+  else if(mood==="Yawn"){leftArmZ=-.52;rightArmZ=.55;leftArmX=-.25;rightArmX=-.25;}
+  else if(mood==="Wink"){leftArmZ=-.1;rightArmZ=.28;}
+  armL.rotation.z=leftArmZ;armR.rotation.z=rightArmZ;
+  armL.rotation.x=leftArmX;armR.rotation.x=rightArmX;
+  if(mood==="Curious"){headPivot.rotation.z=Math.sin(t*1.8)*.10;headPivot.rotation.x+=.04;}
+  else if(mood==="Nod"){headPivot.rotation.x+=Math.sin(t*5.8)*.12;}
+  else if(mood==="Shake"){headPivot.rotation.y+=Math.sin(t*7.5)*.18;}
+  else if(mood==="Laugh"){headPivot.rotation.x+=Math.abs(Math.sin(t*8))*.09;headPivot.rotation.z+=Math.sin(t*9)*.07;}
+  else if(mood==="Shy"){headPivot.rotation.z=-.17+Math.sin(t*2)*.025;headPivot.rotation.x+=.12;}
+  else if(mood==="Bow"){headPivot.rotation.x+=.28;}
+  else if(mood==="Yawn"){headPivot.rotation.x+=.22+Math.sin(t*2)*.025;}
+  if(isWaving){rightArmZ=1.08+Math.sin(t*7.8)*.12;armR.rotation.z=rightArmZ;armR.rotation.x=-.04;}
+  if(clickPulse>0){lumi.scale.setScalar(.58*(1+clickPulse*.035));clickPulse*=.88;if(clickPulse<.01)clickPulse=0;}
+  else lumi.scale.setScalar(.58*(1+(mood==="Bounce"?Math.abs(Math.sin(t*4.2))*.018:0)));
 
-  const blink=isSleeping?.035:(mood==="Sleepy"?(Math.sin(t*.65)>.72?.18:1):(Math.sin(t*1.15+Math.sin(t*.27))>.985?.12:1));
-  eyeGroups.forEach(g=>g.scale.y+=(blink-g.scale.y)*.42);
-  halo.rotation.z=t*(mood==="Spin"?.55:.012);
-  orbit.rotation.z=-t*(mood==="Dance"?.28:.008);
-  halo.scale.setScalar(1+Math.sin(t*.45)*.008);
-  sparkles.forEach(s=>{
+  const blink=isSleeping?.035:(mood==="Sleepy"?(Math.sin(t*.65)>.72?.18:1):(Math.sin(t*1.15+Math.sin(t*.27))>.985?.12:1));
+  eyeGroups.forEach((g,index)=>{
+   const eyeTarget=mood==="Wink"?(index===1?.07:1):blink;
+   g.scale.y+=(eyeTarget-g.scale.y)*.42;
+  });
+  halo.rotation.z=t*(mood==="Spin"?.55:.012);
+  orbit.rotation.z=-t*(mood==="Dance"?.28:.008);
+  halo.scale.setScalar(1+Math.sin(t*.45)*.008);
+  sparkles.forEach(s=>{
    s.mesh.position.y=s.base.y+Math.sin(t*1.2+s.phase)*.07;
    s.mesh.rotation.y=t*.5+s.phase;
    s.mesh.rotation.x=Math.sin(t+s.phase)*.35;
   });
-  shadow.scale.set(1-Math.sin(t*1.55)*.08,1,1);
-  shadow.material.opacity=.8-Math.sin(t*1.55)*.15;
+  shadow.scale.set(1-Math.sin(t*1.55)*.08,1,1);
+  shadow.material.opacity=.8-Math.sin(t*1.55)*.15;
   updateDragHitbox();
-  if(webglAvailable)renderer.render(scene,camera);
- }
+  if(webglAvailable)renderer.render(scene,camera);
+ }
 
- if(webglAvailable)animate();
+ if(webglAvailable)animate();
 
 
 
- window.addEventListener("pagehide",()=>{cancelAnimationFrame(raf);ro.disconnect();renderer.dispose();scene.traverse(o=>{o.geometry?.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}});},{once:true});
+ window.addEventListener("pagehide",()=>{cancelAnimationFrame(raf);ro.disconnect();renderer.dispose();scene.traverse(o=>{o.geometry?.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}});},{once:true});
 
- say("Hi! I'm Lumi, your 3D learning buddy. 💜",4200);
+ say("Hi! I'm Lumi, your 3D learning buddy. 💜",4200);
 
   // Parent-page launcher bridge. It works while this iframe is display:none,
   // and does not cancel the host page's own click handler.
@@ -1737,23 +1916,23 @@ whole parent page automatically.
 
 document.addEventListener("pointermove", (e) => {
 
-  const frame = document.getElementById("equallearn-lumi-frame");
+  const frame = document.getElementById("equallearn-lumi-frame");
 
-  if (!frame?.contentWindow) return;
+  if (!frame?.contentWindow) return;
 
-  const r = frame.getBoundingClientRect();
+  const r = frame.getBoundingClientRect();
 
-  frame.contentWindow.postMessage({
+  frame.contentWindow.postMessage({
 
-    type: "LUMI_POINTER",
+    type: "LUMI_POINTER",
 
-    x: e.clientX, y: e.clientY,
+    x: e.clientX, y: e.clientY,
 
-    w: window.innerWidth, h: window.innerHeight,
+    w: window.innerWidth, h: window.innerHeight,
 
-    frame: { left:r.left, top:r.top, width:r.width, height:r.height }
+    frame: { left:r.left, top:r.top, width:r.width, height:r.height }
 
-  }, "*");
+  }, "*");
 
 }, {passive:true});
 
