@@ -1,9 +1,11 @@
+
 name: Build EqualLearn APK
 
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -11,24 +13,45 @@ permissions:
 jobs:
   android:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
+
       - name: Install dependencies
         run: npm install
+
+      - name: Generate app version
+        id: app_version
+        shell: bash
+        run: |
+          BASE_VERSION="$(node -p "require('./package.json').version || '1.0.0'")"
+          VERSION_CODE=$((100000 + GITHUB_RUN_NUMBER * 1000 + GITHUB_RUN_ATTEMPT))
+          VERSION_NAME="${BASE_VERSION}+${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}"
+
+          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+
+          echo "EqualLearn version: $VERSION_NAME"
+          echo "Android version code: $VERSION_CODE"
+
       - name: Prepare web assets
         run: npm run mobile:build-web
+
       - name: Create Android project
         run: npx cap add android
+
       - name: Configure Firebase Cloud Messaging for Android
         env:
           GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
@@ -37,23 +60,213 @@ jobs:
             echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > android/app/google-services.json
             echo "Firebase Android configuration installed."
           else
-            echo "::warning::GOOGLE_SERVICES_JSON_BASE64 is not configured. The APK can build, but Android FCM registration/delivery will not work until this repository secret is added. See workers/web-push/README.md."
+            echo "::warning::GOOGLE_SERVICES_JSON_BASE64 is not configured. Android FCM registration/delivery may not work."
           fi
+
       - name: Install EqualLearn notification sound
         run: |
           mkdir -p android/app/src/main/res/raw
           cp resources/android/res/raw/equallearn_notification.wav android/app/src/main/res/raw/equallearn_notification.wav
+
       - name: Generate app icon and splash
         run: npx @capacitor/assets generate --android --assetPath resources --iconBackgroundColor '#111827' --iconBackgroundColorDark '#0b1020' --splashBackgroundColor '#111827' --splashBackgroundColorDark '#0b1020'
+
       - name: Sync Capacitor
         run: npx cap sync android
-      - name: Build debug APK
+
+      - name: Prepare permanent signing key
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ] || [ -z "$ANDROID_KEYSTORE_PASSWORD" ]; then
+            echo "::error::Android signing secrets are missing."
+            exit 1
+          fi
+
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/equallearn-release.jks"
+          chmod 600 "$RUNNER_TEMP/equallearn-release.jks"
+
+          keytool -list \
+            -keystore "$RUNNER_TEMP/equallearn-release.jks" \
+            -alias equallearn \
+            -storepass "$ANDROID_KEYSTORE_PASSWORD" > /dev/null
+
+          echo "Permanent EqualLearn signing key verified."
+
+      - name: Configure Android release signing
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/equallearn-release.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          EQUALLEARN_VERSION_CODE: ${{ steps.app_version.outputs.version_code }}
+          EQUALLEARN_VERSION_NAME: ${{ steps.app_version.outputs.version_name }}
+        run: |
+          if [ ! -f android/app/build.gradle ]; then
+            echo "::error::Expected android/app/build.gradle was not generated."
+            exit 1
+          fi
+
+          cat >> android/app/build.gradle <<'GRADLE'
+
+          // EqualLearn permanent CI release signing configuration
+          android {
+              defaultConfig {
+                  versionCode Integer.parseInt(System.getenv("EQUALLEARN_VERSION_CODE"))
+                  versionName System.getenv("EQUALLEARN_VERSION_NAME")
+              }
+
+              signingConfigs {
+                  release {
+                      storeFile file(System.getenv("ANDROID_KEYSTORE_PATH"))
+                      storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                      keyAlias "equallearn"
+                      keyPassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                  }
+              }
+
+              buildTypes {
+                  release {
+                      signingConfig signingConfigs.release
+                  }
+              }
+          }
+          GRADLE
+
+      - name: Build signed release APK
         working-directory: android
-        run: ./gradlew assembleDebug
-      - name: Rename APK
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk EqualLearn.apk
-      - name: Upload EqualLearn APK
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/equallearn-release.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          EQUALLEARN_VERSION_CODE: ${{ steps.app_version.outputs.version_code }}
+          EQUALLEARN_VERSION_NAME: ${{ steps.app_version.outputs.version_name }}
+        run: ./gradlew --no-daemon clean assembleRelease
+
+      - name: Verify APK signature
+        shell: bash
+        run: |
+          APK_PATH="android/app/build/outputs/apk/release/app-release.apk"
+
+          if [ ! -f "$APK_PATH" ]; then
+            echo "::error::Release APK was not generated."
+            exit 1
+          fi
+
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+
+          if [ -z "$SDK_ROOT" ]; then
+            echo "::error::Android SDK path was not found."
+            exit 1
+          fi
+
+          APKSIGNER="$(find "$SDK_ROOT/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
+
+          if [ -z "$APKSIGNER" ]; then
+            echo "::error::apksigner was not found."
+            exit 1
+          fi
+
+          "$APKSIGNER" verify --verbose --print-certs "$APK_PATH" | tee signing-verification.txt
+
+      - name: Prepare Cloudflare Pages deployment
+        env:
+          VERSION_CODE: ${{ steps.app_version.outputs.version_code }}
+          VERSION_NAME: ${{ steps.app_version.outputs.version_name }}
+        run: |
+          APK_PATH="android/app/build/outputs/apk/release/app-release.apk"
+          APK_NAME="EqualLearn-${VERSION_CODE}.apk"
+
+          APK_SIZE=$(stat -c%s "$APK_PATH")
+          MAX_SIZE=$((25 * 1024 * 1024))
+
+          if [ "$APK_SIZE" -gt "$MAX_SIZE" ]; then
+            echo "::error::APK exceeds the Cloudflare Pages 25 MiB per-file limit."
+            exit 1
+          fi
+
+          mkdir -p public
+          cp "$APK_PATH" "public/$APK_NAME"
+
+          APK_URL="https://equallearn-downloads.pages.dev/$APK_NAME"
+
+          cat > public/version.json <<EOF
+          {
+            "appId": "com.equallearn.app",
+            "versionCode": ${VERSION_CODE},
+            "versionName": "${VERSION_NAME}",
+            "apkUrl": "${APK_URL}",
+            "downloadUrl": "https://equallearn-downloads.pages.dev/EqualLearn.apk"
+          }
+          EOF
+
+          cat > public/index.html <<EOF
+          <!doctype html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>EqualLearn Downloads</title>
+          </head>
+          <body>
+            <main>
+              <h1>EqualLearn</h1>
+              <p>Latest Android release: ${VERSION_NAME}</p>
+              <p><a href="/EqualLearn.apk">Download EqualLearn APK</a></p>
+              <p>Version code: ${VERSION_CODE}</p>
+            </main>
+          </body>
+          </html>
+          EOF
+
+          cat > public/_redirects <<EOF
+          /EqualLearn.apk /${APK_NAME} 302
+          EOF
+
+          cat > public/_headers <<'EOF'
+          /version.json
+            Cache-Control: no-store, max-age=0, must-revalidate
+
+          /*.apk
+            Cache-Control: public, max-age=31536000, immutable
+          EOF
+
+          echo "APK prepared: $APK_NAME"
+          echo "APK size: $APK_SIZE bytes"
+
+      - name: Upload release artifact backup
         uses: actions/upload-artifact@v4
         with:
-          name: EqualLearn
-          path: EqualLearn.apk
+          name: EqualLearn-Release-${{ github.run_number }}-${{ github.run_attempt }}
+          path: |
+            public/
+            signing-verification.txt
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Deploy APK to Cloudflare Pages
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::error::Cloudflare deployment secrets are missing."
+            exit 1
+          fi
+
+          npx wrangler@4 pages deploy public \
+            --project-name=equallearn-downloads \
+            --branch=main \
+            --commit-dirty=true
+
+      - name: Write deployment summary
+        env:
+          VERSION_CODE: ${{ steps.app_version.outputs.version_code }}
+          VERSION_NAME: ${{ steps.app_version.outputs.version_name }}
+        run: |
+          {
+            echo "## EqualLearn Android Release"
+            echo ""
+            echo "- Version: $VERSION_NAME"
+            echo "- Version code: $VERSION_CODE"
+            echo "- APK: https://equallearn-downloads.pages.dev/EqualLearn.apk"
+            echo "- Version info: https://equallearn-downloads.pages.dev/version.json"
+          } >> "$GITHUB_STEP_SUMMARY"
