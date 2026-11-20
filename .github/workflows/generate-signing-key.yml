@@ -1,0 +1,50 @@
+
+name: Generate EqualLearn Signing Key
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Generate permanent Android keystore
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_PASSWORD" ]; then
+            echo "::error::ANDROID_KEYSTORE_PASSWORD secret is missing."
+            exit 1
+          fi
+
+          keytool -genkeypair \
+            -v \
+            -storetype JKS \
+            -keystore "$RUNNER_TEMP/equallearn-release.jks" \
+            -alias equallearn \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass "$ANDROID_KEYSTORE_PASSWORD" \
+            -keypass "$ANDROID_KEYSTORE_PASSWORD" \
+            -dname "CN=EqualLearn, OU=Mobile, O=EqualLearn, L=Taguig, ST=Metro Manila, C=PH"
+
+          echo "EqualLearn signing key generated successfully."
+
+      - name: Upload signing keystore
+        uses: actions/upload-artifact@v4
+        with:
+          name: EqualLearn-Signing-Key
+          path: ${{ runner.temp }}/equallearn-release.jks
+          retention-days: 1
+          if-no-files-found: error
