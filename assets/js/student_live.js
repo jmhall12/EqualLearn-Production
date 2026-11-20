@@ -5,7 +5,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
 
 import {
-  doc, getDoc, collection, query, where, getDocs,
+  doc, getDoc, collection, query, where, getDocs, onSnapshot,
   orderBy, limit
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
@@ -27,7 +27,6 @@ const notificationCount = document.getElementById("notificationCount");
 
 const liveSessionList = document.getElementById("liveSessionList");
 const liveSessionCount = document.getElementById("liveSessionCount");
-const refreshLiveBtn = document.getElementById("refreshLiveBtn");
 
 const sessionIdInput =
   document.getElementById("studentSessionIdInput");
@@ -78,6 +77,15 @@ const cameraBtn =
 const shareBtn =
   document.getElementById("studentMeetingShare");
 
+const raiseHandBtn =
+  document.getElementById("studentMeetingRaiseHand");
+
+const meetingLayout =
+  document.getElementById("studentMeetingLayout");
+
+const meetingToastHost =
+  document.getElementById("studentMeetingToastHost");
+
 const leaveBtn =
   document.getElementById("studentMeetingLeave");
 
@@ -91,19 +99,9 @@ let cameraEnabled = false;
 let shareEnabled = false;
 let canPublish = false;
 let joining = false;
-
-let cameraFacingMode = "user";
-let currentBackgroundProcessor = null;
-let backgroundModulePromise = null;
-let currentBackgroundMode = "disabled";
-let backgroundImageUrl = null;
-let floatingCallCard = null;
-let floatingVideoTrack = null;
-let floatingVideoElement = null;
-let raisedHands = new Set();
 let handRaised = false;
-
-
+let liveSessionsUnsubscribe = null;
+const raisedHands = new Set();
 
 const encoder = new TextEncoder();
 
@@ -122,6 +120,72 @@ function message(element, value, error = false) {
 
   element.textContent = value;
   element.style.color = error ? "#dc2626" : "";
+}
+
+function setControlLabel(button, label, isOff = false, isActive = false) {
+  if (!button) return;
+  const span = button.querySelector("span");
+  if (span) span.textContent = label;
+  button.setAttribute("aria-label", label);
+  button.title = label;
+  button.classList.toggle("is-off", isOff);
+  button.classList.toggle("is-active", isActive);
+}
+
+function handIconMarkup() {
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 12V5a2 2 0 0 1 4 0v6-3a2 2 0 0 1 4 0v4-2a2 2 0 0 1 4 0v4c0 5-3 8-8 8h-1c-3.5 0-5.6-1.8-6.6-4.8L3 14.5a2 2 0 0 1 3.3-2.1L8 14"/></svg>';
+}
+
+function showHandRaiseToast(name, raised) {
+  if (!meetingToastHost) return;
+  meetingToastHost.querySelectorAll(".hand-raise-toast").forEach(node => node.remove());
+  if (!raised) return;
+  const toast = document.createElement("div");
+  toast.className = "hand-raise-toast";
+  toast.innerHTML = handIconMarkup();
+  const label = document.createElement("span");
+  label.textContent = `${name} raised their hand`;
+  toast.appendChild(label);
+  meetingToastHost.appendChild(toast);
+  window.setTimeout(() => toast.remove(), 3600);
+}
+
+function setParticipantHand(participant, raised, displayName = "Participant") {
+  const identity = participant?.identity;
+  if (!identity) return;
+  if (raised) raisedHands.add(identity);
+  else raisedHands.delete(identity);
+
+  const tile = participantGrid?.querySelector(
+    `.sm-tile[data-identity="${CSS.escape(identity)}"]:not([data-tile-type="screen-share"])`
+  );
+  if (tile) {
+    let indicator = tile.querySelector(".sm-hand-indicator");
+    if (raised && !indicator) {
+      indicator = document.createElement("div");
+      indicator.className = "sm-hand-indicator";
+      indicator.innerHTML = handIconMarkup();
+      const label = document.createElement("span");
+      label.textContent = "Hand raised";
+      indicator.appendChild(label);
+      tile.appendChild(indicator);
+    } else if (!raised) {
+      indicator?.remove();
+    }
+  }
+  if (raised && participant !== currentRoom?.localParticipant) {
+    showHandRaiseToast(displayName, true);
+  }
+  renderParticipants();
+}
+
+function addCameraPlaceholder(tile, name, isLocal = false) {
+  if (!tile || tile.querySelector("video")) return;
+  if (tile.querySelector(".sm-placeholder")) return;
+  const placeholder = document.createElement("div");
+  placeholder.className = "sm-placeholder";
+  placeholder.textContent = isLocal ? "Your camera is off" : `${name} camera is off`;
+  tile.prepend(placeholder);
 }
 
 function timestamp(value) {
@@ -166,20 +230,18 @@ function showMeeting() {
   }
 
   meetingScreen.hidden = false;
-  meetingScreen.classList.remove("is-minimized");
   meetingScreen.classList.add("active");
-  ensureReactionControls();
-  restoreLiveCall();
 
   document.body.style.overflow = "hidden";
+  const lumiFrame = document.getElementById("equallearn-lumi-frame");
+  if (lumiFrame) lumiFrame.style.display = "none";
   ensureReactionControls();
   void enterMeetingFullscreenAndLandscape();
 }
 
 function hideMeeting() {
-  disposeFloatingCall();
   if (meetingScreen) {
-    meetingScreen.classList.remove("active", "has-screen-share", "is-minimized");
+    meetingScreen.classList.remove("active", "has-screen-share");
     meetingScreen.hidden = true;
   }
 
@@ -189,6 +251,8 @@ function hideMeeting() {
     document.exitFullscreen?.().catch(() => {});
   }
   document.body.style.overflow = "";
+  const lumiFrame = document.getElementById("equallearn-lumi-frame");
+  if (lumiFrame) lumiFrame.style.display = "block";
 }
 
 // ======================================================
@@ -208,317 +272,39 @@ function studentDisplayName() {
   ).trim();
 }
 
-function ensureFloatingCallCard() {
-  if (floatingCallCard?.isConnected) return floatingCallCard;
-
-  floatingCallCard = document.createElement("section");
-  floatingCallCard.id = "equallearnFloatingCall";
-  floatingCallCard.className = "equallearn-floating-call";
-  floatingCallCard.hidden = true;
-  floatingCallCard.setAttribute("aria-label", "Minimized EqualLearn call");
-
-  const preview = document.createElement("div");
-  preview.className = "equallearn-floating-preview";
-  preview.id = "equallearnFloatingPreview";
-  const fallback = document.createElement("div");
-  fallback.className = "equallearn-floating-fallback";
-  fallback.textContent = "EL";
-  preview.appendChild(fallback);
-
-  const details = document.createElement("div");
-  details.className = "equallearn-floating-details";
-  const title = document.createElement("strong");
-  title.id = "equallearnFloatingTitle";
-  title.textContent = "EqualLearn Live";
-  const status = document.createElement("span");
-  status.id = "equallearnFloatingStatus";
-  status.textContent = "Connected · Minimized";
-  details.append(title, status);
-
-  const actions = document.createElement("div");
-  actions.className = "equallearn-floating-actions";
-  const restore = document.createElement("button");
-  restore.type = "button";
-  restore.textContent = "Return to call";
-  restore.addEventListener("click", restoreLiveCall);
-  const leave = document.createElement("button");
-  leave.type = "button";
-  leave.className = "is-danger";
-  leave.textContent = "Leave";
-  leave.addEventListener("click", () => leaveMeeting());
-  actions.append(restore, leave);
-
-  floatingCallCard.append(preview, details, actions);
-  document.body.appendChild(floatingCallCard);
-  return floatingCallCard;
-}
-
-function refreshFloatingCallVideo() {
-  if (!floatingCallCard || floatingCallCard.hidden || !currentRoom) return;
-  const preview = floatingCallCard.querySelector("#equallearnFloatingPreview");
-  if (!preview) return;
-
-  const participants = [
-    currentRoom.localParticipant,
-    ...Array.from(currentRoom.remoteParticipants.values())
-  ];
-  const tracks = [];
-  for (const participant of participants) {
-    for (const publication of participant.trackPublications.values()) {
-      if (publication.track?.kind === Track.Kind.Video) {
-        tracks.push({ track: publication.track, source: publication.source, local: participant === currentRoom.localParticipant });
-      }
-    }
-  }
-  tracks.sort((a, b) => {
-    const rank = item => item.source === Track.Source.ScreenShare ? 0 : (item.local ? 1 : 2);
-    return rank(a) - rank(b);
-  });
-  const chosen = tracks[0]?.track || null;
-  if (chosen === floatingVideoTrack && floatingVideoElement?.isConnected) return;
-
-  if (floatingVideoTrack && floatingVideoElement) {
-    try { floatingVideoTrack.detach(floatingVideoElement); } catch (_) { floatingVideoElement.remove(); }
-  }
-  floatingVideoTrack = chosen;
-  floatingVideoElement = null;
-  preview.replaceChildren();
-
-  if (chosen) {
-    const video = chosen.attach();
-    video.autoplay = true;
-    video.playsInline = true;
-    video.muted = true;
-    video.className = "equallearn-floating-video";
-    preview.appendChild(video);
-    floatingVideoElement = video;
-  } else {
-    const fallback = document.createElement("div");
-    fallback.className = "equallearn-floating-fallback";
-    fallback.textContent = "EL";
-    preview.appendChild(fallback);
-  }
-}
-
-function minimizeLiveCall() {
-  if (!currentRoom) return;
-  ensureFloatingCallCard();
-  const title = floatingCallCard.querySelector("#equallearnFloatingTitle");
-  const status = floatingCallCard.querySelector("#equallearnFloatingStatus");
-  if (title) title.textContent = currentSession?.title || "EqualLearn Live";
-  if (status) status.textContent = "Connected · Minimized";
-  floatingCallCard.hidden = false;
-  meetingScreen?.classList.add("is-minimized");
-  document.body.style.overflow = "";
-  try { screen.orientation?.unlock?.(); } catch (_) {}
-  if (document.fullscreenElement === meetingScreen) {
-    document.exitFullscreen?.().catch(() => {});
-  }
-  refreshFloatingCallVideo();
-}
-
-function restoreLiveCall() {
-  meetingScreen?.classList.remove("is-minimized");
-  if (currentRoom) document.body.style.overflow = "hidden";
-  if (floatingVideoTrack && floatingVideoElement) {
-    try { floatingVideoTrack.detach(floatingVideoElement); } catch (_) { floatingVideoElement.remove(); }
-  }
-  floatingVideoTrack = null;
-  floatingVideoElement = null;
-  if (floatingCallCard) floatingCallCard.hidden = true;
-}
-
-function disposeFloatingCall() {
-  if (floatingVideoTrack && floatingVideoElement) {
-    try { floatingVideoTrack.detach(floatingVideoElement); } catch (_) { floatingVideoElement.remove(); }
-  }
-  floatingVideoTrack = null;
-  floatingVideoElement = null;
-  if (floatingCallCard) floatingCallCard.hidden = true;
-  meetingScreen?.classList.remove("is-minimized");
-  currentBackgroundProcessor = null;
-  currentBackgroundMode = "disabled";
-  if (backgroundImageUrl) {
-    try { URL.revokeObjectURL(backgroundImageUrl); } catch (_) {}
-    backgroundImageUrl = null;
-  }
-}
-
-function getLocalCameraTrack() {
-  if (!currentRoom) return null;
-  for (const publication of currentRoom.localParticipant.trackPublications.values()) {
-    if (publication.source === Track.Source.Camera && publication.track) return publication.track;
-  }
-  return null;
-}
-
-async function flipCameraFacing() {
-  if (!currentRoom || !cameraEnabled) throw new Error("Turn on your camera first.");
-  const track = getLocalCameraTrack();
-  if (!track || typeof track.restartTrack !== "function") {
-    throw new Error("Camera switching is not supported by this device/browser.");
-  }
-  const nextFacing = cameraFacingMode === "user" ? "environment" : "user";
-  await track.restartTrack({ facingMode: nextFacing });
-  cameraFacingMode = nextFacing;
-  participantGrid?.querySelectorAll("video.is-local-camera").forEach(video => {
-    video.classList.toggle("is-selfie", cameraFacingMode === "user");
-  });
-}
-
-async function loadBackgroundProcessorModule() {
-  if (!backgroundModulePromise) {
-    backgroundModulePromise = import("https://cdn.jsdelivr.net/npm/@livekit/track-processors@0.8.3/+esm");
-  }
-  return backgroundModulePromise;
-}
-
-async function applyCameraBackground(mode, imagePath = null) {
-  if (!currentRoom || !cameraEnabled) throw new Error("Turn on your camera before changing the background.");
-  const track = getLocalCameraTrack();
-  if (!track || typeof track.setProcessor !== "function") {
-    throw new Error("Background effects are not supported by this browser/device.");
-  }
-  const toolkit = await loadBackgroundProcessorModule();
-  if (toolkit.supportsBackgroundProcessors && !toolkit.supportsBackgroundProcessors()) {
-    throw new Error("This browser does not support background effects. Try an updated Chrome browser.");
-  }
-  if (!currentBackgroundProcessor) {
-    currentBackgroundProcessor = toolkit.BackgroundProcessor({ mode: "disabled" });
-    await track.setProcessor(currentBackgroundProcessor);
-  }
-  if (mode === "virtual-background") {
-    await currentBackgroundProcessor.switchTo({ mode, imagePath });
-  } else if (mode === "background-blur") {
-    await currentBackgroundProcessor.switchTo({ mode, blurRadius: 12 });
-  } else {
-    await currentBackgroundProcessor.switchTo({ mode: "disabled" });
-  }
-  currentBackgroundMode = mode;
-}
-
-async function toggleBackgroundBlur() {
-  try {
-    const next = currentBackgroundMode === "background-blur" ? "disabled" : "background-blur";
-    await applyCameraBackground(next);
-    const button = meetingScreen?.querySelector("[data-live-action='blur']");
-    if (button) button.textContent = next === "background-blur" ? "Blur: On" : "Blur: Off";
-  } catch (error) {
-    const notice = document.getElementById("meetingNotice") || document.getElementById("studentMeetingNotice");
-    if (notice) notice.textContent = error.message || "Unable to apply background effect.";
-  }
-}
-
-async function chooseVirtualBackground(file) {
-  if (!file || !file.type.startsWith("image/")) return;
-  const nextUrl = URL.createObjectURL(file);
-  try {
-    await applyCameraBackground("virtual-background", nextUrl);
-    if (backgroundImageUrl) URL.revokeObjectURL(backgroundImageUrl);
-    backgroundImageUrl = nextUrl;
-    const notice = document.getElementById("meetingNotice") || document.getElementById("studentMeetingNotice");
-    if (notice) notice.textContent = "Your custom background is active for other participants.";
-  } catch (error) {
-    URL.revokeObjectURL(nextUrl);
-    const notice = document.getElementById("meetingNotice") || document.getElementById("studentMeetingNotice");
-    if (notice) notice.textContent = error.message || "Unable to apply this background.";
-  }
-}
-
-async function toggleRaiseHand() {
-  if (!currentRoom) return;
-  handRaised = !handRaised;
-  const payload = encoder.encode(JSON.stringify({
-    type: "hand",
-    raised: handRaised,
-    senderName: currentRoom.localParticipant.name || "Participant",
-    sentAt: new Date().toISOString()
-  }));
-  try {
-    await currentRoom.localParticipant.publishData(payload, { reliable: true });
-    const button = meetingScreen?.querySelector("[data-live-action='hand']");
-    if (button) button.textContent = handRaised ? "✋ Lower hand" : "✋ Raise hand";
-    const identity = currentRoom.localParticipant.identity;
-    if (handRaised) raisedHands.add(identity); else raisedHands.delete(identity);
-    if (typeof updateParticipantList === "function") updateParticipantList();
-    if (typeof renderParticipants === "function") renderParticipants();
-  } catch (error) {
-    handRaised = !handRaised;
-    const notice = document.getElementById("meetingNotice") || document.getElementById("studentMeetingNotice");
-    if (notice) notice.textContent = error.message || "Unable to update raised hand.";
-  }
-}
-
-function ensureExtraMeetingControls() {
-  const controls = meetingScreen?.querySelector(".meeting-controls");
-  if (!controls) return;
-  const add = (key, label, handler, title = label) => {
-    if (controls.querySelector(`[data-live-action='${key}']`)) return;
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "equallearn-extra-control";
-    button.dataset.liveAction = key;
-    button.textContent = label;
-    button.title = title;
-    button.addEventListener("click", handler);
-    controls.appendChild(button);
-  };
-  add("minimize", "▁ Minimize", minimizeLiveCall, "Minimize the call without disconnecting");
-  add("flip", "↻ Flip camera", () => flipCameraFacing().catch(error => {
-    const notice = document.getElementById("meetingNotice") || document.getElementById("studentMeetingNotice");
-    if (notice) notice.textContent = error.message;
-  }));
-  add("blur", "Blur: Off", toggleBackgroundBlur);
-  add("background", "▧ Background", () => controls.querySelector("input[data-live-background-file]")?.click());
-  add("hand", "✋ Raise hand", toggleRaiseHand);
-
-  if (!controls.querySelector("input[data-live-background-file]")) {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
-    input.hidden = true;
-    input.dataset.liveBackgroundFile = "true";
-    input.addEventListener("change", () => {
-      const file = input.files?.[0];
-      if (file) chooseVirtualBackground(file);
-      input.value = "";
-    });
-    controls.appendChild(input);
-  }
-}
-
 function ensureReactionControls() {
   const controls = meetingScreen?.querySelector(".meeting-controls");
-  if (!controls) return;
-  if (!controls.querySelector(".live-reaction-bar")) {
-    const bar = document.createElement("div");
-    bar.className = "live-reaction-bar";
-    bar.setAttribute("aria-label", "Send a live reaction");
-    LIVE_REACTIONS.forEach(reaction => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "live-reaction-button";
-      button.textContent = reaction;
-      button.title = `Send ${reaction}`;
-      button.setAttribute("aria-label", `Send ${reaction} reaction`);
-      button.addEventListener("click", () => sendLiveReaction(reaction));
-      bar.appendChild(button);
-    });
-    controls.prepend(bar);
-  }
-  if (!controls.querySelector(".live-fullscreen-button")) {
-    const fullscreenButton = document.createElement("button");
-    fullscreenButton.type = "button";
-    fullscreenButton.className = "live-fullscreen-button";
-    fullscreenButton.textContent = "⛶ Fullscreen";
-    fullscreenButton.addEventListener("click", () =>
-      enterMeetingFullscreenAndLandscape(Boolean(meetingScreen?.classList.contains("has-screen-share")))
-    );
-    controls.appendChild(fullscreenButton);
-  }
-  ensureExtraMeetingControls();
-  ensureFloatingCallCard();
+  if (!controls || controls.querySelector(".live-reaction-bar")) return;
+
+  const bar = document.createElement("div");
+  bar.className = "live-reaction-bar";
+  bar.setAttribute("aria-label", "Send a live reaction");
+
+  LIVE_REACTIONS.forEach(reaction => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "live-reaction-button";
+    button.textContent = reaction;
+    button.title = `Send ${reaction}`;
+    button.setAttribute("aria-label", `Send ${reaction} reaction`);
+    button.addEventListener("click", () => sendLiveReaction(reaction));
+    bar.appendChild(button);
+  });
+
+  controls.prepend(bar);
+
+  const fullscreenButton = document.createElement("button");
+  fullscreenButton.type = "button";
+  fullscreenButton.className = "live-fullscreen-button";
+  fullscreenButton.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>';
+  fullscreenButton.setAttribute("aria-label", "Fullscreen");
+  fullscreenButton.title = "Fullscreen";
+  fullscreenButton.addEventListener("click", () =>
+    enterMeetingFullscreenAndLandscape(Boolean(meetingScreen?.classList.contains("has-screen-share")))
+  );
+  controls.appendChild(fullscreenButton);
 }
+
 function showLiveReaction(reaction, participant, fallbackName = "Participant") {
   if (!participantGrid || !LIVE_REACTIONS.includes(reaction)) return;
   const identity = participant?.identity || currentRoom?.localParticipant?.identity;
@@ -595,110 +381,82 @@ async function updateScreenShareLayout() {
   const active = Boolean(participantGrid?.querySelector(".screen-share-tile video"));
   meetingScreen?.classList.toggle("has-screen-share", active);
   participantGrid?.classList.toggle("has-screen-share", active);
-
   if (active) {
-    try {
-      if (document.fullscreenElement === meetingScreen && screen.orientation?.lock) {
-        await screen.orientation.lock("landscape");
-      } else {
-        throw new Error("Fullscreen orientation lock is unavailable.");
-      }
-    } catch (_) {
-      message(meetingNotice, "Screen sharing is active. Tap Fullscreen or rotate your phone to landscape for a wider view.");
-    }
+    // A screen share takes over the meeting canvas; close panels so the content is unobstructed.
+    closeSidebar();
+    message(meetingNotice, "Screen sharing is pinned for everyone in this room.");
   } else {
     try { screen.orientation?.unlock?.(); } catch (_) {}
   }
 }
 
-function createTile(identity, name, isLocal = false) {
+function createTile(identity, name, isLocal = false, isScreenShare = false) {
   const tile = document.createElement("div");
-
   tile.className = "sm-tile";
-  if (isLocal) tile.classList.add("is-local");
   tile.dataset.identity = identity;
+  tile.dataset.tileType = isScreenShare ? "screen-share" : "camera";
+  if (isLocal && !isScreenShare) tile.classList.add("is-local-tile");
+  if (isScreenShare) tile.classList.add("screen-share-tile");
 
   const placeholder = document.createElement("div");
-
   placeholder.className = "sm-placeholder";
-  placeholder.textContent = `${name} camera is off`;
+  placeholder.textContent = isScreenShare ? `${name} is sharing their screen` : (isLocal ? "Your camera is off" : `${name} camera is off`);
 
   const label = document.createElement("div");
-
   label.className = "sm-name";
-  label.textContent = name;
+  label.textContent = isScreenShare ? `${name} · Presenting` : (isLocal ? `${name} (You)` : name);
 
   tile.append(placeholder, label);
-
   participantGrid?.appendChild(tile);
-
   return tile;
 }
 
-function getTile(participant) {
+function getTile(participant, source = null) {
   if (!participantGrid || !participant) return null;
-
   const identity = participant.identity;
-
+  const isShare = isScreenShareSource(source);
+  const type = isShare ? "screen-share" : "camera";
   let tile = participantGrid.querySelector(
-    `[data-identity="${CSS.escape(identity)}"]`
+    `.sm-tile[data-identity="${CSS.escape(identity)}"][data-tile-type="${type}"]`
   );
-
   if (!tile) {
     tile = createTile(
       identity,
       participant.name || identity,
-      participant === currentRoom?.localParticipant
+      participant === currentRoom?.localParticipant,
+      isShare
     );
   }
-
   return tile;
 }
 
 function attachTrack(track, participant, source = null) {
-  if (!track || !participant || !participantGrid) {
-    return;
-  }
-
-  const tile = getTile(participant);
-
+  if (!track || !participant || !participantGrid) return;
+  const isLocal = participant === currentRoom?.localParticipant;
+  const isShare = isScreenShareSource(source);
+  const tile = getTile(participant, source);
   if (!tile) return;
 
   if (track.kind === Track.Kind.Video) {
-    if (isScreenShareSource(source)) tile.classList.add("screen-share-tile");
     tile.querySelector(".sm-placeholder")?.remove();
-
-    // Prevent duplicate video elements.
-    tile.querySelectorAll("video").forEach(video => {
-      video.remove();
-    });
-
+    // Keep camera and screen-share surfaces separate for the same participant.
+    tile.querySelectorAll("video").forEach(video => video.remove());
     const video = track.attach();
-
     video.autoplay = true;
     video.playsInline = true;
+    video.muted = isLocal;
+    video.classList.toggle("sm-local-video", isLocal && !isShare);
     video.style.width = "100%";
     video.style.height = "100%";
-    video.style.objectFit = isScreenShareSource(source) ? "contain" : "cover";
-    if (!isScreenShareSource(source) && participant === currentRoom?.localParticipant) {
-      video.classList.add("is-local-camera");
-      video.classList.toggle("is-selfie", cameraFacingMode === "user");
-      tile.classList.add("is-local");
-    }
-
-    tile.insertBefore(
-      video,
-      tile.querySelector(".sm-name")
-    );
-    if (isScreenShareSource(source)) updateScreenShareLayout();
-    refreshFloatingCallVideo();
-
+    video.style.objectFit = isShare ? "contain" : "cover";
+    tile.insertBefore(video, tile.querySelector(".sm-name"));
+    if (isShare) updateScreenShareLayout();
   } else if (track.kind === Track.Kind.Audio) {
+    // Never attach the local microphone to the local page; that causes feedback.
+    if (isLocal) return;
     const audio = track.attach();
-
     audio.autoplay = true;
     audio.style.display = "none";
-
     tile.appendChild(audio);
   }
 }
@@ -706,13 +464,18 @@ function attachTrack(track, participant, source = null) {
 function detachTrack(track, source = null) {
   if (!track) return;
   const isShare = isScreenShareSource(source || track.source);
-  track.detach().forEach(element => {
+  const isVideo = track.kind === Track.Kind.Video;
+  const attached = track.detach();
+  attached.forEach(element => {
     const tile = element.closest(".sm-tile");
     element.remove();
-    if (isShare) tile?.classList.remove("screen-share-tile");
+    if (isShare) tile?.remove();
+    else if (isVideo && tile) {
+      const name = tile.querySelector(".sm-name")?.textContent || "Participant";
+      addCameraPlaceholder(tile, name, tile.classList.contains("is-local-tile"));
+    }
   });
   if (isShare) updateScreenShareLayout();
-  refreshFloatingCallVideo();
 }
 
 function renderExistingParticipants() {
@@ -720,7 +483,7 @@ function renderExistingParticipants() {
 
   const local = currentRoom.localParticipant;
 
-  getTile(local);
+  getTile(local, null);
 
   for (const publication of local.trackPublications.values()) {
     if (publication.track) {
@@ -729,7 +492,7 @@ function renderExistingParticipants() {
   }
 
   for (const participant of currentRoom.remoteParticipants.values()) {
-    getTile(participant);
+    getTile(participant, null);
 
     for (const publication of participant.trackPublications.values()) {
       if (publication.track) {
@@ -751,6 +514,12 @@ function renderParticipants() {
     ...currentRoom.remoteParticipants.values()
   ];
 
+  const peopleButton = document.getElementById("studentPeopleTopBtn");
+  if (peopleButton) {
+    const count = peopleButton.querySelector("[data-participant-count]");
+    if (count) count.textContent = String(all.length);
+  }
+
   all.forEach(participant => {
     const row = document.createElement("div");
 
@@ -767,12 +536,12 @@ function renderParticipants() {
 
     status.style.color = "#cbd5e1";
 
-    status.textContent =
-      participant === currentRoom.localParticipant
+    status.textContent = raisedHands.has(participant.identity)
+      ? "Hand raised"
+      : participant === currentRoom.localParticipant
         ? "You"
         : "Connected";
 
-    if (raisedHands.has(participant.identity)) status.textContent += " · ✋ Raised hand";
     row.append(name, status);
 
     peopleContainer.appendChild(row);
@@ -965,97 +734,60 @@ async function loadNotifications(uid) {
 // LIVE SESSION LIST
 // ======================================================
 
-async function loadLiveSessions(uid) {
+function loadLiveSessions(uid) {
   if (!liveSessionList) return;
+  if (liveSessionsUnsubscribe) {
+    liveSessionsUnsubscribe();
+    liveSessionsUnsubscribe = null;
+  }
 
   liveSessionList.replaceChildren();
-
-  const loading = document.createElement("p");
-
-  loading.textContent = "Loading live classes...";
-
+  const loading = document.createElement("div");
+  loading.className = "live-empty";
+  loading.textContent = "Loading your live classrooms…";
   liveSessionList.appendChild(loading);
 
-  try {
-    const q = query(
-      collection(db, "liveSessions"),
-      where("participantUids", "array-contains", uid)
-    );
+  const sessionsQuery = query(
+    collection(db, "liveSessions"),
+    where("participantUids", "array-contains", uid)
+  );
 
-    const snapshot = await getDocs(q);
+  liveSessionsUnsubscribe = onSnapshot(
+    sessionsQuery,
+    snapshot => {
+      const sessions = snapshot.docs
+        .map(item => ({ id: item.id, ...item.data() }))
+        .filter(session => ["scheduled", "live", "ended"].includes(session.status))
+        .filter(session => session.status !== "ended" || ["batch", "livestream"].includes(session.meetingType))
+        .filter(session => session.meetingType !== "one_on_one" || session.targetStudentUid === uid)
+        .sort((a, b) => {
+          if (a.status === "live" && b.status !== "live") return -1;
+          if (a.status !== "live" && b.status === "live") return 1;
+          return timestamp(b.createdAt) - timestamp(a.createdAt);
+        });
 
-    const sessions = snapshot.docs
-      .map(item => ({
-        id: item.id,
-        ...item.data()
-      }))
-      .filter(session => ["scheduled", "live", "ended"].includes(session.status))
-      .filter(session => {
-        if (
-          session.meetingType === "one_on_one" &&
-          session.targetStudentUid !== uid
-        ) {
-          return false;
-        }
-        return true;
-      })
-      .sort((a, b) => {
-        if (
-          a.status === "live" &&
-          b.status !== "live"
-        ) {
-          return -1;
-        }
+      liveSessionList.replaceChildren();
+      if (liveSessionCount) liveSessionCount.textContent = String(sessions.length);
 
-        if (
-          a.status !== "live" &&
-          b.status === "live"
-        ) {
-          return 1;
-        }
+      if (!sessions.length) {
+        const empty = document.createElement("div");
+        empty.className = "live-empty";
+        empty.textContent = "No scheduled or ongoing live classes for your account.";
+        liveSessionList.appendChild(empty);
+        return;
+      }
 
-        return (
-          timestamp(b.createdAt) -
-          timestamp(a.createdAt)
-        );
-      });
-
-    liveSessionList.replaceChildren();
-
-    if (liveSessionCount) {
-      liveSessionCount.textContent =
-        String(sessions.length);
+      sessions.forEach(session => liveSessionList.appendChild(createSessionCard(session)));
+    },
+    error => {
+      console.error("Live session listener error:", error);
+      liveSessionList.replaceChildren();
+      const errorMessage = document.createElement("div");
+      errorMessage.className = "live-empty";
+      errorMessage.textContent = "Unable to load live classes. Check your connection and permissions.";
+      liveSessionList.appendChild(errorMessage);
     }
-
-    if (!sessions.length) {
-      const empty = document.createElement("p");
-
-      empty.textContent =
-        "No scheduled or ongoing live classes for your account.";
-
-      liveSessionList.appendChild(empty);
-
-      return;
-    }
-
-    sessions.forEach(session => {
-      liveSessionList.appendChild(
-        createSessionCard(session)
-      );
-    });
-
-  } catch (error) {
-    console.error("Load live sessions error:", error);
-
-    liveSessionList.replaceChildren();
-
-    const errorMessage = document.createElement("p");
-
-    errorMessage.textContent =
-      "Unable to load live classes. Check your connection and permissions.";
-
-    liveSessionList.appendChild(errorMessage);
-  }
+  );
 }
 
 function meetingTypeLabel(session) {
@@ -1094,102 +826,43 @@ function openMeetingPage(sessionId) {
 
 function createSessionCard(session) {
   const card = document.createElement("article");
-
   card.className = "student-live-card";
 
   const header = document.createElement("div");
-
   header.className = "student-live-card-header";
 
   const title = document.createElement("h4");
-
-  title.textContent =
-    session.title || "Untitled Live Class";
+  title.textContent = session.title || "Untitled Live Class";
 
   const badge = document.createElement("span");
-
- badge.className =
-  "student-live-badge " +
-  (
-    session.status === "live"
-      ? "is-live"
-      : session.status === "ended"
-        ? "is-ended"
-        : "is-scheduled"
-  );
-
-badge.textContent =
-  session.status === "live"
-    ? "LIVE NOW"
-    : session.status === "ended"
-      ? "ENDED"
-      : "SCHEDULED";
-
+  badge.className = "student-live-status" + (session.status === "live" ? " is-live" : session.status === "ended" ? " is-ended" : "");
+  badge.textContent = session.status === "live" ? "LIVE NOW" : session.status === "ended" ? "ENDED" : "SCHEDULED";
   header.append(title, badge);
 
-  const type = document.createElement("p");
-
-  type.className = "student-live-meta";
-  type.textContent = meetingTypeLabel(session);
-
   const teacher = document.createElement("p");
-
   teacher.className = "student-live-meta";
-
-  teacher.textContent =
-    "Teacher: " + (session.teacherName || "Teacher");
+  teacher.textContent = `Teacher: ${session.teacherName || "Teacher"}`;
 
   const section = document.createElement("p");
-
   section.className = "student-live-meta";
-
-  section.textContent =
-    "Section: " +
-    (
-      session.sectionName ||
-      session.sectionId ||
-      "Not specified"
-    );
-
-  const description = document.createElement("p");
-
-  description.className = "student-live-meta";
-
-  description.textContent =
-    session.description ||
-    "No description provided.";
+  section.textContent = `Section: ${session.sectionName || session.sectionId || "Not specified"}`;
 
   const button = document.createElement("button");
-
   button.type = "button";
-  button.className =
-    "el-btn el-btn-primary student-join-btn";
+  button.className = "student-join-btn";
 
- if (session.status === "live") {
-  button.textContent = "Join Meeting";
+  if (session.status === "live") {
+    button.textContent = "Join meeting";
+    button.addEventListener("click", () => joinMeeting(session));
+  } else if (session.status === "ended") {
+    button.textContent = "Waiting to restart";
+    button.disabled = true;
+  } else {
+    button.textContent = "Waiting for teacher";
+    button.disabled = true;
+  }
 
-  button.addEventListener("click", () => {
-    openMeetingPage(session.id);
-  });
-
-} else if (session.status === "ended") {
-  button.textContent = "Waiting for Teacher to Restart";
-  button.disabled = true;
-
-} else {
-  button.textContent = "Waiting for Teacher";
-  button.disabled = true;
-}
-
-  card.append(
-    header,
-    type,
-    teacher,
-    section,
-    description,
-    button
-  );
-
+  card.append(header, teacher, section, button);
   return card;
 }
 
@@ -1437,10 +1110,10 @@ async function joinMeeting(session) {
     room.on(
       RoomEvent.ParticipantDisconnected,
       participant => {
-        participantGrid?.querySelector(
-          `[data-identity="${CSS.escape(participant.identity)}"]`
-        )?.remove();
-
+        participantGrid?.querySelectorAll(
+          `.sm-tile[data-identity="${CSS.escape(participant.identity)}"]`
+        ).forEach(tile => tile.remove());
+        raisedHands.delete(participant.identity);
         renderParticipants();
       }
     );
@@ -1480,18 +1153,13 @@ async function joinMeeting(session) {
             typeof data.message === "string"
           ) {
             addChatMessage(
-              participant?.name || data.senderName || data.sender || participant?.identity || "Participant",
+              participant?.name || data.sender || participant?.identity || "Participant",
               data.message
             );
           } else if (data.type === "reaction") {
             showLiveReaction(data.reaction, participant, data.senderName || "Participant");
-          } else if (data.type === "hand") {
-            const identity = participant?.identity;
-            if (identity) {
-              if (data.raised) raisedHands.add(identity);
-              else raisedHands.delete(identity);
-              renderParticipants();
-            }
+          } else if (data.type === "raise_hand" || data.type === "raise-hand") {
+            setParticipantHand(participant, Boolean(data.raised), data.senderName || participant?.name || "Participant");
           }
 
         } catch (error) {
@@ -1505,31 +1173,12 @@ async function joinMeeting(session) {
 
     room.on(
       RoomEvent.Disconnected,
-      reason => {
-        if (currentRoom !== room) return;
-        currentRoom = null;
-        micEnabled = false;
-        cameraEnabled = false;
-        shareEnabled = false;
-        canPublish = false;
-        hideMeeting();
-        if (participantGrid) participantGrid.replaceChildren();
-        if (peopleContainer) peopleContainer.replaceChildren();
-        if (chatContainer) chatContainer.replaceChildren();
-        const wasRoomDeleted = String(reason) === "ROOM_DELETED" || String(reason?.toString?.()) === "ROOM_DELETED";
+      () => {
         message(
           meetingNotice,
-          wasRoomDeleted
-            ? "The teacher ended this meeting for everyone. You have been disconnected."
-            : "You were disconnected from the meeting. You can rejoin while the session is live.",
-          !wasRoomDeleted
+          "Disconnected from meeting.",
+          true
         );
-        if (currentStudent) {
-          // The teacher updates the Firestore status immediately after deleting the LiveKit room.
-          // Refresh once now and once shortly after to avoid showing a stale LIVE badge.
-          void loadLiveSessions(currentStudent.uid);
-          setTimeout(() => loadLiveSessions(currentStudent.uid), 900);
-        }
       }
     );
 
@@ -1555,33 +1204,32 @@ async function joinMeeting(session) {
       cameraEnabled = false;
     }
 
+    handRaised = false;
+    raisedHands.clear();
+    closeSidebar();
     renderExistingParticipants();
 
     if (micBtn) {
       micBtn.disabled = !canPublish;
 
-      micBtn.textContent =
-        micEnabled ? "Mute mic" : "Unmute mic";
+      setControlLabel(micBtn, micEnabled ? "Mute mic" : "Unmute mic", !micEnabled);
     }
 
     if (cameraBtn) {
       cameraBtn.disabled = !canPublish;
 
-      cameraBtn.textContent =
-        cameraEnabled
-          ? "Turn camera off"
-          : "Turn camera on";
+      setControlLabel(cameraBtn, cameraEnabled ? "Turn camera off" : "Turn camera on", !cameraEnabled);
     }
 
     if (shareBtn) {
       shareBtn.disabled = !canPublish;
-      shareBtn.textContent = "Share screen";
+      setControlLabel(shareBtn, "Share screen");
     }
 
     message(
       meetingNotice,
       canPublish
-        ? "Connected. Your microphone and camera are enabled."
+        ? "Connected. Your microphone and camera are on."
         : "Connected in viewer mode. Your microphone and camera are disabled."
     );
 
@@ -1629,28 +1277,14 @@ async function joinMeeting(session) {
 // ======================================================
 
 async function toggleMic() {
-  if (!currentRoom || !canPublish || !micBtn) {
-    return;
-  }
-
+  if (!currentRoom || !canPublish || !micBtn) return;
   const nextState = !micEnabled;
-
   try {
-    await currentRoom.localParticipant.setMicrophoneEnabled(
-      nextState
-    );
-
+    await currentRoom.localParticipant.setMicrophoneEnabled(nextState);
     micEnabled = nextState;
-
-    micBtn.textContent =
-      micEnabled ? "Mute mic" : "Unmute mic";
-
+    setControlLabel(micBtn, micEnabled ? "Mute mic" : "Unmute mic", !micEnabled);
   } catch (error) {
-    message(
-      meetingNotice,
-      error.message || "Unable to change microphone.",
-      true
-    );
+    message(meetingNotice, error.message || "Unable to change microphone.", true);
   }
 }
 
@@ -1659,70 +1293,25 @@ async function toggleMic() {
 // ======================================================
 
 async function toggleCamera() {
-  if (!currentRoom || !canPublish || !cameraBtn) {
-    return;
-  }
-
+  if (!currentRoom || !canPublish || !cameraBtn) return;
   const nextState = !cameraEnabled;
-
   try {
-    await currentRoom.localParticipant.setCameraEnabled(
-      nextState
-    );
-
+    await currentRoom.localParticipant.setCameraEnabled(nextState);
     cameraEnabled = nextState;
-
-    cameraBtn.textContent =
-      cameraEnabled
-        ? "Turn camera off"
-        : "Turn camera on";
-
-    if (!cameraEnabled) {
-      const tile = participantGrid?.querySelector(
-        `[data-identity="${CSS.escape(currentRoom.localParticipant.identity)}"]`
-      );
-
-      tile?.querySelectorAll("video").forEach(video => {
-        video.remove();
-      });
-
-      if (
-        tile &&
-        !tile.querySelector(".sm-placeholder")
-      ) {
-        const placeholder = document.createElement("div");
-
-        placeholder.className = "sm-placeholder";
-        placeholder.textContent = "Your camera is off";
-
-        tile.prepend(placeholder);
-      }
+    setControlLabel(cameraBtn, cameraEnabled ? "Turn camera off" : "Turn camera on", !cameraEnabled);
+    if (cameraEnabled) {
+      const cameraPublication = [...currentRoom.localParticipant.trackPublications.values()]
+        .find(publication => publication.source === Track.Source.Camera && publication.track);
+      if (cameraPublication) attachTrack(cameraPublication.track, currentRoom.localParticipant, cameraPublication.source);
     }
-
   } catch (error) {
-    message(
-      meetingNotice,
-      error.message || "Unable to change camera.",
-      true
-    );
+    message(meetingNotice, error.message || "Unable to change camera.", true);
   }
 }
 
 // ======================================================
 // SCREEN SHARING
 // ======================================================
-
-
-async function flipCamera() {
-  try {
-    await flipCameraFacing();
-    const notice = document.getElementById("meetingNotice") || document.getElementById("studentMeetingNotice");
-    if (notice) notice.textContent = cameraFacingMode === "environment" ? "Back camera is active." : "Front camera is active.";
-  } catch (error) {
-    const notice = document.getElementById("meetingNotice") || document.getElementById("studentMeetingNotice");
-    if (notice) notice.textContent = error.message || "Unable to switch camera.";
-  }
-}
 
 async function toggleShareScreen() {
   if (!currentRoom || !canPublish || !shareBtn) {
@@ -1738,15 +1327,12 @@ async function toggleShareScreen() {
     );
     shareEnabled = nextState;
 
-    shareBtn.textContent =
-      shareEnabled
-        ? "Stop sharing"
-        : "Share screen";
+    setControlLabel(shareBtn, shareEnabled ? "Stop sharing" : "Share screen", false, shareEnabled);
 
   } catch (error) {
     shareEnabled = false;
 
-    shareBtn.textContent = "Share screen";
+    setControlLabel(shareBtn, "Share screen");
 
     message(
       meetingNotice,
@@ -1754,6 +1340,29 @@ async function toggleShareScreen() {
       "Screen sharing is unavailable on this device.",
       true
     );
+  }
+}
+
+// ======================================================
+// RAISE HAND
+// ======================================================
+async function toggleRaiseHand() {
+  if (!currentRoom || !raiseHandBtn || !currentStudent) return;
+  const nextState = !handRaised;
+  try {
+    const payload = encoder.encode(JSON.stringify({
+      type: "raise_hand",
+      raised: nextState,
+      senderName: studentDisplayName(),
+      sentAt: new Date().toISOString()
+    }));
+    await currentRoom.localParticipant.publishData(payload, { reliable: true });
+    handRaised = nextState;
+    setParticipantHand(currentRoom.localParticipant, handRaised, studentDisplayName());
+    setControlLabel(raiseHandBtn, handRaised ? "Lower hand" : "Raise hand", false, handRaised);
+    if (handRaised) showHandRaiseToast("You", true);
+  } catch (error) {
+    message(meetingNotice, error.message || "Unable to raise your hand.", true);
   }
 }
 
@@ -1838,34 +1447,21 @@ async function sendChat(event) {
 // ======================================================
 
 function openSidebar(mode) {
-  if (!sidebar) return;
-
+  if (!sidebar || meetingScreen?.classList.contains("has-screen-share")) return;
   sidebar.classList.add("open");
-
-  if (mode === "chat") {
-    if (sidebarTitle) {
-      sidebarTitle.textContent = "Meeting Chat";
-    }
-
-    peopleContainer?.classList.add("sm-hidden");
-    chatContainer?.classList.remove("sm-hidden");
-    chatForm?.classList.remove("sm-hidden");
-
-  } else {
-    if (sidebarTitle) {
-      sidebarTitle.textContent = "Participants";
-    }
-
-    peopleContainer?.classList.remove("sm-hidden");
-    chatContainer?.classList.add("sm-hidden");
-    chatForm?.classList.add("sm-hidden");
-
-    renderParticipants();
-  }
+  meetingLayout?.classList.add("with-sidebar");
+  const showChat = mode === "chat";
+  if (sidebarTitle) sidebarTitle.textContent = showChat ? "Meeting chat" : "Participants";
+  peopleContainer?.classList.toggle("sm-hidden", showChat);
+  chatContainer?.classList.toggle("sm-hidden", !showChat);
+  chatForm?.classList.toggle("sm-hidden", !showChat);
+  if (!showChat) renderParticipants();
+  if (showChat) chatInput?.focus();
 }
 
 function closeSidebar() {
   sidebar?.classList.remove("open");
+  meetingLayout?.classList.remove("with-sidebar");
 }
 
 // ======================================================
@@ -1873,11 +1469,9 @@ function closeSidebar() {
 // ======================================================
 
 async function leaveMeeting() {
-  const roomToLeave = currentRoom;
-  currentRoom = null;
   try {
-    if (roomToLeave) {
-      await roomToLeave.disconnect();
+    if (currentRoom) {
+      await currentRoom.disconnect();
     }
 
   } catch (error) {
@@ -1894,8 +1488,13 @@ async function leaveMeeting() {
   cameraEnabled = false;
   shareEnabled = false;
   canPublish = false;
+  handRaised = false;
+  raisedHands.clear();
+  setControlLabel(raiseHandBtn, "Raise hand", false, false);
 
   hideMeeting();
+  closeSidebar();
+  meetingScreen?.classList.remove("has-screen-share");
 
   participantGrid?.replaceChildren();
   peopleContainer?.replaceChildren();
@@ -1903,17 +1502,17 @@ async function leaveMeeting() {
 
   if (micBtn) {
     micBtn.disabled = true;
-    micBtn.textContent = "Unmute mic";
+    setControlLabel(micBtn, "Unmute mic", true);
   }
 
   if (cameraBtn) {
     cameraBtn.disabled = true;
-    cameraBtn.textContent = "Turn camera on";
+    setControlLabel(cameraBtn, "Turn camera on", true);
   }
 
   if (shareBtn) {
     shareBtn.disabled = true;
-    shareBtn.textContent = "Share screen";
+    setControlLabel(shareBtn, "Share screen");
   }
 
   message(
@@ -1930,12 +1529,6 @@ async function leaveMeeting() {
 // EVENT LISTENERS
 // ======================================================
 
-refreshLiveBtn?.addEventListener("click", () => {
-  if (currentStudent) {
-    loadLiveSessions(currentStudent.uid);
-  }
-});
-
 joinBySessionIdBtn?.addEventListener(
   "click",
   joinUsingSessionId
@@ -1951,33 +1544,16 @@ sessionIdInput?.addEventListener("keydown", event => {
 micBtn?.addEventListener("click", toggleMic);
 cameraBtn?.addEventListener("click", toggleCamera);
 shareBtn?.addEventListener("click", toggleShareScreen);
+raiseHandBtn?.addEventListener("click", toggleRaiseHand);
 leaveBtn?.addEventListener("click", leaveMeeting);
 
 chatForm?.addEventListener("submit", sendChat);
 
-document.getElementById("studentPeopleTopBtn")
-  ?.addEventListener(
-    "click",
-    () => openSidebar("people")
-  );
+document.getElementById("studentPeopleTopBtn")?.addEventListener("click", () => openSidebar("people"));
+document.getElementById("studentMeetingPeopleBtn")?.addEventListener("click", () => openSidebar("people"));
 
-document.getElementById("studentMeetingPeople")
-  ?.addEventListener(
-    "click",
-    () => openSidebar("people")
-  );
-
-document.getElementById("studentChatTopBtn")
-  ?.addEventListener(
-    "click",
-    () => openSidebar("chat")
-  );
-
-document.getElementById("studentMeetingChatBtn")
-  ?.addEventListener(
-    "click",
-    () => openSidebar("chat")
-  );
+document.getElementById("studentChatTopBtn")?.addEventListener("click", () => openSidebar("chat"));
+document.getElementById("studentMeetingChatBtn")?.addEventListener("click", () => openSidebar("chat"));
 
 document.getElementById("studentCloseSidebar")
   ?.addEventListener(
@@ -2064,7 +1640,6 @@ onAuthStateChanged(auth, async user => {
 // ======================================================
 
 window.addEventListener("beforeunload", () => {
-  if (currentRoom) {
-    currentRoom.disconnect();
-  }
+  if (liveSessionsUnsubscribe) liveSessionsUnsubscribe();
+  if (currentRoom) currentRoom.disconnect();
 });

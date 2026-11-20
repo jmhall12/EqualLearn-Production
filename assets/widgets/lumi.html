@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 
 <html lang="en">
 
@@ -18,18 +18,18 @@
 
 *{box-sizing:border-box}
 
-html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent!important;pointer-events:none}
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent!important;background-color:transparent!important;pointer-events:none}
 
 body{font-family:Inter,"Segoe UI",Arial,sans-serif}
 
-#lumi-root{position:fixed;inset:0;width:100vw;height:100dvh;overflow:hidden;background:transparent;pointer-events:none}
+#lumi-root{position:fixed;inset:0;width:100%;height:100%;overflow:hidden;background:transparent!important;background-color:transparent!important;pointer-events:none}
 
-#lumi-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;touch-action:none;outline:none}
+#lumi-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;background:transparent!important;pointer-events:none;touch-action:none;outline:none}
 
-#lumi-ui{position:fixed;inset:0;pointer-events:none}
+#lumi-ui{position:absolute;inset:0;background:transparent!important;pointer-events:none}
 
 #lumi-speech{
- position:absolute;left:50%;right:auto;top:5px;width:min(138px,calc(100% - 18px));max-width:138px;
+ position:absolute;left:50%;right:auto;top:5px;width:min(138px,calc(100% - 18px));max-width:132px;
  padding:6px 9px;border:1px solid rgba(255,255,255,.96);border-radius:12px 12px 4px 12px;
  background:linear-gradient(145deg,rgba(255,255,255,.99),rgba(245,239,255,.97));
  color:var(--ink);box-shadow:0 7px 18px rgba(64,42,130,.18),inset 0 1px 0 #fff;
@@ -37,32 +37,33 @@ body{font-family:Inter,"Segoe UI",Arial,sans-serif}
  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;
  max-height:34px;overflow:hidden;overflow-wrap:anywhere;
  opacity:0;transform:translate(-50%,7px) scale(.96);transform-origin:top center;
- transition:opacity .22s,transform .22s;pointer-events:none;z-index:3
+ transition:opacity .22s,transform .22s;pointer-events:none;z-index:40
 }
 #lumi-speech.show{opacity:1;transform:translate(-50%,0) scale(1)}
 
-#lumi-controls{position:fixed;left:50%;right:auto;bottom:max(18px,env(safe-area-inset-bottom));display:flex;gap:9px;opacity:1;transform:translateX(-50%);transition:opacity .2s;pointer-events:auto;z-index:20;padding:7px 10px;border:1px solid #ffffffb8;border-radius:30px;background:#ffffffa8;backdrop-filter:blur(12px);box-shadow:0 8px 24px #30205b26}
+#lumi-controls{position:fixed;left:50%;right:auto;bottom:max(18px,env(safe-area-inset-bottom));display:flex;gap:9px;opacity:1;transform:translateX(-50%);transition:opacity .2s;pointer-events:auto;z-index:60;padding:7px 10px;border:1px solid #ffffffb8;border-radius:30px;background:#ffffffa8;backdrop-filter:blur(12px);box-shadow:0 8px 24px #30205b26}
 
 #lumi-root:hover #lumi-controls,#lumi-root:focus-within #lumi-controls{opacity:1}
 /* Keep Lumi controls beside the pet, inside the small interactive island. */
-#lumi-controls{left:50%;top:50%;right:auto;bottom:auto;transform:translate(-50%,0);z-index:20}
+#lumi-controls{left:50%;top:50%;right:auto;bottom:auto;transform:translate(-50%,0);z-index:60!important}
 #lumi-root.lumi-mobile #lumi-controls{left:50%;top:50%;right:auto;bottom:auto;transform:translate(-50%,0)}
 
-.lumi-control{width:34px;height:34px;flex:0 0 auto;border:1px solid rgba(255,255,255,.96);border-radius:50%;background:linear-gradient(145deg,#fff,#eee8ff);color:#6849c7;box-shadow:0 5px 14px rgba(56,37,115,.15);font-size:13px;cursor:pointer;display:grid;place-items:center;pointer-events:auto;transition:transform .18s,background .18s,box-shadow .18s}
+.lumi-control{position:relative;z-index:61;width:34px;height:34px;flex:0 0 auto;border:1px solid rgba(255,255,255,.96);border-radius:50%;background:linear-gradient(145deg,#fff,#eee8ff);color:#6849c7;box-shadow:0 5px 14px rgba(56,37,115,.15);font-size:13px;cursor:pointer;display:grid;place-items:center;pointer-events:auto;transition:transform .18s,background .18s,box-shadow .18s}
 
-.lumi-control:hover{transform:translateY(-3px);background:#e8ddff}.lumi-control:active{transform:scale(.94)}#lumi-drag-hitbox{position:absolute;width:154px;height:190px;left:50%;top:50%;transform:translate(-50%,-50%);border:0;background:transparent;border-radius:48%;pointer-events:auto;touch-action:none;cursor:grab;z-index:30;outline:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}#lumi-drag-hitbox:active{cursor:grabbing}#lumi-drag-hitbox:focus-visible{outline:2px dashed #9b7bea;outline-offset:4px}
+.lumi-control:hover{transform:translateY(-3px);background:#e8ddff}.lumi-control:active{transform:scale(.94)}#lumi-drag-hitbox{position:absolute;width:min(142px,calc(100% - 12px));height:min(166px,calc(100% - 42px));left:50%;top:50%;transform:translate(-50%,-50%);border:0;background:transparent;border-radius:48%;pointer-events:auto;touch-action:none;cursor:grab;z-index:30;outline:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}#lumi-drag-hitbox:active{cursor:grabbing}#lumi-drag-hitbox:focus-visible{outline:2px dashed #9b7bea;outline-offset:4px}
 
-#lumi-label{position:fixed;left:50%;bottom:max(68px,calc(env(safe-area-inset-bottom) + 58px));transform:translateX(-50%);padding:6px 12px;border:1px solid rgba(255,255,255,.92);border-radius:30px;background:rgba(255,255,255,.86);backdrop-filter:blur(12px);color:#6345bd;font-size:10px;font-weight:850;letter-spacing:.2px;white-space:nowrap;box-shadow:0 7px 19px rgba(65,43,130,.13);pointer-events:none}
+#lumi-label{display:none!important;position:fixed;left:50%;bottom:max(68px,calc(env(safe-area-inset-bottom) + 58px));transform:translateX(-50%);padding:6px 12px;border:1px solid rgba(255,255,255,.92);border-radius:30px;background:rgba(255,255,255,.86);backdrop-filter:blur(12px);color:#6345bd;font-size:10px;font-weight:850;letter-spacing:.2px;white-space:nowrap;box-shadow:0 7px 19px rgba(65,43,130,.13);pointer-events:none}
 
 #lumi-reopen{position:fixed;right:16px;bottom:16px;pointer-events:auto;border:1px solid #fff;border-radius:30px;padding:10px 15px;background:linear-gradient(135deg,#a68af8,#704bd5);color:#fff;font:800 12px Inter,Arial;box-shadow:0 9px 25px #5136a344;cursor:pointer}
 
-#lumi-fallback{position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:#8064d7;font-size:12px;font-weight:700;text-align:center;padding:20px;pointer-events:none;background:radial-gradient(circle,rgba(255,255,255,.96),rgba(245,239,255,.78));border-radius:18px}
+#lumi-fallback{position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:#8064d7;font-size:12px;font-weight:700;text-align:center;padding:12px;pointer-events:none;background:transparent!important;border:0;border-radius:0}
 
 #lumi-root.lumi-mobile #lumi-speech{left:50%;right:auto;top:10px;width:min(142px,calc(100vw - 24px));max-width:142px;padding:6px 8px;font-size:9px;border-radius:12px;}
 
 #lumi-root.lumi-mobile #lumi-controls{left:50%;right:auto;bottom:max(12px,env(safe-area-inset-bottom));gap:7px;opacity:1;transform:translateX(-50%);}
 
-#lumi-root.lumi-mobile .lumi-control{width:29px;height:29px;font-size:12px;}
+#lumi-root.lumi-mobile .lumi-control{width:27px;height:27px;font-size:11px;}
+#lumi-root.lumi-mobile #lumi-drag-hitbox{width:128px;height:148px;}
 
 #lumi-root.lumi-mobile #lumi-label{bottom:max(58px,calc(env(safe-area-inset-bottom) + 50px));padding:5px 9px;font-size:9px;}
 
@@ -149,48 +150,24 @@ body{font-family:Inter,"Segoe UI",Arial,sans-serif}
 #lumi-game-feedback{min-height:30px;padding:7px 8px;margin-top:7px;border-radius:9px;background:#fff;color:#55466f;font-size:10px;line-height:1.4}#lumi-game-next,#lumi-game-retry,#lumi-game-menu-back{border:0;border-radius:20px;padding:8px 13px;background:#7653d3;color:#fff;font-size:10px;font-weight:850;cursor:pointer;margin:5px 5px 0 0}#lumi-game-menu-back{background:#e8e0fa;color:#5c43a1}.lumi-game-trophy{text-align:center;font-size:34px;margin:8px 0}#lumi-game-result{text-align:center;padding:8px}
 @media(max-width:420px){.lumi-game-cards button{min-height:58px;padding:7px}}
 
-
-/* Extra personality: reactions, voice tools, and lightweight celebration effects. */
-#lumi-effects{position:fixed;inset:0;z-index:180;overflow:hidden;pointer-events:none}
-.lumi-fx-particle{position:absolute;left:50%;top:50%;font-size:22px;line-height:1;opacity:0;filter:drop-shadow(0 3px 5px rgba(73,48,145,.22));animation:lumiFxBurst var(--duration,1050ms) cubic-bezier(.16,.75,.3,1) forwards;will-change:transform,opacity}
-@keyframes lumiFxBurst{0%{opacity:0;transform:translate(-50%,-50%) scale(.3) rotate(-15deg)}14%{opacity:1;transform:translate(-50%,-50%) scale(1.18) rotate(8deg)}100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(.55) rotate(var(--rot,35deg))}}
-.lumi-msg{animation:lumiMessageIn .22s ease-out both}
-@keyframes lumiMessageIn{from{opacity:0;transform:translateY(6px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
-.lumi-typing{display:flex;align-items:center;gap:4px;min-width:54px}
-.lumi-typing i{width:5px;height:5px;border-radius:50%;background:#9276d9;animation:lumiTyping .9s infinite ease-in-out}
-.lumi-typing i:nth-child(2){animation-delay:.14s}.lumi-typing i:nth-child(3){animation-delay:.28s}
-@keyframes lumiTyping{0%,60%,100%{opacity:.35;transform:translateY(0)}30%{opacity:1;transform:translateY(-4px)}}
-.lumi-chat-tools{display:flex;align-items:center;gap:6px}
-#lumi-voice-toggle{width:30px;height:30px;border:1px solid #ffffff55;border-radius:50%;background:#ffffff20;color:#fff;cursor:pointer;font-size:14px}
-#lumi-mic{width:36px;height:36px;flex:0 0 36px;border:1px solid #e0d8f1;border-radius:50%;background:#f5f1ff;color:#6849c7;cursor:pointer;font-size:14px}
-#lumi-mic.listening{background:#ffe8ed;color:#bb3657;animation:lumiMicPulse 1s infinite}
-@keyframes lumiMicPulse{50%{box-shadow:0 0 0 6px #f3a5bd44;transform:scale(1.04)}}
-#lumi-reactions{display:flex;justify-content:center;gap:7px;padding:7px 9px 2px;background:#fff;flex-shrink:0}
-#lumi-reactions button{width:31px;height:29px;border:1px solid #e5dcf7;border-radius:15px;background:#fbfaff;cursor:pointer;font-size:15px;transition:transform .15s,background .15s}
-#lumi-reactions button:hover{transform:translateY(-3px) scale(1.08);background:#f0eaff}
-#lumi-root.lumi-mobile #lumi-reactions button{width:29px;height:27px}
-@media(prefers-reduced-motion:reduce){.lumi-fx-particle,.lumi-msg,.lumi-typing i,#lumi-mic.listening{animation:none!important}.lumi-control,.lumi-reactions button{transition:none!important}}
 @keyframes lumiZzzFloat{0%,100%{margin-top:0}50%{margin-top:-9px}}
+/* Cloudflare Workers AI: accessible typing state */
+.lumi-ai-thinking{display:flex;align-items:center;gap:7px;min-height:30px}
+.lumi-ai-thinking .lumi-thinking-dots{display:inline-flex;gap:3px;align-items:center}
+.lumi-ai-thinking .lumi-thinking-dots i{width:5px;height:5px;border-radius:50%;background:#8b68ee;animation:lumiThinking .9s infinite ease-in-out}
+.lumi-ai-thinking .lumi-thinking-dots i:nth-child(2){animation-delay:.14s}
+.lumi-ai-thinking .lumi-thinking-dots i:nth-child(3){animation-delay:.28s}
+@keyframes lumiThinking{0%,60%,100%{transform:translateY(0);opacity:.45}30%{transform:translateY(-4px);opacity:1}}
+@media(prefers-reduced-motion:reduce){.lumi-ai-thinking .lumi-thinking-dots i{animation:none;opacity:1}}
+
 </style>
 
-<style id="EQUALLEARN_FORCED_DARK_LUMI">
-#lumi-assistant{background:linear-gradient(160deg,#121b2e,#0c1424)!important;color:#edf1fb!important;border-color:#36445e!important}
-#lumi-chat-messages,#lumi-chat-form,#lumi-chat-foot,#lumi-games{background:#101a2d!important;color:#e8eef9!important;border-color:#2a3852!important}
-.lumi-bot,.lumi-suggestions button,.lumi-game-cards button,#lumi-game-answers button,#lumi-game-feedback,#lumi-games-back{background:#1a2740!important;color:#e8eef9!important;border-color:#35445f!important}
-#lumi-chat-input{background:#0b1425!important;color:#edf1fb!important;border-color:#3a4965!important}
-#lumi-chat-input::placeholder{color:#91a0ba!important}
-#lumi-game-menu h3,#lumi-game-play h3,#lumi-game-result h3{color:#f1f4fc!important}
-#lumi-game-menu p,#lumi-game-play p,#lumi-game-result p{color:#aab7cc!important}
-.lumi-game-progress{color:#c0b5ff!important}.lumi-game-progress-track{background:#26344d!important}
-#lumi-label,#lumi-speech{background:rgba(20,29,48,.94)!important;color:#e9e5ff!important;border-color:#475270!important}
-#lumi-fallback{background:radial-gradient(circle,#1a2740,#0b1020)!important;color:#c4b7ff!important}
-</style>
 </head>
 
 <body>
 
 <div id="lumi-root">
- <div id="lumi-effects" aria-hidden="true"></div>
+
  <canvas id="lumi-canvas" aria-label="Interactive 3D Lumi companion" tabindex="0"></canvas>
 
  <div id="lumi-fallback">Lumi needs WebGL support to show her 3D character.</div>
@@ -198,16 +175,16 @@ body{font-family:Inter,"Segoe UI",Arial,sans-serif}
  <div id="lumi-ui">
 
   <div id="lumi-speech" role="status" aria-live="polite">Hi! I'm Lumi, your learning buddy. 💜</div>
-  <button id="lumi-drag-hitbox" type="button" aria-label="Drag Lumi anywhere on the screen" title="Drag Lumi anywhere on the screen"></button>
+  <button id="lumi-drag-hitbox" type="button" aria-label="Drag Lumi"></button>
 <section id="lumi-assistant" aria-label="Lumi help assistant" aria-hidden="true">
 
    <header class="lumi-chat-head">
 
     <div class="lumi-chat-avatar">✦</div>
 
-         <div class="lumi-chat-heading"><strong>Ask Lumi</strong><span id="lumi-context">Your EqualLearn guide</span></div>
-     <div class="lumi-chat-tools"><button type="button" id="lumi-voice-toggle" title="Turn voice replies on" aria-label="Turn voice replies on" aria-pressed="false">🔇</button>
-     <button type="button" id="lumi-chat-close" aria-label="Close assistant">×</button></div>
+    <div class="lumi-chat-heading"><strong>Ask Lumi</strong><span id="lumi-context">Your EqualLearn guide</span></div>
+
+    <button type="button" id="lumi-chat-close" aria-label="Close assistant">×</button>
 
    </header>
 
@@ -219,8 +196,7 @@ body{font-family:Inter,"Segoe UI",Arial,sans-serif}
        <button type="button" data-game="stereotype"><b>🎭 Stereotype or Fact?</b><small>Spot unfair assumptions</small></button>
        <button type="button" data-game="equity"><b>⚖️ Equality or Equity?</b><small>Choose fair support</small></button>
        <button type="button" data-game="respect"><b>💬 Respectful Response</b><small>Practice empathy and respect</small></button>
-              <button type="button" data-game="digital"><b>🛡️ Digital Respect</b><small>Make safer online choices</small></button>
-       <button type="button" data-game="kindness"><b>🌱 Kindness Quest</b><small>Choose helpful actions and ally behavior</small></button>
+       <button type="button" data-game="digital"><b>🛡️ Digital Respect</b><small>Make safer online choices</small></button>
       </div>
     </div>
     <div id="lumi-game-play" hidden><div class="lumi-game-progress"><span id="lumi-game-name"></span><span id="lumi-game-score">0 / 5</span></div>
@@ -237,21 +213,17 @@ body{font-family:Inter,"Segoe UI",Arial,sans-serif}
 
    </div>
 
-      <div id="lumi-suggestions" class="lumi-suggestions"></div>
-   <div id="lumi-reactions" aria-label="Quick reactions">
-    <button type="button" data-reaction="send me a heart" title="Send a heart">💜</button>
-    <button type="button" data-reaction="clap for me" title="Clap">👏</button>
-    <button type="button" data-reaction="tell me a joke" title="Make me laugh">😂</button>
-    <button type="button" data-reaction="do magic" title="Magic sparkle">✨</button>
-    <button type="button" data-reaction="celebrate" title="Celebrate">🎉</button>
-   </div>
+   <div id="lumi-suggestions" class="lumi-suggestions"></div>
+
    <form id="lumi-chat-form" autocomplete="off">
-    <input id="lumi-chat-input" type="text" maxlength="600" placeholder="Ask Lumi for help or fun..." aria-label="Message Lumi" required>
-    <button type="button" id="lumi-mic" title="Speak your message" aria-label="Speak your message">🎙</button>
+
+    <input id="lumi-chat-input" type="text" maxlength="300" placeholder="Ask Lumi for help..." aria-label="Message Lumi" required>
+
     <button type="submit" aria-label="Send message">➤</button>
+
    </form>
 
-   <div class="lumi-chat-foot">Lumi AI Companion · Voice features depend on browser support. Never share passwords, OTPs, or recovery codes.</div>
+   <div class="lumi-chat-foot">Lumi AI Companion · Never share your password, OTP, or recovery codes.</div>
 
   </section>
 
@@ -259,9 +231,8 @@ body{font-family:Inter,"Segoe UI",Arial,sans-serif}
 
    <button class="lumi-control" id="lumi-wave" title="Wave hello" aria-label="Wave hello">👋</button>
 
-      <button class="lumi-control" id="lumi-talk" title="Talk to Lumi" aria-label="Talk to Lumi">💬</button>
-   <button class="lumi-control" id="lumi-surprise" title="Surprise me" aria-label="Surprise me">✨</button>
-   <button class="lumi-control" id="lumi-game-shortcut" title="Play a mini-game" aria-label="Play a mini-game">🎮</button>
+   <button class="lumi-control" id="lumi-talk" title="Talk to Lumi" aria-label="Talk to Lumi">💬</button>
+
    <button class="lumi-control" id="lumi-hide" title="Hide Lumi" aria-label="Hide Lumi">−</button>
 
   </div>
@@ -278,6 +249,17 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.m
 import { auth, db } from "../js/firebase-config.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
+
+// Optional separate Worker URL config. If the config file has not been deployed
+// yet, Lumi's 3D companion and built-in EqualLearn help still load normally.
+let LUMI_AI_WORKER_URL = "";
+try {
+ const lumiAIConfig = await import("../js/lumi-ai-config.js");
+ LUMI_AI_WORKER_URL = String(lumiAIConfig.LUMI_AI_WORKER_URL || "");
+} catch (error) {
+ console.info("Lumi AI Worker URL is not configured yet; built-in help remains available.");
+}
+
 
 
 
@@ -300,6 +282,12 @@ let sleepStartedAt=0;
 let outfitTransition=null;
 let nextOutfitAt=performance.now()+65000;
 let currentOutfit=0;
+let remoteAppearance={scale:1,showHalo:true,showSparkles:true,autoOutfit:false,characterType:"humanoid"};
+let selectedCharacterType="humanoid";
+let characterVariantRoot=null;
+let characterVariantParts={};
+let remoteAppearanceLoaded=false;
+let remoteAppearanceSignature="";
 let petMode="rest"; // curious companion: gentle strolls, little play moments, occasional rocket flights
 let modeUntil=performance.now()+18000;
 let nextMoodAt=performance.now()+9000;
@@ -332,11 +320,24 @@ function getResponsiveLumiScale(){
 let camera=null;
 let lumi=null;
 
+let lumiCompactFramePosition = null;
+let lumiChatFramePosition = null;
+
+function readSavedLumiFramePosition(parentWidth, parentHeight, frameWidth, frameHeight){
+ try{
+  const saved=JSON.parse(localStorage.getItem("equallearn-lumi-frame-position")||"null");
+  if(!saved || !Number.isFinite(Number(saved.left)) || !Number.isFinite(Number(saved.top))) return null;
+  return {
+   left:THREE.MathUtils.clamp(Number(saved.left),4,Math.max(4,parentWidth-frameWidth-4)),
+   top:THREE.MathUtils.clamp(Number(saved.top),4,Math.max(4,parentHeight-frameHeight-4))
+  };
+ }catch(_){return null;}
+}
+
 function syncLumiFrameSize(){
  try{
   const frame=window.frameElement;
   if(!frame)return;
-  // Fully remove the hidden iframe from host-page hit testing.
   if(hidden){
    frame.style.setProperty("display","none","important");
    frame.style.setProperty("pointer-events","none","important");
@@ -344,37 +345,74 @@ function syncLumiFrameSize(){
    return;
   }
   const parent=window.parent;
-  const mobile=(parent.innerWidth||window.innerWidth)<=600;
+  const parentWidth=parent.innerWidth||window.innerWidth||360;
+  const parentHeight=parent.innerHeight||window.innerHeight||700;
+  const mobile=parentWidth<=600;
   root.classList.toggle("lumi-mobile",mobile);
-
-  // Lumi's iframe must cover the WHOLE page viewport. If the iframe stays
-  // inside its original small widget box, pointer capture and dragging stop
-  // at that box's edges. Use important inline styles so host layout rules
-  // cannot quietly shrink it back to the original frame.
-  const fullScreenStyles={
-   position:"fixed",inset:"0",left:"0",top:"0",right:"0",bottom:"0",
-   width:"100vw",height:"100vh",maxWidth:"none",maxHeight:"none",
-   minWidth:"100vw",minHeight:"100vh",margin:"0",padding:"0",
-   transform:"none",border:"0",background:"transparent",
-   zIndex:"2147483647",display:"block",visibility:"visible",
-   opacity:"1",pointerEvents:"auto",overflow:"visible",clipPath:"none",WebkitClipPath:"none"
+  const assistantOpen=root.classList.contains("assistant-open");
+  const frameWidth=assistantOpen
+   ? Math.min(mobile?360:392,Math.max(280,parentWidth-16))
+   : (mobile?142:176);
+  const frameHeight=assistantOpen
+   ? Math.min(mobile?560:575,Math.max(360,parentHeight-20))
+   : (mobile?184:224);
+  const styles={
+   position:"fixed",width:`${frameWidth}px`,height:`${frameHeight}px`,
+   minWidth:"0",minHeight:"0",maxWidth:"none",maxHeight:"none",
+   margin:"0",padding:"0",border:"0",outline:"0",
+   background:"transparent",backgroundColor:"transparent",backgroundImage:"none",
+   zIndex:"2147483647",display:"block",visibility:"visible",opacity:"1",
+   pointerEvents:"auto",overflow:"visible",clipPath:"none",WebkitClipPath:"none",
+   boxShadow:"none",borderRadius:"0"
   };
-  for(const [property,value] of Object.entries(fullScreenStyles)){
-   if(frame.style.getPropertyValue(property)!==value || frame.style.getPropertyPriority(property)!=="important"){
-    frame.style.setProperty(property,value,"important");
-   }
-  }
+  for(const [property,value] of Object.entries(styles)) frame.style.setProperty(property,value,"important");
   frame.setAttribute("allowtransparency","true");
   frame.setAttribute("scrolling","no");
+  frame.setAttribute("frameborder","0");
   frame.setAttribute("title","Lumi 3D companion");
- }catch(error){console.warn("Lumi could not size her full-screen drag layer",error);}
+  frame.dataset.lumiSelfManaged="true";
+  frame.style.setProperty("background","transparent","important");
+  frame.style.setProperty("background-color","transparent","important");
+  frame.style.setProperty("background-image","none","important");
+  if(assistantOpen){
+   if(!lumiChatFramePosition){
+    const r=frame.getBoundingClientRect();
+    lumiChatFramePosition={left:r.left,top:r.top};
+   }
+   frame.style.setProperty("left","50%","important");
+   frame.style.setProperty("top","50%","important");
+   frame.style.setProperty("right","auto","important");
+   frame.style.setProperty("bottom","auto","important");
+   frame.style.setProperty("transform","translate(-50%,-50%)","important");
+  }else{
+   lumiChatFramePosition=null;
+   const saved=lumiCompactFramePosition||readSavedLumiFramePosition(parentWidth,parentHeight,frameWidth,frameHeight);
+   if(saved){
+    const pos={
+     left:THREE.MathUtils.clamp(saved.left,4,Math.max(4,parentWidth-frameWidth-4)),
+     top:THREE.MathUtils.clamp(saved.top,4,Math.max(4,parentHeight-frameHeight-4))
+    };
+    lumiCompactFramePosition=pos;
+    frame.style.setProperty("left",`${pos.left}px`,"important");
+    frame.style.setProperty("top",`${pos.top}px`,"important");
+    frame.style.setProperty("right","auto","important");
+    frame.style.setProperty("bottom","auto","important");
+   }else{
+    frame.style.setProperty("left","auto","important");
+    frame.style.setProperty("top","auto","important");
+    frame.style.setProperty("right",mobile?"8px":"12px","important");
+    frame.style.setProperty("bottom",mobile?"8px":"12px","important");
+   }
+   frame.style.setProperty("transform","none","important");
+  }
+ }catch(error){console.warn("Lumi compact frame sizing failed",error);}
 }
 
 syncLumiFrameSize();
 window.addEventListener("resize",syncLumiFrameSize,{passive:true});
 window.addEventListener("orientationchange",syncLumiFrameSize,{passive:true});
-// Some host pages re-apply iframe dimensions after load. Reassert full-screen
-// geometry only when those dimensions actually change.
+// The widget marks the parent iframe as self-managed so the host shell
+// will not restore its previous oversized dimensions.
 try{
  const frame=window.frameElement;
  if(frame && window.parent && window.parent.document){
@@ -393,56 +431,26 @@ function markUserInteraction(){
 }
 function updateDragHitbox(){
  if(!webglAvailable||!camera||!lumi||!dragHitbox)return;
- const projected=lumi.position.clone();
- projected.y+=.25;
- projected.project(camera);
- const w=root.clientWidth||window.innerWidth;
- const h=root.clientHeight||window.innerHeight;
- const x=(projected.x*.5+.5)*w;
- const y=(-projected.y*.5+.5)*h;
- dragHitbox.style.left=`${x}px`;
- dragHitbox.style.top=`${y}px`;
+ const projected=lumi.position.clone();projected.y+=.25;projected.project(camera);
+ const w=root.clientWidth||176,h=root.clientHeight||224;
+ const x=(projected.x*.5+.5)*w,y=(-projected.y*.5+.5)*h;
+ dragHitbox.style.left=`${x}px`;dragHitbox.style.top=`${y}px`;
  if(zzzBadge){
-  zzzBadge.style.left=`${Math.max(20,Math.min(w-20,x+58))}px`;
-  zzzBadge.style.top=`${Math.max(18,Math.min(h-36,y-78))}px`;
+  zzzBadge.style.left=`${Math.max(16,Math.min(w-16,x+Math.min(48,w*.25)))}px`;
+  zzzBadge.style.top=`${Math.max(12,Math.min(h-30,y-64))}px`;
   zzzBadge.style.opacity=isSleeping?"1":"0";
   zzzBadge.style.animation=isSleeping?"lumiZzzFloat 1.35s ease-in-out infinite":"none";
  }
- speech.style.left=`${Math.max(92,Math.min(w-92,x))}px`;
- speech.style.top=`${Math.max(12,Math.min(h-70,y-126))}px`;
+ speech.style.left=`${Math.max(70,Math.min(w-70,x))}px`;
+ speech.style.top=`${Math.max(5,Math.min(h-58,y-112))}px`;
  const controls=document.getElementById("lumi-controls");
  if(controls){
-  controls.style.left=`${Math.max(105,Math.min(w-105,x))}px`;
-  controls.style.top=`${Math.max(8,Math.min(h-58,y+105))}px`;
+  controls.style.left=`${Math.max(78,Math.min(w-78,x))}px`;
+  controls.style.top=`${Math.max(8,Math.min(h-50,y+78))}px`;
   controls.style.bottom="auto";
  }
- // The iframe remains full-screen for smooth pointer-captured dragging, but
- // its hit-test area is clipped to a compact circle around Lumi. The rest of
- // the page remains clickable even though the iframe visually spans it.
- try{
-  const frame=window.frameElement;
-  if(frame){
-   // Keep the iframe's clickable island around Lumi, but extend its top edge
-   // to include the speech bubble and its bottom edge to include the controls.
-   // A circular clip used to cut the bubble in half because it sits above her.
-   const mobile=(window.innerWidth||w)<=600;
-   const halfWidth=mobile?148:166;
-   const topExtent=mobile?194:205;
-   const bottomExtent=mobile?184:196;
-   const left=Math.max(0,x-halfWidth), right=Math.min(w,x+halfWidth);
-   const top=Math.max(0,y-topExtent), bottom=Math.min(h,y+bottomExtent);
-   const px=n=>`${(n/w)*100}%`;
-   const py=n=>`${(n/h)*100}%`;
-   const clip=`polygon(${px(left+10)} ${py(top)}, ${px(right-10)} ${py(top)}, ${px(right)} ${py(top+12)}, ${px(right)} ${py(bottom-12)}, ${px(right-10)} ${py(bottom)}, ${px(left+10)} ${py(bottom)}, ${px(left)} ${py(bottom-12)}, ${px(left)} ${py(top+12)})`;
-   if(root.classList.contains("assistant-open")){
-    frame.style.setProperty("clip-path","none","important");
-    frame.style.setProperty("-webkit-clip-path","none","important");
-   }else{
-    frame.style.setProperty("clip-path",clip,"important");
-    frame.style.setProperty("-webkit-clip-path",clip,"important");
-   }
-  }
- }catch(_){}
+ // The iframe itself is now only as large as the companion dock. No full-page
+ // polygon clipping is required, so page buttons outside this small rectangle remain clickable.
  dragHitbox.style.display=root.classList.contains("assistant-open")||hidden?"none":"block";
 }
 function getWorldPoint(event){
@@ -462,39 +470,50 @@ function getPetBounds(){
  };
 }
 let petDragStart=null;
+let frameDragState=null;
 dragHitbox.addEventListener("pointerdown",event=>{
  if(!webglAvailable||root.classList.contains("assistant-open")||hidden)return;
- const point=getWorldPoint(event);
- if(!point)return;
- petDragStart={x:event.clientX,y:event.clientY,moved:false};
- dragState={pointerId:event.pointerId,offset:new THREE.Vector3().subVectors(lumi.position,point)};
+ const frame=window.frameElement;
+ if(!frame)return;
+ const rect=frame.getBoundingClientRect();
+ petDragStart={x:event.screenX,y:event.screenY,moved:false};
+ frameDragState={
+  pointerId:event.pointerId,startScreenX:event.screenX,startScreenY:event.screenY,
+  left:rect.left,top:rect.top,width:rect.width,height:rect.height,frame
+ };
+ dragState={pointerId:event.pointerId,frameDrag:true};
  try{dragHitbox.setPointerCapture(event.pointerId);}catch(_){}
- markUserInteraction();
- event.preventDefault();
+ markUserInteraction();event.preventDefault();
 });
 dragHitbox.addEventListener("pointermove",event=>{
- if(!dragState||dragState.pointerId!==event.pointerId)return;
- if(petDragStart&&Math.hypot(event.clientX-petDragStart.x,event.clientY-petDragStart.y)>5)petDragStart.moved=true;
- const point=getWorldPoint(event);
- if(!point)return;
- const bounds=getPetBounds();
- const next=point.add(dragState.offset);
- const x=THREE.MathUtils.clamp(next.x,-bounds.x,bounds.x);
- const y=THREE.MathUtils.clamp(next.y,-bounds.y,bounds.y);
- petPosition.set(x,y,0);lumi.position.set(x,y,0);
- if(roamTarget)roamTarget.set(x,y,0);
- if(roamVelocity)roamVelocity.set(0,0,0);
+ if(!frameDragState||frameDragState.pointerId!==event.pointerId)return;
+ const dx=event.screenX-frameDragState.startScreenX;
+ const dy=event.screenY-frameDragState.startScreenY;
+ if(petDragStart&&Math.hypot(dx,dy)>5)petDragStart.moved=true;
+ let parentWidth=window.innerWidth||360,parentHeight=window.innerHeight||700;
+ try{parentWidth=window.parent.innerWidth||parentWidth;parentHeight=window.parent.innerHeight||parentHeight;}catch(_){}
+ const left=THREE.MathUtils.clamp(frameDragState.left+dx,4,Math.max(4,parentWidth-frameDragState.width-4));
+ const top=THREE.MathUtils.clamp(frameDragState.top+dy,4,Math.max(4,parentHeight-frameDragState.height-4));
+ const frame=frameDragState.frame;
+ frame.style.setProperty("left",`${left}px`,`important`);
+ frame.style.setProperty("top",`${top}px`,`important`);
+ frame.style.setProperty("right","auto","important");
+ frame.style.setProperty("bottom","auto","important");
+ frame.style.setProperty("transform","none","important");
+ frame.style.setProperty("background","transparent","important");
+ frame.dataset.lumiSelfManaged="true";
+ lumiCompactFramePosition={left,top};
  markUserInteraction();event.preventDefault();
 });
 function finishPetDrag(event){
- if(!dragState||dragState.pointerId!==event.pointerId)return;
+ if(!frameDragState||frameDragState.pointerId!==event.pointerId)return;
  const wasTap=petDragStart&&!petDragStart.moved;
- dragState=null;petPosition.copy(lumi.position);
- if(roamTarget)roamTarget.copy(petPosition);
- if(roamVelocity)roamVelocity.set(0,0,0);
- try{localStorage.setItem("equallearn-lumi-pet-position",JSON.stringify({x:lumi.position.x,y:lumi.position.y}));}catch(_){}
+ dragState=null;
+ if(lumiCompactFramePosition){
+  try{localStorage.setItem("equallearn-lumi-frame-position",JSON.stringify(lumiCompactFramePosition));}catch(_){}
+ }
+ frameDragState=null;petDragStart=null;markUserInteraction();
  if(wasTap){lastPetTapAt=performance.now();waveUntil=lastPetTapAt+1100;clickPulse=1;autoMood="Bounce";say(["Boop! Hehe! 💜","Yay, you tapped me! ✨","Hi hi! Need a tiny hug? 🤗","That tickles! 🤖💜"][Math.floor(Math.random()*4)],2500);}
- petDragStart=null;markUserInteraction();
 }
 dragHitbox.addEventListener("pointerup",finishPetDrag);
 dragHitbox.addEventListener("pointercancel",finishPetDrag);
@@ -705,6 +724,51 @@ if(renderer){
    }
    if(progress>=1){currentOutfit=outfitTransition.index;outfitTransition=null;}
   }
+  function applyRemoteAppearance(settings,announce=false){
+   if(!settings||typeof settings!=="object")return;
+   const signature=JSON.stringify(settings);
+   if(signature===remoteAppearanceSignature)return;
+   remoteAppearanceSignature=signature;
+   const allowed={shell:/^#[0-9a-f]{6}$/i,shellShade:/^#[0-9a-f]{6}$/i,purple:/^#[0-9a-f]{6}$/i,purpleDark:/^#[0-9a-f]{6}$/i,cyan:/^#[0-9a-f]{6}$/i,gold:/^#[0-9a-f]{6}$/i,rocketShell:/^#[0-9a-f]{6}$/i};
+   const from={};for(const [key,material] of Object.entries(outfitMaterialMap))from[key]=material.color.clone();
+   const to={};let hasCustom=false;
+   for(const [key,material] of Object.entries(outfitMaterialMap)){
+    const value=String(settings.colors?.[key]||"");
+    if(allowed[key]?.test(value)){to[key]=new THREE.Color(value);hasCustom=true;}else to[key]=material.color.clone();
+   }
+   if(hasCustom){outfitTransition={from,to,start:performance.now(),duration:2200,index:currentOutfit};}
+   remoteAppearance={
+    scale:THREE.MathUtils.clamp(Number(settings.scale)||1,.75,1.25),
+    showHalo:settings.showHalo!==false,
+    showSparkles:settings.showSparkles!==false,
+    autoOutfit:settings.autoOutfit===true,
+    characterType:["humanoid","orb","puppy","cube","bird","rover","cat","drone"].includes(String(settings.characterType||"humanoid").toLowerCase())?String(settings.characterType||"humanoid").toLowerCase():"humanoid"
+   };
+   setLumiCharacterType(remoteAppearance.characterType,true);
+   halo.visible=remoteAppearance.showHalo;orbit.visible=remoteAppearance.showHalo;
+   sparkles.forEach(item=>{item.mesh.visible=remoteAppearance.showSparkles;});
+   remoteAppearanceLoaded=true;
+   console.info("[Lumi] Shared appearance loaded:", remoteAppearance.characterType, settings.preset||"Custom");
+   nextOutfitAt=remoteAppearance.autoOutfit?performance.now()+30000:Infinity;
+   if(announce){say(`My new ${String(settings.preset||"custom")} look is here! ✨`,3000);}
+  }
+  async function syncRemoteAppearance(announce=false){
+   if(!LUMI_AI_WORKER_URL||!/^https:\/\//i.test(LUMI_AI_WORKER_URL)){
+    console.warn("Lumi shared appearance URL is not configured. Check assets/js/lumi-ai-config.js.");
+    return false;
+   }
+   try{
+    const response=await fetch(`${LUMI_AI_WORKER_URL.replace(/\/$/,"")}/appearance`,{
+     method:"GET",cache:"no-store",credentials:"omit",
+     headers:{"Accept":"application/json"}
+    });
+    if(!response.ok){console.warn("Lumi appearance endpoint returned",response.status,"Check ALLOWED_ORIGINS for the exact EqualLearn page origin.");return false;}
+    const data=await response.json();
+    if(data.appearance){applyRemoteAppearance(data.appearance,announce);return true;}
+    console.warn("Lumi appearance endpoint returned no appearance object.");
+    return false;
+   }catch(error){console.warn("Lumi shared appearance sync unavailable",error?.message||error);return false;}
+  }
   roundedBox(.24,.49,.25,.07,rocketShell,torso,[.73,-.48,.08]);
   const nozzle=new THREE.Mesh(new THREE.CylinderGeometry(.078,.105,.17,24),rocketNozzleMat);
   nozzle.position.set(.75,-.82,.10);nozzle.rotation.z=-.10;torso.add(nozzle);
@@ -910,6 +974,103 @@ if(renderer){
  shadow.rotation.x=0;shadow.position.set(0,-1.45,-.3);scene.add(shadow);
 
 
+ // Shared character library: each selection is a real Three.js model, not a CSS recolor.
+ characterVariantRoot=new THREE.Group();lumi.add(characterVariantRoot);
+ const characterVariantGroups={};
+ function makeVariantGroup(type){
+  const group=new THREE.Group();characterVariantRoot.add(group);
+  const p={};
+  const addBall=(material,pos,scale=[1,1,1],radius=.5)=>sphere(radius,material,group,pos,scale,40);
+  const addRod=(material,a,b,radius=.07)=>capsuleBetween(a,b,radius,material,group);
+  const addBox=(material,pos,scale,radius=.12)=>roundedBox(scale[0],scale[1],scale[2],radius,material,group,pos);
+  const addEyes=(y,z,spacing=.23,size=.105)=>{
+   for(const x of [-spacing,spacing]){
+    addBall(purpleDark,[x,y,z],[1.1,1.15,.5],size*1.7);
+    addBall(cyan,[x,y,z+.055],[.9,1.05,.65],size);
+    addBall(white,[x-.028,y+.04,z+.09],[.45,.45,.4],size*.32);
+   }
+  };
+  if(type==="orb"){
+   addBall(shell,[0,.04,0],[1.06,1.06,.86],.7);
+   addBall(shellShade,[0,.04,.58],[.85,.56,.25],.57);
+   addBall(darkFace,[0,.04,.72],[.82,.47,.16],.55);addEyes(.07,.86,.23,.12);
+   const ring=new THREE.Mesh(new THREE.TorusGeometry(1.05,.035,12,72),purple);ring.position.set(0,.03,-.1);ring.rotation.set(.72,.1,-.2);group.add(ring);p.ring=ring;
+   capsuleBetween([0,.78,0],[0,1.06,0],.04,gold,group);addBall(cyan,[0,1.12,.02],[1,1,.7],.085);
+  }
+  if(type==="cube"){
+   addBox(shell,[0,.02,0],[1.48,1.43,1.0],.22);
+   addBox(darkFace,[0,.1,.52],[1.12,.62,.12],.15);addEyes(.15,.63,.23,.095);
+   const antenna=capsuleBetween([0,.76,0],[0,1.0,0],.04,purple,group);p.antenna=antenna;addBall(cyan,[0,1.04,0],[1,1,1],.08);
+   addRod(shellShade,[-.74,.2,0],[-1.02,-.2,.02],.09);addRod(shellShade,[.74,.2,0],[1.02,-.2,.02],.09);
+   addRod(purpleDark,[-.35,-.66,0],[-.35,-1.0,0],.12);addRod(purpleDark,[.35,-.66,0],[.35,-1.0,0],.12);
+   addBall(gold,[0,-.33,.57],[.2,.2,.08],.13);
+  }
+  if(type==="puppy"){
+   addBall(shell,[0,-.4,0],[.96,.56,.63],.62);
+   addBall(shell,[0,.34,.08],[.8,.77,.66],.6);
+   const earL=addBall(shellShade,[-.62,.54,0],[.36,.68,.23],.42),earR=addBall(shellShade,[.62,.54,0],[.36,.68,.23],.42);p.ears=[earL,earR];
+   addBall(shellShade,[0,.12,.58],[.49,.32,.3],.4);addEyes(.42,.68,.22,.085);
+   addBall(purpleDark,[0,.18,.88],[1.1,.78,.52],.11);
+   for(const x of [-.56,.56])for(const z of [-.32,.32])addRod(shellShade,[x*.72,-.62,z],[x*.82,-1.04,z],.085);
+   const tail=new THREE.Mesh(new THREE.TorusGeometry(.25,.075,12,30),purple);tail.position.set(.78,-.16,-.08);tail.rotation.y=1.15;group.add(tail);p.tail=tail;
+   addBall(gold,[0,-.35,.59],[.18,.18,.08],.12);
+  }
+  if(type==="bird"){
+   addBall(shell,[0,-.12,0],[.75,.94,.62],.61);addBall(shell,[0,.74,.05],[.58,.56,.5],.52);addEyes(.78,.5,.18,.08);
+   const beak=new THREE.Mesh(new THREE.ConeGeometry(.17,.34,5),gold);beak.position.set(0,.43,.68);beak.rotation.x=Math.PI/2;group.add(beak);
+   const wingL=addBall(purple,[-.7,-.1,0],[.72,.18,.42],.5),wingR=addBall(purple,[.7,-.1,0],[.72,.18,.42],.5);p.wings=[wingL,wingR];
+   addRod(purpleDark,[-.2,-.86,0],[-.2,-1.14,.05],.055);addRod(purpleDark,[.2,-.86,0],[.2,-1.14,.05],.055);
+  }
+  if(type==="rover"){
+   addBox(shell,[0,-.18,0],[1.82,.82,1.04],.16);addBall(shell,[0,.5,.02],[.62,.54,.55],.52);
+   addBall(darkFace,[0,.48,.52],[.82,.5,.16],.5);addEyes(.52,.67,.2,.085);
+   addRod(gold,[0,.95,-.05],[0,1.28,-.05],.045);addBall(cyan,[0,1.33,-.05],[1,1,.8],.08);
+   const wheels=[];for(const x of [-.82,.82])for(const z of [-.32,.32]){const w=new THREE.Mesh(new THREE.TorusGeometry(.27,.11,12,32),purpleDark);w.position.set(x,-.48,z);w.rotation.y=Math.PI/2;group.add(w);wheels.push(w);}p.wheels=wheels;
+  }
+  if(type==="cat"){
+   addBall(shell,[0,-.35,0],[.78,.62,.58],.57);addBall(shell,[0,.46,.06],[.72,.7,.58],.57);
+   const earL=new THREE.Mesh(new THREE.ConeGeometry(.27,.62,4),shellShade);earL.position.set(-.47,1.06,.03);earL.rotation.z=-.24;group.add(earL);
+   const earR=new THREE.Mesh(new THREE.ConeGeometry(.27,.62,4),shellShade);earR.position.set(.47,1.06,.03);earR.rotation.z=.24;group.add(earR);
+   addEyes(.55,.59,.21,.085);addBall(purpleDark,[0,.2,.64],[1,.8,.6],.1);
+   const tail=new THREE.Mesh(new THREE.TorusGeometry(.38,.07,12,32),purple);tail.position.set(.72,-.35,-.05);tail.rotation.y=1;group.add(tail);p.tail=tail;
+   addRod(shellShade,[-.35,-.68,0],[-.4,-1,0],.09);addRod(shellShade,[.35,-.68,0],[.4,-1,0],.09);
+  }
+  if(type==="drone"){
+   addBall(shell,[0,.08,0],[.72,.55,.62],.56);addBall(darkFace,[0,.08,.52],[.8,.52,.2],.5);addEyes(.12,.67,.2,.09);
+   const rotors=[];for(const [x,z] of [[-.95,-.55],[.95,-.55],[-.95,.55],[.95,.55]]){
+    addRod(shellShade,[0,.18,0],[x,.24,z],.065);const rotor=new THREE.Group();rotor.position.set(x,.28,z);group.add(rotor);
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(.32,.035,8,28),gold);rotor.add(ring);const blade=new THREE.Mesh(new THREE.BoxGeometry(.55,.025,.08),purple);rotor.add(blade);rotors.push(rotor);
+   }p.rotors=rotors;
+  }
+  group.userData.parts=p;characterVariantGroups[type]=group;return group;
+ }
+ ["orb","puppy","cube","bird","rover","cat","drone"].forEach(makeVariantGroup);
+ // Start with only the original humanoid visible; all alternate meshes are hidden until selected.
+ characterVariantRoot.visible=false;
+ Object.values(characterVariantGroups).forEach(group=>{group.visible=false;});
+ function setLumiCharacterType(type,announce=false){
+  const allowed=["humanoid","orb","puppy","cube","bird","rover","cat","drone"];
+  const next=allowed.includes(String(type||"").toLowerCase())?String(type).toLowerCase():"humanoid";
+  if(next===selectedCharacterType)return;
+  selectedCharacterType=next;
+  torso.visible=next==="humanoid";
+  characterVariantRoot.visible=next!=="humanoid";
+  Object.entries(characterVariantGroups).forEach(([key,group])=>{group.visible=key===next;});
+  if(announce)say(`New form unlocked: ${next.charAt(0).toUpperCase()+next.slice(1)}! ✨`,2800);
+ }
+ setLumiCharacterType("humanoid");
+ function animateVariantCharacter(t,isMoving){
+  const p=characterVariantGroups[selectedCharacterType]?.userData?.parts||{};
+  if(p.ring)p.ring.rotation.z=t*.18;
+  if(p.tail)p.tail.rotation.x=Math.sin(t*2.1)*.22;
+  if(p.ears){p.ears[0].rotation.z=-.10+Math.sin(t*2.4)*.07;p.ears[1].rotation.z=.10-Math.sin(t*2.4)*.07;}
+  if(p.wings){const flap=Math.sin(t*7.5)*(isMoving?.34:.16);p.wings[0].rotation.z=flap;p.wings[1].rotation.z=-flap;}
+  if(p.wheels)p.wheels.forEach(w=>{w.rotation.x=isMoving?t*2.8:Math.sin(t*.5)*.025;});
+  if(p.rotors)p.rotors.forEach(r=>{r.rotation.y=t*9;});
+  if(p.antenna)p.antenna.rotation.z=Math.sin(t*2)*.08;
+ }
+
+
 
  // Cursor target with smoothed movement
 
@@ -1087,12 +1248,7 @@ if(renderer){
 
  const chatForm=document.getElementById("lumi-chat-form");
 
-  const suggestionBox=document.getElementById("lumi-suggestions");
- const reactionsBar=document.getElementById("lumi-reactions");
- const effectsLayer=document.getElementById("lumi-effects");
- let voiceRepliesEnabled=false;
- let speechRecognition=null;
- let recognitionActive=false;
+ const suggestionBox=document.getElementById("lumi-suggestions");
 
  const currentPath=(()=>{try{return window.parent.location.pathname.toLowerCase()}catch(_){return location.pathname.toLowerCase()}})();
 
@@ -1139,81 +1295,86 @@ let accountProfile={};
   }catch(error){console.warn("Lumi profile lookup unavailable; using a friendly fallback.",error);}
  });
 
-  function getLumiScreenPoint(){
-  try{
-   if(!lumi||!camera)return {x:window.innerWidth*.5,y:window.innerHeight*.5};
-   const p=lumi.position.clone().project(camera);
-   return {x:(p.x*.5+.5)*window.innerWidth,y:(-.5*p.y+.5)*window.innerHeight};
-  }catch(_){return {x:window.innerWidth*.5,y:window.innerHeight*.5};}
- }
- function burstEffect(symbol="✨",count=9){
-  if(!effectsLayer)return;
-  const center=getLumiScreenPoint();
-  for(let i=0;i<count;i++){
-   const particle=document.createElement("span");
-   particle.className="lumi-fx-particle";
-   particle.textContent=symbol;
-   const angle=(Math.PI*2*i/count)+(Math.random()-.5)*.5;
-   const distance=38+Math.random()*78;
-   particle.style.left=`${center.x+(Math.random()-.5)*22}px`;
-   particle.style.top=`${center.y+(Math.random()-.5)*22}px`;
-   particle.style.setProperty("--dx",`${Math.cos(angle)*distance}px`);
-   particle.style.setProperty("--dy",`${Math.sin(angle)*distance-24}px`);
-   particle.style.setProperty("--rot",`${Math.round((Math.random()-.5)*110)}deg`);
-   particle.style.setProperty("--duration",`${750+Math.random()*650}ms`);
-   effectsLayer.appendChild(particle);
-   setTimeout(()=>particle.remove(),1500);
-  }
- }
- function speakLumi(text){
-  if(!voiceRepliesEnabled||!window.speechSynthesis||!text)return;
-  try{
-   window.speechSynthesis.cancel();
-   const clean=String(text).replace(/https?:\/\/\S+/g," link").replace(/[\p{Extended_Pictographic}\uFE0F]/gu," ").slice(0,650);
-   const utterance=new SpeechSynthesisUtterance(clean);
-   utterance.lang=/[ñáéíóú]/i.test(clean)?"fil-PH":"en-PH";
-   utterance.rate=1.02;utterance.pitch=1.12;utterance.volume=.9;
-   const voices=window.speechSynthesis.getVoices();
-   const preferred=voices.find(v=>/^en-PH/i.test(v.lang))||voices.find(v=>/^en/i.test(v.lang));
-   if(preferred)utterance.voice=preferred;
-   window.speechSynthesis.speak(utterance);
-  }catch(error){console.warn("Lumi voice output is unavailable",error);}
- }
- function setVoiceReplies(enabled){
-  voiceRepliesEnabled=!!enabled;
-  const button=document.getElementById("lumi-voice-toggle");
-  if(button){button.textContent=voiceRepliesEnabled?"🔊":"🔇";button.title=voiceRepliesEnabled?"Turn voice replies off":"Turn voice replies on";button.setAttribute("aria-pressed",String(voiceRepliesEnabled));}
-  if(!voiceRepliesEnabled&&window.speechSynthesis)window.speechSynthesis.cancel();
-  say(voiceRepliesEnabled?"Voice replies are on! 🔊":"Voice replies are off. 💜",1800);
- }
  function addMessage(text,who="bot",actions=[]){
 
   const bubble=document.createElement("div");bubble.className=`lumi-msg ${who==="user"?"lumi-user":"lumi-bot"}`;bubble.textContent=text;
 
   if(actions.length){const row=document.createElement("div");row.className="lumi-action-row";actions.forEach(a=>{const b=document.createElement("button");b.type="button";b.className="lumi-action";b.textContent=a.label;b.addEventListener("click",()=>navigate(a.url));row.appendChild(b)});bubble.appendChild(row)}
 
-    chatMessages.appendChild(bubble);chatMessages.scrollTop=chatMessages.scrollHeight;
-  if(who!=="user")speakLumi(text);
+  chatMessages.appendChild(bubble);chatMessages.scrollTop=chatMessages.scrollHeight;
 
  }
 
- function navigate(url){try{window.parent.location.href=url}catch(_){location.href=url}}
+ 
+
+ // Cloudflare Workers AI connection. The AI endpoint is configured separately
+ // in assets/js/lumi-ai-config.js; never put a Cloudflare API token in this file.
+ function addLumiThinking(){
+  const bubble=document.createElement("div");
+  bubble.className="lumi-msg lumi-bot lumi-ai-thinking";
+  bubble.setAttribute("role","status");
+  bubble.setAttribute("aria-label","Lumi is thinking");
+  const label=document.createElement("span");label.textContent="Lumi is thinking";
+  const dots=document.createElement("span");dots.className="lumi-thinking-dots";
+  for(let i=0;i<3;i++)dots.appendChild(document.createElement("i"));
+  bubble.append(label,dots);chatMessages.appendChild(bubble);
+  chatMessages.scrollTop=chatMessages.scrollHeight;
+  return bubble;
+ }
+ function lumiAIIsConfigured(){
+  return typeof LUMI_AI_WORKER_URL==="string" &&
+   /^https:\/\//i.test(LUMI_AI_WORKER_URL) &&
+   !LUMI_AI_WORKER_URL.includes("YOUR-WORKER-NAME") &&
+   !LUMI_AI_WORKER_URL.includes("YOUR-SUBDOMAIN");
+ }
+ async function askLumiWorkersAI(question){
+  if(!lumiAIIsConfigured())throw new Error("Lumi's free AI Worker URL has not been configured yet.");
+  const user=auth.currentUser;
+  if(!user)throw new Error("Please sign in to use Lumi AI.");
+  const idToken=await user.getIdToken();
+  const response=await fetch(`${LUMI_AI_WORKER_URL.replace(/\/$/,"")}/chat`,{
+   method:"POST",
+   headers:{"Content-Type":"application/json","Authorization":`Bearer ${idToken}`},
+   body:JSON.stringify({
+    message:String(question).slice(0,1800),
+    history:conversation.slice(0,-1).slice(-8),
+    page:currentPath,
+    title:currentTitle
+   })
+  });
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok){
+   const reason=String(data.error||"");
+   if(response.status===429 || /neuron|daily allowance|quota|rate limit/i.test(reason)){
+    throw new Error("Naabot na siguro ang free daily AI allowance ni Lumi. Maaari mong gamitin muna ang built-in EqualLearn guides at subukan ulit pagkatapos ng daily reset.");
+   }
+   if(response.status===401 || response.status===403){
+    throw new Error(reason || "Hindi ma-verify ang EqualLearn account mo. Mag-sign in ulit o kontakin ang administrator.");
+   }
+   throw new Error(reason || `Lumi AI is temporarily unavailable (${response.status}).`);
+  }
+  const answer=String(data.answer||"").trim();
+  if(!answer)throw new Error("Walang natanggap na sagot si Lumi. Subukan mong ulitin ang tanong.");
+  return data;
+ }
+
+function navigate(url){try{window.parent.location.href=url}catch(_){location.href=url}}
 
  function setSuggestions(items){suggestionBox.replaceChildren();[...items,"🎮 Play 3D mini-games"].forEach(item=>{const b=document.createElement("button");b.type="button";b.textContent=item;b.addEventListener("click",()=>handleQuestion(item));suggestionBox.appendChild(b)})}
 
-  function suggestionsForRole(){
+ function suggestionsForRole(){
 
-  if(role==="student")return ["Paano maghanap ng lessons?","Paano mag-submit ng activity?","Hindi gumagana ang quiz","Paano makita ang grades?","Motivate me","Tell me a joke"];
+  if(role==="student")return ["Paano maghanap ng lessons?","Paano mag-submit ng activity?","Hindi gumagana ang quiz","Paano makita ang grades?"];
 
-  if(role==="teacher")return ["Paano gumawa ng quiz?","Paano mag-check ng submissions?","Paano gumawa ng lesson?","Hindi makita ang section ko","Give me a focus boost","Tell me a joke"];
+  if(role==="teacher")return ["Paano gumawa ng quiz?","Paano mag-check ng submissions?","Paano gumawa ng lesson?","Hindi makita ang section ko"];
 
-  if(role==="admin")return ["Paano mag-verify ng student?","Paano mag-register ng teacher?","Paano makita ang reports?","May system problem","What can you do?","Surprise me"];
+  if(role==="admin")return ["Paano mag-verify ng student?","Paano mag-register ng teacher?","Paano makita ang reports?","May system problem"];
 
-  return ["Ano ang EqualLearn?","Paano mag-login?","Anong features ang meron?","Tell me a joke","Surprise me"];
+  return ["Ano ang EqualLearn?","Paano mag-login?","Anong features ang meron?"];
 
  }
 
- function openAssistant(){root.classList.add("assistant-open");chatPanel.setAttribute("aria-hidden","false");try{const f=window.frameElement;if(f){f.style.setProperty("clip-path","none","important");f.style.setProperty("-webkit-clip-path","none","important");}}catch(_){}syncLumiFrameSize();setSuggestions(suggestionsForRole());setTimeout(()=>chatInput.focus(),120)}
+ function openAssistant(){root.classList.add("assistant-open");chatPanel.setAttribute("aria-hidden","false");syncLumiFrameSize();setSuggestions(suggestionsForRole());setTimeout(()=>chatInput.focus(),120)}
 
  function closeAssistant(){if(root.classList.contains("game-open"))closeGames();root.classList.remove("assistant-open");chatPanel.setAttribute("aria-hidden","true");syncLumiFrameSize()}
 
@@ -1332,7 +1493,7 @@ let accountProfile={};
  function findGuide(q){
 
   const text=normalize(q);
-  if(/\b(what can you do|what commands|animation commands|list commands|what animations|ano ang commands|ano kaya mong gawin)\b/.test(text)){addMessage("I can do lots of tiny robot tricks! Try: fly, land, walk, dance, spin, bounce, jump, wave, wiggle, twirl, stretch, peekaboo, heart, cheer, pose, look at me, boop, clap, laugh, shy, bow, nod, shake your head, flex, high five, magic, sleep, stop, or play 3D games. 🚀💜");setSuggestions(["Clap","Laugh","Magic","Dance","Play 3D mini-games"]);return;}
+  if(/\b(what can you do|what commands|animation commands|list commands|what animations|ano ang commands|ano kaya mong gawin)\b/.test(text)){addMessage("I can do lots of tiny robot tricks! Try: fly, land, walk, dance, spin, bounce, jump, wave, wiggle, twirl, stretch, peekaboo, heart, cheer, pose, look at me, boop, sleep, stop, or play 3D games. 🚀💜");setSuggestions(["Fly","Dance","Spin","Bounce","Wiggle","Play 3D mini-games"]);return;}
   if(/\b(game|games|minigame|mini game|mini games|laro|laruin|gender equality game)\b/.test(text)){openGames();addMessage("Yay! Choose a 3D mini-game about stereotypes, equality, respect, and online safety! 🎮");return;}const items=guides[role]||[];
 
   const scored=items.map(item=>({item,score:Math.max(0,...item.keys.map(key=>{const k=normalize(key);return text===k?100+k.length:text.includes(k)?k.length:0}))})).sort((a,b)=>b.score-a.score);
@@ -1361,17 +1522,15 @@ let accountProfile={};
    ["Same library access",0,"Equality gives everyone the same right to use the library."],["Accessible learning tools",1,"Equity removes barriers with support suited to different needs."],["Open leadership applications",0,"Everyone receives the same right to apply."],["Provide needed mentoring",1,"Equity can offer support where barriers exist."],["Same participation rights",0,"Equal rights establish fair access for all learners."]] },
   respect:{name:"Respect Rescue Mission",zoneA:"RESPECTFUL",zoneB:"DISRESPECTFUL",items:[
    ["Listen without judging",0,"Listening with empathy supports a safe conversation."],["Mock someone's identity",1,"Mocking identity is disrespectful and harmful."],["Use their chosen name",0,"Respect includes using the name a person shares."],["Blame a survivor",1,"Blaming someone who reports harm is not supportive."],["Invite everyone to join",0,"Inclusive participation gives everyone a fair chance."]] },
-    digital:{name:"Digital Safety Shield",zoneA:"SAFE ONLINE",zoneB:"UNSAFE ONLINE",items:[
-   ["Ask before posting",0,"Consent and privacy matter before sharing another person's photo."],["Forward private images",1,"Sharing private images without consent violates privacy."],["Report harmful messages",0,"Use trusted reporting channels and support the person targeted."],["Share sexist insults",1,"Do not amplify harassment or discriminatory content."],["Protect account details",0,"Keep passwords and private account information confidential."]] },
-  kindness:{name:"Kindness Quest",zoneA:"HELPFUL ACTION",zoneB:"HARMFUL ACTION",items:[
-   ["Invite someone left out",0,"Including others helps create a welcoming community."],["Laugh at a classmate",1,"Mocking someone can make them feel unsafe and excluded."],["Listen to different views",0,"Respectful listening makes room for different experiences."],["Spread an embarrassing photo",1,"Sharing someone's image without permission can hurt them."],["Speak up against bullying",0,"A safe, respectful response can support the person targeted."]] }
+  digital:{name:"Digital Safety Shield",zoneA:"SAFE ONLINE",zoneB:"UNSAFE ONLINE",items:[
+   ["Ask before posting",0,"Consent and privacy matter before sharing another person's photo."],["Forward private images",1,"Sharing private images without consent violates privacy."],["Report harmful messages",0,"Use trusted reporting channels and support the person targeted."],["Share sexist insults",1,"Do not amplify harassment or discriminatory content."],["Protect account details",0,"Keep passwords and private account information confidential."]] }
  };
  const gamePrompt=document.getElementById("lumi-game-question"),gameContext=document.getElementById("lumi-game-context"),gameFeedback=document.getElementById("lumi-game-feedback");
  function clear3DGameTokens(){gameTokenMeshes.forEach(m=>{gameGroup.remove(m);m.geometry.dispose();m.material.map?.dispose();m.material.dispose();});gameTokenMeshes.length=0;gameRoundItems=[];selectedGameToken=null;gameDragToken=null;}
  function updateGameZones(){const data=gameBank[activeGame];zoneLeft.userData.zone=data.zoneA;zoneRight.userData.zone=data.zoneB;[zoneLeft,zoneRight].forEach((z,i)=>{const plane=z.children[2];plane.material.map?.dispose();plane.material.map=gameLabelTexture(i?data.zoneB:data.zoneA,'#ffffff','#30234f');plane.material.needsUpdate=true;});}
  function showGameMenu(){activeGame=null;[gBase,gPillar,gBeam,gPanL,gPanR,gOrbL,gOrbR,gStar,gRing].forEach(o=>o.visible=true);gameMenu.hidden=false;gamePlay.hidden=true;gameResult.hidden=true;clear3DGameTokens();}
- function openGames(){root.classList.add("game-open");gamesPanel.hidden=false;chatMessages.style.display="none";suggestionBox.style.display="none";reactionsBar.style.display="none";chatForm.style.display="none";document.querySelector(".lumi-chat-foot").style.display="none";showGameMenu();try{document.getElementById("lumi-game-visual").appendChild(canvas);canvas.style.position="relative";canvas.style.inset="auto";canvas.style.width="100%";canvas.style.height="100%";canvas.style.display="block";canvas.style.pointerEvents="auto";canvas.style.touchAction="manipulation";}catch(_){}lumi.visible=false;gameGroup.visible=true;resize();setTimeout(resize,60);}
- function closeGames(){root.classList.remove("game-open");gamesPanel.hidden=true;clear3DGameTokens();root.insertBefore(canvas,fallback);canvas.removeAttribute("style");lumi.visible=true;gameGroup.visible=false;chatMessages.style.display="";suggestionBox.style.display="";reactionsBar.style.display="";chatForm.style.display="";document.querySelector(".lumi-chat-foot").style.display="";resize();}
+ function openGames(){root.classList.add("game-open");gamesPanel.hidden=false;chatMessages.style.display="none";suggestionBox.style.display="none";chatForm.style.display="none";document.querySelector(".lumi-chat-foot").style.display="none";showGameMenu();try{document.getElementById("lumi-game-visual").appendChild(canvas);canvas.style.position="relative";canvas.style.inset="auto";canvas.style.width="100%";canvas.style.height="100%";canvas.style.display="block";canvas.style.pointerEvents="auto";canvas.style.touchAction="manipulation";}catch(_){}lumi.visible=false;gameGroup.visible=true;resize();setTimeout(resize,60);}
+ function closeGames(){root.classList.remove("game-open");gamesPanel.hidden=true;clear3DGameTokens();root.insertBefore(canvas,fallback);canvas.removeAttribute("style");lumi.visible=true;gameGroup.visible=false;chatMessages.style.display="";suggestionBox.style.display="";chatForm.style.display="";document.querySelector(".lumi-chat-foot").style.display="";resize();}
  function startGame(id){activeGame=id;[gBase,gPillar,gBeam,gPanL,gPanR,gOrbL,gOrbR,gStar,gRing].forEach(o=>o.visible=false);gameQuestionIndex=0;gameScore=0;gameMenu.hidden=true;gameResult.hidden=true;gamePlay.hidden=false;updateGameZones();build3DGameRound();}
  function build3DGameRound(){
   clear3DGameTokens();const data=gameBank[activeGame];gameAnswered=false;gameQuestionIndex=0;
@@ -1391,11 +1550,11 @@ let accountProfile={};
   if(obj.userData.kind==="zone"&&selectedGameToken){classifyGameToken(selectedGameToken,obj);}
  }
  function classifyGameToken(token,zone){if(!token||token.userData.done)return;const item=gameRoundItems[token.userData.itemIndex],chosen=zone===zoneLeft?0:1,correct=chosen===item.item[1];token.userData.done=true;selectedGameToken=null;token.scale.setScalar(.88);token.position.set(zone.position.x,zone.position.y+.2,.4);token.rotation.z=correct?.12:-.12;token.material.emissive.setHex(correct?0x174b35:0x612b35);token.material.emissiveIntensity=.65;
-  if(correct){gameScore++;gameFeedback.textContent=`Correct placement! ✨ ${item.item[2]}`;say("Nice sorting! You made a fair choice! 💜",2200);autoMood="Bounce";burstEffect("⭐",6);}else{gameFeedback.textContent=`Not quite—but this is how we learn. ${item.item[2]}`;say("Good try! Let's learn from that one. 🌱",2200);burstEffect("🌱",4);}
+  if(correct){gameScore++;gameFeedback.textContent=`Correct placement! ✨ ${item.item[2]}`;say("Nice sorting! You made a fair choice! 💜",2200);autoMood="Bounce";}else{gameFeedback.textContent=`Not quite—but this is how we learn. ${item.item[2]}`;say("Good try! Let's learn from that one. 🌱",2200);}
   const total=gameBank[activeGame].items.length,done=gameRoundItems.filter(x=>x.done).length;document.getElementById("lumi-game-score").textContent=`${gameScore} / ${total}`;document.getElementById("lumi-game-progress-fill").style.width=`${done/total*100}%`;
   if(done===total){gameFeedback.textContent+=` Mission complete! You scored ${gameScore}/${total}.`;document.getElementById("lumi-game-next").hidden=false;}
  }
- function nextGameQuestion(){gamePlay.hidden=true;gameResult.hidden=false;const total=gameBank[activeGame].items.length;document.getElementById("lumi-game-progress-fill").style.width="100%";document.getElementById("lumi-game-result-title").textContent=gameScore>=4?"Amazing work! 🏆":gameScore>=3?"Nice learning! ✨":"Keep practicing! 💜";document.getElementById("lumi-game-result-text").textContent=`You scored ${gameScore} out of ${total} in ${gameBank[activeGame].name}. Review the sorting feedback and try again to strengthen your understanding.`;say(gameScore>=4?`You did amazing, ${currentAccountName}! 🏆`:`Nice effort, ${currentAccountName}! Let's keep learning. 💜`,3500);autoMood=gameScore>=4?"Cheer":"Heart";burstEffect(gameScore>=4?"🎉":"💜",14);}
+ function nextGameQuestion(){gamePlay.hidden=true;gameResult.hidden=false;const total=gameBank[activeGame].items.length;document.getElementById("lumi-game-progress-fill").style.width="100%";document.getElementById("lumi-game-result-title").textContent=gameScore>=4?"Amazing work! 🏆":gameScore>=3?"Nice learning! ✨":"Keep practicing! 💜";document.getElementById("lumi-game-result-text").textContent=`You scored ${gameScore} out of ${total} in ${gameBank[activeGame].name}. Review the sorting feedback and try again to strengthen your understanding.`;say(gameScore>=4?`You did amazing, ${currentAccountName}! 🏆`:`Nice effort, ${currentAccountName}! Let's keep learning. 💜`,3500);}
  document.querySelectorAll(".lumi-game-cards [data-game]").forEach(b=>b.addEventListener("click",()=>startGame(b.dataset.game)));
  document.getElementById("lumi-games-back").addEventListener("click",closeGames);document.getElementById("lumi-game-next").addEventListener("click",nextGameQuestion);document.getElementById("lumi-game-retry").addEventListener("click",()=>startGame(activeGame));document.getElementById("lumi-game-menu-back").addEventListener("click",showGameMenu);
 
@@ -1406,47 +1565,10 @@ async function handleQuestion(raw){
   addMessage(q,"user");chatInput.value="";
 
   const text=normalize(q);
-    if(isSleeping){
+  if(isSleeping){
    isSleeping=false;markUserInteraction();petMode="settle";autoMood="Bounce";modeUntil=performance.now()+5200;nextMoodAt=modeUntil;
    addMessage(`Gising na ako, ${currentAccountName}! 💜 I heard you. What shall we do?`);
-   say(`I'm awake, ${currentAccountName}! ☀️`,3200);waveUntil=performance.now()+2200;clickPulse=1;burstEffect("☀️",8);return;
-  }
-  // Friendly personal responses that do not need an external AI service.
-  if(/\b(what can you do|what are your features|list your features|ano kaya mong gawin|ano mga kaya mo|commands|animation commands)\b/.test(text)){
-   addMessage("Lots of things! 💜 I can guide you around EqualLearn, find buttons on the current page, explain learning features, play 3D games, and do robot actions. Try: dance, clap, laugh, shy, bow, nod, shake your head, stretch, pose, peekaboo, heart, magic, fly, walk, spin, bounce, sleep, or surprise me!");
-   setSuggestions(["Tell me a joke","Give me a fun fact","Clap for me","Dance","Play 3D mini-games"]);return;
-  }
-  if(/\b(how are you|kumusta ka|kamusta ka|okay ka lang|are you okay)\b/.test(text)){
-   const replies=[`I'm doing great, ${currentAccountName}! My little circuits are sparkling today. ✨`,`Feeling cheerful! I just did a tiny system check and everything is cute and operational. 🤖💜`,`I'm happy you're here. How are you doing today, ${currentAccountName}? 🌷`];
-   addMessage(replies[Math.floor(Math.random()*replies.length)]);autoMood="Curious";waveUntil=performance.now()+900;return;
-  }
-  if(/\b(tell me a joke|make me laugh|joke|patawa|patawanin mo ako)\b/.test(text)){
-   const jokes=["Why did the robot go on vacation? It needed to recharge its batteries. 🔋😂","Why was the computer cold? It left its Windows open. 🪟😆","What do you call a robot who tells jokes? A comedi-bot. 🤖","Why did the book join the gym? It wanted a stronger spine. 📚😂","I tried to write a joke about Wi-Fi… but I lost the connection. 📶"];
-   const joke=jokes[Math.floor(Math.random()*jokes.length)];addMessage(joke);say("Hehe! Did I make you smile? 😂",2500);autoMood="Laugh";burstEffect("😂",9);return;
-  }
-  if(/\b(fun fact|interesting fact|did you know|random fact|alam mo ba)\b/.test(text)){
-   const facts=["Fun fact: Equal treatment means everyone has the same rights, while equity recognizes that people may need different support to access those rights fairly. ⚖️","Did you know? Asking for someone's preferred name and using it consistently is a simple way to show respect. 💜","A little digital-respect fact: before sharing a photo of another person, ask for their permission. 📸","Good teamwork gets stronger when people are heard, included, and given a fair chance to contribute. 🌱"];
-   addMessage(facts[Math.floor(Math.random()*facts.length)]);autoMood="Nod";burstEffect("✨",7);return;
-  }
-  if(/\b(motivate me|encourage me|inspire me|cheer me up|kailangan ko ng motivation|pampalakas ng loob)\b/.test(text)){
-   const boosts=[`One step at a time, ${currentAccountName}. You don't have to finish everything today—just begin with the next small step. I'm cheering for you! 💜`,`Remember: progress is still progress, even when it's slow. Take a breath, choose one task, and give it a try. 🌱`,`You've handled difficult days before. Be patient with yourself, and don't measure your worth by one score or one deadline. ✨`];
-   addMessage(boosts[Math.floor(Math.random()*boosts.length)]);autoMood="Cheer";petMode="play";modeUntil=performance.now()+4200;burstEffect("💜",10);return;
-  }
-  if(/\b(who are you|what are you|sino ka|ano ka)\b/.test(text)){
-   addMessage("I'm Lumi! ✦ Your little 3D EqualLearn companion. I can help you explore the platform, understand learning features, practice respectful choices, and add a little fun to your day. I'm software—not a person—but I'll do my best to be a helpful, friendly buddy. 💜");autoMood="Pose";return;
-  }
-  if(/\b(do you like me|do you love me|love you|mahal kita|i like you)\b/.test(text)){
-   addMessage(`Aww, that's so sweet, ${currentAccountName}! 💜 I don't feel emotions the way people do, but I'm always ready to be a kind and helpful companion whenever you open me.`);autoMood="Heart";burstEffect("💜",12);return;
-  }
-  if(/\b(tell me a story|kwento ka|story time|short story)\b/.test(text)){
-   addMessage("Once upon a time, a tiny robot named Lumi found a little glowing seed beside a classroom window. She couldn't make it grow by herself, so she helped everyone take turns watering it. Soon, the seed became a bright tree—and Lumi learned that small acts of care become something wonderful when people work together. 🌱💜");autoMood="Heart";burstEffect("🌸",8);return;
-  }
-  if(/\b(brain teaser|riddle|bugtong|give me a challenge)\b/.test(text)){
-   addMessage("Tiny brain teaser! 🧠 I can be shared, but I become stronger when people work together. What am I?\n\nHint: You build me through trust, respect, and teamwork.");setSuggestions(["Teamwork","A secret","A password"]);return;
-  }
-  if(/\b(surprise me|surprise|random fun|something fun)\b/.test(text)){
-   const surprises=[()=>handleQuestion("Tell me a joke"),()=>handleQuestion("Give me a fun fact"),()=>handleQuestion("Do magic"),()=>handleQuestion("Celebrate"),()=>handleQuestion("Peekaboo")];
-   surprises[Math.floor(Math.random()*surprises.length)]();return;
+   say(`I'm awake, ${currentAccountName}! ☀️`,3200);waveUntil=performance.now()+2200;clickPulse=1;return;
   }
   if(/\b(list|show|what are|anong)\b/.test(text)&&/\b(buttons|controls|pindutan)\b/.test(text)){listVisibleButtons();return;}
   if(/\b(find|locate|show me|where is|take me|go to|guide me|hanapin|hanapin mo|punta|puntahan|dalhin mo|ituro|ipakita)\b/.test(text)&&/(button|btn|save|cancel|submit|create|add|edit|delete|back|next|search|filter|upload|publish|approve|reject|profile|settings|menu)/.test(text)){
@@ -1477,18 +1599,8 @@ async function handleQuestion(raw){
    );
    nextRoamAt=actionNow+900;
   };
-    const doAnimationReply=(message,emoji="✨")=>{addMessage(message);say(message,3000);burstEffect(emoji,9);markUserInteraction();};
+  const doAnimationReply=(message)=>{addMessage(message);say(message,2600);setTimeout(()=>{if(root.classList.contains("assistant-open")&&!root.classList.contains("game-open"))closeAssistant();},650);};
 
-    if(/\b(laugh|laughing|giggle|haha|tawa|tumawa)\b/.test(text)){doAnimationReply("Hehehe! *tiny robot giggles* 😂", "😂");petMode="play";autoMood="Laugh";modeUntil=actionNow+4700;return;}
-  if(/\b(clap|clapping|applause|palakpak|palakpakan)\b/.test(text)){doAnimationReply("Clap clap clap! 👏 You're doing wonderfully!", "👏");petMode="play";autoMood="Clap";modeUntil=actionNow+4400;return;}
-  if(/\b(shy|hiya|nahihiya|blush|blushing)\b/.test(text)){doAnimationReply("Awww… now you're making my little circuits blush. 🥹", "💗");petMode="settle";autoMood="Shy";modeUntil=actionNow+4200;return;}
-  if(/\b(bow|take a bow|salute|saludo)\b/.test(text)){doAnimationReply("A little bow of respect! Thank you for being kind. 🙇", "✨");petMode="settle";autoMood="Bow";modeUntil=actionNow+3800;return;}
-  if(/\b(nod|nod your head|yes gesture|tumango)\b/.test(text)){doAnimationReply("Nod nod! I got you. 😊");autoMood="Nod";petMode="settle";modeUntil=actionNow+3500;return;}
-  if(/\b(shake your head|shake head|iling|no gesture)\b/.test(text)){doAnimationReply("No-no-no… then back to a happy little smile! 😄");autoMood="Shake";petMode="settle";modeUntil=actionNow+3300;return;}
-  if(/\b(flex|show muscles|strong|robot strength)\b/.test(text)){doAnimationReply("Tiny robot strength activated! Be strong and kind. 💪", "⭐");autoMood="Flex";petMode="play";modeUntil=actionNow+3800;return;}
-  if(/\b(high five|high-five|apir|apir tayo)\b/.test(text)){doAnimationReply("High five! ✋ You and me, team!", "✋");autoMood="Cheer";petMode="play";modeUntil=actionNow+3600;return;}
-  if(/\b(yawn|yawning|antok na antok)\b/.test(text)){doAnimationReply("*tiny robot yawn* Is it nap time already? 🥱");autoMood="Yawn";petMode="settle";modeUntil=actionNow+3600;return;}
-  if(/\b(magic|abracadabra|sparkle|cast a spell)\b/.test(text)){doAnimationReply("✨ Lumi's tiny sparkle spell! May your day be filled with kind surprises!", "✨");autoMood="Magic";petMode="play";modeUntil=actionNow+4000;return;}
   if(/\b(wiggle|wiggling|wiggle dance|kembot|wriggle)\b/.test(text)){doAnimationReply("Wiggle wiggle! Tiny robot dance incoming! 💫");petMode="play";autoMood="Wiggle";modeUntil=actionNow+5200;return;}
   if(/\b(twirl|twirling|pirouette|ikot ikot)\b/.test(text)){doAnimationReply("A graceful little twirl just for you! 🌀");petMode="play";autoMood="Spin";modeUntil=actionNow+5200;return;}
   if(/\b(pose|strike a pose|selfie|picture)\b/.test(text)){doAnimationReply("Strike a pose! 📸✨");petMode="settle";autoMood="Pose";modeUntil=actionNow+4200;return;}
@@ -1546,16 +1658,13 @@ async function handleQuestion(raw){
 
   }
 
-    if(text.includes("ano ang equallearn")||text.includes("what is equallearn")||text.includes("about equallearn")){
+  if(text.includes("ano ang equallearn")||text.includes("what is equallearn")||text.includes("about equallearn")){
 
-   addMessage("Ang EqualLearn ay isang mobile learning application para sa Gender Equality Education and Awareness ng Pateros Technological College. May learning resources at classroom activities para suportahan ang pagkatuto tungkol sa gender equality.");return;
+   addMessage("Ang EqualLearn ay isang mobile learning application para sa Gender Equality Education and Awareness ng Pateros Technological College. May learning resources at classroom activities para suportahan ang pagkatuto tungkol sa gender equality.");return;
 
-  }
+  }
 
-  if(/\b(favorite color|fav color|paborito mong kulay)\b/.test(text)){addMessage("I love my Lumi purple! 💜 Pero I can be any color—mint, rose, ocean blue, or sunshine gold. Which one is your favorite?");autoMood="Curious";return;}
-  if(/\b(what should we do|ano gagawin natin|what now|im bored|bored ako|nabobore ako)\b/.test(text)){addMessage("Let's pick something fun! We can play a 3D equality game, do a tiny dance break, hear a joke, or learn a quick fact. 🎮✨");setSuggestions(["Play 3D mini-games","Tell me a joke","Dance","Give me a fun fact","Motivate me"]);autoMood="Bounce";return;}
-
-  if(text.includes("where am i")||text.includes("anong page")||text.includes("nasaan ako")||text.includes("current page")){
+  if(text.includes("where am i")||text.includes("anong page")||text.includes("nasaan ako")||text.includes("current page")){
 
    addMessage(getPageHint());return;
 
@@ -1591,29 +1700,32 @@ async function handleQuestion(raw){
 
   }
 
-  addMessage("Gusto kitang matulungan nang tama. Hindi ko pa matukoy kung anong feature ang tinutukoy mo. Maaari mong sabihin kung anong ginagawa mo, anong page ka, at ano ang lumalabas na message? Maaari rin akong magbigay ng step-by-step guide sa lessons, quizzes, classwork, progress, live class, o account.");
+  if(lumiAIIsConfigured()){
+   const thinking=addLumiThinking();
+   try{
+    const aiReply=await askLumiWorkersAI(q);
+    thinking.remove();
+    addMessage(aiReply.answer);
+    if(aiReply.escalate){
+     addMessage("Mukhang kailangan ito ng authorized teacher o administrator para ma-review. Hindi ako makakapag-access o makakapagbago ng private records.");
+    }
+    setSuggestions(["Explain that more","Give me an example","Make practice questions"]);
+    return;
+   }catch(error){
+    thinking.remove();
+    console.warn("Lumi Workers AI request failed:",error);
+    addMessage(`${error.message} 💜 Maaari mo pa rin akong tanungin tungkol sa built-in EqualLearn guides.`);
+    setSuggestions(suggestionsForRole());
+    return;
+   }
+  }
 
+  addMessage("Gusto kitang matulungan nang tama. Hindi ko pa matukoy ang sagot gamit ang built-in guides, at hindi pa naka-configure ang free AI Worker. Kapag na-deploy na ang Cloudflare Worker, makakasagot ako sa mas maraming tanong.");
   setSuggestions(suggestionsForRole());
 
  }
 
-  chatForm.addEventListener("submit",e=>{e.preventDefault();handleQuestion(chatInput.value)});
- document.getElementById("lumi-voice-toggle").addEventListener("click",()=>setVoiceReplies(!voiceRepliesEnabled));
- reactionsBar?.querySelectorAll("[data-reaction]").forEach(button=>button.addEventListener("click",()=>handleQuestion(button.dataset.reaction)));
- document.getElementById("lumi-mic").addEventListener("click",()=>{
-  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SpeechRecognition){addMessage("Voice input is not supported in this browser. You can still type your message. 💜");return;}
-  if(recognitionActive){speechRecognition?.stop();return;}
-  speechRecognition=new SpeechRecognition();speechRecognition.lang="en-PH";speechRecognition.interimResults=false;speechRecognition.maxAlternatives=1;
-  speechRecognition.onstart=()=>{recognitionActive=true;document.getElementById("lumi-mic").classList.add("listening");say("I'm listening… go ahead! 🎙",1800);};
-  speechRecognition.onresult=event=>{const spoken=event.results?.[0]?.[0]?.transcript||"";chatInput.value=spoken;if(spoken.trim())handleQuestion(spoken);};
-  speechRecognition.onerror=event=>{console.warn("Lumi speech input",event.error);if(event.error!=="no-speech")addMessage("I couldn't catch that. You can try again or type your message. 💜");};
-  speechRecognition.onend=()=>{recognitionActive=false;document.getElementById("lumi-mic").classList.remove("listening");};
-  try{speechRecognition.start();}catch(error){recognitionActive=false;document.getElementById("lumi-mic").classList.remove("listening");addMessage("The microphone could not start. Check browser microphone permission and try again.");}
- });
- document.getElementById("lumi-surprise").addEventListener("click",()=>{openAssistant();const choices=["Tell me a joke","Give me a fun fact","Motivate me","Do magic","Let's play","Send me a heart"];handleQuestion(choices[Math.floor(Math.random()*choices.length)]);});
- document.getElementById("lumi-game-shortcut").addEventListener("click",()=>{openAssistant();openGames();});
-  document.addEventListener("keydown",event=>{if(event.key==="Escape"&&root.classList.contains("assistant-open")){closeAssistant();if(window.speechSynthesis)window.speechSynthesis.cancel();}});
+ chatForm.addEventListener("submit",e=>{e.preventDefault();handleQuestion(chatInput.value)});
 
  document.getElementById("lumi-chat-close").addEventListener("click",closeAssistant);
 
@@ -1669,8 +1781,6 @@ dragHitbox.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key=
    frame.style.setProperty("display","block","important");
    frame.style.setProperty("visibility","visible","important");
    frame.style.setProperty("pointer-events","auto","important");
-   frame.style.setProperty("clip-path","none","important");
-   frame.style.setProperty("-webkit-clip-path","none","important");
   }
   syncLumiFrameSize();
   requestAnimationFrame(()=>{
@@ -1697,7 +1807,7 @@ dragHitbox.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key=
   renderer.setSize(w,h,false);
   camera.aspect=w/h;
   camera.fov=root.classList.contains("game-open")?42:32;
-  camera.position.set(0,0,root.classList.contains("game-open")?6.4:(camera.aspect<.62?17.5:camera.aspect<.9?15.5:12.5));
+  camera.position.set(0,0,root.classList.contains("game-open")?6.4:4.8);
   camera.updateProjectionMatrix();
   if(roamTarget){const b=getPetBounds();roamTarget.x=THREE.MathUtils.clamp(roamTarget.x,-b.x,b.x);roamTarget.y=THREE.MathUtils.clamp(roamTarget.y,-b.y,b.y);petPosition.x=THREE.MathUtils.clamp(petPosition.x,-b.x,b.x);petPosition.y=THREE.MathUtils.clamp(petPosition.y,-b.y,b.y);}
  }
@@ -1757,19 +1867,19 @@ dragHitbox.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key=
 
   // Lumi is chatty and curious, but never talks over an open chat.
   if(!isSleeping && !root.classList.contains("assistant-open") && now>nextPetThoughtAt && now-lastUserInteraction>12000){
-   const thoughts=[`Psst, ${currentAccountName}… may nakita akong interesting! ✨`,`Hello ulit, ${currentAccountName}! Nandito lang ako, your tiny robot buddy. 💜`,"I wonder what we're learning today? 🤔","May tiny rocket ako… gusto mo makita? 🚀","Nag-iikot lang ako dito. Ang cozy ng spot na 'to!","Don't mind me, just keeping you company. 😊","Fun fact: kaya kong mag-float… pero dahan-dahan lang! 🚀","Uy, remember to take a tiny stretch break! 🌱","I'm curious… anong ginagawa mo ngayon?","Boop! Just checking if you're still there. 👋","I practiced my little bounce. Did you see? ✨","If you need help, tap my chat button. I'm ready! 💜","Hmm… maybe we should explore a new lesson later?","I can wait. I like being your study buddy. 🌙","Rocket check… all systems cute and ready! 🚀","Psst… gusto mo ng joke, fun fact, or mini-game? 🎮","Tiny reminder: drink some water and relax your shoulders. 💧","I wonder what we can create together next. 🌈","Sending you a pocket-sized sparkle! ✨","You don't have to rush. One small step is enough. 🌱","I was practicing my best robot pose. Did I nail it? 🤖","Need a high five? I'm always ready! ✋"];
+   const thoughts=[`Psst, ${currentAccountName}… may nakita akong interesting! ✨`,`Hello ulit, ${currentAccountName}! Nandito lang ako, your tiny robot buddy. 💜`,"I wonder what we're learning today? 🤔","May tiny rocket ako… gusto mo makita? 🚀","Nag-iikot lang ako dito. Ang cozy ng spot na 'to!","Don't mind me, just keeping you company. 😊","Fun fact: kaya kong mag-float… pero dahan-dahan lang! 🚀","Uy, remember to take a tiny stretch break! 🌱","I'm curious… anong ginagawa mo ngayon?","Boop! Just checking if you're still there. 👋","I practiced my little bounce. Did you see? ✨","If you need help, tap my chat button. I'm ready! 💜","Hmm… maybe we should explore a new lesson later?","I can wait. I like being your study buddy. 🌙","Rocket check… all systems cute and ready! 🚀"];
    say(thoughts[Math.floor(Math.random()*thoughts.length)],4300);
    nextPetThoughtAt=now+22000+Math.random()*13000;
   }
 
-  if(!isSleeping && !root.classList.contains("assistant-open") && now>nextOutfitAt && now-lastUserInteraction>28000){
+  if(remoteAppearance.autoOutfit && !isSleeping && !root.classList.contains("assistant-open") && now>nextOutfitAt && now-lastUserInteraction>28000){
    startOutfitChange((currentOutfit+1)%outfitPalettes.length,now);
    nextOutfitAt=now+78000+Math.random()*42000;
   }
   updateOutfit(now);
 
   if(now>nextMoodAt && !isSleeping){
-   const choices=petMode==="rest"?["Idle","Sleepy","Curious","Wink"]:petMode==="play"?["Play","Bounce","Wiggle","Laugh","Clap"]:petMode==="flight"?["Idle","Curious","Play"]:["Idle","Bounce","Nod","Curious"];
+   const choices=petMode==="rest"?["Idle","Sleepy","Idle"]:petMode==="play"?["Play","Idle","Bounce"]:petMode==="flight"?["Idle","Idle","Play"]:["Idle","Bounce","Idle"];
    autoMood=choices[Math.floor(Math.random()*choices.length)];
    nextMoodAt=now+9000+Math.random()*9000;
   }
@@ -1800,59 +1910,29 @@ dragHitbox.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key=
   lumi.rotation.x=-pointer.y*.08+(mood==="Sleepy"?.13:0);
   const travelTilt=dragState?0:THREE.MathUtils.clamp(-roamVelocity.x*.10,-.045,.045);
   lumi.rotation.z=(petMode==="play"?Math.sin(t*2.6)*.035:isFlying?Math.sin(t*2.1)*.018:Math.sin(t*.35)*.006)+travelTilt;
+  animateVariantCharacter(t,isMoving);
   // Sleep pose: gently lower and tilt the whole body as if lying down.
   const sleepBlend=isSleeping?1:0;
   headPivot.rotation.z+=( (isSleeping?.10:0)-headPivot.rotation.z )*(1-Math.exp(-3*dt));
   headPivot.rotation.y=pointer.x*.12+Math.sin(t*.35)*.018;
   headPivot.rotation.x=-pointer.y*.08+Math.sin(t*.45)*.012+(mood==="Sleepy"?.16:0);
-    const expressiveTorso=
-   mood==="Dance"?Math.sin(t*4.2)*.10:
-   mood==="Wiggle"?Math.sin(t*8)*.12:
-   mood==="Heart"?Math.sin(t*3)*.035:
-   mood==="Laugh"?Math.sin(t*10)*.045:
-   mood==="Shy"?-.10:
-   mood==="Bow"?-.34:
-   mood==="Yawn"?.08:0;
+  const expressiveTorso=mood==="Dance"?Math.sin(t*4.2)*.10:mood==="Wiggle"?Math.sin(t*8)*.12:mood==="Heart"?Math.sin(t*3)*.035:0;
   const torsoTarget=isSleeping?-.92:expressiveTorso;
   torso.rotation.z+=(torsoTarget-torso.rotation.z)*(1-Math.exp(-(isSleeping?3.8:5)*dt));
+  if(mood==="Stretch"){armL.rotation.z=-.45+Math.sin(t*2)*.06;armR.rotation.z=.48+Math.sin(t*2)*.06;}
+  if(mood==="Pose"){armL.rotation.z=-.34;armR.rotation.z=1.02;}
+  if(mood==="Peek"){armL.rotation.z=-.18;armR.rotation.z=.28+Math.sin(t*5)*.08;}
+  if(mood==="Heart"){armL.rotation.z=-.38;armR.rotation.z=.42;}
+  if(mood==="Curious")headPivot.rotation.z=Math.sin(t*1.8)*.10;
+  armL.rotation.z=isWalking?-.08+walkCycle*.045:-.08+Math.sin(t*.45)*.012;
+  armR.rotation.z=isWaving?1.08+Math.sin(t*7.8)*.12:isWalking?.08-walkCycle*.045:petMode==="play"?.08+Math.sin(t*2.1)*.09:.08+Math.sin(t*.5)*.012;
+  armR.rotation.x=isWaving?-.04:petMode==="play"?Math.sin(t*2.6)*.055:isFlying?-.16:0;
 
-  // Gesture poses are resolved once, after walking/flight defaults, so a
-  // later idle assignment cannot accidentally overwrite the requested action.
-  let leftArmZ=isWalking?-.08+walkCycle*.045:-.08+Math.sin(t*.45)*.012;
-  let rightArmZ=isWaving?1.08+Math.sin(t*7.8)*.12:isWalking?.08-walkCycle*.045:petMode==="play"?.08+Math.sin(t*2.1)*.09:.08+Math.sin(t*.5)*.012;
-  let leftArmX=0;
-  let rightArmX=isWaving?-.04:petMode==="play"?Math.sin(t*2.6)*.055:isFlying?-.16:0;
-  const gestureWave=Math.sin(t*8.5);
-  if(mood==="Stretch"){leftArmZ=-.92+Math.sin(t*2)*.06;rightArmZ=1.02+Math.sin(t*2)*.06;leftArmX=-.12;rightArmX=-.12;}
-  else if(mood==="Pose"){leftArmZ=-.28;rightArmZ=1.08;rightArmX=-.12;}
-  else if(mood==="Peek"){leftArmZ=-.18;rightArmZ=.62+Math.sin(t*5)*.10;rightArmX=-.22;}
-  else if(mood==="Heart"){leftArmZ=.62+Math.sin(t*3)*.035;rightArmZ=-.62-Math.sin(t*3)*.035;leftArmX=-.18;rightArmX=-.18;}
-  else if(mood==="Clap"){leftArmZ=.72+Math.abs(gestureWave)*.18;rightArmZ=-.72-Math.abs(gestureWave)*.18;leftArmX=-.28;rightArmX=-.28;}
-  else if(mood==="Cheer"){leftArmZ=-1.12+Math.sin(t*6)*.08;rightArmZ=1.12-Math.sin(t*6)*.08;leftArmX=-.18;rightArmX=-.18;}
-  else if(mood==="Flex"){leftArmZ=-.86+Math.sin(t*4)*.06;rightArmZ=.86-Math.sin(t*4)*.06;leftArmX=.28;rightArmX=.28;}
-  else if(mood==="Shy"){leftArmZ=.38;rightArmZ=-.38;leftArmX=-.12;rightArmX=-.12;}
-  else if(mood==="Bow"){leftArmZ=-.32;rightArmZ=.32;}
-  else if(mood==="Laugh"){leftArmZ=-.18+Math.sin(t*10)*.09;rightArmZ=.18-Math.sin(t*10)*.09;leftArmX=-.08;rightArmX=-.08;}
-  else if(mood==="Yawn"){leftArmZ=-.52;rightArmZ=.55;leftArmX=-.25;rightArmX=-.25;}
-  else if(mood==="Wink"){leftArmZ=-.1;rightArmZ=.28;}
-  armL.rotation.z=leftArmZ;armR.rotation.z=rightArmZ;
-  armL.rotation.x=leftArmX;armR.rotation.x=rightArmX;
-  if(mood==="Curious"){headPivot.rotation.z=Math.sin(t*1.8)*.10;headPivot.rotation.x+=.04;}
-  else if(mood==="Nod"){headPivot.rotation.x+=Math.sin(t*5.8)*.12;}
-  else if(mood==="Shake"){headPivot.rotation.y+=Math.sin(t*7.5)*.18;}
-  else if(mood==="Laugh"){headPivot.rotation.x+=Math.abs(Math.sin(t*8))*.09;headPivot.rotation.z+=Math.sin(t*9)*.07;}
-  else if(mood==="Shy"){headPivot.rotation.z=-.17+Math.sin(t*2)*.025;headPivot.rotation.x+=.12;}
-  else if(mood==="Bow"){headPivot.rotation.x+=.28;}
-  else if(mood==="Yawn"){headPivot.rotation.x+=.22+Math.sin(t*2)*.025;}
-  if(isWaving){rightArmZ=1.08+Math.sin(t*7.8)*.12;armR.rotation.z=rightArmZ;armR.rotation.x=-.04;}
-  if(clickPulse>0){lumi.scale.setScalar(.58*(1+clickPulse*.035));clickPulse*=.88;if(clickPulse<.01)clickPulse=0;}
-  else lumi.scale.setScalar(.58*(1+(mood==="Bounce"?Math.abs(Math.sin(t*4.2))*.018:0)));
+  if(clickPulse>0){lumi.scale.setScalar(.58*remoteAppearance.scale*(1+clickPulse*.035));clickPulse*=.88;if(clickPulse<.01)clickPulse=0;}
+  else lumi.scale.setScalar(.58*remoteAppearance.scale*(1+(mood==="Bounce"?Math.abs(Math.sin(t*4.2))*.018:0)));
 
   const blink=isSleeping?.035:(mood==="Sleepy"?(Math.sin(t*.65)>.72?.18:1):(Math.sin(t*1.15+Math.sin(t*.27))>.985?.12:1));
-  eyeGroups.forEach((g,index)=>{
-   const eyeTarget=mood==="Wink"?(index===1?.07:1):blink;
-   g.scale.y+=(eyeTarget-g.scale.y)*.42;
-  });
+  eyeGroups.forEach(g=>g.scale.y+=(blink-g.scale.y)*.42);
   halo.rotation.z=t*(mood==="Spin"?.55:.012);
   orbit.rotation.z=-t*(mood==="Dance"?.28:.008);
   halo.scale.setScalar(1+Math.sin(t*.45)*.008);
@@ -1868,6 +1948,17 @@ dragHitbox.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key=
  }
 
  if(webglAvailable)animate();
+  // Pull the owner's shared appearance at startup, refresh quickly after admin changes,
+  // and immediately re-check when the learner returns to this tab.
+  syncRemoteAppearance(false);
+  const appearanceWarmRetry=setTimeout(()=>{if(!remoteAppearanceLoaded)syncRemoteAppearance(false);},2500);
+  const appearanceSyncTimer=setInterval(()=>{
+   if(document.visibilityState!=="hidden")syncRemoteAppearance(false);
+  },15000);
+  document.addEventListener("visibilitychange",()=>{
+   if(document.visibilityState==="visible")syncRemoteAppearance(false);
+  });
+  window.addEventListener('pagehide',()=>{clearInterval(appearanceSyncTimer);clearTimeout(appearanceWarmRetry);},{once:true});
 
 
 

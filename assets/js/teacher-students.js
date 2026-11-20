@@ -387,41 +387,96 @@ function injectProgressStyles() {
 }
 
 function createProgressStats() {
-  const directoryStats = document.querySelector(".directory-stats");
+  const directorySummary = document.querySelector(".directory-summary-panel");
 
-  if (!directoryStats || $("liveProgressStats")) return;
+  if (!directorySummary || $("liveProgressStats")) return;
 
   const wrapper = document.createElement("section");
   wrapper.id = "liveProgressStats";
-  wrapper.className = "live-progress-stats";
+  wrapper.className = "live-progress-panel";
+  wrapper.setAttribute("aria-label", "Quiz activity summary");
+
+  const metrics = [
+    {
+      label: "Quiz Submissions",
+      note: "Total student attempts",
+      valueId: "totalQuizSubmissions",
+      ringId: "totalQuizSubmissionsRing",
+      color: "#9B87FF"
+    },
+    {
+      label: "Pending Grading",
+      note: "Awaiting evaluation",
+      valueId: "pendingQuizGrading",
+      ringId: "pendingQuizGradingRing",
+      color: "#E6B66C"
+    },
+    {
+      label: "Graded Quizzes",
+      note: "Attempts with scores",
+      valueId: "gradedQuizCount",
+      ringId: "gradedQuizCountRing",
+      color: "#5BC99C"
+    },
+    {
+      label: "Average Quiz Score",
+      note: "Across graded attempts",
+      valueId: "averageQuizScore",
+      ringId: "averageQuizScoreRing",
+      color: "#6FB9F2"
+    }
+  ];
+
+  const metricMarkup = metrics.map(metric => `
+    <article class="live-progress-stat">
+      <div class="live-progress-copy">
+        <small>${metric.label}</small>
+        <span>${metric.note}</span>
+      </div>
+      <svg class="progress-donut" viewBox="0 0 48 48" role="img" aria-label="${metric.label}">
+        <circle class="progress-donut-track" cx="24" cy="24" r="18"></circle>
+        <circle
+          class="progress-donut-value"
+          id="${metric.ringId}"
+          cx="24"
+          cy="24"
+          r="18"
+          stroke="${metric.color}"
+          stroke-dasharray="113.1 113.1"
+          stroke-dashoffset="113.1"
+        ></circle>
+        <text class="progress-donut-number" id="${metric.valueId}" x="24" y="27">—</text>
+      </svg>
+    </article>
+  `).join("");
 
   wrapper.innerHTML = `
-    <article class="live-progress-stat">
-      <small>Quiz Submissions</small>
-      <strong id="totalQuizSubmissions">—</strong>
-      <span>Submitted by your students</span>
-    </article>
-
-    <article class="live-progress-stat">
-      <small>Pending Grading</small>
-      <strong id="pendingQuizGrading">—</strong>
-      <span>Awaiting teacher evaluation</span>
-    </article>
-
-    <article class="live-progress-stat">
-      <small>Graded Quizzes</small>
-      <strong id="gradedQuizCount">—</strong>
-      <span>Quiz attempts with scores</span>
-    </article>
-
-    <article class="live-progress-stat">
-      <small>Average Quiz Score</small>
-      <strong id="averageQuizScore">—</strong>
-      <span>Based on graded submissions</span>
-    </article>
+    <div class="live-progress-panel-head">
+      <div>
+        <h2>Learning Activity</h2>
+        <p>Quiz submissions and grading overview</p>
+      </div>
+      <span class="directory-live-indicator">Live updates</span>
+    </div>
+    <div class="live-progress-stats">
+      ${metricMarkup}
+    </div>
   `;
 
-  directoryStats.insertAdjacentElement("afterend", wrapper);
+  directorySummary.insertAdjacentElement("afterend", wrapper);
+}
+
+function updateProgressDonut(ringId, percentage) {
+  const ring = $(ringId);
+  if (!ring) return;
+
+  const safePercentage = Math.max(0, Math.min(100, Number(percentage) || 0));
+  const circumference = 2 * Math.PI * 18;
+
+  ring.style.strokeDasharray = `${circumference} ${circumference}`;
+  ring.style.strokeDashoffset = String(
+    circumference * (1 - safePercentage / 100)
+  );
 }
 
 /* =========================================================
@@ -492,11 +547,28 @@ function updateStatistics() {
       graded.toLocaleString("en-PH");
   }
 
+  const averageScore = graded
+    ? Math.round(scoreTotal / graded)
+    : 0;
+
   if ($("averageQuizScore")) {
     $("averageQuizScore").textContent = graded
-      ? `${Math.round(scoreTotal / graded)}%`
+      ? `${averageScore}%`
       : "—";
   }
+
+  // Donut meanings: total submissions = full ring when data exists;
+  // pending/graded = share of submissions; average = actual average score.
+  updateProgressDonut("totalQuizSubmissionsRing", submissions > 0 ? 100 : 0);
+  updateProgressDonut(
+    "pendingQuizGradingRing",
+    submissions ? (pendingGrading / submissions) * 100 : 0
+  );
+  updateProgressDonut(
+    "gradedQuizCountRing",
+    submissions ? (graded / submissions) * 100 : 0
+  );
+  updateProgressDonut("averageQuizScoreRing", averageScore);
 }
 
 /* =========================================================

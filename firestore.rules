@@ -1,0 +1,1573 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+
+    // =========================================
+    // 1. AUTHENTICATION AND ROLE HELPERS
+    // =========================================
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userExists() {
+      return signedIn()
+        && exists(
+          /databases/$(database)/documents/users/$(request.auth.uid)
+        );
+    }
+
+    function myProfile() {
+      return get(
+        /databases/$(database)/documents/users/$(request.auth.uid)
+      ).data;
+    }
+
+    function isAdmin() {
+      return userExists()
+        && myProfile().role in ["admin", "Admin", "ADMIN"]
+        && myProfile().status != "inactive";
+    }
+
+    function isGadCoordinator() {
+      return userExists()
+        && myProfile().role in [
+          "gad_coordinator",
+          "GAD_Coordinator",
+          "GAD Coordinator"
+        ]
+        && myProfile().status == "active";
+    }
+
+ 
+function isTeacher() {
+  return userExists()
+    && myProfile().role in ["teacher", "Teacher", "TEACHER"]
+    && myProfile().status in ["active", "Active", "ACTIVE"];
+}
+
+
+   
+function isStudent() {
+  return userExists()
+    && myProfile().role in ["student", "Student", "STUDENT"]
+    && myProfile().status in ["active", "Active", "ACTIVE"];
+}
+
+
+    // Legacy modules and lessons: active content assigned to this section.
+   function studentCanReadApprovedSectionContent() {
+  return isStudent()
+    && myProfile().sectionId is string
+    && resource.data.status == "active"
+    && resource.data.reviewStatus == "approved"
+    && resource.data.sectionIds is list
+    && myProfile().sectionId in resource.data.sectionIds;
+}
+
+    // V2 modules and teacher activities: published content assigned to this section.
+   function studentCanReadPublishedV2Content() {
+  return isStudent()
+    && myProfile().sectionId is string
+    && resource.data.status == "published"
+    && resource.data.sectionIds is list
+    && myProfile().sectionId in resource.data.sectionIds;
+}
+
+
+    function isOwner(userId) {
+      return signedIn()
+        && request.auth.uid == userId;
+    }
+
+    function ValidString(value) {
+      return value is string && value.size() > 0;
+    }
+
+    function sectionExists(sectionId) {
+      return sectionId is string
+        && exists(
+          /databases/$(database)/documents/sections/$(sectionId)
+        );
+    }
+
+    function sectionData(sectionId) {
+      return get(
+        /databases/$(database)/documents/sections/$(sectionId)
+      ).data;
+    }
+
+    function assignedTeacher(sectionId) {
+      return isTeacher()
+        && sectionExists(sectionId)
+        && (
+          (
+            sectionData(sectionId).keys().hasAny(["teacherIds"])
+            && sectionData(sectionId).teacherIds is list
+            && request.auth.uid in sectionData(sectionId).teacherIds
+          )
+          ||
+          (
+            sectionData(sectionId).keys().hasAny(["teacherId"])
+            && sectionData(sectionId).teacherId == request.auth.uid
+          )
+        );
+    }
+
+    function studentInSection(sectionId) {
+      return isStudent()
+        && myProfile().sectionId == sectionId;
+    }
+
+    function ownsRecord() {
+      return signedIn()
+        && resource.data.userId == request.auth.uid;
+    }
+
+    function createsOwnRecord() {
+      return signedIn()
+        && request.resource.data.userId == request.auth.uid;
+    }
+
+
+    // =========================================
+    // 2. USERS
+    // =========================================
+
+    match /users/{userId} {
+
+      allow get: if isOwner(userId)
+        || isAdmin()
+        || (
+          isGadCoordinator()
+          && resource.data.role in ["student", "Student", "STUDENT"]
+        )
+        || (
+          resource.data.role in ["student", "Student", "STUDENT"]
+          && assignedTeacher(resource.data.sectionId)
+        );
+
+      allow list: if isAdmin()
+        || (
+          isGadCoordinator()
+          && resource.data.role in ["student", "Student", "STUDENT"]
+        )
+        || (
+          isTeacher()
+          && resource.data.role in ["student", "Student", "STUDENT"]
+          && resource.data.sectionId is string
+          && assignedTeacher(resource.data.sectionId)
+        );
+
+      allow create: if isAdmin()
+        || (
+          isOwner(userId)
+          && request.resource.data.role in ["student", "Student", "STUDENT"]
+          && request.resource.data.status == "active"
+        );
+
+      allow update: if isOwner(userId)
+        && request.resource.data.diff(resource.data)
+          .affectedKeys()
+          .hasOnly([
+            "lastLogin",
+            "profileUpdatedAt",
+            "updatedAt"
+          ]);
+
+      allow update: if isAdmin()
+        || (
+          isOwner(userId)
+          && resource.data.role in ["student", "Student", "STUDENT"]
+          && resource.data.status == "active"
+          && request.resource.data.role == resource.data.role
+          && request.resource.data.status == resource.data.status
+          && request.resource.data.diff(resource.data)
+            .affectedKeys()
+            .hasOnly([
+              "fullname",
+              "profileImage",
+              "profileImageBase64",
+              "profileImageMime",
+              "photoURL",
+              "photoPath",
+              "photoUpdatedAt",
+              "profileCompleted",
+              "profileUpdatedAt",
+              "lastLogin",
+              "updatedAt"
+            ])
+        );
+
+      allow update: if isOwner(userId)
+        && resource.data.role in ["student", "Student", "STUDENT"]
+        && resource.data.status == "active"
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.status == resource.data.status
+        && request.resource.data.diff(resource.data)
+          .affectedKeys()
+          .hasOnly([
+            "studentNumber",
+            "course",
+            "yearLevel",
+            "section",
+            "cohort",
+            "profileCompleted",
+            "profileUpdatedAt",
+            "academicProfileVerified",
+            "verificationStatus"
+          ])
+        && (
+          !request.resource.data.diff(resource.data)
+            .affectedKeys()
+            .hasAny([
+              "studentNumber",
+              "course",
+              "yearLevel",
+              "section",
+              "cohort",
+              "academicProfileVerified",
+              "verificationStatus"
+            ])
+          ||
+          (
+            request.resource.data.academicProfileVerified == false
+            && request.resource.data.verificationStatus == "pending"
+          )
+        );
+
+      allow update: if isGadCoordinator()
+        && resource.data.role in ["student", "Student", "STUDENT"]
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly([
+            "status",
+            "verificationStatus",
+            "academicProfileVerified",
+            "verifiedAt",
+            "verifiedBy",
+            "verificationMethod",
+            "rejectedAt",
+            "rejectedBy",
+            "rejectionReason",
+            "deletionScheduledAt",
+            "updatedAt"
+          ])
+        && (
+          (
+            request.resource.data.verificationStatus == "verified"
+            && request.resource.data.status == "active"
+            && request.resource.data.academicProfileVerified == true
+            && request.resource.data.verificationMethod in [
+              "institutional",
+              "manual"
+            ]
+          )
+          ||
+          (
+            request.resource.data.verificationStatus == "rejected"
+            && request.resource.data.status == "inactive"
+            && request.resource.data.academicProfileVerified == false
+            && request.resource.data.deletionScheduledAt is timestamp
+          )
+          ||
+          (
+            request.resource.data.verificationStatus == "pending"
+            && request.resource.data.status == "active"
+            && request.resource.data.academicProfileVerified == false
+            && !request.resource.data.keys().hasAny([
+              "deletionScheduledAt"
+            ])
+          )
+        );
+
+      allow delete: if isAdmin();
+    }
+
+
+    // =========================================
+    // 3. ACADEMIC YEARS
+    // =========================================
+
+    match /academicYears/{academicYearId} {
+      allow get, list: if signedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+
+    // =========================================
+    // 4. COURSES
+    // =========================================
+
+    match /courses/{courseId} {
+      allow get, list: if signedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+
+    // =========================================
+    // 5. SECTIONS
+    // =========================================
+
+    match /sections/{sectionId} {
+
+      allow get: if isAdmin()
+        || assignedTeacher(sectionId)
+        || studentInSection(sectionId);
+
+      allow list: if isAdmin()
+        || (
+          isTeacher()
+          && (
+            (
+              resource.data.keys().hasAny(["teacherIds"])
+              && request.auth.uid in resource.data.teacherIds
+            )
+            ||
+            (
+              resource.data.keys().hasAny(["teacherId"])
+              && resource.data.teacherId == request.auth.uid
+            )
+          )
+        )
+        || (
+          isStudent()
+          && resource.data.academicYear == myProfile().academicYear
+          && resource.data.course == myProfile().course
+          && resource.data.section == myProfile().section
+        );
+
+      allow create, update, delete: if isAdmin();
+    }
+
+
+    // =========================================
+    // 6. ENROLLMENTS
+    // =========================================
+
+    match /enrollments/{enrollmentId} {
+
+      allow get: if isAdmin()
+        || (
+          isStudent()
+          && resource.data.studentId == request.auth.uid
+        )
+        || assignedTeacher(resource.data.sectionId);
+
+      allow list: if isAdmin()
+        || (
+          isStudent()
+          && resource.data.studentId == request.auth.uid
+        )
+        || (
+          isTeacher()
+          && assignedTeacher(resource.data.sectionId)
+        );
+
+      allow create, update, delete: if isAdmin();
+    }
+
+
+    // =========================================
+    // 7. TEACHER ASSIGNMENTS
+    // =========================================
+
+    match /teacherAssignments/{assignmentId} {
+
+      allow get: if isAdmin()
+        || (
+          isTeacher()
+          && resource.data.teacherId == request.auth.uid
+        )
+        || (
+          isStudent()
+          && (
+            resource.data.sectionId == myProfile().sectionId
+            || (
+              myProfile().keys().hasAny(["assignmentId"])
+              && myProfile().assignmentId == assignmentId
+            )
+          )
+        );
+
+      allow list: if isAdmin()
+        || (
+          isTeacher()
+          && resource.data.teacherId == request.auth.uid
+        )
+        || (
+          isStudent()
+          && resource.data.sectionId == myProfile().sectionId
+        );
+
+      allow create, update, delete: if isAdmin();
+    }
+
+
+    // =========================================
+    // 8. CLASS GROUPS - LEGACY COMPATIBILITY
+    // =========================================
+
+    match /classGroups/{groupId} {
+
+      allow get: if isAdmin()
+        || (
+          isStudent()
+          && resource.data.name == myProfile().section
+          && resource.data.course == myProfile().course
+        )
+        || (
+          isTeacher()
+          && resource.data.keys().hasAny(["teacherIds"])
+          && request.auth.uid in resource.data.teacherIds
+        );
+
+      allow list: if isAdmin();
+
+      allow create, update, delete: if isAdmin();
+    }
+
+
+    // =========================================
+    // 9. LEGACY CLASS ASSIGNMENTS
+    // =========================================
+
+    match /classAssignments/{assignmentId} {
+
+      allow get, list: if isAdmin()
+        || (
+          isStudent()
+          && resource.data.studentId == request.auth.uid
+        );
+
+      allow create, update, delete: if isAdmin();
+    }
+
+
+      // =========================================
+    // 10. MODULES
+    // ADMIN CONTENT REVIEW + TEACHER PUBLISHING
+    // =========================================
+
+    function teacherOwnsModule() {
+      return isTeacher()
+        && resource.data.createdBy == request.auth.uid;
+    }
+
+    function teacherCanReviewAdminModule() {
+      return isTeacher()
+        && resource.data.createdByRole == "admin"
+        && resource.data.reviewStatus == "pending";
+    }
+
+    function validReviewUpdate() {
+      return isTeacher()
+        && resource.data.createdByRole == "admin"
+        && resource.data.reviewStatus == "pending"
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdByRole == "admin"
+        && request.resource.data.diff(resource.data)
+          .affectedKeys()
+          .hasOnly([
+            "reviewStatus",
+            "reviewedBy",
+            "reviewedAt",
+            "reviewFeedback",
+            "status",
+            "updatedAt"
+          ])
+        && request.resource.data.reviewedBy == request.auth.uid
+        && request.resource.data.reviewedAt is timestamp
+        && request.resource.data.reviewStatus in [
+          "approved",
+          "rejected"
+        ]
+        && (
+          (
+            request.resource.data.reviewStatus == "approved"
+            && request.resource.data.status == "approved"
+          )
+          ||
+          (
+            request.resource.data.reviewStatus == "rejected"
+            && request.resource.data.status == "rejected"
+          )
+        );
+    }
+
+
+
+function teacherCanReadApprovedAdminModule() {
+  // Teachers may view approved Admin content to distinguish items that
+  // are still available from items already published by another teacher.
+  // Publishing remains restricted by validModulePublishing(), which
+  // requires that the record has not already been assigned.
+  return isTeacher()
+    && resource.data.createdByRole == "admin"
+    && resource.data.reviewStatus == "approved";
+}
+
+function validAdminLessonReviewUpdate() {
+  return isTeacher()
+    && resource.data.createdByRole == "admin"
+    && resource.data.reviewStatus == "pending"
+    && request.resource.data.createdBy == resource.data.createdBy
+    && request.resource.data.createdByRole == "admin"
+    && request.resource.data.diff(resource.data)
+      .affectedKeys()
+      .hasOnly([
+        "reviewStatus",
+        "reviewedBy",
+        "reviewedAt",
+        "reviewFeedback",
+        "status",
+        "updatedAt"
+      ])
+    && request.resource.data.reviewedBy == request.auth.uid
+    && request.resource.data.reviewedAt is timestamp
+    && request.resource.data.reviewStatus in ["approved", "rejected"]
+    && request.resource.data.status == request.resource.data.reviewStatus;
+}
+
+function validAdminLessonPublishing() {
+  return isTeacher()
+    && resource.data.createdByRole == "admin"
+    && resource.data.reviewStatus == "approved"
+    && !resource.data.keys().hasAny(["assignedTeacherId"])
+    && request.resource.data.createdBy == resource.data.createdBy
+    && request.resource.data.createdByRole == "admin"
+    && request.resource.data.reviewStatus == "approved"
+    && request.resource.data.status == "active"
+    && request.resource.data.assignedTeacherId == request.auth.uid
+    && request.resource.data.publishedBy == request.auth.uid
+    && request.resource.data.publishedAt is timestamp
+    && request.resource.data.sectionIds is list
+    && request.resource.data.sectionIds.size() == 1
+    && assignedTeacher(request.resource.data.sectionIds[0])
+    && request.resource.data.diff(resource.data)
+      .affectedKeys()
+      .hasOnly([
+        "status",
+        "sectionIds",
+        "assignedTeacherId",
+        "assignedTeacherName",
+        "publishedBy",
+        "publishedAt",
+        "updatedAt"
+      ]);
+}
+
+
+   
+function validModulePublishing() {
+  return isTeacher()
+    && resource.data.createdByRole == "admin"
+    && resource.data.reviewStatus == "approved"
+    && !resource.data.keys().hasAny(["assignedTeacherId"])
+    && request.resource.data.createdBy == resource.data.createdBy
+    && request.resource.data.createdByRole == "admin"
+    && request.resource.data.reviewStatus == "approved"
+    && request.resource.data.status == "active"
+    && request.resource.data.assignedTeacherId == request.auth.uid
+    && request.resource.data.publishedBy == request.auth.uid
+    && request.resource.data.publishedAt is timestamp
+    && request.resource.data.sectionIds is list
+    && request.resource.data.sectionIds.size() == 1
+    && assignedTeacher(request.resource.data.sectionIds[0])
+    && request.resource.data.diff(resource.data)
+      .affectedKeys()
+      .hasOnly([
+        "status",
+        "sectionIds",
+        "assignedTeacherId",
+        "assignedTeacherName",
+        "publishedBy",
+        "publishedAt",
+        "updatedAt"
+      ]);
+}
+
+
+  
+
+match /modules/{moduleId} {
+
+  allow get, list: if isAdmin()
+  || teacherCanReadApprovedAdminModule()
+    || teacherOwnsModule()
+    || teacherCanReviewAdminModule()
+    || (
+      isTeacher()
+      && resource.data.createdByRole == "admin"
+      && resource.data.reviewStatus == "approved"
+      && resource.data.assignedTeacherId == request.auth.uid
+    )
+    || studentCanReadApprovedSectionContent();
+
+  allow create: if isAdmin()
+    || (
+      isTeacher()
+      && request.resource.data.createdBy == request.auth.uid
+      && request.resource.data.sectionIds is list
+      && request.resource.data.sectionIds.size() > 0
+    );
+
+  allow update: if isAdmin()
+    || (
+      isTeacher()
+      && resource.data.createdBy == request.auth.uid
+      && request.resource.data.createdBy == resource.data.createdBy
+    )
+    || validReviewUpdate()
+    || validModulePublishing();
+
+  allow delete: if isAdmin()
+    || (
+      isTeacher()
+      && resource.data.createdBy == request.auth.uid
+    );
+}
+
+    // =========================================
+    // 11. LESSONS
+    // =========================================
+
+   
+match /lessons/{lessonId} {
+
+  allow get, list: if isAdmin()
+    || (
+      isTeacher()
+      && (
+        resource.data.createdBy == request.auth.uid
+        || (
+          resource.data.createdByRole == "admin"
+          && resource.data.reviewStatus in ["pending", "approved"]
+        )
+      )
+    )
+    || studentCanReadApprovedSectionContent();
+
+  allow create: if isAdmin() || isTeacher();
+
+  allow update: if isAdmin()
+    || (
+      isTeacher()
+      && resource.data.createdBy == request.auth.uid
+      && request.resource.data.createdBy == resource.data.createdBy
+    )
+    || validAdminLessonReviewUpdate()
+    || validAdminLessonPublishing();
+
+  allow delete: if isAdmin()
+    || (
+      isTeacher()
+      && resource.data.createdBy == request.auth.uid
+    );
+}
+
+
+
+    // =========================================
+    // 12. QUESTIONS
+    // =========================================
+
+    match /questions/{questionId} {
+
+      allow get, list: if isAdmin() || isTeacher();
+
+      allow create: if isAdmin()
+        || (
+          isTeacher()
+          && request.resource.data.createdBy == request.auth.uid
+        );
+
+      allow update: if isAdmin()
+        || (
+          isTeacher()
+          && resource.data.createdBy == request.auth.uid
+          && request.resource.data.createdBy == resource.data.createdBy
+        );
+
+      allow delete: if isAdmin()
+        || (
+          isTeacher()
+          && resource.data.createdBy == request.auth.uid
+        );
+    }
+
+
+    // =========================================
+    // 13. QUIZZES
+    // =========================================
+
+   
+
+
+match /quizzes/{quizId} {
+
+  allow get, list: if isAdmin()
+    || (
+      isTeacher()
+      && resource.data.createdBy == request.auth.uid
+    )
+    || studentCanReadApprovedSectionContent();
+
+  allow create: if isAdmin()
+    || (
+      isTeacher()
+      && request.resource.data.createdBy == request.auth.uid
+      && request.resource.data.sectionIds is list
+      && request.resource.data.sectionIds.size() > 0
+    );
+
+  allow update: if isAdmin()
+    || (
+      isTeacher()
+      && resource.data.createdBy == request.auth.uid
+      && request.resource.data.createdBy == resource.data.createdBy
+    );
+
+  allow delete: if isAdmin()
+    || (
+      isTeacher()
+      && resource.data.createdBy == request.auth.uid
+    );
+}
+
+    // =========================================
+    // 14. ASSIGNMENTS
+    // =========================================
+
+   
+match /assignments/{assignmentId} {
+
+  // STUDENT ASSIGNMENT ACCESS
+  function studentCanReadAssignment() {
+    return userExists()
+      && myProfile().role in ["student", "Student", "STUDENT"]
+
+      // Match the existing JavaScript behavior:
+      // missing status is allowed; inactive status is denied.
+      && (
+        !myProfile().keys().hasAny(["status"])
+        || myProfile().status == "active"
+      )
+
+      && resource.data.status == "active"
+
+      && myProfile().sectionId is string
+
+      && (
+        // If sectionIds has entries, use those.
+        (
+          resource.data.sectionIds is list
+          && resource.data.sectionIds.size() > 0
+          && myProfile().sectionId in resource.data.sectionIds
+        )
+
+        ||
+
+        // Otherwise, support a single sectionId.
+        (
+          (
+            !(resource.data.sectionIds is list)
+            || resource.data.sectionIds.size() == 0
+          )
+          && resource.data.sectionId is string
+          && resource.data.sectionId == myProfile().sectionId
+        )
+
+        ||
+
+        // Support assignments intended for all students.
+        (
+          (
+            !(resource.data.sectionIds is list)
+            || resource.data.sectionIds.size() == 0
+          )
+          && !(resource.data.sectionId is string)
+          && resource.data.audience == "all"
+        )
+      );
+  }
+
+  // READ
+  allow get, list: if isAdmin()
+    || (
+      isTeacher()
+      && resource.data.createdBy == request.auth.uid
+    )
+    || studentCanReadAssignment();
+
+  // CREATE
+  allow create: if isAdmin()
+    || (
+      isTeacher()
+      && request.resource.data.createdBy == request.auth.uid
+    );
+
+  // UPDATE
+  allow update: if isAdmin()
+    || (
+      isTeacher()
+      && resource.data.createdBy == request.auth.uid
+      && request.resource.data.createdBy == resource.data.createdBy
+    );
+
+  // DELETE
+  allow delete: if isAdmin()
+    || (
+      isTeacher()
+      && resource.data.createdBy == request.auth.uid
+    );
+}
+
+
+
+    // =========================================
+    // 15. STUDENT PROGRESS
+    // =========================================
+
+    match /progress/{progressId} {
+
+      allow get, list: if isAdmin()
+        || ownsRecord()
+        || (
+          isTeacher()
+          && resource.data.userId is string
+          && exists(
+            /databases/$(database)/documents/users/$(resource.data.userId)
+          )
+          && assignedTeacher(
+            get(
+              /databases/$(database)/documents/users/$(resource.data.userId)
+            ).data.sectionId
+          )
+        );
+
+      allow create: if isStudent()
+        && createsOwnRecord();
+
+      allow update: if isAdmin()
+        || (
+          isStudent()
+          && ownsRecord()
+          && request.resource.data.userId == resource.data.userId
+        );
+
+      allow delete: if isAdmin();
+    }
+
+   // =========================================
+// 16. NOTIFICATIONS
+// =========================================
+
+match /notifications/{notificationId} {
+
+  // READ
+  allow get, list: if isAdmin()
+    || (
+      signedIn()
+      && resource.data.userId == request.auth.uid
+    );
+
+  // CREATE
+  allow create: if isAdmin()
+    || (
+      isTeacher()
+      && request.resource.data.createdBy == request.auth.uid
+      && request.resource.data.teacherId == request.auth.uid
+
+      && request.resource.data.userId is string
+      && request.resource.data.sectionId is string
+
+      && assignedTeacher(request.resource.data.sectionId)
+
+      && exists(
+        /databases/$(database)/documents/users/$(request.resource.data.userId)
+      )
+
+      && get(
+        /databases/$(database)/documents/users/$(request.resource.data.userId)
+      ).data.role in ["student", "Student", "STUDENT"]
+
+      && get(
+        /databases/$(database)/documents/users/$(request.resource.data.userId)
+      ).data.status in ["active", "Active", "ACTIVE"]
+
+      && get(
+        /databases/$(database)/documents/users/$(request.resource.data.userId)
+      ).data.sectionId == request.resource.data.sectionId
+
+      && request.resource.data.contentType in ["module", "lesson"]
+      && request.resource.data.read == false
+
+      && request.resource.data.keys().hasOnly([
+        "userId",
+        "title",
+        "message",
+        "type",
+        "contentType",
+        "contentId",
+        "contentTitle",
+        "teacherId",
+        "teacherName",
+        "sectionId",
+        "read",
+        "publishedAt",
+        "createdAt",
+        "createdBy"
+      ])
+    );
+
+  // UPDATE: OWNER CAN MARK AS READ
+  allow update: if isAdmin()
+    || (
+      signedIn()
+      && resource.data.userId == request.auth.uid
+      && request.resource.data.userId == resource.data.userId
+
+      && request.resource.data.diff(resource.data)
+        .affectedKeys()
+        .hasOnly([
+          "read",
+          "readAt",
+          "updatedAt"
+        ])
+
+      && request.resource.data.read == true
+      && request.resource.data.readAt is timestamp
+    );
+
+  // DELETE
+  allow delete: if isAdmin()
+    || (
+      signedIn()
+      && resource.data.userId == request.auth.uid
+    );
+}
+
+    // =========================================
+    // 17. MESSAGES
+    // =========================================
+
+    match /messages/{messageId} {
+
+      allow get, list: if isAdmin()
+        || (
+          signedIn()
+          && (
+            resource.data.senderId == request.auth.uid
+            || resource.data.receiverId == request.auth.uid
+          )
+        );
+
+      allow create: if signedIn()
+        && request.resource.data.senderId == request.auth.uid
+        && request.resource.data.receiverId is string;
+
+      allow update: if isAdmin()
+        || (
+          signedIn()
+          && resource.data.receiverId == request.auth.uid
+          && request.resource.data.senderId == resource.data.senderId
+          && request.resource.data.receiverId == resource.data.receiverId
+        );
+
+      allow delete: if isAdmin();
+    }
+
+
+    // =========================================
+    // 18. ANNOUNCEMENTS
+    // =========================================
+
+    match /announcements/{announcementId} {
+
+      allow get, list: if signedIn();
+
+      allow create: if isAdmin()
+        || (
+          isTeacher()
+          && request.resource.data.createdBy == request.auth.uid
+        );
+
+      allow update: if isAdmin()
+        || (
+          isTeacher()
+          && resource.data.createdBy == request.auth.uid
+          && request.resource.data.createdBy == resource.data.createdBy
+        );
+
+      allow delete: if isAdmin()
+        || (
+          isTeacher()
+          && resource.data.createdBy == request.auth.uid
+        );
+    }
+
+
+    // =========================================
+    // 19. ACTIVITY LOGS
+    // =========================================
+
+    match /activityLogs/{logId} {
+
+      allow get, list: if isAdmin()
+        || ownsRecord();
+
+      allow create: if signedIn()
+        && createsOwnRecord();
+
+      allow update, delete: if isAdmin();
+    }
+
+
+    // =========================================
+    // 20. DEPLOYMENTS
+    // =========================================
+
+    match /deployments/{deploymentId} {
+
+      allow get, list: if isAdmin()
+        || (
+          isTeacher()
+          && resource.data.teacherId == request.auth.uid
+        )
+        || (
+          isStudent()
+          && myProfile().sectionId in resource.data.sectionIds
+        );
+
+      allow create, update, delete: if isAdmin();
+    }
+
+
+    // =========================================
+    // 21. EQUALLEARN LIVE SESSIONS
+    // =========================================
+
+    match /liveSessions/{roomId} {
+
+      allow get, list: if isAdmin()
+        || (
+          isTeacher()
+          && resource.data.teacherUid == request.auth.uid
+        )
+        || (
+          isStudent()
+          && request.auth.uid in resource.data.participantUids
+        );
+
+      allow create: if isTeacher()
+        && request.resource.data.roomId == roomId
+        && request.resource.data.teacherUid == request.auth.uid
+        && request.resource.data.sectionId is string
+        && assignedTeacher(request.resource.data.sectionId)
+
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 120
+
+        && request.resource.data.description is string
+        && request.resource.data.sectionName is string
+
+        && request.resource.data.meetingType in [
+          "batch",
+          "one_on_one",
+          "livestream"
+        ]
+
+        && request.resource.data.participantUids is list
+        && request.resource.data.participantUids.size() >= 1
+        && request.resource.data.participantUids.size() <= 200
+        && request.auth.uid in request.resource.data.participantUids
+
+        && request.resource.data.publishUids is list
+        && request.auth.uid in request.resource.data.publishUids
+
+        && (
+          (
+            request.resource.data.meetingType == "livestream"
+            && request.resource.data.mode == "livestream"
+            && request.resource.data.publishUids == [request.auth.uid]
+            && request.resource.data.targetStudentUid == null
+          )
+          ||
+          (
+            request.resource.data.meetingType == "batch"
+            && request.resource.data.mode == "meeting"
+            && request.resource.data.publishUids == request.resource.data.participantUids
+            && request.resource.data.targetStudentUid == null
+          )
+          ||
+          (
+            request.resource.data.meetingType == "one_on_one"
+            && request.resource.data.mode == "meeting"
+            && request.resource.data.participantUids.size() == 2
+            && request.resource.data.publishUids == request.resource.data.participantUids
+            && request.resource.data.targetStudentUid is string
+            && request.resource.data.targetStudentUid != request.auth.uid
+            && request.resource.data.targetStudentUid in request.resource.data.participantUids
+          )
+        )
+
+        && request.resource.data.status == "scheduled"
+
+        && request.resource.data.keys().hasOnly([
+          "roomId",
+          "title",
+          "description",
+          "teacherUid",
+          "teacherName",
+          "sectionId",
+          "sectionName",
+          "meetingType",
+          "targetStudentUid",
+          "participantUids",
+          "publishUids",
+          "status",
+          "mode",
+          "createdAt",
+          "updatedAt"
+        ]);
+
+      allow update: if isTeacher()
+        && resource.data.teacherUid == request.auth.uid
+        && assignedTeacher(resource.data.sectionId)
+
+        && request.resource.data.teacherUid == resource.data.teacherUid
+        && request.resource.data.roomId == resource.data.roomId
+        && request.resource.data.sectionId == resource.data.sectionId
+        && request.resource.data.participantUids == resource.data.participantUids
+        && request.resource.data.publishUids == resource.data.publishUids
+        && request.resource.data.meetingType == resource.data.meetingType
+        && request.resource.data.targetStudentUid == resource.data.targetStudentUid
+
+        && request.resource.data.diff(resource.data)
+          .affectedKeys()
+          .hasOnly([
+            "status",
+            "startedAt",
+            "endedAt",
+            "updatedAt"
+          ])
+
+        && (
+          (
+            resource.data.status == "scheduled"
+            && request.resource.data.status == "live"
+          )
+          ||
+          (
+            resource.data.status == "live"
+            && request.resource.data.status == "ended"
+          )
+          ||
+          (
+            resource.data.status == "live"
+            && request.resource.data.status == "scheduled"
+          )
+          ||
+          (
+            resource.data.status == "ended"
+            && request.resource.data.status == "live"
+            && resource.data.meetingType in ["batch", "livestream"]
+          )
+        );
+
+      allow delete: if isAdmin()
+        || (
+          isTeacher()
+          && resource.data.teacherUid == request.auth.uid
+          && assignedTeacher(resource.data.sectionId)
+          && resource.data.meetingType == "one_on_one"
+          && resource.data.status == "ended"
+        );
+    }
+
+
+    // =========================================
+    // 22. QUIZ QUESTIONS
+    // =========================================
+
+    match /quizQuestions/{questionId} {
+
+      // Students can read questions only when the parent quiz
+      // is active and assigned to their section.
+      // Teachers can read questions belonging to their own quizzes.
+      allow get, list: if isAdmin()
+        || (
+          isTeacher()
+          && get(
+            /databases/$(database)/documents/quizzes/$(resource.data.quizId)
+          ).data.createdBy == request.auth.uid
+        )
+        || (
+          isStudent()
+          && get(
+            /databases/$(database)/documents/quizzes/$(resource.data.quizId)
+          ).data.status == "active"
+          && get(
+            /databases/$(database)/documents/quizzes/$(resource.data.quizId)
+          ).data.sectionIds is list
+          && myProfile().sectionId in get(
+            /databases/$(database)/documents/quizzes/$(resource.data.quizId)
+          ).data.sectionIds
+        );
+
+      allow create: if isAdmin()
+        || (
+          isTeacher()
+          && getAfter(
+            /databases/$(database)/documents/quizzes/$(request.resource.data.quizId)
+          ).data.createdBy == request.auth.uid
+        );
+
+      allow update: if isAdmin()
+        || (
+          isTeacher()
+          && get(
+            /databases/$(database)/documents/quizzes/$(resource.data.quizId)
+          ).data.createdBy == request.auth.uid
+        );
+
+      allow delete: if isAdmin()
+        || (
+          isTeacher()
+          && get(
+            /databases/$(database)/documents/quizzes/$(resource.data.quizId)
+          ).data.createdBy == request.auth.uid
+        );
+    }
+
+
+    // =========================================
+    // 23. QUIZ ANSWER KEYS
+    // =========================================
+
+    match /quizAnswerKeys/{answerKeyId} {
+
+      // Answer keys are private to admins and quiz creators.
+      // Students must never be allowed to read answer keys.
+      allow get, list: if isAdmin()
+        || (
+          isTeacher()
+          && get(
+            /databases/$(database)/documents/quizzes/$(resource.data.quizId)
+          ).data.createdBy == request.auth.uid
+        );
+
+      allow create: if isAdmin()
+        || (
+          isTeacher()
+          && getAfter(
+            /databases/$(database)/documents/quizzes/$(request.resource.data.quizId)
+          ).data.createdBy == request.auth.uid
+        );
+
+      allow update, delete: if isAdmin()
+        || (
+          isTeacher()
+          && get(
+            /databases/$(database)/documents/quizzes/$(resource.data.quizId)
+          ).data.createdBy == request.auth.uid
+        );
+    }
+
+
+    // =========================================
+    // 24. EQUALLEARN MODULES V2
+    // =========================================
+
+
+match /modulesV2/{moduleId} {
+
+  allow get, list: if isAdmin()
+    || (
+      isTeacher()
+      && resource.data.createdBy == request.auth.uid
+    )
+    || studentCanReadPublishedV2Content();
+
+  allow create: if isAdmin()
+    || (
+      isTeacher()
+      && request.resource.data.createdBy == request.auth.uid
+      && request.resource.data.sectionIds is list
+      && request.resource.data.sectionIds.size() > 0
+      && request.resource.data.status in ["draft", "published"]
+    );
+
+  allow update: if isAdmin()
+    || (
+      isTeacher()
+      && resource.data.createdBy == request.auth.uid
+      && request.resource.data.createdBy == resource.data.createdBy
+      && request.resource.data.sectionIds is list
+      && request.resource.data.sectionIds.size() > 0
+      && request.resource.data.status in ["draft", "published", "archived"]
+    );
+
+  allow delete: if isAdmin()
+    || (
+      isTeacher()
+      && resource.data.createdBy == request.auth.uid
+    );
+}
+
+
+// =========================================
+// TEACHER ACTIVITIES V2
+// =========================================
+
+
+match /teacherActivitiesV2/{activityId} {
+
+  allow get, list: if isAdmin()
+    || (
+      isTeacher()
+      && resource.data.createdBy == request.auth.uid
+    )
+    || studentCanReadPublishedV2Content();
+
+  allow create: if isAdmin()
+    || (
+      isTeacher()
+      && request.resource.data.createdBy == request.auth.uid
+      && request.resource.data.teacherId == request.auth.uid
+      && request.resource.data.sectionIds is list
+      && request.resource.data.sectionIds.size() > 0
+      && request.resource.data.status in ["draft", "published"]
+    );
+
+  allow update: if isAdmin()
+    || (
+      isTeacher()
+      && resource.data.createdBy == request.auth.uid
+      && request.resource.data.createdBy == resource.data.createdBy
+      && request.resource.data.teacherId == request.auth.uid
+      && request.resource.data.sectionIds is list
+      && request.resource.data.sectionIds.size() > 0
+      && request.resource.data.status in ["draft", "published", "archived"]
+    );
+
+  allow delete: if isAdmin()
+    || (
+      isTeacher()
+      && resource.data.createdBy == request.auth.uid
+    );
+}
+
+
+    // =========================================
+    // 25. EQUALLEARN QUIZZES V2
+    // =========================================
+
+    match /quizzesV2/{quizId} {
+      allow get, list: if isAdmin()
+        || (
+          isTeacher()
+          && resource.data.createdBy == request.auth.uid
+        )
+        || studentCanReadPublishedV2Content();
+
+      allow create: if isAdmin()
+        || (
+          isTeacher()
+          && request.resource.data.createdBy == request.auth.uid
+          && request.resource.data.sectionIds is list
+          && request.resource.data.sectionIds.size() > 0
+          && request.resource.data.status in ["draft", "published"]
+        );
+
+      allow update: if isAdmin()
+        || (
+          isTeacher()
+          && resource.data.createdBy == request.auth.uid
+          && request.resource.data.createdBy == resource.data.createdBy
+          && request.resource.data.sectionIds is list
+          && request.resource.data.sectionIds.size() > 0
+          && request.resource.data.status in ["draft", "published", "archived"]
+        );
+
+      allow delete: if isAdmin()
+        || (
+          isTeacher()
+          && resource.data.createdBy == request.auth.uid
+        );
+    }
+
+
+    // =========================================
+    // 26. EQUALLEARN QUIZ QUESTIONS V2
+    // =========================================
+
+    match /quizQuestionsV2/{questionId} {
+      allow get, list: if isAdmin()
+        || (
+          isTeacher()
+          && resource.data.quizId is string
+          && get(
+            /databases/$(database)/documents/quizzesV2/$(resource.data.quizId)
+          ).data.createdBy == request.auth.uid
+        )
+        || (
+          isStudent()
+          && resource.data.quizId is string
+          && get(
+            /databases/$(database)/documents/quizzesV2/$(resource.data.quizId)
+          ).data.status == "published"
+          && get(
+            /databases/$(database)/documents/quizzesV2/$(resource.data.quizId)
+          ).data.sectionIds is list
+          && myProfile().sectionId in get(
+            /databases/$(database)/documents/quizzesV2/$(resource.data.quizId)
+          ).data.sectionIds
+        );
+
+      allow create: if isAdmin()
+        || (
+          isTeacher()
+          && request.resource.data.quizId is string
+          && getAfter(
+            /databases/$(database)/documents/quizzesV2/$(request.resource.data.quizId)
+          ).data.createdBy == request.auth.uid
+        );
+
+      allow update: if isAdmin()
+        || (
+          isTeacher()
+          && get(
+            /databases/$(database)/documents/quizzesV2/$(resource.data.quizId)
+          ).data.createdBy == request.auth.uid
+        );
+
+      allow delete: if isAdmin()
+        || (
+          isTeacher()
+          && get(
+            /databases/$(database)/documents/quizzesV2/$(resource.data.quizId)
+          ).data.createdBy == request.auth.uid
+        );
+    }
+
+
+    // =========================================
+    // 27. EQUALLEARN QUIZ ANSWER KEYS V2
+    // =========================================
+
+    match /quizAnswerKeysV2/{answerKeyId} {
+      // Students are deliberately denied access to answer keys.
+      allow get, list: if isAdmin()
+        || (
+          isTeacher()
+          && resource.data.quizId is string
+          && get(
+            /databases/$(database)/documents/quizzesV2/$(resource.data.quizId)
+          ).data.createdBy == request.auth.uid
+        );
+
+      allow create: if isAdmin()
+        || (
+          isTeacher()
+          && request.resource.data.quizId is string
+          && getAfter(
+            /databases/$(database)/documents/quizzesV2/$(request.resource.data.quizId)
+          ).data.createdBy == request.auth.uid
+        );
+
+      allow update, delete: if isAdmin()
+        || (
+          isTeacher()
+          && get(
+            /databases/$(database)/documents/quizzesV2/$(resource.data.quizId)
+          ).data.createdBy == request.auth.uid
+        );
+    }
+
+
+
+match /quizAttempts/{attemptId} {
+
+  // Student can read only their own attempts.
+  // Assigned teacher can read attempts of their students.
+  allow get, list: if isAdmin()
+    || (
+      isStudent()
+      && resource.data.userId == request.auth.uid
+    )
+    || (
+      isTeacher()
+      && resource.data.userId is string
+      && exists(
+        /databases/$(database)/documents/users/$(resource.data.userId)
+      )
+      && assignedTeacher(
+        get(
+          /databases/$(database)/documents/users/$(resource.data.userId)
+        ).data.sectionId
+      )
+    );
+
+  // Students can submit only their own attempt for a published quiz
+  // assigned to their own section in teacherActivitiesV2.
+  allow create: if isStudent()
+    && request.resource.data.userId == request.auth.uid
+    && request.resource.data.quizId is string
+    && request.resource.data.sectionId is string
+    && request.resource.data.sectionId == myProfile().sectionId
+    && request.resource.data.status == "submitted"
+    && request.resource.data.answers is map
+    && request.resource.data.total is number
+    && exists(
+      /databases/$(database)/documents/teacherActivitiesV2/$(request.resource.data.quizId)
+    )
+    && get(
+      /databases/$(database)/documents/teacherActivitiesV2/$(request.resource.data.quizId)
+    ).data.type == "quiz"
+    && get(
+      /databases/$(database)/documents/teacherActivitiesV2/$(request.resource.data.quizId)
+    ).data.status == "published"
+    && get(
+      /databases/$(database)/documents/teacherActivitiesV2/$(request.resource.data.quizId)
+    ).data.sectionIds is list
+    && myProfile().sectionId in get(
+      /databases/$(database)/documents/teacherActivitiesV2/$(request.resource.data.quizId)
+    ).data.sectionIds;
+
+  // Assigned teacher can grade attempts without changing ownership.
+  allow update: if isAdmin()
+    || (
+      isTeacher()
+      && resource.data.userId is string
+      && exists(
+        /databases/$(database)/documents/users/$(resource.data.userId)
+      )
+      && assignedTeacher(
+        get(
+          /databases/$(database)/documents/users/$(resource.data.userId)
+        ).data.sectionId
+      )
+      && request.resource.data.userId == resource.data.userId
+      && request.resource.data.quizId == resource.data.quizId
+    );
+
+  allow delete: if isAdmin();
+}
+
+
+
+  // =========================================
+  // 29. DEFAULT DENY
+  // =========================================
+
+  match /{document=**} {
+    allow read, write: if false;
+  }
+  
+  }
+}

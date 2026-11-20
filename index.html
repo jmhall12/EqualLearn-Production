@@ -1,11 +1,10 @@
-﻿
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script id="EQUALLEARN_FORCE_DARK_BOOTSTRAP">document.documentElement.dataset.theme="dark";document.documentElement.style.colorScheme="dark";</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0b1020">
+  <meta name="theme-color" content="#1b1e27">
 
   <title>EqualLearn — Learning Without Limits</title>
   <meta name="description" content="EqualLearn is a modern learning platform connecting students, teachers, and administrators through one seamless digital learning experience.">
@@ -472,7 +471,7 @@ button {
 }
 
 .preview-section-title span:last-child {
-  color: var(--purple);
+  color: var(--white);
   font-size: 10px;
 }
 
@@ -1344,7 +1343,7 @@ body {
 /* Dashboard preview */
 .dashboard-preview {
   color: #29243e !important;
-  background: #ffffff !important;
+  background: #252b38!important;
   border-color: #e5e0ef !important;
 }
 
@@ -1352,7 +1351,7 @@ body {
 .preview-section-title,
 .course-info strong,
 .preview-stat strong {
-  color: #29243e !important;
+  color: #f6f6f6 !important;
 }
 
 .preview-course,
@@ -1368,7 +1367,7 @@ body {
 }
 
 .preview-section-title span:first-child {
-  color: #38304f !important;
+  color: white !important;
 }
 
 .preview-course .course-info,
@@ -1541,12 +1540,464 @@ body[data-theme="dark"] {
 }
 
 
+
+
+/* ==========================================================
+   EQUALLEARN HOMEPAGE — CHARCOAL / PURPLE DESIGN
+   Keep this block last in the style element. It intentionally
+   overrides the older lavender/light homepage styles above.
+========================================================== */
+:root {
+  color-scheme: dark;
+  --bg: #191c25;
+  --surface: #222733;
+  --surface-soft: #282e3b;
+  --text: #f1f2f7;
+  --muted: #a5adbd;
+  --purple: #a18aff;
+  --purple-dark: #795ce0;
+  --purple-light: #342b4e;
+  --green: #57c7a1;
+  --border: #363d4b;
+  --shadow: 0 14px 38px rgba(0, 0, 0, .20);
+  --shadow-hover: 0 20px 48px rgba(0, 0, 0, .30);
+  --radius: 20px;
+}
+
+html, body {
+  color: var(--text) !important;
+  background: #191c25 !important;
+  color-scheme: dark !important;
+}
+
+body {
+  background:
+    radial-gradient(ellipse at 12% 10%, rgba(126, 98, 218, .13), transparent 34%),
+    radial-gradient(ellipse at 94% 45%, rgba(87, 110, 160, .10), transparent 32%),
+    #191c25 !important;
+  overflow-x: hidden;
+}
+
+.premium-container {
+  width: min(1200px, calc(100% - 48px));
+  margin-inline: auto;
+}
+
+.premium-header {
+  background: rgba(25, 28, 37, .91) !important;
+  border-bottom: 1px solid #303745 !important;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, .10);
+}
+
+.brand-name,
+.premium-brand,
+.premium-brand .brand-name {
+  color: #f2f3f7 !important;
+}
+
+.brand-name span { color: var(--purple) !important; }
+
+.premium-links > a:not(.premium-btn) {
+  color: #bdc3d0 !important;
+}
+
+.premium-links > a:not(.premium-btn):hover { color: var(--purple) !important; }
+
+.premium-btn {
+  min-height: 43px;
+  border-radius: 12px;
+}
+
+.premium-btn-primary {
+  color: #fff !important;
+  background: linear-gradient(130deg, #9679f4, #7054d5) !important;
+  box-shadow: 0 8px 22px rgba(112, 84, 213, .22) !important;
+}
+
+.premium-btn-ghost {
+  color: #e4ddff !important;
+  background: #292e3b !important;
+  border-color: #41485a !important;
+  box-shadow: none !important;
+}
+
+.mobile-menu-button {
+  color: #e8e2ff !important;
+  background: #292e3b !important;
+  border-color: #41485a !important;
+  box-shadow: none !important;
+}
+
+/* Main hero */
+.premium-hero {
+  min-height: 600px;
+  padding-top: 54px;
+  padding-bottom: 62px;
+  gap: 34px;
+  background: transparent !important;
+}
+
+.hero-title { color: #f4f5f8 !important; }
+.hero-title .highlight {
+  color: var(--purple) !important;
+  background: none !important;
+}
+.hero-description,
+.hero-note { color: #b0b7c6 !important; }
+.hero-badge {
+  color: #d9d0ff !important;
+  background: #29263a !important;
+  border-color: #484063 !important;
+  box-shadow: none !important;
+}
+.hero-note-icon {
+  color: #8ce0be !important;
+  background: #253c38 !important;
+}
+
+/* Keep 3D shapes behind the dashboard panel so they never cover text. */
+.hero-visual#equalLearn3D {
+  min-height: 570px !important;
+  overflow: visible !important;
+  isolation: isolate;
+}
+#equalLearn3DCanvas {
+  z-index: 1 !important;
+  pointer-events: auto !important;
+}
+#equalLearn3D .dashboard-preview {
+  position: relative !important;
+  z-index: 2 !important;
+  width: min(88%, 440px);
+  margin-inline: auto;
+  color: #252b38 !important;
+  background: #252b38 !important;
+  border: 1px solid #41495a !important;
+  box-shadow: 0 28px 65px rgba(0, 0, 0, .32) !important;
+  transform-style: preserve-3d;
+}
+#equalLearn3D .floating-note { z-index: 5 !important; }
+.visual-glow { opacity: .48; }
+.preview-brand,
+.preview-section-title,
+.course-info strong,
+.preview-stat strong { color: whitesmoke !important; }
+.preview-course,
+.preview-stat {
+  color: #eef0f6 !important;
+  background: #2d3442 !important;
+  border-color: #424a5b !important;
+}
+.preview-course .course-info,
+.preview-course .course-info *,
+.preview-stat * { color: #e8ebf2 !important; }
+.preview-course .course-info small,
+.preview-stat small { color: #aab3c3 !important; }
+.preview-course .course-percent { color: #b7a7ff !important; }
+.preview-welcome {
+  color: #fff !important;
+  background: linear-gradient(125deg, #514374, #39314f) !important;
+  box-shadow: none !important;
+}
+.preview-welcome * { color: #fff !important; }
+
+/* Role list: plain rows, not three large cards. */
+#features,
+#about {
+  color: var(--text) !important;
+  padding-top: 64px !important;
+  padding-bottom: 64px !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+.section-heading h2,
+.about-simple h2 {
+  color: #f1f2f7 !important;
+  font-family: var(--font-heading);
+  font-size: clamp(28px, 3.3vw, 40px);
+  line-height: 1.2;
+  letter-spacing: -1.4px;
+}
+.section-heading p,
+.community-copy p,
+.about-simple p { color: #aab2c1 !important; }
+.section-kicker {
+  color: #d8d0ff !important;
+  background: #29263a !important;
+  border-color: #494064 !important;
+}
+.community-intro {
+  max-width: 700px;
+  font-size: 15px !important;
+  line-height: 1.75 !important;
+}
+.community-list {
+  margin-top: 28px;
+  border-top: 1px solid #394150;
+}
+.community-row {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) 30px;
+  align-items: center;
+  gap: 18px;
+  padding: 20px 4px;
+  border-bottom: 1px solid #394150;
+  transition: background .2s, padding .2s;
+}
+.community-row:hover {
+  padding-inline: 12px;
+  background: rgba(255, 255, 255, .025);
+}
+.community-index {
+  color: #9e89f1;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+.community-copy h3 {
+  margin: 0 0 5px;
+  color: #f0f2f7;
+  font-size: 17px;
+  font-weight: 800;
+}
+.community-copy p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.65;
+}
+.community-arrow { color: #a18aff; font-size: 20px; }
+
+/* App install: phone only, with the install control inside its screen. */
+#android {
+  padding-top: 28px !important;
+  padding-bottom: 38px !important;
+}
+.app-install-section {
+  min-height: 450px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+.phone-visual {
+  min-height: 440px !important;
+  width: 100%;
+}
+.phone-visual::before {
+  width: 310px;
+  height: 310px;
+  background: rgba(139, 111, 232, .16) !important;
+}
+.phone-frame {
+  width: 220px !important;
+  height: 405px !important;
+  padding: 10px !important;
+  border: 2px solid #454052 !important;
+  border-radius: 36px !important;
+  background: #252a35 !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .38) !important;
+}
+.phone-screen {
+  padding: 16px 12px !important;
+  border-radius: 27px !important;
+  background: #1d222d !important;
+}
+.phone-notch { background: #51596a !important; margin-bottom: 16px !important; }
+.phone-screen h4 { color: #f1f2f7 !important; }
+.phone-screen > p { color: #a5adbd !important; }
+.phone-mini-card {
+  padding: 10px 11px !important;
+  margin-bottom: 8px !important;
+  background: #2a303d !important;
+  border-color: #41495a !important;
+  box-shadow: none !important;
+}
+.phone-mini-card strong { color: #f0f1f6 !important; }
+.phone-mini-card small { color: #aab2c1 !important; }
+.phone-mini-bar { background: #41485a !important; }
+.phone-install-button {
+  width: 100%;
+  min-height: 39px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 5px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 11px;
+  color: #fff;
+  background: linear-gradient(130deg, #9679f4, #7054d5);
+  box-shadow: 0 7px 18px rgba(112, 84, 213, .22);
+  font: 800 11px var(--font-body);
+  cursor: pointer;
+  transition: transform .2s, filter .2s;
+}
+.phone-install-button:hover { transform: translateY(-2px); filter: brightness(1.08); }
+.phone-install-button:active { transform: translateY(0); }
+.phone-install-button:disabled { opacity: .7; cursor: default; }
+.phone-install-hint {
+  min-height: 22px;
+  margin: 7px 0 0 !important;
+  color: #9ca5b6 !important;
+  font-size: 8px !important;
+  line-height: 1.4;
+}
+
+/* About: one compact statement. */
+.about-simple {
+  max-width: 880px;
+  margin-inline: auto;
+  text-align: center;
+}
+.about-simple h2 { margin: 0 auto 14px; }
+.about-simple h2 span { color: var(--purple); }
+.about-simple p {
+  max-width: 690px;
+  margin: 0 auto;
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+/* Short footer: compact spacing and smaller logo. */
+.premium-footer {
+  padding: 10px 0 8px !important;
+  color: #d9deea !important;
+  background: #151821 !important;
+  border-top: 1px solid #303745 !important;
+}
+.footer-main {
+  grid-template-columns: auto 1fr !important;
+  align-items: center;
+  gap: 14px !important;
+  padding-bottom: 0 !important;
+}
+.footer-main > div { display: flex; align-items: center; gap: 12px; }
+.footer-description { display: none !important; }
+.footer-main .premium-brand { font-size: 16px; gap: 8px; }
+.footer-main .brand-icon { width: 29px; height: 29px; border-radius: 9px; }
+.footer-links { justify-content: flex-end; gap: 15px !important; }
+.footer-links a { color: #aeb6c5 !important; font-size: 10px !important; }
+.footer-links a:hover { color: #b5a6ff !important; }
+.footer-bottom {
+  margin-top: 8px;
+  padding-top: 8px !important;
+  color: #8791a3 !important;
+  border-top: 1px solid #303745 !important;
+  font-size: 9px !important;
+}
+
+/* Keep navigation usable on tablets and phones. */
+@media (max-width: 1000px) {
+  .premium-hero { min-height: unset; padding-block: 55px; }
+  #equalLearn3D .dashboard-preview { width: min(94%, 440px); }
+}
+@media (max-width: 760px) {
+  .premium-container { width: min(1200px, calc(100% - 32px)) !important; }
+  .premium-hero {
+    grid-template-columns: 1fr !important;
+    gap: 22px !important;
+    padding-top: 44px !important;
+    padding-bottom: 36px !important;
+  }
+  .hero-title { font-size: clamp(38px, 10vw, 54px) !important; letter-spacing: -2.3px !important; }
+  .hero-visual#equalLearn3D { min-height: 490px !important; }
+  #equalLearn3D .dashboard-preview { width: min(94%, 430px); }
+  .premium-links {
+    background: #222733 !important;
+    border-color: #3b4352 !important;
+  }
+  .premium-links > a:not(.premium-btn) { color: #e0e4ec !important; }
+  .premium-links > a:not(.premium-btn):hover { background: #303747 !important; }
+  .nav-actions { border-color: #3b4352 !important; }
+  #features, #about { padding-block: 48px !important; }
+  #android { padding-block: 15px !important; }
+  .app-install-section { min-height: 410px; }
+  .phone-visual { min-height: 410px !important; }
+  .footer-main { grid-template-columns: 1fr !important; gap: 9px !important; }
+  .footer-main > div { justify-content: center; }
+  .footer-links { justify-content: center; gap: 13px !important; }
+  .footer-bottom { align-items: center; text-align: center; gap: 5px; }
+}
+@media (max-width: 430px) {
+  .hero-title { font-size: 39px !important; }
+  .hero-actions { flex-direction: row !important; align-items: center !important; }
+  .hero-actions .premium-btn { width: auto !important; }
+  .community-row { grid-template-columns: 36px minmax(0, 1fr) 20px; gap: 10px; padding-block: 16px; }
+  .community-copy h3 { font-size: 15px; }
+  .community-copy p { font-size: 12px; }
+  .footer-main .premium-brand { font-size: 15px; }
+  .footer-links a { font-size: 9px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+
+
+/* ==========================================================
+   PAGE-WIDE SCATTERED 3D DECORATIONS
+   The canvas stays behind all content and follows page scroll.
+========================================================== */
+html, body {
+  background-color: #191c25 !important;
+}
+
+body {
+  position: relative;
+  isolation: isolate;
+  background-image:
+    radial-gradient(ellipse at 8% 8%, rgba(132, 105, 220, .10), transparent 34%),
+    radial-gradient(ellipse at 92% 48%, rgba(78, 113, 171, .08), transparent 32%),
+    linear-gradient(180deg, #191c25 0%, #1c202b 48%, #191c25 100%) !important;
+}
+
+.page-3d-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: .88;
+}
+
+body > .premium-header,
+body > main,
+body > .premium-footer {
+  position: relative;
+  z-index: 1;
+}
+
+/* Allow the 3D scene to show through empty areas without covering text. */
+.premium-hero,
+#features,
+#android,
+#about,
+.premium-footer {
+  position: relative;
+  z-index: 1;
+  background: transparent !important;
+}
+
+@media (max-width: 760px) {
+  .page-3d-canvas { opacity: .48; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-3d-canvas { display: none; }
+}
+
 </style>
-    <link rel="stylesheet" href="assets/css/responsive-auto-fit.css">
-  <link rel="stylesheet" href="assets/css/forced-dark-theme.css?v=1">
 </head>
 
 <body>
+
+  <!-- Page-wide 3D decoration: objects are distributed through every section. -->
+  <canvas id="equalLearnPage3DCanvas" class="page-3d-canvas" aria-hidden="true"></canvas>
 
   <!-- HEADER -->
   <header class="premium-header">
@@ -1628,10 +2079,9 @@ body[data-theme="dark"] {
       </div>
 
       <!-- Dashboard preview -->
-      <div class="hero-visual reveal" id="equalLearn3D">
-  <canvas id="equalLearn3DCanvas" aria-label="Interactive EqualLearn 3D scene"></canvas>
+      <div class="hero-visual reveal">
 
-  <div class="visual-glow"></div>
+        <div class="visual-glow"></div>
 
         <div class="dashboard-preview">
 
@@ -1714,197 +2164,90 @@ body[data-theme="dark"] {
       </div>
     </section>
 
-    <!-- FEATURES -->
+    <!-- PLATFORM ROLES: simple list instead of three large cards -->
     <section class="premium-section" id="features">
       <div class="premium-container">
-
         <div class="section-heading reveal">
-          <span class="section-kicker">One connected platform</span>
-          <h2>Everything you need to <span style="color:var(--purple)">learn and grow.</span></h2>
-          <p>
-            A learning environment that supports the different roles
-            in education through one organized digital experience.
+          <span class="section-kicker">One connected learning platform</span>
+          <h2>Made for the whole learning community.</h2>
+          <p class="community-intro">
+            EqualLearn brings the people who teach, manage, and learn together in one organized space.
           </p>
         </div>
 
-        <div class="feature-grid">
-
-          <article class="feature-card reveal">
-            <div class="feature-icon">✧</div>
-            <h3>For Students</h3>
-            <p>
-              Access learning materials, explore educational content,
-              participate in activities, and track your learning progress.
-            </p>
+        <div class="community-list" aria-label="EqualLearn user roles">
+          <article class="community-row reveal">
+            <span class="community-index">01</span>
+            <div class="community-copy">
+              <h3>Students</h3>
+              <p>Explore learning materials, complete activities, and follow your learning progress.</p>
+            </div>
+            <span class="community-arrow" aria-hidden="true">↗</span>
           </article>
-
-          <article class="feature-card reveal">
-            <div class="feature-icon">▤</div>
-            <h3>For Teachers</h3>
-            <p>
-              Support learning activities, organize educational resources,
-              and guide students through their learning journey.
-            </p>
+          <article class="community-row reveal">
+            <span class="community-index">02</span>
+            <div class="community-copy">
+              <h3>Teachers</h3>
+              <p>Share lessons, organize class activities, and guide students through learning.</p>
+            </div>
+            <span class="community-arrow" aria-hidden="true">↗</span>
           </article>
-
-          <article class="feature-card reveal">
-            <div class="feature-icon">⌘</div>
-            <h3>For Administrators</h3>
-            <p>
-              Manage the learning environment and help maintain an organized
-              platform for the academic community.
-            </p>
+          <article class="community-row reveal">
+            <span class="community-index">03</span>
+            <div class="community-copy">
+              <h3>Administrators</h3>
+              <p>Manage users, educational content, and the learning environment.</p>
+            </div>
+            <span class="community-arrow" aria-hidden="true">↗</span>
           </article>
-
         </div>
       </div>
     </section>
 
-    <!-- ANDROID APP -->
-    <section class="premium-container" id="android">
-
-      <div class="android-section reveal">
-
-        <div class="android-content">
-
-          <span class="section-kicker">Learn beyond the desktop</span>
-
-          <h2>Your learning space, <span style="color:var(--purple)">on the go.</span></h2>
-
-          <p>
-            EqualLearn is designed with a mobile learning experience in mind.
-            Access your educational platform through a convenient mobile interface.
-          </p>
-
-          <div class="android-points">
-            <div class="android-point">
-              <span>✓</span>
-              Mobile-friendly learning experience
-            </div>
-            <div class="android-point">
-              <span>✓</span>
-              Convenient access to learning resources
-            </div>
-            <div class="android-point">
-              <span>✓</span>
-              Designed for everyday use
-            </div>
-          </div>
-
-         <a href="https://equallearn-downloads.pages.dev/" class="premium-btn premium-btn-primary">
-  Download Android APK ↗
-</a>
-          <small class="android-download-note">The APK download page will be available here soon.</small>
-
-        </div>
-
-        <div class="phone-visual" aria-label="Illustration of the EqualLearn mobile interface">
-
+    <!-- ANDROID / PWA INSTALL: the phone is the focal point -->
+    <section class="premium-container" id="android" aria-label="Install EqualLearn">
+      <div class="app-install-section reveal">
+        <div class="phone-visual" aria-label="EqualLearn mobile app preview">
           <div class="phone-frame">
             <div class="phone-screen">
-
               <div class="phone-notch"></div>
-
               <div class="phone-logo">E</div>
               <h4>EqualLearn</h4>
-              <p>Your learning journey starts here</p>
+              <p>Your learning space, anywhere.</p>
 
               <div class="phone-mini-card">
                 <strong>Gender Equality</strong>
                 <small>Continue your lesson</small>
-                <div class="phone-mini-bar">
-                  <span style="width:75%"></span>
-                </div>
+                <div class="phone-mini-bar"><span style="width:75%"></span></div>
               </div>
 
               <div class="phone-mini-card">
                 <strong>Social Awareness</strong>
                 <small>Learning module</small>
-                <div class="phone-mini-bar">
-                  <span style="width:48%"></span>
-                </div>
+                <div class="phone-mini-bar"><span style="width:48%"></span></div>
               </div>
 
-              <div class="phone-mini-card">
-                <strong>Respect & Inclusion</strong>
-                <small>Learning module</small>
-                <div class="phone-mini-bar">
-                  <span style="width:30%"></span>
-                </div>
-              </div>
-
+              <button class="phone-install-button" id="installAppButton" type="button">
+                Install EqualLearn <span aria-hidden="true">↗</span>
+              </button>
+              <p class="phone-install-hint" id="installAppHint" aria-live="polite">
+                Add EqualLearn to your device
+              </p>
             </div>
           </div>
-
         </div>
-
       </div>
     </section>
 
-    <!-- ABOUT -->
+    <!-- ABOUT: concise statement instead of another three-card section -->
     <section class="premium-section" id="about">
-      <div class="premium-container">
-
-        <div class="section-heading reveal">
-          <span class="section-kicker">Designed for education</span>
-          <h2>Learning should be <span style="color:var(--purple)">for everyone.</span></h2>
-          <p>
-            EqualLearn promotes a learning environment where access,
-            awareness, and participation matter.
-          </p>
-        </div>
-
-        <div class="about-grid">
-
-          <article class="about-card reveal">
-            <div class="about-card-icon">◎</div>
-            <h3>Inclusive Learning</h3>
-            <p>
-              Encourage an educational environment where everyone
-              can participate and learn.
-            </p>
-          </article>
-
-          <article class="about-card reveal">
-            <div class="about-card-icon">✦</div>
-            <h3>Awareness & Education</h3>
-            <p>
-              Support understanding through organized learning
-              materials and educational activities.
-            </p>
-          </article>
-
-          <article class="about-card reveal">
-            <div class="about-card-icon">↗</div>
-            <h3>Continuous Growth</h3>
-            <p>
-              Make learning a continuous journey through accessible
-              digital learning experiences.
-            </p>
-          </article>
-
-        </div>
-      </div>
-    </section>
-
-    <!-- CALL TO ACTION -->
-    <section class="premium-container cta-wrap">
-
-      <div class="premium-cta reveal">
-
-        <span class="section-kicker">Your next step starts here</span>
-
-        <h2>Make every learning opportunity count.</h2>
-
+      <div class="premium-container about-simple reveal">
+        <span class="section-kicker">Designed for education</span>
+        <h2>Learning should be <span>for everyone.</span></h2>
         <p>
-          Be part of a connected learning environment.
-          Start exploring EqualLearn today.
+          EqualLearn supports inclusive education through accessible learning resources,
+          awareness activities, and a connected digital classroom.
         </p>
-
-        <a class="premium-btn" href="register.html">
-          Get started with EqualLearn ↗
-        </a>
-
       </div>
     </section>
 
@@ -1918,7 +2261,7 @@ body[data-theme="dark"] {
 
         <div>
           <a class="premium-brand" href="index.html">
-            <span class="brand-icon">E</span>
+            <img class="brand-icon" src="assets/icons/equallearn-logo.png" alt="">
             <span class="brand-name">Equal<span>Learn</span></span>
           </a>
 
@@ -2039,438 +2382,354 @@ body[data-theme="dark"] {
   </script>
 
 
+
+  <script>
+    // PWA installation: browser support varies, so provide a clear fallback.
+    let equalLearnInstallPrompt = null;
+    const installAppButton = document.getElementById("installAppButton");
+    const installAppHint = document.getElementById("installAppHint");
+
+    window.addEventListener("beforeinstallprompt", event => {
+      event.preventDefault();
+      equalLearnInstallPrompt = event;
+      if (installAppHint) {
+        installAppHint.textContent = "Ready to install on this device";
+      }
+    });
+
+    if (installAppButton) {
+      installAppButton.addEventListener("click", async () => {
+        if (!equalLearnInstallPrompt) {
+          const isStandalone = window.matchMedia("(display-mode: standalone)").matches
+            || window.navigator.standalone === true;
+
+          if (installAppHint) {
+            installAppHint.textContent = isStandalone
+              ? "EqualLearn is already installed on this device."
+              : "Open your browser menu and choose Install app or Add to Home Screen.";
+          }
+          return;
+        }
+
+        installAppButton.disabled = true;
+        equalLearnInstallPrompt.prompt();
+
+        try {
+          const choice = await equalLearnInstallPrompt.userChoice;
+          if (installAppHint) {
+            installAppHint.textContent = choice.outcome === "accepted"
+              ? "Thanks for installing EqualLearn!"
+              : "Installation was cancelled. You can try again anytime.";
+          }
+        } catch (error) {
+          console.error("EqualLearn installation prompt failed:", error);
+          if (installAppHint) {
+            installAppHint.textContent = "Open the browser menu to install EqualLearn.";
+          }
+        } finally {
+          equalLearnInstallPrompt = null;
+          installAppButton.disabled = false;
+        }
+      });
+    }
+
+    window.addEventListener("appinstalled", () => {
+      if (installAppHint) {
+        installAppHint.textContent = "EqualLearn has been installed.";
+      }
+      if (installAppButton) {
+        installAppButton.textContent = "Installed ✓";
+        installAppButton.disabled = true;
+      }
+    });
+  </script>
+
 <script type="module">
 import * as THREE from
   "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js";
 
-/* =====================================================
-   EQUALLEARN — INTERACTIVE 3D EXPERIENCE
-===================================================== */
+/* ==========================================================
+   EQUALLEARN — PAGE-WIDE SCATTERED 3D OBJECTS
+   Beginner notes:
+   - pageCanvas: the single canvas covering the screen.
+   - camera: what part of the 3D world the visitor sees.
+   - pageWorldHeight: the full webpage converted to 3D units.
+   - scrollTargetY: camera position based on the visitor's scroll.
+   - floatingObjects: every decorative object placed throughout the page.
+========================================================== */
 
-const container = document.getElementById("equalLearn3D");
-const canvas = document.getElementById("equalLearn3DCanvas");
-const dashboard = container?.querySelector(".dashboard-preview");
+const pageCanvas = document.getElementById("equalLearnPage3DCanvas");
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-if (
-  container &&
-  canvas &&
-  dashboard &&
-  !window.matchMedia("(prefers-reduced-motion: reduce)").matches
-) {
+if (pageCanvas && !reduceMotion) {
   let renderer;
 
   try {
     renderer = new THREE.WebGLRenderer({
-      canvas,
+      canvas: pageCanvas,
       alpha: true,
       antialias: true,
-      powerPreference: "high-performance"
+      powerPreference: "low-power"
     });
   } catch (error) {
-    console.warn("EqualLearn 3D unavailable:", error);
+    console.warn("EqualLearn page-wide 3D is unavailable:", error);
   }
 
   if (renderer) {
     const scene = new THREE.Scene();
+    const VIEW_HEIGHT = 10;
+    const camera = new THREE.OrthographicCamera(-5, 5, 5, -5, 0.1, 100);
+    camera.position.set(0, 0, 24);
 
-    const camera = new THREE.PerspectiveCamera(
-      38,
-      1,
-      0.1,
-      100
-    );
-
-    camera.position.set(0, 0, 10);
-
-    renderer.setPixelRatio(
-      Math.min(window.devicePixelRatio || 1, 2)
-    );
-
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
     renderer.setClearColor(0x000000, 0);
-
     renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-    /* LIGHTING */
+    // Soft lighting makes the 3D objects glossy but not too bright.
+    scene.add(new THREE.AmbientLight(0xffffff, 1.25));
 
-    scene.add(
-      new THREE.AmbientLight(0xffffff, 1.7)
-    );
+    const purpleLight = new THREE.PointLight(0xa98cff, 34, 40);
+    purpleLight.position.set(-7, 5, 10);
+    scene.add(purpleLight);
 
-    const mainLight = new THREE.PointLight(
-      0xb69aff,
-      45,
-      30
-    );
-
-    mainLight.position.set(-4, 5, 7);
-    scene.add(mainLight);
-
-    const blueLight = new THREE.PointLight(
-      0x91c8ff,
-      28,
-      25
-    );
-
-    blueLight.position.set(5, -3, 4);
+    const blueLight = new THREE.PointLight(0x82baff, 27, 40);
+    blueLight.position.set(7, -4, 8);
     scene.add(blueLight);
 
-    /* MATERIALS */
+    const materials = [
+      new THREE.MeshPhysicalMaterial({ color: 0x9674ed, metalness: .28, roughness: .22, clearcoat: 1 }),
+      new THREE.MeshPhysicalMaterial({ color: 0xb9a5ff, metalness: .18, roughness: .2, clearcoat: 1 }),
+      new THREE.MeshPhysicalMaterial({ color: 0x78a9ed, metalness: .3, roughness: .24, clearcoat: 1 }),
+      new THREE.MeshPhysicalMaterial({ color: 0xe0d9ff, metalness: .12, roughness: .25, clearcoat: 1 })
+    ];
 
-    const purpleMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0x9575ed,
-      metalness: .25,
-      roughness: .22,
-      clearcoat: 1,
-      clearcoatRoughness: .15
-    });
+    const floatingObjects = [];
+    const objectGroup = new THREE.Group();
+    scene.add(objectGroup);
 
-    const lavenderMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0xc9baff,
-      metalness: .15,
-      roughness: .2,
-      clearcoat: 1
-    });
-
-    const blueMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0x8dbbff,
-      metalness: .3,
-      roughness: .22,
-      clearcoat: 1
-    });
-
-    const whiteMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0xffffff,
-      metalness: .1,
-      roughness: .18,
-      clearcoat: 1
-    });
-
-    /* 3D OBJECT GROUP */
-
-    const world = new THREE.Group();
-    scene.add(world);
-
-    const interactiveObjects = [];
-
-    function addInteractive(mesh, position, scale = 1) {
-      mesh.position.set(...position);
-      mesh.scale.setScalar(scale);
-
-      mesh.userData.baseY = mesh.position.y;
+    // Each object gets a horizontal position and a vertical page position (0 = top, 1 = bottom).
+    function addPageObject(geometry, material, xRatio, pageRatio, size, rotation = [0, 0, 0]) {
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.userData.xRatio = xRatio;
+      mesh.userData.pageRatio = pageRatio;
+      mesh.userData.baseSize = size;
+      mesh.userData.baseRotation = rotation;
       mesh.userData.phase = Math.random() * Math.PI * 2;
-
-      world.add(mesh);
-      interactiveObjects.push(mesh);
-
+      mesh.userData.floatAmount = 0.12 + Math.random() * 0.20;
+      objectGroup.add(mesh);
+      floatingObjects.push(mesh);
       return mesh;
     }
 
-    /* FLOATING TORUS */
+    // 36 objects are spread from the top hero to the footer.
+    // xRatio runs from -1 (left edge) to +1 (right edge).
+    const layouts = [
+      [-.86,.04,.52],[-.57,.07,.25],[.76,.09,.48],[.43,.13,.32],
+      [.91,.17,.30],[-.78,.20,.42],[-.34,.24,.26],[.63,.27,.44],
+      [-.91,.31,.31],[.82,.34,.52],[-.55,.38,.35],[.36,.41,.27],
+      [.94,.45,.38],[-.82,.48,.50],[-.42,.52,.28],[.70,.55,.36],
+      [-.94,.59,.34],[.51,.62,.50],[.86,.66,.28],[-.66,.69,.40],
+      [.33,.72,.30],[-.88,.75,.48],[.77,.78,.38],[-.47,.81,.28],
+      [.92,.84,.44],[-.73,.87,.32],[.49,.90,.50],[-.30,.93,.27],
+      [.82,.96,.38],[-.91,.99,.31],[.18,.18,.22],[-.15,.37,.23],
+      [.12,.56,.22],[-.10,.68,.21],[.22,.82,.24],[-.18,.94,.22]
+    ];
 
-    const ring = new THREE.Mesh(
-      new THREE.TorusGeometry(1.05, .12, 24, 100),
-      lavenderMaterial
-    );
+    layouts.forEach((layout, index) => {
+      const [x, y, size] = layout;
+      const material = materials[index % materials.length];
+      let geometry;
 
-    addInteractive(ring, [-3.2, 1.65, -.8], .75);
+      switch (index % 6) {
+        case 0:
+          geometry = new THREE.TorusGeometry(.62, .10, 18, 64);
+          break;
+        case 1:
+          geometry = new THREE.BoxGeometry(.72, .72, .72);
+          break;
+        case 2:
+          geometry = new THREE.OctahedronGeometry(.58, 0);
+          break;
+        case 3:
+          geometry = new THREE.IcosahedronGeometry(.56, 0);
+          break;
+        case 4:
+          geometry = new THREE.TorusKnotGeometry(.42, .11, 72, 10);
+          break;
+        default:
+          geometry = new THREE.SphereGeometry(.48, 24, 20);
+      }
 
-    /* SECOND RING */
+      const mesh = addPageObject(
+        geometry,
+        material,
+        x,
+        y,
+        size,
+        [Math.random() * .8, Math.random() * .8, Math.random() * .8]
+      );
+      mesh.userData.spin = .0015 + (index % 5) * .0007;
+      mesh.userData.depth = (index % 4) * -0.7;
+    });
 
-    const ring2 = new THREE.Mesh(
-      new THREE.TorusGeometry(.62, .09, 20, 80),
-      purpleMaterial
-    );
+    // Tiny stars/dots create depth between the larger floating objects.
+    const PARTICLE_COUNT = 230;
+    const particlePositions = new Float32Array(PARTICLE_COUNT * 3);
+    const particlePageRatios = [];
+    const particleXPositions = [];
 
-    addInteractive(ring2, [3.25, -1.65, -.6], .9);
-
-    /* 3D BOOK OBJECT */
-
-    const book = new THREE.Group();
-
-    const bookCover = new THREE.Mesh(
-      new THREE.BoxGeometry(1.05, 1.35, .18),
-      purpleMaterial
-    );
-
-    const bookPages = new THREE.Mesh(
-      new THREE.BoxGeometry(.94, 1.25, .1),
-      whiteMaterial
-    );
-
-    bookPages.position.z = .12;
-
-    book.add(bookCover, bookPages);
-
-    addInteractive(book, [-3.2, -1.3, .1], .75);
-
-    /* FLOATING CUBE */
-
-    const cube = new THREE.Mesh(
-      new THREE.BoxGeometry(.75, .75, .75),
-      blueMaterial
-    );
-
-    addInteractive(cube, [3.1, 1.65, -.5], .75);
-
-    /* FLOATING SPHERES */
-
-    const sphere1 = new THREE.Mesh(
-      new THREE.SphereGeometry(.25, 32, 32),
-      lavenderMaterial
-    );
-
-    addInteractive(sphere1, [-2.1, 2.6, -.2]);
-
-    const sphere2 = new THREE.Mesh(
-      new THREE.SphereGeometry(.18, 32, 32),
-      blueMaterial
-    );
-
-    addInteractive(sphere2, [2.1, -2.4, .2]);
-
-    const sphere3 = new THREE.Mesh(
-      new THREE.SphereGeometry(.13, 24, 24),
-      purpleMaterial
-    );
-
-    addInteractive(sphere3, [3.8, .1, -.4]);
-
-    /* PARTICLES */
-
-    const particleCount = 100;
-    const particlePositions = new Float32Array(
-      particleCount * 3
-    );
-
-    for (let i = 0; i < particleCount; i++) {
-      particlePositions[i * 3] =
-        (Math.random() - .5) * 10;
-
-      particlePositions[i * 3 + 1] =
-        (Math.random() - .5) * 7;
-
-      particlePositions[i * 3 + 2] =
-        -2 - Math.random() * 4;
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const pageRatio = (i + Math.random() * .8) / PARTICLE_COUNT;
+      const xRatio = (Math.random() * 1.9) - .95;
+      particlePageRatios.push(pageRatio);
+      particleXPositions.push(xRatio);
+      particlePositions[i * 3] = 0;
+      particlePositions[i * 3 + 1] = 0;
+      particlePositions[i * 3 + 2] = -2 - Math.random() * 5;
     }
 
     const particleGeometry = new THREE.BufferGeometry();
-
-    particleGeometry.setAttribute(
-      "position",
-      new THREE.BufferAttribute(particlePositions, 3)
-    );
-
+    particleGeometry.setAttribute("position", new THREE.BufferAttribute(particlePositions, 3));
     const particles = new THREE.Points(
       particleGeometry,
       new THREE.PointsMaterial({
-        color: 0x9b80ed,
+        color: 0xb9a5ff,
         size: .035,
         transparent: true,
-        opacity: .65,
+        opacity: .58,
         sizeAttenuation: true
       })
     );
-
     scene.add(particles);
 
-    /* POINTER STATE */
-
-    const pointer = new THREE.Vector2(0, 0);
-    const targetRotation = new THREE.Vector2(0, 0);
-
-    const raycaster = new THREE.Raycaster();
-
-    let hoveredObject = null;
-    let active = true;
-    let frame = 0;
-
+    let pageHeight = 0;
+    let viewportWidth = window.innerWidth;
+    let viewportHeight = window.innerHeight;
+    let pageWorldHeight = VIEW_HEIGHT;
+    let targetCameraY = 0;
+    let active = !document.hidden;
+    let animationFrame = 0;
     const clock = new THREE.Clock();
 
-    function resize() {
-      const width = container.clientWidth;
-      const height = container.clientHeight;
+    function measurePage() {
+      viewportWidth = Math.max(window.innerWidth, 1);
+      viewportHeight = Math.max(window.innerHeight, 1);
+      pageHeight = Math.max(
+        document.documentElement.scrollHeight,
+        document.body.scrollHeight,
+        viewportHeight
+      );
+      pageWorldHeight = (pageHeight / viewportHeight) * VIEW_HEIGHT;
 
-      if (!width || !height) return;
-
-      camera.aspect = width / height;
+      const aspect = viewportWidth / viewportHeight;
+      const viewWidth = VIEW_HEIGHT * aspect;
+      camera.left = -viewWidth / 2;
+      camera.right = viewWidth / 2;
+      camera.top = VIEW_HEIGHT / 2;
+      camera.bottom = -VIEW_HEIGHT / 2;
       camera.updateProjectionMatrix();
 
-      renderer.setSize(width, height, false);
-    }
+      renderer.setSize(viewportWidth, viewportHeight, false);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
 
-    resize();
+      // Position every object relative to the whole document, not just the hero.
+      floatingObjects.forEach(object => {
+        object.position.x = object.userData.xRatio * viewWidth * .5;
+        object.position.y = pageWorldHeight * (.5 - object.userData.pageRatio);
+        object.userData.baseY = object.position.y;
+        object.position.z = object.userData.depth;
+        const mobileScale = viewportWidth < 700 ? .72 : 1;
+        object.scale.setScalar(object.userData.baseSize * mobileScale);
+        object.rotation.set(...object.userData.baseRotation);
+      });
 
-    const resizeObserver = new ResizeObserver(resize);
-    resizeObserver.observe(container);
-
-    /* MOUSE / TOUCH */
-
-    function updatePointer(event) {
-      const rect = container.getBoundingClientRect();
-
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-
-      pointer.x = (x / rect.width) * 2 - 1;
-      pointer.y = -(y / rect.height) * 2 + 1;
-
-      targetRotation.x = pointer.y * .13;
-      targetRotation.y = pointer.x * .18;
-    }
-
-    container.addEventListener("pointermove", event => {
-      updatePointer(event);
-
-      dashboard.style.transform =
-        `rotateY(${-pointer.x * 3.5}deg) rotateX(${pointer.y * 2.5}deg)`;
-    });
-
-    container.addEventListener("pointerleave", () => {
-      pointer.set(0, 0);
-      targetRotation.set(0, 0);
-
-      dashboard.style.transform = "";
-      hoveredObject = null;
-      container.style.cursor = "";
-    });
-
-    /* CLICK INTERACTION */
-
-    container.addEventListener("click", event => {
-      const rect = container.getBoundingClientRect();
-
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-
-      pointer.x = (x / rect.width) * 2 - 1;
-      pointer.y = -(y / rect.height) * 2 + 1;
-
-      raycaster.setFromCamera(pointer, camera);
-
-      const hits = raycaster.intersectObjects(
-        interactiveObjects,
-        true
-      );
-
-      if (!hits.length) return;
-
-      let selected = hits[0].object;
-
-      while (
-        selected.parent &&
-        !interactiveObjects.includes(selected)
-      ) {
-        selected = selected.parent;
+      const positions = particleGeometry.attributes.position.array;
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        positions[i * 3] = particleXPositions[i] * viewWidth * .5;
+        positions[i * 3 + 1] = pageWorldHeight * (.5 - particlePageRatios[i]);
       }
+      particleGeometry.attributes.position.needsUpdate = true;
 
-      if (!interactiveObjects.includes(selected)) return;
-
-      selected.userData.phase += Math.PI * 1.5;
-
-      selected.scale.multiplyScalar(1.12);
-
-      setTimeout(() => {
-        selected.scale.divideScalar(1.12);
-      }, 180);
-
-      selected.rotation.y += .5;
-    });
-
-    /* HOVER DETECTION */
-
-    function updateHover() {
-      raycaster.setFromCamera(pointer, camera);
-
-      const hits = raycaster.intersectObjects(
-        interactiveObjects,
-        true
-      );
-
-      hoveredObject = hits.length
-        ? hits[0].object
-        : null;
-
-      container.style.cursor = hoveredObject
-        ? "pointer"
-        : "";
+      updateScrollTarget();
     }
 
-    /* ANIMATION */
+    function updateScrollTarget() {
+      const scrollRatio = Math.min(window.scrollY / viewportHeight, pageHeight / viewportHeight);
+      targetCameraY = pageWorldHeight / 2 - (scrollRatio * VIEW_HEIGHT) - VIEW_HEIGHT / 2;
+    }
 
     function animate() {
       if (!active) return;
-
-      frame = requestAnimationFrame(animate);
-
+      animationFrame = requestAnimationFrame(animate);
       const elapsed = clock.getElapsedTime();
 
-      world.rotation.y +=
-        (targetRotation.x - world.rotation.y) * .025;
+      camera.position.y += (targetCameraY - camera.position.y) * .09;
 
-      world.rotation.x +=
-        (targetRotation.y - world.rotation.x) * .025;
-
-      interactiveObjects.forEach((object, index) => {
+      floatingObjects.forEach(object => {
         const phase = object.userData.phase;
-
         object.position.y =
           object.userData.baseY +
-          Math.sin(elapsed * .85 + phase) * .12;
-
-        if (object !== hoveredObject) {
-          object.rotation.x += .002 + index * .00005;
-          object.rotation.y += .003 + index * .00008;
-        }
+          Math.sin(elapsed * .7 + phase) * object.userData.floatAmount;
+        object.rotation.x += object.userData.spin;
+        object.rotation.y += object.userData.spin * 1.25;
       });
 
-      particles.rotation.y = elapsed * .025;
-      particles.rotation.x = Math.sin(elapsed * .2) * .04;
-
-      updateHover();
-
+      particles.rotation.z = Math.sin(elapsed * .12) * .015;
       renderer.render(scene, camera);
     }
 
-    /* PAUSE WHEN OUTSIDE VIEWPORT */
-
-    const visibilityObserver = new IntersectionObserver(entries => {
-      active = entries[0].isIntersecting;
-
-      if (active) {
+    function startAnimation() {
+      if (active && !animationFrame) {
         clock.start();
         animate();
-      } else {
-        cancelAnimationFrame(frame);
       }
-    }, {
-      threshold: 0.05
-    });
+    }
 
-    visibilityObserver.observe(container);
+    function stopAnimation() {
+      active = false;
+      cancelAnimationFrame(animationFrame);
+      animationFrame = 0;
+    }
 
-    /* CLEANUP IF PAGE IS UNLOADED */
+    function onVisibilityChange() {
+      active = !document.hidden;
+      if (active) startAnimation();
+      else stopAnimation();
+    }
+
+    measurePage();
+    camera.position.y = targetCameraY;
+    window.addEventListener("resize", measurePage, { passive: true });
+    window.addEventListener("scroll", updateScrollTarget, { passive: true });
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    // Re-measure if fonts/images/content change the total webpage height.
+    const pageObserver = new ResizeObserver(() => measurePage());
+    pageObserver.observe(document.body);
+
+    startAnimation();
 
     window.addEventListener("pagehide", () => {
-      cancelAnimationFrame(frame);
-      resizeObserver.disconnect();
-      visibilityObserver.disconnect();
-
+      stopAnimation();
+      pageObserver.disconnect();
+      window.removeEventListener("resize", measurePage);
+      window.removeEventListener("scroll", updateScrollTarget);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
       scene.traverse(object => {
         object.geometry?.dispose();
-
         if (object.material) {
-          if (Array.isArray(object.material)) {
-            object.material.forEach(material => material.dispose());
-          } else {
-            object.material.dispose();
-          }
+          if (Array.isArray(object.material)) object.material.forEach(item => item.dispose());
+          else object.material.dispose();
         }
       });
-
       renderer.dispose();
     }, { once: true });
 
-    console.info("EqualLearn Interactive 3D initialized.");
+    console.info("EqualLearn page-wide scattered 3D initialized:", {
+      objects: floatingObjects.length,
+      particles: PARTICLE_COUNT,
+      pageHeight
+    });
   }
 }
 </script>
@@ -2510,4 +2769,3 @@ if (
 
 </body>
 </html>
-

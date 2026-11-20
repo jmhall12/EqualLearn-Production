@@ -1,14 +1,10 @@
-﻿
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script id="EQUALLEARN_FORCE_DARK_BOOTSTRAP">document.documentElement.dataset.theme="dark";document.documentElement.style.colorScheme="dark";</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#0b1020">
-
+  <meta name="theme-color" content="#171821">
   <title>Classwork | EqualLearn</title>
-
   <link rel="stylesheet" href="../assets/css/style.css">
   <link rel="stylesheet" href="../assets/css/equallearn.css">
   <link rel="manifest" href="../manifest.webmanifest">
@@ -29,689 +25,411 @@
     .cw-page {
       width: 100%;
       min-height: 100%;
-      padding: 28px clamp(16px, 3.5vw, 42px) 48px;
+      padding: 17px clamp(14px, 2.5vw, 32px) 34px;
       color: var(--cw-text);
       background:
-        radial-gradient(circle at 90% 0%, rgba(128,104,244,.12), transparent 30%),
+        radial-gradient(circle at 90% 0%, rgba(128,104,244,.10), transparent 30%),
         var(--cw-bg);
     }
 
-    .cw-container {
-      width: 100%;
-      max-width: 1250px;
-      margin: 0 auto;
-    }
+    .cw-container { width: 100%; max-width: 1320px; margin: 0 auto; }
 
     .cw-breadcrumb {
       display: flex;
+      align-items: center;
       flex-wrap: wrap;
-      gap: 9px;
-      margin-bottom: 25px;
-      color: var(--cw-muted);
-      font-size: 12px;
-    }
-
-    .cw-breadcrumb a {
-      color: var(--cw-purple-light);
-      text-decoration: none;
-    }
-
-    .cw-hero {
-      position: relative;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 24px;
-      padding: clamp(25px, 4vw, 42px);
-      margin-bottom: 25px;
-      overflow: hidden;
-      background: linear-gradient(115deg, #30245e, #5140a5 58%, #7659e9);
-      border: 1px solid rgba(194,177,255,.22);
-      border-radius: 24px;
-      box-shadow: 0 18px 45px rgba(0,0,0,.17);
-    }
-
-    .cw-hero::after {
-      content: "";
-      position: absolute;
-      width: 320px;
-      height: 320px;
-      right: -90px;
-      top: -170px;
-      border: 1px solid rgba(255,255,255,.13);
-      border-radius: 50%;
-      box-shadow: 0 0 0 35px rgba(255,255,255,.025),
-                  0 0 0 75px rgba(255,255,255,.02);
-      pointer-events: none;
-    }
-
-    .cw-hero-copy {
-      position: relative;
-      z-index: 1;
-      max-width: 700px;
-    }
-
-    .cw-eyebrow {
-      display: inline-flex;
-      align-items: center;
       gap: 8px;
-      padding: 8px 13px;
-      margin-bottom: 17px;
-      color: #f2edff;
-      background: rgba(255,255,255,.13);
-      border: 1px solid rgba(255,255,255,.13);
-      border-radius: 30px;
-      font-size: 10px;
-      font-weight: 850;
-      letter-spacing: 1.1px;
-      text-transform: uppercase;
-    }
-
-    .cw-eyebrow::before {
-      content: "";
-      width: 7px;
-      height: 7px;
-      background: #72f0c3;
-      border-radius: 50%;
-      box-shadow: 0 0 10px #72f0c3;
-    }
-
-    .cw-hero h1 {
-      margin: 0;
-      color: white;
-      font-size: clamp(28px, 4vw, 43px);
-      line-height: 1.12;
-      font-weight: 900;
-      letter-spacing: -1.5px;
-    }
-
-    .cw-hero p {
-      max-width: 620px;
-      margin: 14px 0 0;
-      color: rgba(255,255,255,.82);
-      font-size: 14px;
-      line-height: 1.8;
-    }
-
-    .cw-hero-icon {
-      position: relative;
-      z-index: 1;
-      display: grid;
-      place-items: center;
-      flex: 0 0 105px;
-      width: 105px;
-      height: 105px;
-      color: white;
-      background: rgba(255,255,255,.12);
-      border: 1px solid rgba(255,255,255,.2);
-      border-radius: 27px;
-      font-size: 49px;
-      transform: rotate(5deg);
-    }
-
-    .cw-stats {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0,1fr));
-      gap: 15px;
-      margin-bottom: 34px;
-    }
-
-    .cw-stat {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      min-width: 0;
-      padding: 18px;
-      background: linear-gradient(145deg, #262738, #20212e);
-      border: 1px solid var(--cw-border);
-      border-radius: 17px;
-    }
-
-    .cw-stat-icon {
-      display: grid;
-      place-items: center;
-      flex: 0 0 45px;
-      width: 45px;
-      height: 45px;
-      background: rgba(128,104,244,.17);
-      border-radius: 14px;
-      font-size: 21px;
-    }
-
-    .cw-stat-label {
+      margin: 0 0 13px;
       color: var(--cw-muted);
       font-size: 11px;
-      font-weight: 650;
     }
 
-    .cw-stat-value {
-      margin-top: 5px;
-      color: white;
-      font-size: 23px;
-      font-weight: 850;
-    }
+    .cw-breadcrumb a { color: var(--cw-purple-light); text-decoration: none; }
 
-    .cw-section-heading {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 15px;
-      margin: 34px 0 17px;
-    }
-
-    .cw-section-title {
-      display: flex;
-      align-items: center;
-      gap: 13px;
-    }
-
-    .cw-section-icon {
-      display: grid;
-      place-items: center;
-      flex: 0 0 43px;
-      width: 43px;
-      height: 43px;
-      color: var(--cw-purple-light);
-      background: rgba(128,104,244,.16);
-      border: 1px solid rgba(169,154,240,.16);
-      border-radius: 14px;
-      font-size: 19px;
-    }
-
-    .cw-section-title h2 {
-      margin: 0;
-      color: white;
-      font-size: 20px;
-      font-weight: 850;
-      letter-spacing: -.5px;
-    }
-
-    .cw-section-title p {
-      margin: 4px 0 0;
-      color: var(--cw-muted);
-      font-size: 12px;
-    }
-
+    /* Five compact, clickable category cards in one horizontal strip. */
     .cw-category-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0,1fr));
-      gap: 14px;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      width: 100%;
+      margin: 0 0 17px;
     }
 
     .cw-category {
       display: flex;
       align-items: center;
-      gap: 13px;
+      gap: 10px;
       min-width: 0;
-      padding: 17px;
+      min-height: 68px;
+      padding: 10px 12px;
       color: var(--cw-text);
-      background: #222330;
+      background: linear-gradient(145deg, #262738, #20212e);
       border: 1px solid var(--cw-border);
-      border-radius: 17px;
+      border-radius: 14px;
       text-align: left;
       cursor: pointer;
-      transition: .2s ease;
+      transition: background .18s ease, border-color .18s ease, transform .18s ease, box-shadow .18s ease;
     }
 
     .cw-category:hover,
     .cw-category.active {
-      background: rgba(128,104,244,.17);
-      border-color: rgba(169,154,240,.45);
-      transform: translateY(-2px);
+      background: rgba(128,104,244,.19);
+      border-color: rgba(169,154,240,.55);
+      box-shadow: 0 7px 20px rgba(66,48,150,.13);
     }
+
+    .cw-category:hover { transform: translateY(-1px); }
+    .cw-category:focus-visible { outline: 2px solid var(--cw-purple-light); outline-offset: 2px; }
 
     .cw-category-icon {
       display: grid;
       place-items: center;
-      flex: 0 0 43px;
-      width: 43px;
-      height: 43px;
+      flex: 0 0 36px;
+      width: 36px;
+      height: 36px;
+      color: var(--cw-purple-light);
       background: rgba(128,104,244,.18);
-      border-radius: 13px;
-      font-size: 21px;
+      border: 1px solid rgba(169,154,240,.12);
+      border-radius: 11px;
     }
 
+    .cw-category-icon svg { width: 19px; height: 19px; }
+    .cw-category-copy { display: block; min-width: 0; }
     .cw-category strong {
       display: block;
-      font-size: 12px;
+      color: #f5f3ff;
+      font-size: 11px;
       font-weight: 800;
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .cw-category small {
-      display: block;
+    .cw-category-count {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
       margin-top: 4px;
       color: var(--cw-muted);
       font-size: 10px;
+      line-height: 1.2;
     }
 
-    .cw-toolbar {
+    .cw-category-count strong {
+      display: inline;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 850;
+    }
+
+    .cw-section-heading {
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 12px;
-      margin: 19px 0;
+      margin: 0 0 10px;
     }
+
+    .cw-section-title h2 {
+      margin: 0;
+      color: #fff;
+      font-size: 17px;
+      font-weight: 850;
+      letter-spacing: -.35px;
+    }
+
+    .cw-section-title p {
+      margin: 3px 0 0;
+      color: var(--cw-muted);
+      font-size: 11px;
+    }
+
+    .cw-toolbar { display: flex; align-items: center; gap: 9px; margin: 0 0 12px; }
 
     .cw-search {
       display: flex;
       align-items: center;
       flex: 1;
       min-width: 0;
-      gap: 10px;
-      padding: 0 16px;
+      gap: 9px;
+      padding: 0 12px;
       background: #222330;
       border: 1px solid var(--cw-border);
-      border-radius: 13px;
+      border-radius: 11px;
     }
 
-    .cw-search span {
-      color: var(--cw-muted);
-      font-size: 18px;
-    }
+    .cw-search-icon { display: grid; place-items: center; color: var(--cw-muted); }
+    .cw-search-icon svg { width: 17px; height: 17px; }
 
     .cw-search input {
       width: 100%;
       min-width: 0;
-      height: 49px;
+      height: 41px;
       color: white;
       background: transparent;
       border: 0;
       outline: none;
-      font-size: 13px;
+      font-size: 12px;
     }
 
-    .cw-search input::placeholder {
-      color: #9290a5;
-    }
+    .cw-search input::placeholder { color: #9290a5; }
 
     .cw-filter {
-      min-height: 49px;
-      padding: 0 14px;
+      min-height: 41px;
+      padding: 0 12px;
       color: white;
       background: #222330;
       border: 1px solid var(--cw-border);
-      border-radius: 13px;
+      border-radius: 11px;
       outline: none;
-      font-size: 12px;
+      font-size: 11px;
       cursor: pointer;
     }
 
-    .cw-feed {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0,1fr));
-      gap: 15px;
-    }
+    /* Activity entries are compact horizontal rows, not tall dashboard cards. */
+    .cw-feed { display: flex; flex-direction: column; gap: 9px; }
 
     .cw-card {
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(175px, 235px);
+      grid-template-rows: auto auto auto;
+      align-items: center;
+      gap: 5px 17px;
       min-width: 0;
-      padding: 20px;
+      padding: 13px 15px;
       background: linear-gradient(145deg, #262738, #20212e);
       border: 1px solid var(--cw-border);
-      border-radius: 18px;
-      transition: .2s ease;
+      border-radius: 14px;
+      transition: border-color .18s ease, background .18s ease;
     }
 
-    .cw-card:hover {
-      border-color: rgba(169,154,240,.3);
-      transform: translateY(-2px);
-      box-shadow: 0 12px 28px rgba(0,0,0,.12);
-    }
-
-    .cw-card-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 12px;
-    }
+    .cw-card:hover { border-color: rgba(169,154,240,.35); background: #28293a; }
+    .cw-card-top { grid-column: 1; grid-row: 1; min-width: 0; }
 
     .cw-card-category {
       display: inline-flex;
       align-items: center;
-      gap: 7px;
+      gap: 6px;
       color: var(--cw-purple-light);
-      font-size: 10px;
+      font-size: 9px;
       font-weight: 850;
-      letter-spacing: .8px;
+      letter-spacing: .65px;
       text-transform: uppercase;
     }
 
+    .cw-inline-icon { display: inline-block; width: 14px; height: 14px; flex: 0 0 auto; vertical-align: middle; }
     .cw-card h3 {
-      margin: 15px 0 8px;
+      grid-column: 1;
+      grid-row: 2;
+      margin: 0;
       color: white;
-      font-size: 17px;
+      font-size: 14px;
       font-weight: 850;
-      line-height: 1.4;
+      line-height: 1.35;
       overflow-wrap: anywhere;
     }
 
     .cw-card-description {
+      grid-column: 1;
+      grid-row: 3;
       display: -webkit-box;
       overflow: hidden;
       -webkit-box-orient: vertical;
-      -webkit-line-clamp: 3;
-      min-height: 57px;
+      -webkit-line-clamp: 2;
+      min-height: 0;
+      margin: 0;
       color: var(--cw-muted);
-      font-size: 12px;
-      line-height: 1.65;
+      font-size: 11px;
+      line-height: 1.5;
       overflow-wrap: anywhere;
     }
 
     .cw-card-meta {
+      grid-column: 2;
+      grid-row: 1 / span 2;
       display: flex;
-      flex-wrap: wrap;
-      gap: 8px 15px;
-      margin-top: 17px;
-      padding-top: 14px;
-      border-top: 1px solid var(--cw-border);
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+      min-width: 0;
+      margin: 0;
+      padding: 0 0 0 14px;
+      border: 0;
+      border-left: 1px solid var(--cw-border);
       color: var(--cw-muted);
       font-size: 10px;
     }
 
+    .cw-card-meta span { display: inline-flex; align-items: center; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
+    .cw-card-meta svg { width: 13px; height: 13px; flex: 0 0 13px; color: var(--cw-purple-light); }
+
     .cw-card-footer {
+      grid-column: 2;
+      grid-row: 3;
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-end;
       align-items: center;
-      gap: 12px;
-      margin-top: 17px;
+      gap: 9px;
+      margin: 0;
     }
 
     .cw-status {
       display: inline-flex;
       align-items: center;
-      padding: 6px 10px;
+      padding: 5px 8px;
       color: #c9bdff;
       background: rgba(128,104,244,.15);
       border-radius: 30px;
-      font-size: 10px;
+      font-size: 9px;
       font-weight: 800;
+      white-space: nowrap;
     }
 
-    .cw-status.pending {
-      color: #ffd58a;
-      background: rgba(240,174,68,.13);
-    }
-
-    .cw-status.overdue {
-      color: #ff9eac;
-      background: rgba(255,92,117,.13);
-    }
+    .cw-status.pending { color: #ffd58a; background: rgba(240,174,68,.13); }
+    .cw-status.overdue { color: #ff9eac; background: rgba(255,92,117,.13); }
 
     .cw-open {
       display: inline-flex;
       justify-content: center;
       align-items: center;
-      min-height: 38px;
-      padding: 0 15px;
+      min-height: 31px;
+      padding: 0 11px;
       color: white;
       background: linear-gradient(120deg,#8068f4,#684fe0);
       border: 0;
-      border-radius: 11px;
-      font-size: 11px;
+      border-radius: 9px;
+      font-size: 10px;
       font-weight: 800;
       text-decoration: none;
+      white-space: nowrap;
       cursor: pointer;
     }
 
-    .cw-open:hover {
-      filter: brightness(1.1);
-    }
+    .cw-open:hover { filter: brightness(1.1); }
 
     .cw-state {
-      grid-column: 1 / -1;
-      padding: 45px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 35px 18px;
       color: var(--cw-muted);
       background: #222330;
       border: 1px dashed rgba(255,255,255,.12);
-      border-radius: 17px;
+      border-radius: 14px;
       text-align: center;
     }
 
-    .cw-state-icon {
-      margin-bottom: 12px;
-      font-size: 32px;
-    }
-
-    .cw-state h3 {
-      margin: 0 0 7px;
-      color: white;
-      font-size: 16px;
-    }
-
-    .cw-state p {
-      margin: 0;
-      font-size: 12px;
-      line-height: 1.6;
-    }
+    .cw-state-icon { display: grid; place-items: center; margin-bottom: 10px; color: var(--cw-purple-light); }
+    .cw-state-svg { width: 27px; height: 27px; }
+    .cw-state h3 { margin: 0 0 6px; color: white; font-size: 14px; }
+    .cw-state p { margin: 0; font-size: 11px; line-height: 1.55; }
 
     .cw-footer {
-      margin-top: 42px;
-      padding: 22px 10px 0;
+      margin-top: 25px;
+      padding: 15px 8px 0;
       color: var(--cw-muted);
       border-top: 1px solid var(--cw-border);
-      font-size: 11px;
+      font-size: 10px;
       text-align: center;
     }
 
-    .cw-footer span {
-      color: var(--cw-purple-light);
-    }
+    .cw-footer span { color: var(--cw-purple-light); }
 
-    @media (max-width: 950px) {
-      .cw-stats,
+    @media (max-width: 1050px) {
       .cw-category-grid {
-        grid-template-columns: repeat(2,minmax(0,1fr));
+        display: flex;
+        overflow-x: auto;
+        padding: 2px 2px 7px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(169,154,240,.45) transparent;
+        scroll-snap-type: x proximity;
       }
+      .cw-category { flex: 0 0 190px; scroll-snap-align: start; }
     }
 
     @media (max-width: 650px) {
-      .cw-page {
-        padding: 20px 14px 35px;
-      }
-
-      .cw-hero {
-        padding: 25px 21px;
-        border-radius: 19px;
-      }
-
-      .cw-hero-icon {
-        display: none;
-      }
-
-      .cw-feed {
-        grid-template-columns: 1fr;
-      }
-
-      .cw-toolbar {
-        align-items: stretch;
-        flex-direction: column;
-      }
-
-      .cw-filter {
-        width: 100%;
-      }
-    }
-
-    @media (max-width: 420px) {
-      .cw-stats {
-        gap: 9px;
-      }
-
-      .cw-stat {
-        gap: 9px;
+      .cw-page { padding: 14px 12px 28px; }
+      .cw-category { flex-basis: 170px; min-height: 63px; padding: 9px 10px; }
+      .cw-toolbar { align-items: stretch; flex-direction: column; }
+      .cw-filter { width: 100%; }
+      .cw-card {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto;
+        gap: 7px;
         padding: 12px;
       }
-
-      .cw-stat-icon {
-        flex-basis: 36px;
-        width: 36px;
-        height: 36px;
-        font-size: 17px;
+      .cw-card-top, .cw-card h3, .cw-card-description, .cw-card-meta, .cw-card-footer {
+        grid-column: 1;
+        grid-row: auto;
       }
-
-      .cw-stat-value {
-        font-size: 19px;
+      .cw-card-meta {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 7px 12px;
+        margin-top: 4px;
+        padding: 8px 0 0;
+        border-left: 0;
+        border-top: 1px solid var(--cw-border);
       }
+      .cw-card-footer { justify-content: space-between; margin-top: 2px; }
+    }
 
-      .cw-category-grid {
-        gap: 9px;
-      }
-
-      .cw-category {
-        gap: 9px;
-        padding: 12px 9px;
-      }
-
-      .cw-category-icon {
-        flex-basis: 35px;
-        width: 35px;
-        height: 35px;
-        font-size: 17px;
-      }
-
-      .cw-category strong {
-        font-size: 11px;
-      }
+    @media (prefers-reduced-motion: reduce) {
+      .cw-category, .cw-card { transition: none; }
     }
   </style>
-    <link rel="stylesheet" href="../assets/css/responsive-layout.css">
-    <link rel="stylesheet" href="../assets/css/responsive-auto-fit.css">
-  <link rel="stylesheet" href="../assets/css/forced-dark-theme.css?v=1">
 </head>
-
 <body>
-
   <main class="cw-page">
     <div class="cw-container">
-
       <nav class="cw-breadcrumb" aria-label="Breadcrumb">
         <a href="dashboard.html">Learning Space</a>
-        <span>›</span>
+        <span aria-hidden="true">›</span>
         <span>Classwork</span>
       </nav>
 
-      <section class="cw-hero">
-        <div class="cw-hero-copy">
-          <div class="cw-eyebrow">Student Workspace</div>
-          <h1>Your Learning Space.</h1>
-          <p>
-            Announcements, learning materials, assignments, and quizzes
-            — everything your teachers share, organized in one place.
-          </p>
-        </div>
-        <div class="cw-hero-icon" aria-hidden="true">📚</div>
-      </section>
+      <!-- Five clickable category filters with live activity counts. -->
+      <nav class="cw-category-grid" aria-label="Classwork categories">
+        <button class="cw-category active" type="button" data-category="all" aria-pressed="true">
+          <span class="cw-category-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2L12 3Z"/><path d="m19 14 1 2.5 2.5 1-2.5 1L19 21l-1-2.5-2.5-1 2.5-1L19 14ZM5 2l.8 2.2L8 5l-2.2.8L5 8l-.8-2.2L2 5l2.2-.8L5 2Z"/></svg></span>
+          <span class="cw-category-copy"><strong>All Classwork</strong><small class="cw-category-count"><strong id="allCategoryCount">—</strong><span>activities</span></small></span>
+        </button>
 
-      <section class="cw-stats" aria-label="Classwork summary">
-        <div class="cw-stat">
-          <div class="cw-stat-icon">📢</div>
-          <div>
-            <div class="cw-stat-label">Announcements</div>
-            <div class="cw-stat-value" id="announcementCount">—</div>
-          </div>
-        </div>
+        <button class="cw-category" type="button" data-category="announcement" aria-pressed="false">
+          <span class="cw-category-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 13v-2Z"/><path d="M11.6 14.2 14 21h-4l-2-7.6"/><path d="M3 11v2a2 2 0 0 0 2 2h1"/></svg></span>
+          <span class="cw-category-copy"><strong>Announcements</strong><small class="cw-category-count"><strong id="announcementCount">—</strong><span>updates</span></small></span>
+        </button>
 
-        <div class="cw-stat">
-          <div class="cw-stat-icon">📚</div>
-          <div>
-            <div class="cw-stat-label">Learning Modules</div>
-            <div class="cw-stat-value" id="moduleCount">—</div>
-          </div>
-        </div>
+        <button class="cw-category" type="button" data-category="module" aria-pressed="false">
+          <span class="cw-category-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M3 18V5a2 2 0 0 1 2-2h3a4 4 0 0 1 4 4 4 4 0 0 1 4-4h3a2 2 0 0 1 2 2v13"/><path d="M3 18a3 3 0 0 1 3-3h2a4 4 0 0 1 4 4 4 4 0 0 1 4-4h2a3 3 0 0 1 3 3"/></svg></span>
+          <span class="cw-category-copy"><strong>Modules &amp; Lessons</strong><small class="cw-category-count"><strong id="moduleCount">—</strong><span>resources</span></small></span>
+        </button>
 
-        <div class="cw-stat">
-          <div class="cw-stat-icon">📝</div>
-          <div>
-            <div class="cw-stat-label">Assignments</div>
-            <div class="cw-stat-value" id="assignmentCount">—</div>
-          </div>
-        </div>
+        <button class="cw-category" type="button" data-category="assignment" aria-pressed="false">
+          <span class="cw-category-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="18" rx="2"/><path d="M9 4.5h6a1 1 0 0 0 1-1v-1H8v1a1 1 0 0 0 1 1Z"/><path d="M9 11h6M9 15h6M9 19h3"/></svg></span>
+          <span class="cw-category-copy"><strong>Assignments</strong><small class="cw-category-count"><strong id="assignmentCount">—</strong><span>tasks</span></small></span>
+        </button>
 
-        <div class="cw-stat">
-          <div class="cw-stat-icon">✍️</div>
-          <div>
-            <div class="cw-stat-label">Quizzes</div>
-            <div class="cw-stat-value" id="quizCount">—</div>
-          </div>
-        </div>
-      </section>
+        <button class="cw-category" type="button" data-category="quiz" aria-pressed="false">
+          <span class="cw-category-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 14l2.5 2.5L16 11"/></svg></span>
+          <span class="cw-category-copy"><strong>Quizzes</strong><small class="cw-category-count"><strong id="quizCount">—</strong><span>assessments</span></small></span>
+        </button>
+      </nav>
 
-      <section>
+      <section aria-labelledby="feedTitle">
         <div class="cw-section-heading">
           <div class="cw-section-title">
-            <div class="cw-section-icon">▦</div>
-            <div>
-              <h2>Explore Classwork</h2>
-              <p>Choose a category to view its activities.</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="cw-category-grid">
-          <button class="cw-category active" type="button" data-category="all">
-            <span class="cw-category-icon">✦</span>
-            <span>
-              <strong>All Classwork</strong>
-              <small id="allCategoryCount">Everything</small>
-            </span>
-          </button>
-
-          <button class="cw-category" type="button" data-category="announcement">
-            <span class="cw-category-icon">📢</span>
-            <span>
-              <strong>Announcements</strong>
-              <small>Teacher updates</small>
-            </span>
-          </button>
-
-          <button class="cw-category" type="button" data-category="module">
-            <span class="cw-category-icon">📚</span>
-            <span>
-              <strong>Modules</strong>
-              <small>Lessons and resources</small>
-            </span>
-          </button>
-
-          <button class="cw-category" type="button" data-category="assignment">
-            <span class="cw-category-icon">📝</span>
-            <span>
-              <strong>Assignments</strong>
-              <small>Tasks and activities</small>
-            </span>
-          </button>
-
-          <button class="cw-category" type="button" data-category="quiz">
-            <span class="cw-category-icon">✍️</span>
-            <span>
-              <strong>Quizzes</strong>
-              <small>Tests and assessments</small>
-            </span>
-          </button>
-        </div>
-      </section>
-
-      <section>
-        <div class="cw-section-heading">
-          <div class="cw-section-title">
-            <div class="cw-section-icon">▤</div>
-            <div>
-              <h2 id="feedTitle">All Classwork</h2>
-              <p id="feedSubtitle">Your latest classroom activities.</p>
-            </div>
+            <h2 id="feedTitle">All Classwork</h2>
+            <p id="feedSubtitle">Your latest classroom activities.</p>
           </div>
         </div>
 
         <div class="cw-toolbar">
           <label class="cw-search">
-            <span>⌕</span>
-            <input
-              type="search"
-              id="classworkSearch"
-              placeholder="Search activities, topics, or teachers..."
-              autocomplete="off"
-            >
+            <span class="cw-search-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></span>
+            <input type="search" id="classworkSearch" placeholder="Search activities, topics, or teachers..." autocomplete="off">
           </label>
-
           <select class="cw-filter" id="classworkSort" aria-label="Sort activities">
             <option value="recent">Recently Added</option>
             <option value="oldest">Oldest First</option>
@@ -721,7 +439,7 @@
 
         <div class="cw-feed" id="classworkFeed" aria-live="polite">
           <div class="cw-state">
-            <div class="cw-state-icon">⏳</div>
+            <div class="cw-state-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="27" height="27" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48 2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48 2.83-2.83"/></svg></div>
             <h3>Loading your classwork</h3>
             <p>Please wait while we retrieve your classroom activities.</p>
           </div>
@@ -729,43 +447,18 @@
       </section>
 
       <footer class="cw-footer">
-        <span>✦</span> © <span id="currentYear"></span>
-        EqualLearn. Learn without limits.
+        <span aria-hidden="true">✦</span> © <span id="currentYear"></span> EqualLearn. Learn without limits.
       </footer>
-
     </div>
   </main>
 
-  <script>
-    document.getElementById("currentYear").textContent =
-      new Date().getFullYear();
-  </script>
-
+  <script>document.getElementById("currentYear").textContent = new Date().getFullYear();</script>
   <script type="module" src="../assets/js/classwork.js"></script>
   <script type="module" src="../assets/js/ui-shell.js"></script>
   <script type="module" src="../assets/js/pwa.js"></script>
   <script type="module" src="../assets/js/theme.js"></script>
 
-<!-- EQUALLEARN LUMI COMPANION -->
-<iframe
-  src="../assets/widgets/lumi.html"
-  title="Lumi — EqualLearn Companion"
-  id="equallearn-lumi-frame"
-  allow="autoplay"
-  style="
-    position: fixed;
-    right: 8px;
-    bottom: 8px;
-    width: 210px;
-    height: 255px;
-    border: 0;
-    background: transparent;
-    z-index: 99999;
-    overflow: hidden;
-    pointer-events: auto;
-  ">
-</iframe>
-
+  <!-- EQUALLEARN LUMI COMPANION -->
+  <iframe src="/assets/widgets/lumi.html" title="Lumi — EqualLearn Companion" id="equallearn-lumi-frame" allow="autoplay" style="position:fixed;right:8px;bottom:8px;width:210px;height:255px;border:0;background:transparent;z-index:99999;overflow:hidden;pointer-events:auto;"></iframe>
 </body>
 </html>
-

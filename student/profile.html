@@ -1,566 +1,158 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
 <head>
-  <script id="EQUALLEARN_FORCE_DARK_BOOTSTRAP">document.documentElement.dataset.theme="dark";document.documentElement.style.colorScheme="dark";</script>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b1020">
-  <title>Student Profile - EqualLearn</title>
-
+  <title>Student Profile | EqualLearn</title>
   <link rel="manifest" href="../manifest.webmanifest">
   <link rel="icon" href="../assets/icons/equallearn-logo.png">
-
   <link rel="stylesheet" href="../assets/css/equallearn.css">
   <link rel="stylesheet" href="../assets/css/glass-dashboard.css">
   <link rel="stylesheet" href="../assets/css/sidebar-skeuomorphism.css">
-
-  <style>
-    .profile-layout {
-      display: grid;
-      grid-template-columns: minmax(0, 1.3fr) minmax(260px, .7fr);
-      gap: 20px;
-      align-items: start;
-      width: 100%;
-    }
-
-    .profile-panel {
-      background: rgba(255, 255, 255, 0.68);
-      border: 1px solid rgba(255, 255, 255, 0.75);
-      border-radius: 22px;
-      padding: 24px;
-      box-shadow:
-        0 12px 35px rgba(31, 38, 135, 0.08),
-        inset 0 1px 0 rgba(255, 255, 255, 0.8);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      min-width: 0;
-    }
-
-    .profile-panel h2 {
-      margin-top: 0;
-      margin-bottom: 20px;
-      color: var(--el-text);
-    }
-
-    .profile-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
-    }
-
-    .profile-field {
-      min-width: 0;
-    }
-
-    .profile-field.full {
-      grid-column: 1 / -1;
-    }
-
-    .profile-field label {
-      display: block;
-      font-size: 13px;
-      font-weight: 700;
-      margin-bottom: 7px;
-      color: var(--el-text);
-    }
-
-    .profile-field input,
-    .profile-field select {
-      width: 100%;
-      min-height: 46px;
-      padding: 11px 13px;
-      border: 1px solid var(--el-border);
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.78);
-      color: var(--el-text);
-      font: inherit;
-      font-size: 14px;
-      outline: none;
-      transition:
-        border-color .2s ease,
-        box-shadow .2s ease,
-        background .2s ease;
-    }
-
-    .profile-field input:focus,
-    .profile-field select:focus {
-      border-color: var(--el-primary);
-      background: #fff;
-      box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.12);
-    }
-
-    .profile-field input[readonly] {
-      background: rgba(243, 244, 248, 0.85);
-      color: var(--el-muted);
-      cursor: not-allowed;
-    }
-
-    .profile-help {
-      color: var(--el-muted);
-      font-size: 12px;
-      line-height: 1.7;
-      margin-top: 7px;
-    }
-
-    .profile-message {
-      padding: 13px 15px;
-      border-radius: 13px;
-      background: var(--el-primary-soft);
-      color: var(--el-primary);
-      font-size: 13px;
-      line-height: 1.6;
-      margin-bottom: 20px;
-      border: 1px solid rgba(99, 91, 255, 0.1);
-    }
-
-    .profile-message.success {
-      background: rgba(236, 253, 243, 0.9);
-      color: #15803d;
-      border-color: rgba(21, 128, 61, 0.12);
-    }
-
-    .profile-message.error {
-      background: rgba(255, 241, 242, 0.9);
-      color: #be123c;
-      border-color: rgba(190, 18, 60, 0.12);
-    }
-
-    .profile-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-      margin-top: 22px;
-    }
-
-    .profile-actions button,
-    .profile-actions a {
-      min-height: 44px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      text-decoration: none;
-    }
-
-    .profile-divider {
-      border: 0;
-      border-top: 1px solid var(--el-border);
-      margin: 20px 0;
-    }
-
-    .profile-info-item {
-      padding: 13px 0;
-      border-bottom: 1px solid rgba(120, 120, 150, 0.12);
-    }
-
-    .profile-info-item:last-child {
-      border-bottom: 0;
-    }
-
-    .profile-info-item strong {
-      display: block;
-      color: var(--el-text);
-      font-size: 14px;
-      margin-bottom: 4px;
-    }
-
-    .profile-info-item span {
-      display: block;
-      color: var(--el-muted);
-      font-size: 12px;
-      line-height: 1.6;
-    }
-
-    /* STUDENT PROFILE PHOTO */
-
-    .profile-photo-section {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      padding: 18px;
-      margin-bottom: 22px;
-      border: 1px solid rgba(145, 151, 180, .2);
-      border-radius: 18px;
-      background: rgba(255, 255, 255, .48);
-    }
-
-    .profile-photo-frame {
-      width: 112px;
-      height: 112px;
-      flex: 0 0 112px;
-      overflow: hidden;
-      border-radius: 50%;
-      border: 4px solid white;
-      background: #eeedff;
-      box-shadow: 0 5px 18px rgba(31, 38, 135, .12);
-    }
-
-    .profile-photo-frame img {
-      display: block;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .profile-photo-details {
-      min-width: 0;
-    }
-
-    .profile-photo-details strong {
-      display: block;
-      margin-bottom: 5px;
-      color: var(--el-text);
-    }
-
-    .profile-photo-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 12px;
-    }
-
-    .profile-photo-buttons button {
-      padding: 9px 13px;
-      border: 1px solid var(--el-border);
-      border-radius: 10px;
-      background: white;
-      color: var(--el-text);
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .profile-photo-buttons button:hover {
-      border-color: var(--el-primary);
-      color: var(--el-primary);
-    }
-
-    .profile-photo-buttons button:disabled {
-      opacity: .5;
-      cursor: not-allowed;
-    }
-
-    #profilePhotoInput {
-      display: none;
-    }
-
-    @media (max-width: 900px) {
-      .profile-layout {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 600px) {
-      .profile-panel {
-        padding: 18px;
-        border-radius: 18px;
-      }
-
-      .profile-grid {
-        grid-template-columns: 1fr;
-        gap: 14px;
-      }
-
-      .profile-field.full {
-        grid-column: auto;
-      }
-
-      .profile-actions {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .profile-actions button,
-      .profile-actions a {
-        width: 100%;
-      }
-    }
-
-    @media (max-width: 520px) {
-      .profile-photo-section {
-        align-items: flex-start;
-        gap: 14px;
-        padding: 14px;
-      }
-
-      .profile-photo-frame {
-        width: 86px;
-        height: 86px;
-        flex-basis: 86px;
-      }
-
-      .profile-photo-buttons {
-        flex-direction: column;
-      }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .profile-field input,
-      .profile-field select {
-        transition: none;
-      }
-    }
-
-/* ==========================================
-   EQUALLEARN — PREMIUM DARK PROFILE PANELS
-========================================== */
-
-.profile-panel {
-  background: linear-gradient(
-    145deg,
-    rgba(34, 38, 58, 0.97),
-    rgba(23, 27, 44, 0.97)
-  ) !important;
-
-  border: 1px solid rgba(160, 135, 255, 0.24) !important;
-  border-radius: 22px;
-
-  box-shadow:
-    0 18px 45px rgba(0, 0, 0, 0.22),
-    0 0 25px rgba(126, 91, 239, 0.07),
-    inset 0 1px 0 rgba(255, 255, 255, 0.07) !important;
-
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
-  color: #f4f1ff;
-}
-
-.profile-panel h2,
-.profile-panel strong,
-.profile-panel label {
-  color: #f5f1ff !important;
-}
-
-.profile-panel .profile-help,
-.profile-panel .profile-info-item span {
-  color: #aaa8c5 !important;
-}
-
-/* Profile photo upload section */
-.profile-photo-section {
-  background: linear-gradient(
-    145deg,
-    rgba(48, 51, 76, 0.94),
-    rgba(33, 36, 57, 0.94)
-  ) !important;
-
-  border: 1px solid rgba(170, 150, 255, 0.17) !important;
-  border-radius: 18px;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
-}
-
-/* Input fields */
-.profile-field input,
-.profile-field select {
-  background: rgba(13, 17, 32, 0.85) !important;
-  color: #f5f1ff !important;
-  border: 1px solid rgba(160, 145, 205, 0.25) !important;
-}
-
-.profile-field input::placeholder {
-  color: #77758f !important;
-}
-
-.profile-field input:focus,
-.profile-field select:focus {
-  background: rgba(25, 24, 48, 0.98) !important;
-  border-color: #9273f5 !important;
-  box-shadow: 0 0 0 3px rgba(137, 103, 239, 0.16) !important;
-}
-
-.profile-field input[readonly] {
-  background: rgba(37, 40, 59, 0.9) !important;
-  color: #aaa8c5 !important;
-}
-
-/* Upload and remove buttons */
-.profile-photo-buttons button {
-  background: linear-gradient(
-    145deg,
-    rgba(55, 57, 83, 0.96),
-    rgba(37, 39, 61, 0.96)
-  ) !important;
-
-  border: 1px solid rgba(169, 148, 255, 0.28) !important;
-  color: #eee9ff !important;
-}
-
-.profile-photo-buttons button:hover {
-  background: rgba(117, 83, 214, 0.22) !important;
-  border-color: #9b7cff !important;
-  color: #c8b7ff !important;
-}
-
-/* Information dividers */
-.profile-divider {
-  border-top-color: rgba(173, 158, 224, 0.22) !important;
-}
-
-.profile-info-item {
-  border-bottom-color: rgba(173, 158, 224, 0.14) !important;
-}
-
-/* Verification message */
-.profile-message {
-  background: rgba(104, 77, 190, 0.19) !important;
-  border: 1px solid rgba(151, 123, 255, 0.22) !important;
-  color: #c7b7ff !important;
-}
-
-/* Mobile */
-@media (max-width: 600px) {
-  .profile-panel {
-    border-radius: 18px;
-  }
-}
-
-
-  </style>
-    <link rel="stylesheet" href="../assets/css/responsive-layout.css">
-    <link rel="stylesheet" href="../assets/css/responsive-auto-fit.css">
   <link rel="stylesheet" href="../assets/css/forced-dark-theme.css?v=1">
+  <link rel="stylesheet" href="../assets/css/student-profile-settings.css?v=20261121">
 </head>
-
 <body>
-  <main class="el-dashboard">
-
-    <header class="el-page-header">
-      <div>
-        <div class="el-page-kicker">Account settings</div>
-        <h1>My Student Profile</h1>
-        <p>Manage your personal profile and profile picture. Your class placement is managed by the administrator.</p>
+  <main class="el-dashboard sp-page">
+    <section class="sp-topline">
+      <div class="sp-page-intro">
+        <span class="sp-eyebrow">STUDENT WORKSPACE</span>
+        <h1>Account & profile</h1>
+        <p>Manage your personal and academic information in one place.</p>
       </div>
-    </header>
+      <div class="sp-settings-anchor">
+        <button type="button" class="sp-settings-trigger" id="profileSettingsToggle" aria-expanded="false" aria-controls="profileSettingsMenu">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.4a3.6 3.6 0 1 0 0 7.2 3.6 3.6 0 0 0 0-7.2Z"/><path d="m19.4 13.5 1.1.8-1.2 2.1-1.3-.5a7.9 7.9 0 0 1-1.5.9l-.2 1.4h-2.5l-.3-1.4a7.4 7.4 0 0 1-1.6-.6l-1.2.7-1.8-1.8.7-1.2a7.4 7.4 0 0 1-.6-1.6l-1.4-.3V9.5l1.4-.2a7.4 7.4 0 0 1 .6-1.6l-.7-1.2 1.8-1.8 1.2.7a7.4 7.4 0 0 1 1.6-.6l.3-1.4h2.5l.2 1.4a7.9 7.9 0 0 1 1.5.9l1.3-.5 1.2 2.1-1.1.8c.1.5.2 1 .2 1.5s-.1 1-.2 1.5Z"/></svg>
+          <span>Settings</span>
+          <svg class="sp-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <nav class="sp-settings-menu" id="profileSettingsMenu" hidden aria-label="Profile settings">
+          <a href="settings.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c.8-3.3 3.2-5 7-5s6.2 1.7 7 5"/></svg><span><strong>Account settings</strong><small>Manage your account</small></span></a>
+          <a href="change-password.html"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/></svg><span><strong>Change password</strong><small>Update sign-in password</small></span></a>
+          <a href="privacy-security.html"><svg viewBox="0 0 24 24"><path d="M12 3 19 6v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3Z"/><path d="m9 12 2 2 4-4"/></svg><span><strong>Privacy & security</strong><small>Review account protection</small></span></a>
+          <a href="recent-activity.html"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.3-5.7L4 8.5"/><path d="M4 4v4.5h4.5M12 7v5l3 2"/></svg><span><strong>Recent activity</strong><small>See your account history</small></span></a>
+        </nav>
+      </div>
+    </section>
 
-    <div class="profile-layout">
+    <section class="sp-profile-hero" aria-label="Student account overview">
+      <div class="sp-hero-photo-wrap">
+        <img id="profilePhoto" class="sp-hero-photo" src="../assets/icons/icon-192.png" alt="Student profile picture">
+        <span class="sp-online-dot" title="Signed in"></span>
+      </div>
+      <div class="sp-hero-copy">
+        <span class="sp-eyebrow">YOUR ACCOUNT</span>
+        <h2 id="profileHeroName">Student profile</h2>
+        <p id="profileHeroEmail">Loading your account information…</p>
+        <div class="sp-hero-tags">
+          <span id="profileHeroStudentId">Student ID · Loading</span>
+          <span id="profileHeroSection">Section · Loading</span>
+        </div>
+      </div>
+      <a href="settings.html" class="sp-manage-link">Manage settings <span aria-hidden="true">→</span></a>
+    </section>
 
-      <section class="profile-panel">
-        <h2>Personal Information</h2>
+    <div class="sp-main-grid">
+      <section class="sp-panel sp-profile-panel">
+        <div class="sp-panel-heading">
+          <div><span class="sp-eyebrow">PERSONAL DETAILS</span><h2>Profile information</h2></div>
+          <span class="sp-readonly-pill">Account protected</span>
+        </div>
 
-        <!-- STUDENT PROFILE PHOTO -->
-        <div class="profile-photo-section">
-
-          <div class="profile-photo-frame">
-            <img
-              id="profilePhoto"
-              src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' rx='60' fill='%23eeedff'/%3E%3Ccircle cx='60' cy='43' r='22' fill='%239b95e8'/%3E%3Cpath d='M20 112c3-25 19-38 40-38s37 13 40 38' fill='%239b95e8'/%3E%3C/svg%3E"
-              alt="Student profile picture">
-          </div>
-
-          <div class="profile-photo-details">
-            <strong>Profile Picture</strong>
-
-            <p class="profile-help">
-              Upload a clear photo of yourself. JPG, PNG, or WebP.
-              Maximum file size: 5 MB.
-            </p>
-
-            <div class="profile-photo-buttons">
-              <button
-                type="button"
-                id="chooseProfilePhoto"
-                aria-describedby="profilePhotoStatus">
-                Upload Photo
-              </button>
-
-              <button
-                type="button"
-                id="removeProfilePhoto">
-                Remove Photo
-              </button>
+        <div class="sp-photo-card">
+          <div class="sp-photo-frame"><img id="profilePhotoCard" src="../assets/icons/icon-192.png" alt="Profile photo preview"></div>
+          <div class="sp-photo-copy">
+            <strong>Profile picture</strong>
+            <p>Use a clear JPG, PNG, or WebP image. Maximum size: 5 MB.</p>
+            <div class="sp-photo-actions">
+              <button type="button" class="sp-button sp-button-secondary" id="chooseProfilePhoto" aria-describedby="profilePhotoStatus">Upload photo</button>
+              <button type="button" class="sp-button sp-button-quiet" id="removeProfilePhoto">Remove</button>
             </div>
+            <input type="file" id="profilePhotoInput" accept="image/jpeg,image/png,image/webp" hidden>
+            <p id="profilePhotoStatus" class="sp-inline-status" role="status" aria-live="polite">Loading profile picture…</p>
+          </div>
+        </div>
 
-            <input
-              type="file"
-              id="profilePhotoInput"
-              accept="image/jpeg,image/png,image/webp">
+        <div id="profileMessage" class="sp-message" role="status" aria-live="polite">Loading your profile…</div>
 
-            <div
-              id="profilePhotoStatus"
-              class="profile-help"
-              role="status"
-              aria-live="polite">
+        <form id="studentProfileForm" class="sp-form">
+          <div class="sp-form-grid">
+            <div class="sp-field sp-field-wide">
+              <label for="profileName">Full name</label>
+              <input id="profileName" type="text" maxlength="120" autocomplete="name" readonly required>
+              <small>Your registered name is managed through your authenticated account.</small>
+            </div>
+            <div class="sp-field sp-field-wide">
+              <label for="profileEmail">Institutional email</label>
+              <input id="profileEmail" type="email" autocomplete="email" readonly>
+              <small>Your sign-in email is read-only.</small>
+            </div>
+            <div class="sp-field">
+              <label for="profileStudentNumber">Student ID number <span>*</span></label>
+              <input id="profileStudentNumber" type="text" maxlength="40" placeholder="Enter your student ID" required>
+            </div>
+            <div class="sp-field">
+              <label for="profileCourse">Course / program <span>*</span></label>
+              <input id="profileCourse" type="text" maxlength="120" placeholder="e.g. BS Information Technology" required>
+            </div>
+            <div class="sp-field">
+              <label for="profileYear">Year level <span>*</span></label>
+              <select id="profileYear" required>
+                <option value="">Select year level</option>
+                <option value="1">1st Year</option>
+                <option value="2">2nd Year</option>
+                <option value="3">3rd Year</option>
+                <option value="4">4th Year</option>
+                <option value="5">5th Year</option>
+              </select>
+            </div>
+            <div class="sp-field">
+              <label for="profileSection">Assigned section</label>
+              <input id="profileSection" type="text" maxlength="80" readonly>
+              <small>Managed by your administrator.</small>
+            </div>
+            <div class="sp-field sp-field-wide">
+              <label for="profileCohort">Academic year</label>
+              <input id="profileCohort" type="text" maxlength="80" readonly>
+              <small>Managed by your administrator.</small>
             </div>
           </div>
-        </div>
-
-        <div
-          id="profileMessage"
-          class="profile-message"
-          role="status"
-          aria-live="polite">
-          Loading your profile...
-        </div>
-
-        <div class="profile-grid">
-          <div class="profile-field full">
-            <label for="profileName">Full Name</label>
-            <input
-              id="profileName"
-              type="text"
-              maxlength="120"
-              placeholder="Your registered full name"
-              autocomplete="name"
-              readonly>
+          <div class="sp-form-footer">
+            <p>Changes to your Student ID, course, or year level may require administrator verification.</p>
+            <button type="submit" id="saveProfile" class="sp-button sp-button-primary">Save changes</button>
           </div>
-
-          <div class="profile-field full">
-            <label for="profileEmail">Institutional Email</label>
-            <input
-              id="profileEmail"
-              type="email"
-              readonly
-              autocomplete="email">
-            <div class="profile-help">Your email is provided by your authenticated account.</div>
-          </div>
-        </div>
-
-        <div class="profile-info-item" style="margin-top:18px">
-          <strong>Class Placement</strong>
-          <span>Your Student ID, course, year level, section, and academic year are managed by an authorized administrator through Admin Class Assignments. Contact your administrator if these details need to be changed.</span>
-        </div>
+        </form>
       </section>
 
-      <aside class="profile-panel">
-        <h2>Account Information</h2>
-        <p class="profile-help">Your personal identity is linked to your authenticated account.</p>
-        <hr class="profile-divider">
-        <div class="profile-info-item">
-          <strong>Institutional Email</strong>
-          <span>Your authenticated email address is read-only.</span>
-        </div>
-        <div class="profile-info-item">
-          <strong>Class Assignment</strong>
-          <span>Only an authorized administrator can assign or transfer you to a section.</span>
-        </div>
-      </aside>
+      <aside class="sp-side-column">
+        <section class="sp-panel sp-summary-panel">
+          <div class="sp-panel-heading"><div><span class="sp-eyebrow">ACCOUNT OVERVIEW</span><h2>Account information</h2></div><svg class="sp-heading-icon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c.8-3.3 3.2-5 7-5s6.2 1.7 7 5"/></svg></div>
+          <div class="sp-info-row"><span>Account type</span><strong>Student</strong></div>
+          <div class="sp-info-row"><span>Institutional email</span><strong id="profileSummaryEmail">Loading…</strong></div>
+          <div class="sp-info-row"><span>Student ID</span><strong id="profileSummaryStudentId">—</strong></div>
+          <div class="sp-info-row"><span>Course</span><strong id="profileSummaryCourse">—</strong></div>
+          <div class="sp-info-row"><span>Assigned section</span><strong id="profileSummarySection">—</strong></div>
+          <div class="sp-info-row"><span>Academic verification</span><strong id="profileVerificationBadge" class="sp-status-text">Checking…</strong></div>
+        </section>
 
+        <section class="sp-panel sp-security-panel">
+          <div class="sp-panel-heading"><div><span class="sp-eyebrow">ACCOUNT PROTECTION</span><h2>Security shortcuts</h2></div><svg class="sp-heading-icon" viewBox="0 0 24 24"><path d="M12 3 19 6v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3Z"/><path d="m9 12 2 2 4-4"/></svg></div>
+          <a class="sp-shortcut" href="change-password.html"><span class="sp-shortcut-icon"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><span><strong>Change password</strong><small>Keep your account secure</small></span><b>›</b></a>
+          <a class="sp-shortcut" href="privacy-security.html"><span class="sp-shortcut-icon"><svg viewBox="0 0 24 24"><path d="M12 3 19 6v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3Z"/><path d="m9 12 2 2 4-4"/></svg></span><span><strong>Privacy & security</strong><small>Review your sign-in details</small></span><b>›</b></a>
+          <a class="sp-shortcut" href="recent-activity.html"><span class="sp-shortcut-icon"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.3-5.7L4 8.5"/><path d="M4 4v4.5h4.5M12 7v5l3 2"/></svg></span><span><strong>Recent activity</strong><small>Review your account events</small></span><b>›</b></a>
+        </section>
+
+        <div class="sp-help-note"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></svg><p>Your class placement is managed by an authorized administrator. Contact your school administrator if your assigned section needs correction.</p></div>
+      </aside>
     </div>
   </main>
 
   <script type="module" src="../assets/js/student-profile.js"></script>
+  <script type="module" src="../assets/js/student-profile-ui.js"></script>
   <script type="module" src="../assets/js/ui-shell.js"></script>
   <script type="module" src="../assets/js/pwa.js"></script>
   <script type="module" src="../assets/js/theme.js"></script>
-
-<!-- EQUALLEARN LUMI COMPANION -->
-<iframe
- src="../assets/widgets/lumi.html"
-  title="Lumi — EqualLearn Companion"
-  id="equallearn-lumi-frame"
-  allow="autoplay"
-  style="
-    position: fixed;
-    right: 8px;
-    bottom: 8px;
-    width: 210px;
-    height: 255px;
-    border: 0;
-    background: transparent;
-    z-index: 99999;
-    overflow: hidden;
-    pointer-events: auto;
-  ">
-</iframe>
-
+  <iframe src="../assets/widgets/lumi.html" title="Lumi — EqualLearn Companion" id="equallearn-lumi-frame" allow="autoplay" style="position:fixed;right:8px;bottom:8px;width:210px;height:255px;border:0;background:transparent;z-index:99999;overflow:hidden;pointer-events:auto"></iframe>
 </body>
 </html>

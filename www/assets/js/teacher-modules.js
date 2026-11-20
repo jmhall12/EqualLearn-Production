@@ -34,7 +34,8 @@ const COLLECTIONS = {
   users: "users",
   sections: "sections",
   modules: "modulesV2",
-  activities: "teacherActivitiesV2"
+  activities: "teacherActivitiesV2",
+  announcements: "announcements"
 };
 
 // Firestore documents have a 1 MiB hard limit. Keep conservative headroom.
@@ -49,6 +50,8 @@ let editing = null;
 
 let unsubscribeModules = null;
 let unsubscribeActivities = null;
+let unsubscribeAnnouncements = null;
+let expandedItemKey = "";
 
 let saving = false;
 let activityTypeControl = null;
@@ -85,7 +88,29 @@ function bindEvents() {
   });
 
   $("addResource")?.addEventListener("click", () => {
+    const guidance = $("resourceHelp");
+    if (guidance) guidance.hidden = false;
     addResource();
+  });
+
+  $("sectionPickerToggle")?.addEventListener("click", () => {
+    const list = $("sectionList");
+    const button = $("sectionPickerToggle");
+    if (!list || !button) return;
+    list.hidden = !list.hidden;
+    button.setAttribute("aria-expanded", String(!list.hidden));
+  });
+
+  $("sectionList")?.addEventListener("change", updateSectionPickerLabel);
+
+  document.addEventListener("click", event => {
+    const picker = $("sectionPicker");
+    const list = $("sectionList");
+    const button = $("sectionPickerToggle");
+    if (picker && list && button && !picker.contains(event.target)) {
+      list.hidden = true;
+      button.setAttribute("aria-expanded", "false");
+    }
   });
 
   $("publishBtn")?.addEventListener("click", event => {
@@ -178,6 +203,11 @@ function stopListeners() {
   if (unsubscribeActivities) {
     unsubscribeActivities();
     unsubscribeActivities = null;
+  }
+
+  if (unsubscribeAnnouncements) {
+    unsubscribeAnnouncements();
+    unsubscribeAnnouncements = null;
   }
 }
 
@@ -376,6 +406,7 @@ function renderSections(selected = []) {
       checkbox.name = "sectionIds";
       checkbox.value = section.id;
       checkbox.checked = selected.includes(section.id);
+      checkbox.addEventListener("change", updateSectionPickerLabel);
 
       const text = document.createElement("span");
       text.textContent = sectionName(section);
@@ -405,6 +436,8 @@ function renderSections(selected = []) {
   if ($("sectionCount")) {
     $("sectionCount").textContent = sections.length;
   }
+
+  updateSectionPickerLabel();
 }
 
 function selectedSections() {
@@ -413,6 +446,21 @@ function selectedSections() {
       '#sectionList input[name="sectionIds"]:checked'
     )
   ].map(input => input.value);
+}
+
+function updateSectionPickerLabel() {
+  const label = $("sectionPickerLabel");
+  const button = $("sectionPickerToggle");
+  if (!label) return;
+
+  const selected = selectedSections();
+  label.textContent = selected.length
+    ? `${selected.length} section${selected.length === 1 ? "" : "s"} selected`
+    : "Select one or more sections";
+
+  if (button) {
+    button.classList.toggle("has-selection", selected.length > 0);
+  }
 }
 
 // ======================================================
@@ -436,11 +484,19 @@ function listenItems() {
         where("createdBy", "==", currentUser.uid)
       );
 
+  const announcementQuery = role === "admin"
+    ? query(collection(db, COLLECTIONS.announcements))
+    : query(
+        collection(db, COLLECTIONS.announcements),
+        where("createdBy", "==", currentUser.uid)
+      );
+
   let moduleItems = [];
   let activityItems = [];
+  let announcementItems = [];
 
   const refresh = () => {
-    items = [...moduleItems, ...activityItems];
+    items = [...moduleItems, ...activityItems, ...announcementItems];
 
     items.sort((a, b) =>
       dateValue(b.updatedAt || b.createdAt) -
@@ -501,6 +557,30 @@ function listenItems() {
       showNotice(errorMessage(error), "error");
     }
   );
+
+  unsubscribeAnnouncements = onSnapshot(
+    announcementQuery,
+    snapshot => {
+      announcementItems = snapshot.docs.map(d => ({
+        id: d.id,
+        collectionName: COLLECTIONS.announcements,
+        type: "announcement",
+        ...d.data()
+      }));
+      refresh();
+    },
+    error => {
+      console.error("[ANNOUNCEMENT LISTENER]", {
+        code: error.code,
+        message: error.message,
+        uid: currentUser?.uid,
+        role: profile?.role,
+        collection: COLLECTIONS.announcements
+      });
+      showNotice(errorMessage(error), "error");
+    }
+  );
+
 }
 
 // ======================================================
@@ -548,13 +628,16 @@ function openEditor(item = null) {
     activityTypeControl.value = item?.type || "module";
 
     $("activityTitle").value = item?.title || "";
-    $("activityCategory").value = item?.category || "Lesson";
-    $("activityDescription").value = item?.description || "";
+    $("activityDescription").value = item?.description || item?.content || item?.message || "";
 
     renderSections(
       item?.sectionIds ||
       (sections.length === 1 ? [sections[0].id] : [])
     );
+    if ($("sectionList")) $("sectionList").hidden = true;
+    if ($("sectionPickerToggle")) {
+      $("sectionPickerToggle").setAttribute("aria-expanded", "false");
+    }
 
     renderTypeFields(item?.activityData || {});
     updateEditorLabels();
@@ -564,6 +647,9 @@ function openEditor(item = null) {
     (item?.resources || []).forEach(resource => {
       addResource(resource);
     });
+    if ($("resourceHelp")) {
+      $("resourceHelp").hidden = !(item?.resources || []).length;
+    }
 
     const noticeBox = $("formNotice");
 
@@ -601,6 +687,8 @@ function closeEditor(force = false) {
     document.body.style.overflow = "";
 
     editing = null;
+    if ($("resourceHelp")) $("resourceHelp").hidden = true;
+    if ($("sectionList")) $("sectionList").hidden = true;
 }
 
 function updateEditorLabels() {
@@ -624,12 +712,32 @@ function updateEditorLabels() {
     draft.textContent = "Save as Draft";
   }
 
-  const categoryLabel =
-    document.querySelector('label[for="activityCategory"]');
+  const descriptionLabel = $("descriptionLabel");
+  const descriptionInput = $("activityDescription");
+  if (descriptionLabel && descriptionInput) {
+    const labelByType = {
+      module: "Module Description",
+      quiz: "Quiz Instructions",
+      assignment: "Assignment Instructions",
+      discussion: "Activity Instructions",
+      announcement: "Announcement Message"
+    };
+    const placeholderByType = {
+      module: "Describe the topics and learning goals...",
+      quiz: "Explain the quiz coverage and instructions...",
+      assignment: "Explain what students need to submit...",
+      discussion: "Describe the discussion and expected responses...",
+      announcement: "Write the announcement for your selected sections..."
+    };
+    descriptionLabel.innerHTML = `${labelByType[type] || "Description"} <span class="tm-required">*</span>`;
+    descriptionInput.placeholder = placeholderByType[type] || "Add instructions...";
+  }
 
-  if (categoryLabel) {
-    categoryLabel.textContent =
-      type === "module" ? "Category *" : "Category";
+  const resourceHeading = $("resourceHelp")?.querySelector("strong");
+  if (resourceHeading) {
+    resourceHeading.textContent = type === "module"
+      ? "Learning Module"
+      : `${typeLabel(type)} Attachment`;
   }
 }
 
@@ -647,15 +755,7 @@ function renderTypeFields(data = {}) {
   const resourceArea = $("resourceArea");
   if (resourceArea) resourceArea.style.display = "block";
 
-  if (type === "module") {
-    typeFields.innerHTML = `
-      <div class="tm-field">
-        <strong>Learning Module</strong>
-        <p style="color:#aaa;font-size:12px;margin-top:8px">
-          Attach a small file (up to 400 KB) or paste a shareable link. Use links for larger files.
-        </p>
-      </div>
-    `;
+  if (type === "module" || type === "announcement") {
     return;
   }
 
@@ -875,7 +975,7 @@ function addResource(resource = {}) {
   const file = document.createElement("input");
   file.className = "resource-file";
   file.type = "file";
-  file.accept = ".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.csv,.jpg,.jpeg,.png,.webp,.zip";
+  file.accept = ".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.webp,.zip";
 
   const status = document.createElement("small");
   status.className = "resource-status";
@@ -887,7 +987,7 @@ function addResource(resource = {}) {
   } else if (resource.storagePath && resource.url) {
     status.textContent = `Previously uploaded file: ${resource.fileName || "attachment"} (legacy link)`;
   } else {
-    status.textContent = "Choose a file OR paste a link. Maximum file size: 400 KB.";
+    status.textContent = "Choose a file or paste a shareable link (max 400 KB per file).";
   }
 
   const remove = document.createElement("button");
@@ -902,7 +1002,7 @@ function addResource(resource = {}) {
       file.value = "";
       status.textContent = "Link selected. A file cannot be selected in the same row.";
     } else {
-      status.textContent = "Choose a file OR paste a link. Maximum file size: 400 KB.";
+      status.textContent = "Choose a file or paste a shareable link (max 400 KB per file).";
     }
   });
 
@@ -1130,8 +1230,6 @@ async function saveActivity(status) {
 
   const title = $("activityTitle").value.trim();
   const description = $("activityDescription").value.trim();
-  const category = $("activityCategory").value;
-  const icon = "📘";
 
   const sectionIds = selectedSections();
 
@@ -1162,7 +1260,9 @@ async function saveActivity(status) {
 
   const collectionName = type === "module"
     ? COLLECTIONS.modules
-    : COLLECTIONS.activities;
+    : type === "announcement"
+      ? COLLECTIONS.announcements
+      : COLLECTIONS.activities;
 
   const existing =
     editing && editing.collectionName === collectionName
@@ -1195,8 +1295,6 @@ async function saveActivity(status) {
       type,
       title,
       description,
-      category,
-      icon,
       status,
 
       sectionIds,
@@ -1218,6 +1316,13 @@ async function saveActivity(status) {
 
       updatedAt: serverTimestamp()
     };
+
+    if (type === "announcement") {
+      // Student Classwork reads announcements from the dedicated collection.
+      payload.content = description;
+      payload.message = description;
+      payload.announcementTitle = title;
+    }
 
     if (!existing) {
       payload.createdAt = serverTimestamp();
@@ -1247,7 +1352,7 @@ async function saveActivity(status) {
 
     // Notify only on the transition into Published; editing an already-published
     // item does not spam the class with duplicate device notifications.
-    if (status === "published" && existing?.status !== "published") {
+    if (status === "published" && existing?.status !== "published" && type !== "announcement") {
       try {
         const notificationResult = await notifySectionStudents({
           db,
@@ -1318,127 +1423,118 @@ function renderItems() {
   const grid = $("moduleGrid");
   if (!grid) return;
 
-  const search =
-    $("searchInput")?.value.trim().toLowerCase() || "";
-
-  const status =
-    $("statusFilter")?.value || "all";
-
-  const section =
-    $("sectionFilter")?.value || "all";
-
-  const type =
-    $("typeFilter")?.value || "all";
+  const search = $("searchInput")?.value.trim().toLowerCase() || "";
+  const status = $("statusFilter")?.value || "all";
+  const section = $("sectionFilter")?.value || "all";
+  const type = $("typeFilter")?.value || "all";
 
   const filtered = items.filter(item => {
-    const text =
-      `${item.title || ""} ${item.description || ""}`.toLowerCase();
-
+    const text = `${item.title || ""} ${item.description || item.content || ""} ${item.teacherName || ""}`.toLowerCase();
     return text.includes(search)
-      && (status === "all" || item.status === status)
+      && (status === "all" || String(item.status || "draft").toLowerCase() === status)
       && (type === "all" || (item.type || "module") === type)
-      && (
-        section === "all" ||
-        (item.sectionIds || []).includes(section)
-      );
+      && (section === "all" || (item.sectionIds || []).includes(section));
   });
 
   grid.replaceChildren();
 
   if (!filtered.length) {
-    showEmpty(
-      "No activities found",
-      "Create a new activity or change your filters."
-    );
+    showEmpty("No activities found", "Create a new activity or adjust your filters.");
     return;
   }
 
-  filtered.forEach(item => {
-    grid.appendChild(createCard(item));
-  });
+  filtered.forEach(item => grid.appendChild(createCard(item)));
+}
+
+function activityIconMarkup(type, size = 20) {
+  const paths = {
+    module: '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21z"/><path d="M4 5.5v13A2.5 2.5 0 0 1 6.5 16H20"/>',
+    quiz: '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4.5V3h6v1.5M8.5 10h7M8.5 14h4M8 18l1.5 1.5L13 16"/>',
+    assignment: '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/>',
+    discussion: '<path d="M21 11.5a7.5 7.5 0 0 1-8 7.5 8.5 8.5 0 0 1-3.5-.7L4 20l1.3-4A7 7 0 0 1 4 11.5 7.5 7.5 0 0 1 12 4a7.5 7.5 0 0 1 9 7.5Z"/><path d="M8 11h8M8 14h5"/>',
+    announcement: '<path d="M3 11v2a2 2 0 0 0 2 2h2l10 4V5L7 9H5a2 2 0 0 0-2 2Z"/><path d="m7 15 2 5h3l-2-4M20 9l2-2M20 15l2 2"/>'
+  };
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[type] || paths.module}</svg>`;
 }
 
 function createCard(item) {
   const card = document.createElement("article");
   card.className = "tm-card";
 
-  const icons = {
-    module: item.icon || "📚",
-    quiz: "📝",
-    assignment: "📄",
-    discussion: "💬"
-  };
+  const key = `${item.collectionName || ""}:${item.id}`;
+  const expanded = expandedItemKey === key;
+  if (expanded) card.classList.add("is-expanded");
 
-  const cover = document.createElement("div");
-  cover.className = "tm-card-cover";
+  const toggle = document.createElement("button");
+  toggle.type = "button";
+  toggle.className = "tm-row-toggle";
+  toggle.setAttribute("aria-expanded", String(expanded));
+  toggle.setAttribute("aria-label", `${expanded ? "Collapse" : "Expand"} ${item.title || "activity"}`);
 
-  cover.textContent = icons[item.type] || "📚";
+  const icon = document.createElement("span");
+  icon.className = "tm-row-icon";
+  icon.innerHTML = activityIconMarkup(item.type, 20);
 
-  const body = document.createElement("div");
-  body.className = "tm-card-body";
-
-  const meta = document.createElement("div");
-  meta.className = "tm-meta";
-
-  const category = document.createElement("span");
-  category.textContent =
-    item.category || typeLabel(item.type);
+  const copy = document.createElement("span");
+  copy.className = "tm-row-copy";
+  const title = document.createElement("strong");
+  title.className = "tm-row-title";
+  title.textContent = item.title || "Untitled activity";
+  const summary = document.createElement("small");
+  summary.className = "tm-row-summary";
+  summary.textContent = `${typeLabel(item.type)} · ${(item.sectionNames || []).length || (item.sectionIds || []).length} section(s) · ${(item.resources || []).length} resource(s)`;
+  copy.append(title, summary);
 
   const status = document.createElement("span");
-  status.textContent =
-    (item.status || "draft").toUpperCase();
+  status.className = `tm-row-status status-${String(item.status || "draft").toLowerCase()}`;
+  status.textContent = String(item.status || "draft").replaceAll("_", " ");
 
-  meta.append(category, status);
+  const typeBadge = document.createElement("span");
+  typeBadge.className = `tm-row-type type-${item.type || "module"}`;
+  typeBadge.textContent = typeLabel(item.type);
 
-  const title = document.createElement("h3");
-  title.textContent = item.title || "Untitled";
+  const chevron = document.createElement("span");
+  chevron.className = "tm-row-chevron";
+  chevron.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>';
+
+  toggle.append(icon, copy, typeBadge, status, chevron);
+  toggle.addEventListener("click", () => {
+    expandedItemKey = expanded ? "" : key;
+    renderItems();
+  });
+
+  const details = document.createElement("div");
+  details.className = "tm-row-details";
+  details.hidden = !expanded;
 
   const description = document.createElement("p");
-  description.textContent = item.description || "";
+  description.className = "tm-row-description";
+  description.textContent = item.description || item.content || "No description provided.";
 
-  const resourceCount = document.createElement("p");
-  resourceCount.textContent =
-    `${(item.sectionNames || []).length} section(s) • ${(item.resources || []).length} resource(s)`;
+  const meta = document.createElement("div");
+  meta.className = "tm-row-meta";
+  const sectionsText = (item.sectionNames || []).join(", ") || `${(item.sectionIds || []).length} assigned section(s)`;
+  const dateText = dateValue(item.updatedAt || item.createdAt)
+    ? new Date(dateValue(item.updatedAt || item.createdAt)).toLocaleString()
+    : "Date unavailable";
+  meta.textContent = `${sectionsText} · ${dateText}`;
 
   const actions = document.createElement("div");
   actions.className = "tm-actions";
-
   actions.append(
     actionButton("Preview", () => previewItem(item)),
     actionButton("Edit", () => openEditor(item)),
-    actionButton(
-      item.status === "published" ? "Archive" : "Publish",
-      () => changeStatus(item)
-    )
+    actionButton(item.status === "published" ? "Archive" : "Publish", () => changeStatus(item))
   );
 
   if (item.status === "archived") {
-    actions.append(
-      actionButton(
-        "Restore",
-        () => changeStatus(item, "draft")
-      )
-    );
+    actions.append(actionButton("Restore", () => changeStatus(item, "draft")));
   } else {
-    actions.append(
-      actionButton(
-        "Delete",
-        () => deleteActivity(item),
-        true
-      )
-    );
+    actions.append(actionButton("Delete", () => deleteActivity(item), true));
   }
 
-  body.append(
-    meta,
-    title,
-    description,
-    resourceCount,
-    actions
-  );
-
-  card.append(cover, body);
-
+  details.append(description, meta, actions);
+  card.append(toggle, details);
   return card;
 }
 
@@ -1578,7 +1674,7 @@ async function changeStatus(item, forcedStatus) {
       }
     );
 
-    if (status === "published" && item.status !== "published") {
+    if (status === "published" && item.status !== "published" && item.type !== "announcement") {
       try {
         const notificationResult = await notifySectionStudents({
           db,
@@ -1626,19 +1722,30 @@ async function deleteActivity(item) {
 // ======================================================
 
 function updateStatistics() {
-  if ($("totalCount")) {
-    $("totalCount").textContent = items.length;
-  }
+  const total = items.length;
+  const published = items.filter(item => item.status === "published").length;
+  const drafts = items.filter(item => item.status === "draft").length;
+  const sectionTotal = sections.length;
 
-  if ($("publishedCount")) {
-    $("publishedCount").textContent =
-      items.filter(item => item.status === "published").length;
-  }
+  if ($("totalCount")) $("totalCount").textContent = total;
+  if ($("publishedCount")) $("publishedCount").textContent = published;
+  if ($("draftCount")) $("draftCount").textContent = drafts;
+  if ($("sectionCount")) $("sectionCount").textContent = sectionTotal;
 
-  if ($("draftCount")) {
-    $("draftCount").textContent =
-      items.filter(item => item.status === "draft").length;
-  }
+  setDonutProgress("totalRing", total > 0 ? 100 : 0);
+  setDonutProgress("publishedRing", total ? published / total * 100 : 0);
+  setDonutProgress("draftRing", total ? drafts / total * 100 : 0);
+  setDonutProgress("sectionRing", sectionTotal > 0 ? 100 : 0);
+}
+
+function setDonutProgress(id, percentage) {
+  const ring = $(id);
+  if (!ring) return;
+  const radius = Number(ring.getAttribute("r") || 21);
+  const circumference = 2 * Math.PI * radius;
+  const safe = Math.max(0, Math.min(100, Number(percentage) || 0));
+  ring.style.strokeDasharray = `${circumference} ${circumference}`;
+  ring.style.strokeDashoffset = String(circumference * (1 - safe / 100));
 }
 
 // ======================================================
@@ -1660,7 +1767,11 @@ function showEmpty(title, message) {
   const text = document.createElement("p");
   text.textContent = message;
 
-  box.append(heading, text);
+  const icon = document.createElement("div");
+  icon.className = "tm-state-icon";
+  icon.innerHTML = activityIconMarkup("module", 22);
+
+  box.append(icon, heading, text);
 
   grid.appendChild(box);
 }
@@ -1709,7 +1820,8 @@ function typeLabel(type) {
     module: "Learning Module",
     quiz: "Quiz",
     assignment: "Assignment",
-    discussion: "Discussion"
+    discussion: "Discussion",
+    announcement: "Announcement"
   })[type] || "Activity";
 }
 

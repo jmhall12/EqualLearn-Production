@@ -1,11 +1,10 @@
-﻿
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script id="EQUALLEARN_FORCE_DARK_BOOTSTRAP">document.documentElement.dataset.theme="dark";document.documentElement.style.colorScheme="dark";</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0b1020">
+    <meta name="theme-color" content="#7865dc">
 
     <title>Create Sections | EqualLearn</title>
 
@@ -326,214 +325,6 @@
             background: var(--glass-purple, #7865dc);
         }
 
-
-        /* FILTERABLE, STAGED STUDENT PICKER */
-        .student-filter-grid {
-            display: grid;
-            grid-template-columns: minmax(220px, 2fr) repeat(3, minmax(145px, 1fr));
-            gap: 12px;
-            margin-top: 16px;
-        }
-        .student-picker-actions {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin: 14px 0 10px;
-        }
-        .student-picker-actions-left,
-        .student-picker-actions-right {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .student-picker-count {
-            color: var(--glass-muted, #777d96);
-            font-size: 12px;
-            font-weight: 750;
-        }
-        .student-picker-actions .btn {
-            min-height: 38px;
-            padding: 9px 13px;
-            font-size: 12px;
-        }
-        .student-options-list {
-            display: grid;
-            gap: 8px;
-            max-height: 330px;
-            overflow: auto;
-            padding: 9px;
-            border: 1px solid rgba(150,155,190,.2);
-            border-radius: 15px;
-            background: rgba(255,255,255,.38);
-        }
-        .student-option {
-            display: grid;
-            grid-template-columns: 22px minmax(0,1fr) auto;
-            align-items: center;
-            gap: 11px;
-            padding: 12px;
-            border: 1px solid rgba(145,151,185,.16);
-            border-radius: 12px;
-            background: rgba(255,255,255,.72);
-        }
-        .student-option input[type="checkbox"] {
-            width: 17px;
-            height: 17px;
-            accent-color: #7865dc;
-        }
-        .student-option-main {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            min-width: 0;
-        }
-        .student-option-info { min-width: 0; }
-        .student-option-avatar,
-        .student-basket-avatar {
-            position: relative;
-            display: inline-grid;
-            place-items: center;
-            flex: 0 0 auto;
-            width: 42px;
-            height: 42px;
-            overflow: hidden;
-            border-radius: 50%;
-            color: #fff;
-            background: linear-gradient(135deg, #635bdb, #9a80ff);
-            border: 2px solid rgba(99,91,219,.18);
-            font-size: 12px;
-            font-weight: 850;
-        }
-        .student-basket-avatar {
-            width: 32px;
-            height: 32px;
-            font-size: 10px;
-        }
-        .student-option-avatar img,
-        .student-basket-avatar img {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: inherit;
-        }
-        .student-avatar-fallback {
-            display: grid;
-            place-items: center;
-            width: 100%;
-            height: 100%;
-        }
-        .student-option-name {
-            display: block;
-            color: var(--glass-text, #252641);
-            font-size: 13px;
-            font-weight: 800;
-            overflow-wrap: anywhere;
-        }
-        .student-option-sub {
-            display: block;
-            margin-top: 3px;
-            color: var(--glass-muted, #777d96);
-            font-size: 11px;
-            overflow-wrap: anywhere;
-        }
-        .student-option-tags {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-            gap: 5px;
-        }
-        .student-tag {
-            padding: 5px 8px;
-            border-radius: 20px;
-            color: #5a50ad;
-            background: rgba(232,229,255,.8);
-            font-size: 10px;
-            font-weight: 800;
-            white-space: nowrap;
-        }
-        .student-tag.muted-tag {
-            color: #777d96;
-            background: rgba(226,229,239,.8);
-        }
-        .student-option.is-added {
-            border-color: rgba(72,160,116,.25);
-            background: rgba(231,248,239,.72);
-        }
-        .student-option-empty {
-            padding: 22px 14px;
-            color: var(--glass-muted, #777d96);
-            text-align: center;
-            font-size: 12px;
-        }
-        .student-basket {
-            margin-top: 15px;
-            padding: 15px;
-            border: 1px solid rgba(120,101,220,.22);
-            border-radius: 15px;
-            background: rgba(235,232,255,.42);
-        }
-        .student-basket-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-            color: #51489e;
-            font-size: 12px;
-            font-weight: 850;
-        }
-        .student-basket-list { display: grid; gap: 7px; }
-        .student-basket-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            padding: 9px 10px;
-            border-radius: 10px;
-            background: rgba(255,255,255,.72);
-            color: var(--glass-text, #252641);
-            font-size: 11px;
-        }
-        .student-basket-identity {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            min-width: 0;
-        }
-        .student-basket-name { min-width: 0; overflow-wrap: anywhere; }
-        .student-basket-row button {
-            flex: 0 0 auto;
-            padding: 5px 8px;
-            border: 0;
-            border-radius: 7px;
-            background: #fee2e2;
-            color: #991b1b;
-            font-size: 10px;
-            font-weight: 800;
-            cursor: pointer;
-        }
-        .student-basket-empty {
-            color: var(--glass-muted, #777d96);
-            font-size: 11px;
-        }
-        @media (max-width: 850px) {
-            .student-filter-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
-        }
-        @media (max-width: 560px) {
-            .student-filter-grid { grid-template-columns: minmax(0,1fr); }
-            .student-option { grid-template-columns: 22px minmax(0,1fr); }
-            .student-option-tags { grid-column: 2; justify-content: flex-start; }
-            .student-picker-actions { align-items: stretch; }
-            .student-picker-actions-left,
-            .student-picker-actions-right { width: 100%; }
-            .student-picker-actions .btn { flex: 1; }
-        }
-
         /* =========================================
            ACTION BUTTONS
         ========================================= */
@@ -816,38 +607,273 @@
                 background: rgba(255,255,255,.96);
             }
         }
-    </style>
-    <link rel="stylesheet" href="../assets/css/responsive-layout.css">
-    <link rel="stylesheet" href="../assets/css/responsive-auto-fit.css">
-  <link rel="stylesheet" href="../assets/css/forced-dark-theme.css?v=1">
+    
+
+        /* =====================================================
+           EQUALLEARN CREATE SECTIONS — COMPACT DARK WORKSPACE
+           ===================================================== */
+        body {
+            color: #edf0fa !important;
+            background: #0d1222 !important;
+        }
+
+        .page {
+            padding: 14px clamp(14px, 1.8vw, 26px) 30px !important;
+        }
+
+        .stats {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 0 !important;
+            margin: 0 0 14px !important;
+            overflow: hidden !important;
+            border: 1px solid #2d3851 !important;
+            border-radius: 14px !important;
+            background: #151e31 !important;
+            box-shadow: 0 8px 22px rgba(0,0,0,.16) !important;
+        }
+
+        .stats .stat-card {
+            min-height: 70px !important;
+            padding: 12px 17px !important;
+            border: 0 !important;
+            border-right: 1px solid #303a53 !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            backdrop-filter: none !important;
+        }
+
+        .stats .stat-card:last-child { border-right: 0 !important; }
+        .stats .stat-card::after { display: none !important; }
+        .stats .stat-card span {
+            color: #aab4ca !important;
+            font-size: 10px !important;
+        }
+        .stats .stat-card strong {
+            margin-top: 3px !important;
+            color: #f2f4fb !important;
+            font-size: 24px !important;
+            line-height: 1.15 !important;
+        }
+
+        .page .card {
+            padding: 17px 18px !important;
+            margin-bottom: 14px !important;
+            border: 1px solid #2d3851 !important;
+            border-radius: 16px !important;
+            color: #edf0fa !important;
+            background: #151e31 !important;
+            box-shadow: 0 10px 26px rgba(0,0,0,.16) !important;
+            backdrop-filter: none !important;
+        }
+
+        .page .card h2 { color: #f0f2fa !important; font-size: 17px !important; }
+        .el-card-title { margin-bottom: 10px !important; }
+        .el-card-title span, .page .muted, .notice { color: #a6b0c6 !important; }
+        .page .muted { font-size: 11px !important; }
+
+        .form-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 12px !important;
+            margin-top: 14px !important;
+        }
+        .field label {
+            margin-bottom: 5px !important;
+            color: #d5dbee !important;
+            font-size: 11px !important;
+        }
+        .page input:not([type="checkbox"]):not([type="radio"]),
+        .page select {
+            min-height: 39px !important;
+            padding: 8px 11px !important;
+            border: 1px solid #34415d !important;
+            border-radius: 10px !important;
+            color: #eef1fa !important;
+            background: #0e172a !important;
+            font-size: 12px !important;
+        }
+        .page input::placeholder { color: #8490aa !important; }
+        .page input:focus, .page select:focus {
+            border-color: #8d7bf0 !important;
+            background: #111d33 !important;
+            box-shadow: 0 0 0 3px rgba(141,123,240,.14) !important;
+        }
+
+        .student-picker-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .student-picker-controls input[type="search"] {
+            flex: 1 1 280px;
+            width: auto !important;
+        }
+        .btn {
+            min-height: 34px !important;
+            gap: 6px !important;
+            padding: 7px 11px !important;
+            border-radius: 9px !important;
+            font-size: 10px !important;
+        }
+        .btn.secondary {
+            color: #d2caff !important;
+            border: 1px solid #414b67 !important;
+            background: #252e45 !important;
+            box-shadow: none !important;
+        }
+        .btn.primary {
+            color: #fff !important;
+            background: linear-gradient(120deg,#8972ed,#6651ca) !important;
+        }
+        .btn.danger { color: #ffabb4 !important; background: rgba(194,65,84,.16) !important; }
+        .btn.edit { color: #c8bbff !important; background: rgba(123,101,220,.16) !important; }
+        .actions { gap: 8px !important; margin-top: 15px !important; }
+
+        .student-selection-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin: 9px 0 7px;
+        }
+        .selection-summary {
+            min-height: 31px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 7px !important;
+            margin: 0 !important;
+            padding: 5px 10px !important;
+            border: 1px solid #3a4161 !important;
+            border-radius: 9px !important;
+            color: #d3caff !important;
+            background: #202943 !important;
+            font-size: 10px !important;
+        }
+        .selection-summary::before {
+            width: 17px !important;
+            height: 17px !important;
+            font-size: 10px !important;
+        }
+        .student-visible-count { color: #929fba; font-size: 10px; white-space: nowrap; }
+        .student-picker-list {
+            display: grid;
+            gap: 5px;
+            max-height: 285px;
+            min-height: 100px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 7px;
+            border: 1px solid #303b55;
+            border-radius: 12px;
+            background: #0e172a;
+            scrollbar-width: thin;
+            scrollbar-color: #515d7d transparent;
+        }
+        .student-option {
+            display: grid;
+            grid-template-columns: 18px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 9px;
+            min-width: 0;
+            padding: 8px 10px;
+            border: 1px solid #293650;
+            border-radius: 9px;
+            background: #172238;
+            cursor: pointer;
+            transition: background .15s ease, border-color .15s ease;
+        }
+        .student-option:hover:not(.is-locked) {
+            border-color: #6659ad;
+            background: #202b45;
+        }
+        .student-option.is-selected {
+            border-color: rgba(151,132,244,.7);
+            background: rgba(111,91,198,.16);
+        }
+        .student-option.is-locked { opacity: .48; cursor: not-allowed; }
+        .student-option input[type="checkbox"] {
+            width: 15px !important;
+            height: 15px !important;
+            margin: 0 !important;
+            accent-color: #927cf0;
+            cursor: pointer;
+        }
+        .student-option-main { min-width: 0; }
+        .student-option-name {
+            display: block;
+            overflow: hidden;
+            color: #edf0fa;
+            font-size: 11px;
+            font-weight: 750;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .student-option-detail {
+            display: block;
+            overflow: hidden;
+            margin-top: 2px;
+            color: #98a4bd;
+            font-size: 9px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .student-option-status {
+            max-width: 150px;
+            overflow: hidden;
+            color: #a89af0;
+            font-size: 9px;
+            text-align: right;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .student-picker-empty {
+            padding: 18px 10px;
+            color: #95a1ba;
+            font-size: 11px;
+            text-align: center;
+        }
+        .notice { margin-top: 7px !important; font-size: 10px !important; line-height: 1.5 !important; }
+        .message.error { color: #ffb2bc !important; background: rgba(190,56,76,.15) !important; border-color: rgba(255,142,158,.22) !important; }
+        .message.success { color: #86e0b7 !important; background: rgba(39,145,103,.15) !important; border-color: rgba(118,220,176,.2) !important; }
+
+        .table-wrap { overflow-x: auto !important; border-color: #303b55 !important; background: #111a2c !important; }
+        .page th { padding: 10px !important; color: #b7aaff !important; background: #202a40 !important; border-color: #303b55 !important; font-size: 9px !important; }
+        .page td { padding: 10px !important; color: #e0e5f2 !important; border-color: #2c3650 !important; font-size: 10px !important; }
+        .page tbody tr:hover { background: #202a40 !important; }
+        .page .pill { color: #cbbfff !important; border-color: #454069 !important; background: #282746 !important; font-size: 9px !important; }
+
+        @media (max-width: 650px) {
+            .page { padding: 10px 10px 24px !important; }
+            .stats { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+            .stats .stat-card { min-height: 62px !important; padding: 9px 8px !important; }
+            .stats .stat-card span { font-size: 8px !important; }
+            .stats .stat-card strong { font-size: 20px !important; }
+            .page .card { padding: 13px !important; }
+            .form-grid { grid-template-columns: minmax(0, 1fr) !important; gap: 10px !important; }
+            .field.full { grid-column: auto !important; }
+            .student-picker-controls { align-items: stretch; }
+            .student-picker-controls input[type="search"] { min-width: 0; }
+            .student-picker-controls .btn { flex: 0 0 auto; }
+            .student-option { grid-template-columns: 17px minmax(0,1fr); }
+            .student-option-status { grid-column: 2; text-align: left; max-width: 100%; }
+            .actions { flex-direction: row !important; align-items: center !important; }
+            .actions .btn { width: auto !important; flex: 0 1 auto; }
+        }
+
+        @media (max-width: 380px) {
+            .student-picker-controls { flex-direction: column; }
+            .student-picker-controls .btn { align-self: flex-start; }
+        }
+
+</style>
 </head>
 
 <body>
 
 <main class="page">
-
-    <!-- PAGE HEADER -->
-
-    <header class="header">
-        <div>
-            <div class="el-page-kicker">Academic Management</div>
-
-            <h1>Create Sections</h1>
-
-            <p class="muted">
-                Create class sections and manage official student placement in one place.
-            </p>
-        </div>
-
-        <button
-            type="button"
-            class="btn secondary"
-            onclick="location.href='dashboard.html'">
-            ← Back to Dashboard
-        </button>
-    </header>
-
-    <!-- STATISTICS -->
+<!-- STATISTICS -->
 
     <section class="stats" aria-label="Section statistics">
 
@@ -883,7 +909,7 @@
         </div>
 
         <p class="muted">
-            Set the section details and choose one teacher. Add students in one or more filtered batches, then create the section once the member list is complete.
+            Select one teacher, then assign multiple students to that teacher in one submission.
         </p>
 
         <form id="sectionForm">
@@ -925,7 +951,6 @@
                         <option value="2">2nd Year</option>
                         <option value="3">3rd Year</option>
                         <option value="4">4th Year</option>
-                        <option value="5">5th Year</option>
                     </select>
                 </div>
 
@@ -957,56 +982,47 @@
                     </div>
                 </div>
 
-                <!-- FILTERABLE, MULTI-BATCH STUDENT ASSIGNMENT -->
+                <!-- BATCH STUDENT ASSIGNMENT -->
+
                 <div class="field full">
-                    <label>Find students for this section</label>
+                    <label for="studentIds">
+                        Assign Students (Batch Assignment)
+                    </label>
+
+                    <div class="student-picker-controls">
+                        <input
+                            type="search"
+                            id="studentSearch"
+                            placeholder="Search name, Student ID, email, course, or section..."
+                            aria-label="Search students">
+                        <button
+                            type="button"
+                            class="btn secondary select-all-btn"
+                            id="selectVisibleStudents"
+                            aria-pressed="false">
+                            Select All
+                        </button>
+                    </div>
+
+                    <div class="student-selection-head">
+                        <div
+                            class="selection-summary"
+                            id="selectionSummary"
+                            aria-live="polite">
+                            0 students selected
+                        </div>
+                        <span class="student-visible-count" id="studentVisibleSummary">0 students shown</span>
+                    </div>
+
+                    <div
+                        id="studentPickerList"
+                        class="student-picker-list"
+                        aria-label="Available students">
+                        <div class="student-picker-empty">Loading students...</div>
+                    </div>
+
                     <div class="notice">
-                        Filter or search the available students. Save each selection batch below, then change the filters to add more students to the same section. Students already assigned to another section are automatically hidden.
-                    </div>
-
-                    <div class="student-filter-grid">
-                        <div class="field">
-                            <label for="studentSearch">Search by name, email, or Student ID</label>
-                            <input id="studentSearch" type="search" placeholder="Type a name, email, or ID..." autocomplete="off">
-                        </div>
-                        <div class="field">
-                            <label for="studentCourseFilter">Course / Program</label>
-                            <select id="studentCourseFilter"><option value="all">All courses</option></select>
-                        </div>
-                        <div class="field">
-                            <label for="studentYearFilter">Year Level</label>
-                            <select id="studentYearFilter"><option value="all">All year levels</option></select>
-                        </div>
-                        <div class="field">
-                            <label for="studentAcademicYearFilter">Academic Year</label>
-                            <select id="studentAcademicYearFilter"><option value="all">All academic years</option></select>
-                        </div>
-                    </div>
-
-                    <div class="student-picker-actions">
-                        <div class="student-picker-actions-left">
-                            <span id="eligibleStudentCount" class="student-picker-count">Loading available students...</span>
-                            <span id="checkedStudentCount" class="student-picker-count">0 checked</span>
-                        </div>
-                        <div class="student-picker-actions-right">
-                            <button type="button" id="selectVisibleStudents" class="btn secondary">Select Visible</button>
-                            <button type="button" id="clearCurrentSelection" class="btn secondary">Clear Checks</button>
-                            <button type="button" id="addSelectedStudents" class="btn primary" disabled>Save Selected Students</button>
-                        </div>
-                    </div>
-
-                    <div id="studentOptionsList" class="student-options-list" role="group" aria-label="Available students">
-                        <div class="student-option-empty">Loading available students...</div>
-                    </div>
-
-                    <div class="student-basket">
-                        <div class="student-basket-header">
-                            <span>Students saved for this section</span>
-                            <span id="selectionSummary">0 selected</span>
-                        </div>
-                        <div id="selectedStudentsList" class="student-basket-list">
-                            <div class="student-basket-empty">No students added yet. Use the filters above to choose students.</div>
-                        </div>
+                        Selections are kept while you search or change the visible results. Click Select All to select all matching students; click it again to unselect those visible students. Students already assigned to another section cannot be selected.
                     </div>
                 </div>
 
@@ -1117,7 +1133,7 @@
 
 <!-- EQUALLEARN LUMI COMPANION -->
 <iframe
- src="../assets/widgets/lumi.html"
+  src="/assets/widgets/lumi.html"
   title="Lumi — EqualLearn Companion"
   id="equallearn-lumi-frame"
   allow="autoplay"
@@ -1138,4 +1154,3 @@
 
 </body>
 </html>
-

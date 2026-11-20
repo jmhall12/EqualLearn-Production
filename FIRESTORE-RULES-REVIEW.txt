@@ -1,0 +1,49 @@
+EQUALLEARN FIRESTORE RULES REVIEW — 2026-11-20
+
+Source used: the Firestore rules text uploaded in this conversation as
+"Pasted text(20261120-065100).txt". This is a full-file, minimal-change
+revision; unrelated rules and collections were retained.
+
+CHANGES
+1. Replaced the three undefined calls to studentCanReadSectionContent() with
+   the existing studentCanReadApprovedSectionContent() helper. This helper
+   requires role=student, status=active on the student profile, an active
+   content document, reviewStatus=approved, and sectionIds containing the
+   student's exact sectionId.
+2. Adjusted teacherCanReadApprovedAdminModule() to allow teachers to read
+   approved Admin modules. This matches the existing Teacher Admin Content
+   query and its "Already published by another teacher" card state. The
+   publish rule still requires no existing assignedTeacherId and verifies
+   that the selected section is assigned to the current teacher, so it does
+   not grant reassignment rights.
+3. Added an explicit list type guard to studentCanReadPublishedV2Content().
+4. Removed duplicate progress and quizAttempts match blocks. Firestore grants
+   access when ANY matching allow condition returns true; duplicate
+   quizAttempts create rules previously made the strict parent-quiz check
+   ineffective because a later, broader create rule also allowed submission.
+5. Kept a single quizAttempts match and tightened create so the student can
+   submit only their own attempt for a published quiz document in
+   teacherActivitiesV2 whose sectionIds includes their own sectionId.
+   The parent collection and fields match the current student quiz code.
+6. Aligned notification recipient lookup with the /users list rule by adding
+   a student-role filter to the section query. The notification creation rule
+   accepts the same active-status variants handled by the app. The matching
+   users (sectionId + role) composite index is included.
+
+WORKFLOW EXPECTED FIELDS
+Legacy Admin modules/lessons:
+  reviewStatus="pending" -> teacher approval sets reviewStatus="approved",
+  status="approved" -> teacher publish sets status="active",
+  reviewStatus="approved", sectionIds=[Firestore section document ID],
+  assignedTeacherId=<publishing teacher UID>.
+
+Student visibility:
+  students can read only status="active" + reviewStatus="approved" legacy
+  modules/lessons assigned to their profile.sectionId.
+  V2 modules and teacherActivitiesV2 remain governed by status="published"
+  and sectionIds containing the student's profile.sectionId.
+
+NOT DEPLOYED
+This file was statically reviewed only. It has not been deployed to, or run
+through the Firebase Rules Emulator against, the user's live Firebase project.
+Back up the deployed rules before replacing them and run the included tests.

@@ -9,6 +9,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  onSnapshot,
   query,
   where,
   updateDoc,
@@ -29,6 +30,9 @@ const batchReject = document.getElementById("batchReject");
 const refreshButton = document.getElementById("refreshStudents");
 
 let students = [];
+let canAssignStudentIds = false;
+let studentsUnsubscribe = null;
+let assigningMissingStudentIds = false;
 
 const $ = id => document.getElementById(id);
 
@@ -131,9 +135,6 @@ function renderStudentPhoto(student) {
 
       <div class="admin-student-details">
         <strong>${esc(name)}</strong>
-        <div class="muted">
-          ${esc(student.studentId || "Student ID pending")}
-        </div>
       </div>
     </div>
   `;
@@ -149,14 +150,15 @@ function injectStudentPhotoStyles() {
     .admin-student-identity {
       display: flex;
       align-items: center;
-      gap: 12px;
-      min-width: 190px;
+      gap: 7px;
+      min-width: 0;
+      max-width: 100%;
     }
 
     .admin-student-photo {
-      width: 48px;
-      height: 48px;
-      min-width: 48px;
+      width: 34px;
+      height: 34px;
+      min-width: 34px;
       border-radius: 50%;
       overflow: hidden;
       position: relative;
@@ -164,7 +166,7 @@ function injectStudentPhotoStyles() {
       place-items: center;
       background: linear-gradient(135deg, #635bff, #9a80ff);
       color: white;
-      font-size: 15px;
+      font-size: 11px;
       font-weight: 800;
       border: 2px solid rgba(99,91,255,.15);
     }
@@ -190,9 +192,13 @@ function injectStudentPhotoStyles() {
       color: var(--text, inherit);
     }
 
+    .admin-student-details { min-width: 0; overflow-wrap: anywhere; }
+    .admin-student-details strong { display: block; font-size: 10px; line-height: 1.3; }
     .admin-student-identity .muted {
-      font-size: 11px;
-      margin-top: 3px;
+      font-size: 8px;
+      line-height: 1.25;
+      margin-top: 2px;
+      overflow-wrap: anywhere;
     }
   `;
 
@@ -209,14 +215,6 @@ const verificationOf = student =>
   student.verificationStatus ||
   (student.academicProfileVerified === true ? "verified" : "pending");
 
-const isComplete = student =>
-  Boolean(
-    student.studentNumber &&
-    student.course &&
-    student.yearLevel &&
-    (student.section || student.sectionName) &&
-    (student.academicYear || student.cohort)
-  );
 
 function setNotice(message, type = "info") {
   notice.textContent = message;
@@ -231,21 +229,143 @@ function setNotice(message, type = "info") {
     }`;
 }
 
+const DONUT_CIRCUMFERENCE = 125.66;
+
+function setStatNumber(elementId, value) {
+  const element = $(elementId);
+  if (!element) return;
+
+  const nextValue = Number(value || 0).toLocaleString("en-PH");
+  if (element.textContent === nextValue) return;
+
+  element.textContent = nextValue;
+}
+
+function setDonutProgress(elementId, value, total) {
+  const ring = $(elementId);
+  if (!ring) return;
+
+  const percentage = total > 0
+    ? Math.max(0, Math.min(100, (value / total) * 100))
+    : 0;
+  const offset = DONUT_CIRCUMFERENCE * (1 - percentage / 100);
+
+  // Update only the SVG stroke offset. CSS animates the arc smoothly;
+  // the SVG is never recreated for each Firestore event.
+  ring.style.strokeDashoffset = offset.toFixed(2);
+  ring.setAttribute("aria-valuenow", percentage.toFixed(1));
+}
+
 function updateStats() {
-  $("totalStudents").textContent =
-    students.length.toLocaleString("en-PH");
+  const total = students.length;
+  const pending = students.filter(s => verificationOf(s) === "pending").length;
+  const verified = students.filter(s => verificationOf(s) === "verified").length;
+  const rejected = students.filter(s => verificationOf(s) === "rejected").length;
 
-  $("pendingStudents").textContent =
-    students.filter(s => verificationOf(s) === "pending")
-      .length.toLocaleString("en-PH");
+  setStatNumber("totalStudents", total);
+  setStatNumber("pendingStudents", pending);
+  setStatNumber("verifiedStudents", verified);
+  setStatNumber("rejectedStudents", rejected);
 
-  $("verifiedStudents").textContent =
-    students.filter(s => verificationOf(s) === "verified")
-      .length.toLocaleString("en-PH");
+  // Total is represented by a complete ring; status rings show their share
+  // of the total student population.
+  setDonutProgress("totalStudentsRing", total, total);
+  setDonutProgress("pendingStudentsRing", pending, total);
+  setDonutProgress("verifiedStudentsRing", verified, total);
+  setDonutProgress("rejectedStudentsRing", rejected, total);
+}
 
-  $("rejectedStudents").textContent =
-    students.filter(s => verificationOf(s) === "rejected")
-      .length.toLocaleString("en-PH");
+function studentTableSignature(records) {
+  return JSON.stringify(records.map(student => {
+    const deletion = student.deletionScheduledAt?.toDate
+      ? student.deletionScheduledAt.toDate().toISOString()
+      : String(student.deletionScheduledAt || "");
+
+    return [
+      student.id,
+      student.fullname,
+      student.studentNumber,
+      student.email,
+      student.course,
+      student.yearLevel,
+      student.section,
+      student.sectionName,
+      student.academicYear,
+      student.cohort,
+      student.verificationStatus,
+      student.academicProfileVerified,
+      deletion,
+      student.photoURL,
+      student.googlePhotoURL,
+      student.profileImage,
+      student.profileImageBase64
+    ];
+  }));
+}
+
+function sortStudents(records) {
+  return records.sort((a, b) =>
+    String(a.fullname || "").localeCompare(String(b.fullname || ""))
+  );
+}
+
+function applyStudentSnapshot(nextStudents) {
+  const previousSignature = studentTableSignature(students);
+  students = sortStudents(nextStudents);
+
+  // Summary values and doughnut arcs update on every snapshot, but are
+  // changed in place. The table is only rebuilt when visible row data changes.
+  updateStats();
+
+  const nextSignature = studentTableSignature(students);
+  if (previousSignature !== nextSignature) {
+    render();
+  }
+}
+
+function subscribeToStudentUpdates() {
+  if (studentsUnsubscribe) studentsUnsubscribe();
+
+  const studentsQuery = query(
+    collection(db, "users"),
+    where("role", "==", "student")
+  );
+
+  studentsUnsubscribe = onSnapshot(
+    studentsQuery,
+    snapshot => {
+      const nextStudents = snapshot.docs.map(item => ({
+        id: item.id,
+        ...item.data()
+      }));
+
+      applyStudentSnapshot(nextStudents);
+
+      // Newly created student profiles may arrive without a human-readable ID.
+      // Assign it once for Admin accounts; the subsequent snapshot contains it.
+      if (
+        canAssignStudentIds &&
+        !assigningMissingStudentIds &&
+        students.some(student => !String(student.studentNumber || "").trim())
+      ) {
+        assigningMissingStudentIds = true;
+        assignMissingStudentNumbers(students)
+          .catch(error => {
+            console.error("Automatic Student ID assignment failed:", error);
+          })
+          .finally(() => {
+            assigningMissingStudentIds = false;
+          });
+      }
+    },
+    error => {
+      console.error("Live student updates unavailable:", error);
+      setNotice(
+        "Live updates were interrupted. Use Refresh to check the latest records.",
+        "error"
+      );
+    }
+  );
 }
 
 function visibleStudents() {
@@ -273,7 +393,6 @@ function visibleStudents() {
     const searchable = [
       student.fullname,
       student.email,
-      student.studentId,
       student.studentNumber,
       student.course,
       student.yearLevel,
@@ -318,7 +437,17 @@ function render() {
   }
 
   tableContainer.innerHTML = `
-    <table>
+    <table class="verification-table">
+      <colgroup>
+        <col class="col-select">
+        <col class="col-student">
+        <col class="col-student-id">
+        <col class="col-email">
+        <col class="col-course">
+        <col class="col-section">
+        <col class="col-verification">
+        <col class="col-actions">
+      </colgroup>
       <thead>
         <tr>
           <th>
@@ -333,7 +462,6 @@ function render() {
           <th>Email</th>
           <th>Course / Year</th>
           <th>Section / Academic Year</th>
-          <th>Profile</th>
           <th>Verification</th>
           <th>Actions</th>
         </tr>
@@ -365,7 +493,7 @@ function render() {
 
           return `
             <tr>
-              <td>
+              <td data-label="Select">
                 ${
                   pending
                     ? `
@@ -379,41 +507,33 @@ function render() {
                 }
               </td>
 
-              <td>
+              <td data-label="Student">
                 ${renderStudentPhoto(student)}
               </td>
 
-              <td>
-                <strong class="student-public-id">${esc(student.studentId || "Not assigned")}</strong>
-                ${student.studentNumber ? `<div class="muted">Legacy number: ${esc(student.studentNumber)}</div>` : ""}
-              </td>
+              <td data-label="Student ID">${esc(student.studentNumber || "—")}</td>
 
-              <td>
+              <td data-label="Email">
                 ${esc(student.email || "—")}
                 <div class="muted">
                   ${allowed ? "PTC domain" : "Unauthorized domain"}
                 </div>
               </td>
 
-              <td>
+              <td data-label="Course / Year">
                 ${esc(student.course || "—")} ·
                 ${esc(student.yearLevel || "—")}
               </td>
 
-              <td>
+              <td data-label="Section / Academic Year">
                 ${esc(student.section || student.sectionName || "—")}
                 <div class="muted">
                   ${esc(student.academicYear || student.cohort || "—")}
                 </div>
               </td>
 
-              <td>
-                <span class="pill ${isComplete(student) ? "verified" : "pending"}">
-                  ${isComplete(student) ? "Complete" : "Incomplete"}
-                </span>
-              </td>
 
-              <td>
+              <td data-label="Verification">
                 <span class="pill ${badge}">${statusText}</span>
 
                 ${
@@ -422,14 +542,9 @@ function render() {
                     : ""
                 }
 
-                ${
-                  !allowed
-                    ? '<div class="muted">Manual verification required</div>'
-                    : ""
-                }
               </td>
 
-              <td>
+              <td data-label="Actions">
                 <div class="row-actions">
                   ${
                     pending
@@ -656,7 +771,7 @@ async function perform(action, uids, reason = "") {
       failed.length ? "error" : "success"
     );
 
-    await loadStudents();
+    // Firestore onSnapshot updates the table and summary as writes land.
 
   } catch (error) {
     console.error("Verification action failed:", error);
@@ -668,75 +783,150 @@ async function perform(action, uids, reason = "") {
   }
 }
 
-// Public-facing EqualLearn ID. Firebase Auth UID remains internal and is
-// never rendered in the admin student directory. Existing studentNumber is
-// intentionally preserved because older registration/cohort workflows use it.
-const STUDENT_ID_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+// =====================================================
+// HUMAN-READABLE STUDENT ID GENERATION
+// Format: YY + COURSE + - + RANDOM FOUR DIGITS
+// Example: 25BSIT-0597
+// Existing studentNumber values are never overwritten.
+// =====================================================
 
-function createStudentId(usedIds) {
-  const year = new Date().getFullYear();
+function getStudentYearCode(student) {
+  const values = [student.cohort, student.academicYear];
 
-  for (let attempt = 0; attempt < 100; attempt += 1) {
-    const bytes = new Uint8Array(8);
-    crypto.getRandomValues(bytes);
-    let suffix = "";
+  for (const value of values) {
+    const text = String(value || "").trim();
+    if (!text) continue;
 
-    for (const byte of bytes) {
-      suffix += STUDENT_ID_ALPHABET[byte % STUDENT_ID_ALPHABET.length];
-    }
+    // Prefer a full academic year such as 2025-2026.
+    const fullYear = text.match(/20(\d{2})/);
+    if (fullYear) return fullYear[1];
 
-    const candidate = `EL-${year}-${suffix}`;
-    if (!usedIds.has(candidate)) return candidate;
+    // Also accept a short cohort such as 25 or 25BSIT.
+    const shortYear = text.match(/^(\d{2})/);
+    if (shortYear) return shortYear[1];
   }
 
-  throw new Error("Unable to generate a unique student ID. Please retry.");
+  const createdAt = student.createdAt?.toDate
+    ? student.createdAt.toDate()
+    : student.createdAt
+      ? new Date(student.createdAt)
+      : null;
+
+  const year = createdAt && !Number.isNaN(createdAt.getTime())
+    ? createdAt.getFullYear()
+    : new Date().getFullYear();
+
+  return String(year).slice(-2);
 }
 
-async function assignMissingStudentIds(records) {
-  const idCounts = new Map();
-  for (const student of records) {
-    const existingId = String(student.studentId || "").trim().toUpperCase();
-    if (existingId) idCounts.set(existingId, (idCounts.get(existingId) || 0) + 1);
+function getStudentCourseCode(student) {
+  const raw = String(student.course || "BSIT")
+    .trim()
+    .toUpperCase();
+  const compact = raw.replace(/[^A-Z0-9]/g, "");
+
+  if (!compact) return "BSIT";
+  if (compact.includes("INFORMATIONTECH") || compact === "BSIT") return "BSIT";
+  if (compact.includes("COMPUTERSCIENCE") || compact === "BSCS") return "BSCS";
+  if (compact.includes("BUSINESSADMIN") || compact === "BSBA") return "BSBA";
+  if (compact.includes("SECONDARYEDUC") || compact === "BSED") return "BSED";
+  if (compact.includes("ELEMENTARYEDUC") || compact === "BEED") return "BEED";
+
+  // Preserve short course codes already stored in the profile.
+  if (/^[A-Z0-9]{2,8}$/.test(compact)) return compact;
+
+  // For longer unrecognized course names, use an acronym of its words.
+  const words = raw.match(/[A-Z0-9]+/g) || [];
+  const acronym = words
+    .filter(word => !["BACHELOR", "OF", "SCIENCE", "IN", "THE"].includes(word))
+    .map(word => word[0])
+    .join("")
+    .slice(0, 8);
+
+  return /^[A-Z0-9]{2,8}$/.test(acronym) ? acronym : "BSIT";
+}
+
+function randomFourDigitSuffix() {
+  const value = new Uint32Array(1);
+
+  if (window.crypto?.getRandomValues) {
+    window.crypto.getRandomValues(value);
+  } else {
+    value[0] = Math.floor(Math.random() * 0xFFFFFFFF);
   }
 
-  const usedIds = new Set(idCounts.keys());
-  const keptIds = new Set();
-  const missing = records.filter(student => {
-    const existingId = String(student.studentId || "").trim().toUpperCase();
-    if (!existingId) return true;
-    if (keptIds.has(existingId)) return true;
-    keptIds.add(existingId);
-    return false;
-  });
+  return String(value[0] % 10000).padStart(4, "0");
+}
 
-  let assigned = 0;
-  const failures = [];
+function createUniqueStudentNumber(student, usedNumbers) {
+  const prefix = `${getStudentYearCode(student)}${getStudentCourseCode(student)}`;
 
-  // Sequential writes avoid collisions within this admin assignment batch.
-  // Duplicate existing IDs are repaired by retaining the first and reissuing the rest.
-  for (const student of missing) {
-    try {
-      const studentId = createStudentId(usedIds);
-      await updateDoc(doc(db, "users", student.id), {
-        studentId,
-        studentIdAssignedAt: serverTimestamp(),
-        studentIdAssignedBy: auth.currentUser?.uid || ""
-      });
-      student.studentId = studentId;
-      usedIds.add(studentId);
-      assigned += 1;
-    } catch (error) {
-      console.error(`Unable to assign an EqualLearn ID to ${student.id}:`, error);
-      failures.push(student.fullname || student.email || "A student");
+  for (let attempt = 0; attempt < 10000; attempt += 1) {
+    const candidate = `${prefix}-${randomFourDigitSuffix()}`;
+
+    if (!usedNumbers.has(candidate)) {
+      usedNumbers.add(candidate);
+      return candidate;
     }
   }
 
-  return { assigned, failed: failures.length, failures };
+  throw new Error(`Unable to generate a unique Student ID for ${student.fullname || student.id}.`);
+}
+
+async function assignMissingStudentNumbers(records) {
+  const usedNumbers = new Set(
+    records
+      .map(student => String(student.studentNumber || "").trim().toUpperCase())
+      .filter(Boolean)
+  );
+
+  const missing = records.filter(
+    student => !String(student.studentNumber || "").trim()
+  );
+
+  let generated = 0;
+  let failed = 0;
+
+  // Small batches avoid firing too many Firestore writes at once.
+  for (let index = 0; index < missing.length; index += 10) {
+    const batch = missing.slice(index, index + 10);
+
+    const results = await Promise.allSettled(
+      batch.map(async student => {
+        const studentNumber = createUniqueStudentNumber(student, usedNumbers);
+
+        await updateDoc(doc(db, "users", student.id), {
+          studentNumber,
+          updatedAt: serverTimestamp()
+        });
+
+        student.studentNumber = studentNumber;
+        return studentNumber;
+      })
+    );
+
+    results.forEach((result, resultIndex) => {
+      if (result.status === "fulfilled") {
+        generated += 1;
+      } else {
+        failed += 1;
+        const student = batch[resultIndex];
+        console.error(
+          `Unable to save Student ID for ${student.fullname || student.id}:`,
+          result.reason
+        );
+      }
+    });
+  }
+
+  return { generated, failed };
 }
 
 async function loadStudents() {
-  tableContainer.innerHTML =
-    '<div class="loading">Loading student records…</div>';
+  if (!students.length) {
+    tableContainer.innerHTML =
+      '<div class="loading">Loading student records…</div>';
+  }
 
   const snapshot = await getDocs(
     query(
@@ -745,23 +935,19 @@ async function loadStudents() {
     )
   );
 
-  students = snapshot.docs.map(item => ({
+  const nextStudents = snapshot.docs.map(item => ({
     id: item.id,
     ...item.data()
   }));
 
-  // Automatically issue permanent public IDs to existing student accounts
-  // that do not have one yet. The Firebase UID is retained only internally.
-  const idResult = await assignMissingStudentIds(students);
+  // Only admins may assign IDs. GAD coordinators can review records,
+  // but they should not write the protected studentNumber field.
+  const idSummary = canAssignStudentIds
+    ? await assignMissingStudentNumbers(nextStudents)
+    : { generated: 0, failed: 0 };
 
-  students.sort((a, b) =>
-    String(a.fullname || "")
-      .localeCompare(String(b.fullname || ""))
-  );
-
-  updateStats();
-  render();
-  return idResult;
+  applyStudentSnapshot(nextStudents);
+  return idSummary;
 }
 
 onAuthStateChanged(auth, async user => {
@@ -794,19 +980,28 @@ onAuthStateChanged(auth, async user => {
       return;
     }
 
-    const idResult = await loadStudents();
+    canAssignStudentIds =
+      String(profile.role || "").toLowerCase() === "admin";
 
-    const idSummary = idResult.assigned
-      ? ` Generated ${idResult.assigned} new EqualLearn student ID(s).`
-      : " All student accounts already have EqualLearn IDs.";
-    const idWarning = idResult.failed
-      ? ` ${idResult.failed} ID(s) could not be assigned; check Firestore permissions and refresh.`
-      : "";
+    const idSummary = await loadStudents();
+    subscribeToStudentUpdates();
 
-    setNotice(
-      `Student records loaded.${idSummary}${idWarning} Pending institutional and non-institutional accounts can be reviewed manually.`,
-      idResult.failed ? "error" : "success"
-    );
+    if (idSummary.failed > 0) {
+      setNotice(
+        `${idSummary.failed} Student ID(s) could not be saved. Check Firestore Rules and console errors.`,
+        "error"
+      );
+    } else if (idSummary.generated > 0) {
+      setNotice(
+        `${idSummary.generated} missing Student ID(s) were generated and saved. Existing IDs were kept.`,
+        "success"
+      );
+    } else {
+      setNotice(
+        "Student records loaded. Existing Student IDs were preserved.",
+        "success"
+      );
+    }
 
   } catch (error) {
     console.error("Student verification page error:", error);
@@ -835,10 +1030,26 @@ selectAll.addEventListener("change", () => {
   updateBatchButtons();
 });
 
-refreshButton.addEventListener("click", () => {
-  loadStudents().catch(error =>
-    setNotice(error.message, "error")
-  );
+refreshButton.addEventListener("click", async () => {
+  try {
+    const idSummary = await loadStudents();
+
+    if (idSummary.failed > 0) {
+      setNotice(
+        `${idSummary.failed} Student ID(s) could not be saved. Check Firestore Rules.`,
+        "error"
+      );
+    } else if (idSummary.generated > 0) {
+      setNotice(
+        `${idSummary.generated} missing Student ID(s) generated and saved.`,
+        "success"
+      );
+    } else {
+      setNotice("Student records synced. Live updates remain enabled.", "success");
+    }
+  } catch (error) {
+    setNotice(error.message, "error");
+  }
 });
 
 batchApprove.addEventListener("click", async () => {
@@ -870,3 +1081,10 @@ batchReject.addEventListener("click", async () => {
 
   await perform("reject", uids, reason);
 });
+
+window.addEventListener("beforeunload", () => {
+  if (studentsUnsubscribe) {
+    studentsUnsubscribe();
+    studentsUnsubscribe = null;
+  }
+}, { once: true });

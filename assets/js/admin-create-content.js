@@ -13,7 +13,6 @@ import {
   doc,
   query,
   where,
-  orderBy,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
@@ -455,21 +454,37 @@ async function loadModules() {
 
   try {
 
+    // Filter by creator in Firestore, then sort locally.
+    // This avoids requiring a composite index for createdBy + order.
     const modulesQuery = query(
-      collection(db, "modules"),
-      where("createdBy", "==", currentUser.uid),
-      orderBy("order", "asc")
+      collection(db, "modulesV2"),
+      where("createdBy", "==", currentUser.uid)
     );
 
     const snapshot = await getDocs(modulesQuery);
 
-    modules = snapshot.docs.map(item => ({
+    modules = snapshot.docs
+      .map(item => ({
+        id: item.id,
+        ...item.data()
+      }))
+      // Firestore orderBy("order") previously excluded documents
+      // without an order field, so keep the same behavior here.
+      .filter(module => Object.prototype.hasOwnProperty.call(module, "order"))
+      .sort((a, b) => {
+        const left = Number(a.order);
+        const right = Number(b.order);
 
-      id: item.id,
+        if (Number.isFinite(left) && Number.isFinite(right)) {
+          return left - right;
+        }
 
-      ...item.data()
-
-    }));
+        return String(a.order ?? "").localeCompare(
+          String(b.order ?? ""),
+          undefined,
+          { numeric: true, sensitivity: "base" }
+        );
+      });
 
     lessonModule.replaceChildren(
       new Option("Select a module", "")
@@ -640,7 +655,7 @@ if (moduleForm) {
       );
 
       await addDoc(
-        collection(db, "modules"),
+        collection(db, "modulesV2"),
         {
 
           title,
@@ -663,6 +678,10 @@ if (moduleForm) {
           status: "pending_review",
 
           reviewStatus: "pending",
+
+          // Explicit null lets the Teacher review page safely query
+          // approved Admin modules that have not been assigned yet.
+          assignedTeacherId: null,
 
           createdBy: currentUser.uid,
 
@@ -983,10 +1002,19 @@ async function loadMyContent() {
   try {
 
     const [
-      moduleSnapshot,
+      moduleV2Snapshot,
+      legacyModuleSnapshot,
       lessonSnapshot
     ] = await Promise.all([
 
+      getDocs(
+        query(
+          collection(db, "modulesV2"),
+          where("createdBy", "==", currentUser.uid)
+        )
+      ),
+
+      // Preserve visibility of Admin modules created before the V2 workflow.
       getDocs(
         query(
           collection(db, "modules"),
@@ -1005,7 +1033,17 @@ async function loadMyContent() {
 
     const items = [
 
-      ...moduleSnapshot.docs.map(item => ({
+      ...moduleV2Snapshot.docs.map(item => ({
+
+        id: item.id,
+
+        type: "Module",
+
+        ...item.data()
+
+      })),
+
+      ...legacyModuleSnapshot.docs.map(item => ({
 
         id: item.id,
 

@@ -1,4 +1,3 @@
-﻿
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,1024 +5,367 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b1020">
-  <meta name="color-scheme" content="light dark">
-
+  <meta name="color-scheme" content="dark">
   <title>Create Learning Content - EqualLearn</title>
-
   <link rel="icon" href="../assets/icons/equallearn-logo.png">
   <link rel="stylesheet" href="../assets/css/sidebar-skeuomorphism.css">
   <link rel="stylesheet" href="../assets/css/glass-dashboard.css">
-
+  <link rel="stylesheet" href="../assets/css/responsive-layout.css">
+  <link rel="stylesheet" href="../assets/css/responsive-auto-fit.css">
+  <link rel="stylesheet" href="../assets/css/forced-dark-theme.css?v=1">
   <style>
     :root {
-      color-scheme: light;
-      --page-bg: #e8e9f0;
-      --surface: #ffffff;
-      --surface-soft: #f6f6fa;
-      --text: #292b40;
-      --muted: #818399;
-      --border: rgba(69,70,105,.12);
-      --accent: #7968c9;
-      --accent-soft: rgba(121,104,201,.11);
-      --success: #219b70;
-      --danger: #dc6262;
-      --shadow: 0 12px 35px rgba(40,40,75,.055);
-      --input-bg: #f8f8fb;
-    }
-
-    html[data-theme="dark"],
-    body[data-theme="dark"] {
       color-scheme: dark;
-      --page-bg: #171821;
-      --surface: #22232e;
-      --surface-soft: #292a37;
-      --text: #ecebf5;
-      --muted: #a3a3b8;
-      --border: rgba(190,188,225,.12);
-      --accent: #ad9bf2;
-      --accent-soft: rgba(173,155,242,.13);
-      --success: #59c69a;
-      --danger: #ff8585;
-      --shadow: 0 14px 35px rgba(0,0,0,.18);
-      --input-bg: #292a37;
+      --cc-bg: #0b1020;
+      --cc-panel: #141d31;
+      --cc-panel-2: #1a2439;
+      --cc-input: #101a2d;
+      --cc-text: #eef1fa;
+      --cc-muted: #9aa7bf;
+      --cc-border: #2b3a56;
+      --cc-accent: #947cf5;
+      --cc-accent-soft: rgba(148,124,245,.14);
+      --cc-success: #65d5aa;
+      --cc-danger: #ff8997;
     }
 
-    * {
-      box-sizing: border-box;
-    }
-
-    html {
-      scroll-behavior: smooth;
-    }
-
-    body {
-      margin: 0;
-      background: var(--page-bg);
-      color: var(--text);
-      font-family: Inter, "Segoe UI", Arial, sans-serif;
-      transition: background .25s ease, color .25s ease;
-    }
-
-    button, input, textarea, select {
-      font: inherit;
-    }
-
+    .content-page, .content-page * { box-sizing: border-box; }
     .content-page {
-      width: min(1160px, 100%);
-      margin: auto;
-      padding: 12px 8px 55px;
+      width: min(1280px, 100%);
+      margin: 0 auto;
+      padding: 14px 16px 42px;
+      color: var(--cc-text);
     }
-
-    .page-header {
+    .workflow-note {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      gap: 18px;
-      flex-wrap: wrap;
-      margin-bottom: 24px;
-    }
-
-    .header-copy {
-      display: flex;
-      align-items: flex-start;
-      gap: 14px;
-    }
-
-    .header-icon {
-      width: 48px;
-      height: 48px;
-      display: grid;
-      place-items: center;
-      flex-shrink: 0;
-      border-radius: 15px;
-      background: var(--accent-soft);
-      color: var(--accent);
-      font-size: 23px;
-    }
-
-    .page-header h1 {
-      margin: 0 0 7px;
-      font-size: clamp(21px, 3vw, 28px);
-      font-weight: 850;
-      letter-spacing: -.7px;
-    }
-
-    .page-header p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.6;
-    }
-
-    .back-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 11px 15px;
-      border: 1px solid var(--border);
+      gap: 10px;
+      padding: 10px 13px;
+      margin: 0 0 13px;
+      border: 1px solid rgba(148,124,245,.24);
+      border-left: 3px solid var(--cc-accent);
       border-radius: 11px;
-      color: var(--text);
-      background: var(--surface);
-      text-decoration: none;
-      font-size: 12px;
-      font-weight: 750;
-      transition: .2s;
+      background: rgba(20,29,49,.82);
     }
-
-    .back-link:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-      transform: translateY(-2px);
-    }
-
-    .intro-card {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      padding: 17px 19px;
-      margin-bottom: 22px;
-      border: 1px solid var(--border);
-      border-left: 4px solid var(--accent);
-      border-radius: 14px;
-      background: var(--surface);
-      box-shadow: var(--shadow);
-    }
-
-    .intro-icon {
-      width: 40px;
-      height: 40px;
+    .workflow-note .note-icon {
       display: grid;
       place-items: center;
-      border-radius: 12px;
-      flex-shrink: 0;
-      background: var(--accent-soft);
-      color: var(--accent);
-      font-size: 19px;
+      flex: 0 0 27px;
+      width: 27px;
+      height: 27px;
+      border-radius: 8px;
+      background: var(--cc-accent-soft);
+      color: #b9aaff;
+      font-size: 14px;
+      font-weight: 900;
     }
+    .workflow-note strong { display: block; margin: 0 0 2px; font-size: 11px; }
+    .workflow-note p { margin: 0; color: var(--cc-muted); font-size: 10px; line-height: 1.45; }
 
-    .intro-card strong {
-      display: block;
-      margin-bottom: 4px;
-      font-size: 12px;
-    }
-
-    .intro-card p {
-      margin: 0;
-      color: var(--muted);
+    .message {
+      display: none;
+      margin: 0 0 12px;
+      padding: 10px 12px;
+      border: 1px solid transparent;
+      border-radius: 9px;
       font-size: 11px;
-      line-height: 1.6;
+      line-height: 1.5;
     }
+    .message.show { display: block; }
+    .message.success { color: var(--cc-success); background: rgba(41,167,119,.1); border-color: rgba(101,213,170,.2); }
+    .message.error { color: var(--cc-danger); background: rgba(220,65,85,.1); border-color: rgba(255,137,151,.22); }
 
     .tabs {
       display: flex;
-      gap: 7px;
-      padding: 6px;
+      align-items: center;
+      gap: 4px;
       width: fit-content;
       max-width: 100%;
       overflow-x: auto;
-      margin-bottom: 19px;
-      border: 1px solid var(--border);
-      border-radius: 13px;
-      background: var(--surface);
+      padding: 4px;
+      margin: 0 0 12px;
+      border: 1px solid var(--cc-border);
+      border-radius: 11px;
+      background: var(--cc-panel);
     }
-
     .tab {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      white-space: nowrap;
-      padding: 11px 16px;
+      gap: 7px;
+      min-height: 34px;
+      padding: 7px 12px;
       border: 0;
-      border-radius: 9px;
+      border-radius: 8px;
       background: transparent;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 750;
+      color: var(--cc-muted);
+      white-space: nowrap;
+      font-size: 11px;
+      font-weight: 800;
       cursor: pointer;
-      transition: .2s;
+      transition: background .18s ease, color .18s ease;
     }
-
-    .tab:hover {
-      background: var(--accent-soft);
-      color: var(--accent);
-    }
-
-    .tab.active {
-      color: #fff;
-      background: var(--accent);
-      box-shadow: 0 5px 13px rgba(100,80,180,.2);
-    }
+    .tab:hover { color: var(--cc-text); background: rgba(148,124,245,.09); }
+    .tab.active { color: #fff; background: #705bd0; box-shadow: 0 4px 12px rgba(87,66,180,.22); }
 
     .panel {
-      padding: 25px;
-      margin-bottom: 20px;
-      border: 1px solid var(--border);
-      border-radius: 17px;
-      background: var(--surface);
-      box-shadow: var(--shadow);
-      animation: panelEnter .3s ease both;
+      padding: 17px 18px;
+      margin: 0 0 14px;
+      border: 1px solid var(--cc-border);
+      border-radius: 15px;
+      background: var(--cc-panel);
+      box-shadow: 0 12px 30px rgba(0,0,0,.12);
     }
-
-    @keyframes panelEnter {
-      from {
-        opacity: 0;
-        transform: translateY(8px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
     .panel-heading {
       display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 15px;
-      margin-bottom: 23px;
-    }
-
-    .panel-heading h2 {
-      margin: 0 0 7px;
-      font-size: 18px;
-      font-weight: 850;
-      letter-spacing: -.3px;
-    }
-
-    .panel-heading p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 11px;
-      line-height: 1.6;
-    }
-
-    .required-note {
-      color: var(--muted);
-      font-size: 10px;
-      white-space: nowrap;
-    }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0,1fr));
-      gap: 19px;
-    }
-
-    .field {
-      min-width: 0;
-    }
-
-    .field.full {
-      grid-column: 1 / -1;
-    }
-
-    .field label {
-      display: flex;
       align-items: center;
-      gap: 5px;
-      margin-bottom: 8px;
-      color: var(--text);
-      font-size: 11px;
-      font-weight: 800;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 0 0 14px;
     }
+    .panel-heading h2 { margin: 0 0 3px; color: var(--cc-text); font-size: 16px; font-weight: 850; letter-spacing: -.25px; }
+    .panel-heading p { margin: 0; color: var(--cc-muted); font-size: 10px; line-height: 1.45; }
+    .required-note { color: var(--cc-muted); font-size: 10px; white-space: nowrap; }
 
-    .field label .required {
-      color: var(--danger);
-    }
-
-    .field input,
-    .field textarea,
-    .field select {
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 11px 13px; }
+    .field { min-width: 0; }
+    .field.full { grid-column: 1 / -1; }
+    .field.third { grid-column: span 1; }
+    .field label { display: flex; align-items: center; gap: 4px; margin: 0 0 5px; color: #dbe2f1; font-size: 10px; font-weight: 800; }
+    .field label .required { color: #ff8997; }
+    .field input, .field textarea, .field select {
       display: block;
       width: 100%;
-      min-height: 44px;
-      padding: 12px 13px;
-      border: 1px solid var(--border);
-      border-radius: 10px;
+      min-width: 0;
+      min-height: 37px;
+      padding: 8px 10px;
+      border: 1px solid var(--cc-border);
+      border-radius: 8px;
       outline: none;
-      background: var(--input-bg);
-      color: var(--text);
-      font-size: 12px;
-      transition: border .2s, box-shadow .2s, background .2s;
+      background: var(--cc-input);
+      color: var(--cc-text);
+      font: inherit;
+      font-size: 11px;
+      transition: border-color .18s ease, box-shadow .18s ease;
     }
+    .field textarea { min-height: 78px; resize: vertical; line-height: 1.5; }
+    .field textarea.content-editor { min-height: 178px; line-height: 1.65; font-family: inherit; }
+    .field input::placeholder, .field textarea::placeholder { color: #71819d; opacity: .9; }
+    .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--cc-accent); box-shadow: 0 0 0 3px var(--cc-accent-soft); }
+    .field small { display: block; margin-top: 4px; color: #8795af; font-size: 9px; line-height: 1.4; }
 
-    .field textarea {
-      min-height: 115px;
-      resize: vertical;
-      line-height: 1.75;
-    }
-
-    .field textarea.content-editor {
-      min-height: 290px;
-      font-family: inherit;
-      line-height: 1.85;
-    }
-
-    .field input::placeholder,
-    .field textarea::placeholder {
-      color: var(--muted);
-      opacity: .75;
-    }
-
-    .field input:focus,
-    .field textarea:focus,
-    .field select:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-soft);
-    }
-
-    .field small {
-      display: block;
-      margin-top: 7px;
-      color: var(--muted);
-      font-size: 10px;
-      line-height: 1.5;
-    }
-
-    .file-field {
-      padding: 16px;
-      border: 1px dashed var(--border);
-      border-radius: 12px;
-      background: var(--surface-soft);
-    }
-
-    .file-field input {
-      background: var(--surface);
-    }
-
-    .actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      flex-wrap: wrap;
-      padding-top: 21px;
-      margin-top: 22px;
-      border-top: 1px solid var(--border);
-    }
-
+    .file-field { padding: 8px; border: 1px dashed #3a4b6d; border-radius: 8px; background: rgba(16,26,45,.55); }
+    .file-field input { min-height: 30px; padding: 5px; border: 0; background: transparent; }
+    .actions { display: flex; justify-content: flex-end; align-items: center; gap: 8px; padding-top: 12px; margin-top: 13px; border-top: 1px solid rgba(139,157,190,.15); }
     .btn {
       display: inline-flex;
+      align-items: center;
       justify-content: center;
-      align-items: center;
-      gap: 8px;
-      min-height: 43px;
-      padding: 11px 17px;
+      gap: 6px;
+      min-height: 35px;
+      padding: 8px 12px;
       border: 1px solid transparent;
-      border-radius: 10px;
-      cursor: pointer;
-      font-size: 11px;
-      font-weight: 850;
-      transition: .2s;
-    }
-
-    .btn-primary {
-      color: #fff;
-      background: var(--accent);
-      box-shadow: 0 5px 14px rgba(100,80,180,.18);
-    }
-
-    .btn-primary:hover:not(:disabled) {
-      filter: brightness(1.08);
-      transform: translateY(-2px);
-    }
-
-    .btn-secondary {
-      color: var(--text);
-      border-color: var(--border);
-      background: var(--surface-soft);
-    }
-
-    .btn-secondary:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    .btn:disabled {
-      opacity: .55;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .message {
-      display: none;
-      padding: 13px 15px;
-      margin-bottom: 18px;
-      border: 1px solid transparent;
-      border-radius: 11px;
-      font-size: 11px;
-      line-height: 1.6;
-    }
-
-    .message.show {
-      display: block;
-    }
-
-    .message.success {
-      color: var(--success);
-      background: rgba(35,160,100,.09);
-      border-color: rgba(35,160,100,.2);
-    }
-
-    .message.error {
-      color: var(--danger);
-      background: rgba(220,65,65,.09);
-      border-color: rgba(220,65,65,.2);
-    }
-
-    .content-list {
-      display: grid;
-      gap: 11px;
-    }
-
-    .content-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 15px;
-      padding: 16px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      background: var(--surface-soft);
-      transition: .2s;
-    }
-
-    .content-item:hover {
-      border-color: var(--accent);
-      transform: translateY(-2px);
-    }
-
-    .content-item h3 {
-      margin: 0 0 6px;
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    .content-item p {
-      margin: 0;
-      color: var(--muted);
+      border-radius: 8px;
       font-size: 10px;
-      line-height: 1.6;
-    }
-
-    .status {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      margin-top: 9px;
-      padding: 5px 9px;
-      border-radius: 20px;
-      color: var(--accent);
-      background: var(--accent-soft);
-      font-size: 9px;
       font-weight: 850;
-      text-transform: uppercase;
+      cursor: pointer;
+      transition: filter .18s ease, transform .18s ease, border-color .18s ease;
     }
+    .btn-primary { color: #fff; background: #705bd0; box-shadow: 0 4px 12px rgba(87,66,180,.2); }
+    .btn-primary:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-1px); }
+    .btn-secondary { color: #d7def0; background: #202c43; border-color: #344563; }
+    .btn-secondary:hover { border-color: var(--cc-accent); color: #c5b9ff; }
+    .btn:disabled { opacity: .55; cursor: not-allowed; }
 
-    .empty {
-      padding: 35px 15px;
-      border: 1px dashed var(--border);
-      border-radius: 12px;
-      color: var(--muted);
-      text-align: center;
-      font-size: 11px;
+    .content-list { display: grid; gap: 8px; }
+    .content-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 12px; border: 1px solid var(--cc-border); border-radius: 10px; background: var(--cc-panel-2); }
+    .content-item:hover { border-color: rgba(148,124,245,.55); }
+    .content-item h3 { margin: 0 0 3px; color: var(--cc-text); font-size: 12px; font-weight: 800; }
+    .content-item p { margin: 0; color: var(--cc-muted); font-size: 9px; line-height: 1.45; }
+    .status { display: inline-flex; margin-top: 5px; padding: 4px 7px; border-radius: 20px; color: #c1b5ff; background: var(--cc-accent-soft); font-size: 8px; font-weight: 850; text-transform: uppercase; }
+    .empty { padding: 24px 14px; border: 1px dashed #3a4b6d; border-radius: 10px; color: var(--cc-muted); text-align: center; font-size: 10px; }
+    .empty-icon { display: block; margin-bottom: 5px; font-size: 20px; }
+    [hidden] { display: none !important; }
+
+    @media (min-width: 1000px) {
+      .content-page { padding-left: 20px; padding-right: 20px; }
+      .form-grid .field.triple { grid-column: span 1; }
+      .form-grid.compact-three { grid-template-columns: repeat(3, minmax(0,1fr)); }
     }
-
-    .empty-icon {
-      display: block;
-      margin-bottom: 10px;
-      font-size: 28px;
+    @media (max-width: 720px) {
+      .content-page { padding: 10px 10px 32px; }
+      .panel { padding: 14px; }
+      .form-grid { grid-template-columns: 1fr; gap: 10px; }
+      .field.full, .field.third, .field[style*="grid-column:span 2"] { grid-column: auto !important; }
+      .tabs { width: 100%; }
+      .tab { flex: 1; padding: 7px 8px; font-size: 10px; }
+      .panel-heading { align-items: flex-start; }
+      .actions { flex-direction: column-reverse; }
+      .actions .btn { width: 100%; }
+      .content-item { align-items: flex-start; }
     }
-
-    [hidden] {
-      display: none !important;
-    }
-
-    @media(max-width: 700px) {
-      .content-page {
-        padding: 10px 2px 40px;
-      }
-
-      .panel {
-        padding: 19px;
-      }
-
-      .form-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .field.full {
-        grid-column: auto;
-      }
-
-      .page-header {
-        align-items: flex-start;
-      }
-
-      .back-link {
-        width: 100%;
-        justify-content: center;
-      }
-    }
-
-    @media(max-width: 480px) {
-      .tabs {
-        width: 100%;
-      }
-
-      .tab {
-        flex: 1;
-        padding: 11px 9px;
-        font-size: 10px;
-      }
-
-      .panel-heading {
-        flex-direction: column;
-      }
-
-      .actions {
-        flex-direction: column-reverse;
-      }
-
-      .actions .btn {
-        width: 100%;
-      }
-
-      .header-icon {
-        width: 42px;
-        height: 42px;
-      }
-    }
-
-    @media(prefers-reduced-motion: reduce) {
-      *,
-      *::before,
-      *::after {
-        scroll-behavior: auto !important;
-        animation-duration: .01ms !important;
-        transition-duration: .01ms !important;
-      }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; scroll-behavior: auto !important; }
     }
   </style>
-    <link rel="stylesheet" href="../assets/css/responsive-layout.css">
-    <link rel="stylesheet" href="../assets/css/responsive-auto-fit.css">
-  <link rel="stylesheet" href="../assets/css/forced-dark-theme.css?v=1">
 </head>
-
 <body>
-
   <main class="content-page">
-
-    <header class="page-header">
-      <div class="header-copy">
-        <div class="header-icon">✦</div>
-
-        <div>
-          <h1>Create Learning Content</h1>
-          <p>
-            Build structured learning materials for the EqualLearn platform.
-          </p>
-        </div>
-      </div>
-
-      <a class="back-link" href="dashboard.html">
-        ← Back to Dashboard
-      </a>
-    </header>
-
-    <section class="intro-card">
-      <div class="intro-icon">✓</div>
-
+    <section class="workflow-note" aria-label="Teacher review workflow">
+      <span class="note-icon" aria-hidden="true">✓</span>
       <div>
-        <strong>Teacher Review Workflow</strong>
-        <p>
-          Admin-created modules and lessons are submitted for teacher review.
-          Modules will not be available to students until approved, assigned,
-          and published by the teacher.
-        </p>
+        <strong>Teacher review required</strong>
+        <p>Admin-created modules and lessons go to the Teacher review queue first. Students only receive content after a teacher approves and publishes it to a section.</p>
       </div>
     </section>
 
-    <div
-      id="pageMessage"
-      class="message"
-      role="status"
-      aria-live="polite">
-    </div>
+    <div id="pageMessage" class="message" role="status" aria-live="polite"></div>
 
     <nav class="tabs" aria-label="Content management tabs">
-
-      <button
-        class="tab active"
-        type="button"
-        data-tab="module">
-        <span>▦</span> Create Module
-      </button>
-
-      <button
-        class="tab"
-        type="button"
-        data-tab="lesson">
-        <span>▤</span> Create Lesson
-      </button>
-
-      <button
-        class="tab"
-        type="button"
-        data-tab="content">
-        <span>◷</span> My Content
-      </button>
-
+      <button class="tab active" type="button" data-tab="module"><span aria-hidden="true">▦</span> Create Module</button>
+      <button class="tab" type="button" data-tab="lesson"><span aria-hidden="true">▤</span> Create Lesson</button>
+      <button class="tab" type="button" data-tab="content"><span aria-hidden="true">◷</span> My Content</button>
     </nav>
 
-    <!-- MODULE FORM -->
-
     <section class="panel" id="modulePanel">
-
       <div class="panel-heading">
         <div>
-          <h2>Create New Module</h2>
-          <p>
-            Start by defining a module and its learning goals.
-          </p>
+          <h2>Create Module</h2>
+          <p>Set up the learning unit and submit it for teacher review.</p>
         </div>
-
-        <span class="required-note">* Required fields</span>
+        <span class="required-note">* Required</span>
       </div>
-
       <form id="moduleForm">
-
         <div class="form-grid">
-
           <div class="field full">
-            <label for="moduleTitle">
-              Module Title
-              <span class="required">*</span>
-            </label>
-
-            <input
-              id="moduleTitle"
-              maxlength="150"
-              required
-              placeholder="e.g. Introduction to Gender Equality">
+            <label for="moduleTitle">Module Title <span class="required">*</span></label>
+            <input id="moduleTitle" maxlength="150" required placeholder="e.g. Introduction to Gender Equality">
           </div>
-
-          <div class="field full">
-            <label for="moduleDescription">
-              Module Description
-              <span class="required">*</span>
-            </label>
-
-            <textarea
-              id="moduleDescription"
-              maxlength="3000"
-              required
-              placeholder="Explain the topics and concepts covered in this module..."></textarea>
-          </div>
-
-          <div class="field full">
-            <label for="moduleObjectives">
-              Learning Objectives
-            </label>
-
-            <textarea
-              id="moduleObjectives"
-              placeholder="1. Understand the meaning of gender equality&#10;2. Identify common gender stereotypes"></textarea>
-
-            <small>Enter one objective per line.</small>
-          </div>
-
           <div class="field">
-            <label for="moduleOrder">
-              Module Order
-              <span class="required">*</span>
-            </label>
-
-            <input
-              id="moduleOrder"
-              type="number"
-              min="1"
-              value="1"
-              required>
-
-            <small>Determines the module sequence.</small>
+            <label for="moduleDescription">Description <span class="required">*</span></label>
+            <textarea id="moduleDescription" maxlength="3000" required placeholder="Explain the topics covered in this module..."></textarea>
           </div>
-
           <div class="field">
-            <label for="moduleDuration">
-              Estimated Duration (minutes)
-            </label>
-
-            <input
-              id="moduleDuration"
-              type="number"
-              min="1"
-              placeholder="e.g. 60">
+            <label for="moduleObjectives">Learning Objectives</label>
+            <textarea id="moduleObjectives" placeholder="1. Understand gender equality&#10;2. Identify common stereotypes"></textarea>
+            <small>One objective per line.</small>
           </div>
-
-          <div class="field full">
-            <label for="moduleVideo">
-              Reference Video URL
-            </label>
-
-            <input
-              id="moduleVideo"
-              type="url"
-              placeholder="https://www.youtube.com/watch?v=...">
-
-            <small>
-              Optional. Add a video reference for the module.
-            </small>
-
-
-<div class="field full">
-  <label for="moduleFiles">Module Files / Attachments</label>
-
-  <div class="file-field">
-    <input
-      id="moduleFiles"
-      type="file"
-      multiple
-      accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.webp,.mp4,.webm,.mov">
-
-    <small>
-      Upload multiple files. Maximum 20 MB per file.
-    </small>
-  </div>
-</div>
-
-<div class="field full">
-  <label for="moduleResourceLinks">
-    Additional Learning Links
-  </label>
-
-  <textarea
-    id="moduleResourceLinks"
-    placeholder="Enter one URL per line&#10;https://drive.google.com/...&#10;https://example.com/reading"></textarea>
-
-  <small>
-    Google Drive, Google Docs, Google Slides,
-    YouTube, or other learning resources.
-  </small>
-</div>
-
-
-          </div>
-
         </div>
-
+        <div class="form-grid compact-three" style="margin-top:11px">
+          <div class="field">
+            <label for="moduleOrder">Module Order <span class="required">*</span></label>
+            <input id="moduleOrder" type="number" min="1" value="1" required>
+          </div>
+          <div class="field">
+            <label for="moduleDuration">Duration (minutes)</label>
+            <input id="moduleDuration" type="number" min="1" placeholder="e.g. 60">
+          </div>
+          <div class="field">
+            <label for="moduleVideo">Reference Video URL</label>
+            <input id="moduleVideo" type="url" placeholder="https://youtube.com/...">
+          </div>
+        </div>
+        <div class="form-grid" style="margin-top:11px">
+          <div class="field">
+            <label for="moduleFiles">Attachments</label>
+            <div class="file-field">
+              <input id="moduleFiles" type="file" multiple accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.webp,.mp4,.webm,.mov">
+              <small>Multiple files; maximum 20 MB each.</small>
+            </div>
+          </div>
+          <div class="field">
+            <label for="moduleResourceLinks">Additional Learning Links</label>
+            <textarea id="moduleResourceLinks" placeholder="One URL per line"></textarea>
+            <small>Drive, Docs, Slides, YouTube, or other learning resources.</small>
+          </div>
+        </div>
         <div class="actions">
-
-          <button
-            class="btn btn-secondary"
-            type="reset">
-            Clear Form
-          </button>
-
-          <button
-            class="btn btn-primary"
-            id="saveModuleBtn"
-            type="submit">
-            Submit Module for Review →
-          </button>
-
+          <button class="btn btn-secondary" type="reset">Clear</button>
+          <button class="btn btn-primary" id="saveModuleBtn" type="submit">Submit Module for Review →</button>
         </div>
-
       </form>
     </section>
-
-    <!-- LESSON FORM -->
 
     <section class="panel" id="lessonPanel" hidden>
-
       <div class="panel-heading">
         <div>
-          <h2>Create New Lesson</h2>
-          <p>
-            Write a lesson and connect it to an existing learning module.
-          </p>
+          <h2>Create Lesson</h2>
+          <p>Write a lesson and link it to one of your modules.</p>
         </div>
-
-        <span class="required-note">* Required fields</span>
+        <span class="required-note">* Required</span>
       </div>
-
       <form id="lessonForm">
-
         <div class="form-grid">
-
-          <div class="field full">
-            <label for="lessonModule">
-              Learning Module
-              <span class="required">*</span>
-            </label>
-
-            <select id="lessonModule" required>
-              <option value="">Loading modules...</option>
-            </select>
-          </div>
-
-          <div class="field full">
-            <label for="lessonTitle">
-              Lesson Title
-              <span class="required">*</span>
-            </label>
-
-            <input
-              id="lessonTitle"
-              maxlength="150"
-              required
-              placeholder="e.g. Understanding Gender Equality">
-          </div>
-
-          <div class="field full">
-            <label for="lessonDescription">
-              Lesson Description
-              <span class="required">*</span>
-            </label>
-
-            <textarea
-              id="lessonDescription"
-              maxlength="3000"
-              required
-              placeholder="Provide a clear overview of this lesson..."></textarea>
-          </div>
-
-          <div class="field full">
-            <label for="lessonContent">
-              Lesson Content
-              <span class="required">*</span>
-            </label>
-
-            <textarea
-              id="lessonContent"
-              class="content-editor"
-              required
-              placeholder="Write your lesson here...
-
-INTRODUCTION
-
-Start with the main topic...
-
-DISCUSSION
-
-Explain the important concepts...
-
-EXAMPLES
-
-Provide examples to help learners understand...
-
-SUMMARY
-
-Summarize the key points..."></textarea>
-
-            <small>
-              Use headings, numbered lists, and paragraphs
-              to organize your lesson.
-            </small>
-          </div>
-
-          <div class="field full">
-            <label for="lessonObjectives">
-              Learning Objectives
-            </label>
-
-            <textarea
-              id="lessonObjectives"
-              placeholder="1. Define gender equality&#10;2. Explain its importance"></textarea>
-
-            <small>Enter one objective per line.</small>
-          </div>
-
           <div class="field">
-            <label for="lessonDuration">
-              Estimated Duration (minutes)
-            </label>
-
-            <input
-              id="lessonDuration"
-              type="number"
-              min="1"
-              placeholder="e.g. 30">
+            <label for="lessonModule">Learning Module <span class="required">*</span></label>
+            <select id="lessonModule" required><option value="">Loading modules...</option></select>
           </div>
-
           <div class="field">
-            <label for="lessonVideo">
-              Video URL
-            </label>
-
-            <input
-              id="lessonVideo"
-              type="url"
-              placeholder="https://www.youtube.com/watch?v=...">
+            <label for="lessonTitle">Lesson Title <span class="required">*</span></label>
+            <input id="lessonTitle" maxlength="150" required placeholder="e.g. Understanding Gender Equality">
           </div>
-
-          
-<div class="field full">
-  <label for="lessonFiles">Lesson Files / Attachments</label>
-
-  <div class="file-field">
-    <input
-      id="lessonFiles"
-      type="file"
-      multiple
-      accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.webp,.mp4,.webm,.mov">
-
-    <small>
-      Upload multiple files. Maximum 20 MB per file.
-    </small>
-  </div>
-</div>
-
-<div class="field full">
-  <label for="lessonResourceLinks">
-    Additional Learning Links
-  </label>
-
-  <textarea
-    id="lessonResourceLinks"
-    placeholder="Enter one URL per line&#10;https://drive.google.com/...&#10;https://example.com/reading"></textarea>
-
-  <small>
-    Google Drive, Google Docs, Google Slides,
-    YouTube, or other learning resources.
-  </small>
-</div>
-
+          <div class="field">
+            <label for="lessonDescription">Description <span class="required">*</span></label>
+            <textarea id="lessonDescription" maxlength="3000" required placeholder="Give a short overview of this lesson..."></textarea>
+          </div>
+          <div class="field">
+            <label for="lessonObjectives">Learning Objectives</label>
+            <textarea id="lessonObjectives" placeholder="1. Define gender equality&#10;2. Explain its importance"></textarea>
+            <small>One objective per line.</small>
+          </div>
+          <div class="field full">
+            <label for="lessonContent">Lesson Content <span class="required">*</span></label>
+            <textarea id="lessonContent" class="content-editor" required placeholder="INTRODUCTION&#10;&#10;Start with the main topic...&#10;&#10;DISCUSSION&#10;&#10;Explain important concepts...&#10;&#10;EXAMPLES&#10;&#10;Provide examples...&#10;&#10;SUMMARY&#10;&#10;Summarize the key points..."></textarea>
+            <small>Use headings, short paragraphs, and numbered lists to organize your lesson.</small>
+          </div>
         </div>
-
+        <div class="form-grid compact-three" style="margin-top:11px">
+          <div class="field">
+            <label for="lessonDuration">Duration (minutes)</label>
+            <input id="lessonDuration" type="number" min="1" placeholder="e.g. 30">
+          </div>
+          <div class="field" style="grid-column:span 2">
+            <label for="lessonVideo">Video URL</label>
+            <input id="lessonVideo" type="url" placeholder="https://youtube.com/...">
+          </div>
+        </div>
+        <div class="form-grid" style="margin-top:11px">
+          <div class="field">
+            <label for="lessonFiles">Attachments</label>
+            <div class="file-field">
+              <input id="lessonFiles" type="file" multiple accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.webp,.mp4,.webm,.mov">
+              <small>Multiple files; maximum 20 MB each.</small>
+            </div>
+          </div>
+          <div class="field">
+            <label for="lessonResourceLinks">Additional Learning Links</label>
+            <textarea id="lessonResourceLinks" placeholder="One URL per line"></textarea>
+            <small>Drive, Docs, Slides, YouTube, or other learning resources.</small>
+          </div>
+        </div>
         <div class="actions">
-
-          <button
-            class="btn btn-secondary"
-            type="reset">
-            Clear Form
-          </button>
-
-          <button
-            class="btn btn-primary"
-            id="saveLessonBtn"
-            type="submit">
-            Submit Lesson for Review →
-          </button>
-
+          <button class="btn btn-secondary" type="reset">Clear</button>
+          <button class="btn btn-primary" id="saveLessonBtn" type="submit">Submit Lesson for Teacher Review →</button>
         </div>
-
       </form>
     </section>
 
-    <!-- CONTENT LIST -->
-
     <section class="panel" id="contentPanel" hidden>
-
       <div class="panel-heading">
         <div>
           <h2>My Created Content</h2>
-          <p>
-            Track the modules and lessons submitted by your administrator account.
-          </p>
+          <p>Track review status and resource details for your submissions.</p>
         </div>
       </div>
-
       <div class="content-list" id="contentList">
-
-        <div class="empty">
-          <span class="empty-icon">◷</span>
-          Loading your content...
-        </div>
-
+        <div class="empty"><span class="empty-icon">◷</span>Loading your content...</div>
       </div>
-
     </section>
-
   </main>
-
-  <!-- Theme must load before shell -->
 
   <script type="module" src="../assets/js/theme.js"></script>
   <script type="module" src="../assets/js/ui-shell.js"></script>
   <script type="module" src="../assets/js/admin-create-content.js"></script>
-
-<!-- EQUALLEARN LUMI COMPANION -->
-<iframe
-  src="../assets/widgets/lumi.html"
-  title="Lumi — EqualLearn Companion"
-  id="equallearn-lumi-frame"
-  allow="autoplay"
-  style="
-    position: fixed;
-    right: 8px;
-    bottom: 8px;
-    width: 210px;
-    height: 255px;
-    border: 0;
-    background: transparent;
-    z-index: 99999;
-    overflow: hidden;
-    pointer-events: auto;
-  ">
-</iframe>
-
-
+  <iframe src="../assets/widgets/lumi.html" title="Lumi — EqualLearn Companion" id="equallearn-lumi-frame" allow="autoplay" allowtransparency="true" frameborder="0" scrolling="no"></iframe>
 </body>
 </html>
-

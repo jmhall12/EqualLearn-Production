@@ -116,7 +116,11 @@ export async function notifySectionStudents({
 
   const studentsByUid = new Map();
   for (const sectionId of uniqueSectionIds) {
-    const q = query(collection(db, "users"), where("sectionId", "==", sectionId));
+    const q = query(
+      collection(db, "users"),
+      where("sectionId", "==", sectionId),
+      where("role", "in", ["student", "Student", "STUDENT"])
+    );
     const snapshot = await getDocs(q);
     snapshot.forEach(studentDoc => {
       const student = studentDoc.data();

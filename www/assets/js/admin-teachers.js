@@ -1,780 +1,302 @@
-import {
-    auth,
-    db,
-    firebaseConfig
-} from "./firebase-config.js";
+import { auth, db } from "./firebase-config.js";
 
 import {
-    onAuthStateChanged,
-    createUserWithEmailAndPassword,
-    signOut,
-    getAuth
+  onAuthStateChanged,
+  signOut
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
 
 import {
-    initializeApp,
-    deleteApp
-} from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
-
-import {
-    collection,
-    getDocs,
-    deleteDoc,
-    doc,
-    setDoc,
-    updateDoc,
-    getDoc,
-    serverTimestamp,
-    query,
-    where
+  collection,
+  getDocs,
+  deleteDoc,
+  doc,
+  updateDoc,
+  getDoc,
+  serverTimestamp,
+  query,
+  where
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
-
-// ======================================================
-// ELEMENTS
-// ======================================================
-
+/* =========================================================
+   ELEMENTS
+   These IDs connect JavaScript to elements in manage-teachers.html.
+========================================================= */
 const teacherList = document.getElementById("teacherList");
 const modal = document.getElementById("teacherModal");
-
-const openModal = document.getElementById("openModal");
-const saveTeacher = document.getElementById("saveTeacher");
-const cancel = document.getElementById("cancel");
-
-
-const email = document.getElementById("email");
-const password = document.getElementById("password");
-const department = document.getElementById("department");
-
+const departmentInput = document.getElementById("department");
+const teacherEditIdentity = document.getElementById("teacherEditIdentity");
+const saveTeacherButton = document.getElementById("saveTeacher");
+const cancelButton = document.getElementById("cancel");
+const closeModalButton = document.getElementById("closeTeacherModal");
 
 let editingId = null;
+let editingTeacherName = "";
 
-
-// ======================================================
-// OPEN ADD TEACHER MODAL
-// ======================================================
-
-openModal.onclick = () => {
-    editingId = null;
-
-    email.value = "";
-    password.value = "";
-    department.value = "";
-
-    email.disabled = false;
-    password.required = true;
-
-    modal.style.display = "flex";
-};
-
-
-// ======================================================
-// CANCEL MODAL
-// ======================================================
-
-cancel.onclick = () => {
-
-    modal.style.display = "none";
-
-};
-
-
-// ======================================================
-// CLOSE MODAL WHEN CLICKING OUTSIDE
-// ======================================================
-
-window.onclick = (event) => {
-
-    if (event.target === modal) {
-
-        modal.style.display = "none";
-
-    }
-
-};
-
-
-// ======================================================
-// CHECK ADMIN AUTHENTICATION
-// ======================================================
-
+/* =========================================================
+   ADMIN AUTHENTICATION
+   Only authenticated administrator profiles can load this page.
+========================================================= */
 onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.replace("../login.html");
+    return;
+  }
 
-    if (!user) {
+  try {
+    const adminSnapshot = await getDoc(doc(db, "users", user.uid));
 
-        window.location.href = "../login.html";
-
-        return;
-
+    if (!adminSnapshot.exists()) {
+      alert("Admin profile not found.");
+      await signOut(auth);
+      window.location.replace("../login.html");
+      return;
     }
 
-    try {
-
-        const adminRef = doc(
-            db,
-            "users",
-            user.uid
-        );
-
-        const adminSnapshot = await getDoc(adminRef);
-
-
-        if (!adminSnapshot.exists()) {
-
-            alert("Admin profile not found.");
-
-            await signOut(auth);
-
-            window.location.href = "../login.html";
-
-            return;
-
-        }
-
-
-        const adminData = adminSnapshot.data();
-
-
-        if (adminData.role !== "admin") {
-
-            alert("Access denied. Admins only.");
-
-            window.location.href = "../login.html";
-
-            return;
-
-        }
-
-
-        loadTeachers();
-
+    const adminData = adminSnapshot.data();
+    if (String(adminData.role || "").toLowerCase() !== "admin") {
+      alert("Access denied. Admins only.");
+      window.location.replace("../login.html");
+      return;
     }
 
-    catch (error) {
-
-        console.error(
-            "Admin authentication error:",
-            error
-        );
-
-        teacherList.innerHTML =
-            "Unable to verify administrator.";
-
-    }
-
+    await loadTeachers();
+  } catch (error) {
+    console.error("Admin authentication error:", error);
+    showTeacherState("Unable to verify administrator. Please refresh the page.", true);
+  }
 });
 
-
-// ======================================================
-// LOAD TEACHERS
-// ======================================================
-
+/* =========================================================
+   LOAD TEACHERS
+   Reads teacher profiles from the existing users collection.
+========================================================= */
 async function loadTeachers() {
+  showTeacherState("Loading teacher accounts...");
 
-    teacherList.innerHTML = "Loading...";
+  try {
+    const teacherQuery = query(
+      collection(db, "users"),
+      where("role", "==", "teacher")
+    );
 
-    try {
+    const snapshot = await getDocs(teacherQuery);
+    teacherList.replaceChildren();
 
-        const teacherQuery = query(
-            collection(db, "users"),
-            where("role", "==", "teacher")
-        );
-
-
-        const snapshot =
-            await getDocs(teacherQuery);
-
-
-        teacherList.innerHTML = "";
-
-
-        if (snapshot.empty) {
-
-            teacherList.innerHTML =
-                `<p class="no-teachers">
-                    No teachers found.
-                </p>`;
-
-            return;
-
-        }
-
-
-        snapshot.forEach((item) => {
-
-            const teacher = item.data();
-
-
-            const card =
-                document.createElement("div");
-
-            card.className = "teacher-card";
-
-
-            card.innerHTML = `
-
-                <div class="teacher-info">
-
-                    <h3>
-                        ${escapeHTML(
-                            teacher.fullname || "Unnamed Teacher"
-                        )}
-                    </h3>
-
-                    <p>
-                        ${escapeHTML(
-                            teacher.email || ""
-                        )}
-                    </p>
-
-                    <p>
-                        ${escapeHTML(
-                            teacher.department || "No department"
-                        )}
-                    </p>
-
-                    <span class="status ${
-                        teacher.status === "active"
-                            ? "active"
-                            : "inactive"
-                    }">
-
-                        Status:
-                        ${escapeHTML(
-                            teacher.status || "inactive"
-                        )}
-
-                    </span>
-
-                </div>
-
-
-                <div class="teacher-actions">
-
-                    <button
-                        class="edit-btn"
-                        onclick="editTeacher('${item.id}')">
-
-                        Edit
-
-                    </button>
-
-
-                    <button
-                        class="delete-btn"
-                        onclick="deleteTeacher('${item.id}')">
-
-                        Delete
-
-                    </button>
-
-                </div>
-
-            `;
-
-
-            teacherList.appendChild(card);
-
-        });
-
+    if (snapshot.empty) {
+      showTeacherState("No teachers have been registered yet.");
+      return;
     }
 
-    catch (error) {
+    const teachers = snapshot.docs.map((item) => ({
+      id: item.id,
+      ...item.data()
+    }));
 
-        console.error(
-            "Load teachers error:",
-            error
-        );
+    teachers.sort((a, b) => getTeacherName(a).localeCompare(getTeacherName(b)));
 
-        teacherList.innerHTML =
-            `<p class="error-message">
-                Failed to load teachers.
-            </p>`;
-
-    }
-
+    const fragment = document.createDocumentFragment();
+    teachers.forEach((teacher) => fragment.appendChild(createTeacherRow(teacher)));
+    teacherList.appendChild(fragment);
+  } catch (error) {
+    console.error("Load teachers error:", error);
+    showTeacherState("Failed to load teachers. Check the console for details.", true);
+  }
 }
 
+/* =========================================================
+   CREATE ONE HORIZONTAL TEACHER ROW
+   Uses textContent so user-provided profile data is rendered as text.
+========================================================= */
+function createTeacherRow(teacher) {
+  const name = getTeacherName(teacher);
+  const email = String(teacher.email || "No email address");
+  const department = String(teacher.department || "Department not set");
+  const status = String(teacher.status || "inactive").toLowerCase();
 
-// ======================================================
-// ADD / UPDATE TEACHER
-// ======================================================
+  const row = document.createElement("article");
+  row.className = "teacher-row";
 
-saveTeacher.onclick = async () => {
+  const avatar = document.createElement("div");
+  avatar.className = "teacher-avatar";
+  avatar.setAttribute("aria-hidden", "true");
+  avatar.textContent = getInitials(name);
 
-    // GET FORM VALUES FIRST
-    const emailValue = email.value.trim().toLowerCase();
-    const passwordValue = password.value.trim();
-    const departmentValue = department.value.trim();
+  const main = document.createElement("div");
+  main.className = "teacher-main";
 
-    // VALIDATION
-    if (!emailValue || !departmentValue) {
-        alert("Email and department are required.");
-        return;
-    }
+  const heading = document.createElement("h3");
+  heading.textContent = name;
 
-    if (!editingId && !passwordValue) {
-        alert("Password is required.");
-        return;
-    }
+  const emailText = document.createElement("p");
+  emailText.textContent = email;
+  emailText.title = email;
 
+  main.append(heading, emailText);
 
-    // ==================================================
-    // VALIDATION
-    // ==================================================
+  const departmentBlock = document.createElement("div");
+  departmentBlock.className = "teacher-department";
 
-    if (!emailValue || !departmentValue) {
+  const departmentLabel = document.createElement("span");
+  departmentLabel.className = "teacher-department-label";
+  departmentLabel.textContent = "Department";
 
-        alert(
-            " email are required."
-        );
+  const departmentText = document.createElement("span");
+  departmentText.className = "teacher-department-value";
+  departmentText.textContent = department;
+  departmentText.title = department;
 
-        return;
+  departmentBlock.append(departmentLabel, departmentText);
 
-    }
+  const statusBadge = document.createElement("span");
+  statusBadge.className = `teacher-status ${status === "active" ? "is-active" : "is-inactive"}`;
+  statusBadge.textContent = status;
 
+  const actions = document.createElement("div");
+  actions.className = "teacher-actions";
 
-    // Password is required only when adding
-    if (!editingId && !passwordValue) {
+  const editButton = document.createElement("button");
+  editButton.type = "button";
+  editButton.className = "edit-btn";
+  editButton.dataset.action = "edit";
+  editButton.dataset.id = teacher.id;
+  editButton.textContent = "Edit";
+  editButton.setAttribute("aria-label", `Edit ${name}`);
 
-        alert(
-            "Password is required."
-        );
+  const deleteButton = document.createElement("button");
+  deleteButton.type = "button";
+  deleteButton.className = "delete-btn";
+  deleteButton.dataset.action = "delete";
+  deleteButton.dataset.id = teacher.id;
+  deleteButton.textContent = "Delete";
+  deleteButton.setAttribute("aria-label", `Delete ${name}`);
 
-        return;
+  actions.append(editButton, deleteButton);
+  row.append(avatar, main, departmentBlock, statusBadge, actions);
+  return row;
+}
 
-    }
+function getTeacherName(teacher) {
+  const candidates = [teacher.fullname, teacher.fullName, teacher.name];
+  const name = candidates.find((value) => typeof value === "string" && value.trim());
+  return String(name || "Unnamed Teacher").trim();
+}
 
+function getInitials(name) {
+  const parts = String(name || "Teacher").trim().split(/\s+/).filter(Boolean);
+  return parts.slice(0, 2).map((part) => part[0].toUpperCase()).join("") || "T";
+}
 
-    // ==================================================
-    // UPDATE EXISTING TEACHER
-    // ==================================================
+function showTeacherState(message, isError = false) {
+  if (!teacherList) return;
+  const state = document.createElement("div");
+  state.className = `teacher-state${isError ? " is-error" : ""}`;
+  state.textContent = message;
+  teacherList.replaceChildren(state);
+}
 
-    if (editingId) {
+/* =========================================================
+   TEACHER LIST ACTIONS
+   Event delegation lets dynamically created rows use one listener.
+========================================================= */
+teacherList.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-action][data-id]");
+  if (!button) return;
 
-        try {
-
-           await updateDoc(doc(db, "users", editingId), {
-    department: departmentValue,
-    updatedAt: serverTimestamp()
+  const { action, id } = button.dataset;
+  if (action === "edit") openTeacherEditor(id);
+  if (action === "delete") removeTeacher(id);
 });
 
-        
+/* =========================================================
+   EDIT TEACHER
+   The current management form updates the department only.
+========================================================= */
+async function openTeacherEditor(id) {
+  try {
+    const teacherSnapshot = await getDoc(doc(db, "users", id));
 
-
-            alert(
-                "Teacher information updated."
-            );
-
-
-            modal.style.display = "none";
-
-            editingId = null;
-
-            loadTeachers();
-
-            return;
-
-        }
-
-        catch (error) {
-
-            console.error(
-                "Update teacher error:",
-                error
-            );
-
-            alert(
-                "Failed to update teacher: " +
-                error.message
-            );
-
-            return;
-
-        }
-
+    if (!teacherSnapshot.exists()) {
+      alert("Teacher not found.");
+      await loadTeachers();
+      return;
     }
 
-
-    // ==================================================
-    // CREATE NEW TEACHER
-    // ==================================================
-
-    let secondaryApp = null;
-
-
-    try {
-
-        // ----------------------------------------------
-        // CHECK IF EMAIL ALREADY EXISTS IN FIRESTORE
-        // ----------------------------------------------
-
-        const existingTeacherQuery = query(
-            collection(db, "users"),
-            where("email", "==", emailValue)
-        );
-
-
-        const existingSnapshot =
-            await getDocs(existingTeacherQuery);
-
-
-        if (!existingSnapshot.empty) {
-
-            alert(
-                "This email is already registered."
-            );
-
-            return;
-
-        }
-
-
-        // ----------------------------------------------
-        // CREATE SECONDARY FIREBASE APP
-        // ----------------------------------------------
-
-        const appName =
-            "teacherCreator_" +
-            Date.now();
-
-
-        secondaryApp =
-            initializeApp(
-                firebaseConfig,
-                appName
-            );
-
-
-        const secondaryAuth =
-            getAuth(secondaryApp);
-
-
-        // ----------------------------------------------
-        // CREATE FIREBASE AUTH ACCOUNT
-        // ----------------------------------------------
-
-        const credential =
-            await createUserWithEmailAndPassword(
-
-                secondaryAuth,
-
-                emailValue,
-
-                passwordValue
-
-            );
-
-
-        const uid =
-            credential.user.uid;
-
-
-        // ----------------------------------------------
-        // CREATE FIRESTORE USER PROFILE
-        // ----------------------------------------------
-
-        await setDoc(
-
-            doc(
-                db,
-                "users",
-                uid
-            ),
-
-           {
-    uid: uid,
-    email: emailValue,
-    department: departmentValue,
-    role: "teacher",
-    status: "active",
-    course: "",
-    yearLevel: "",
-    studentNumber: "",
-    profileImage: "",
-    createdAt: serverTimestamp(),
-    lastLogin: null
+    const teacher = teacherSnapshot.data();
+    editingId = id;
+    editingTeacherName = getTeacherName(teacher);
+    teacherEditIdentity.textContent = `${editingTeacherName} · ${teacher.email || "No email address"}`;
+    departmentInput.value = teacher.department || "";
+    modal.classList.add("show");
+    modal.setAttribute("aria-hidden", "false");
+    departmentInput.focus();
+  } catch (error) {
+    console.error("Edit teacher error:", error);
+    alert("Failed to load teacher information: " + (error.message || "Unknown error"));
+  }
 }
 
-        );
-
-
-        // ----------------------------------------------
-        // SIGN OUT SECONDARY AUTH
-        // ----------------------------------------------
-
-        await signOut(
-            secondaryAuth
-        );
-
-
-        alert(
-            "Teacher account created successfully!"
-        );
-
-
-        // ----------------------------------------------
-        // CLOSE MODAL
-        // ----------------------------------------------
-
-        modal.style.display = "none";
-
-
-        
-       email.value = teacher.email || "";
-department.value = teacher.department || "";
-password.value = "";
-email.disabled = true;
-password.required = false;
-        
-
-
-        loadTeachers();
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Create teacher error:",
-            error
-        );
-
-
-        let message =
-            error.message;
-
-
-        if (
-            error.code ===
-            "auth/email-already-in-use"
-        ) {
-
-            message =
-                "This email is already registered in Firebase Authentication.";
-
-        }
-
-        else if (
-            error.code ===
-            "auth/invalid-email"
-        ) {
-
-            message =
-                "Please enter a valid email address.";
-
-        }
-
-        else if (
-            error.code ===
-            "auth/weak-password"
-        ) {
-
-            message =
-                "Password must be at least 6 characters.";
-
-        }
-
-
-        alert(
-            "Failed to create teacher:\n\n" +
-            message
-        );
-
-    }
-
-    finally {
-
-        // ----------------------------------------------
-        // DELETE SECONDARY APP
-        // ----------------------------------------------
-
-        if (secondaryApp) {
-
-            try {
-
-                await deleteApp(
-                    secondaryApp
-                );
-
-            }
-
-            catch (error) {
-
-                console.log(
-                    "Secondary app cleanup:",
-                    error
-                );
-
-            }
-
-        }
-
-    }
-
-};
-
-
-// ======================================================
-// EDIT TEACHER
-// ======================================================
-
-window.editTeacher = async (id) => {
-
-    try {
-
-        const teacherRef =
-            doc(
-                db,
-                "users",
-                id
-            );
-
-
-        const snapshot =
-            await getDoc(
-                teacherRef
-            );
-
-
-        if (!snapshot.exists()) {
-
-            alert(
-                "Teacher not found."
-            );
-
-            return;
-
-        }
-
-
-        const teacher =
-            snapshot.data();
-
-
-        editingId = id;
-
-
-        fullname.value =
-            teacher.fullname || "";
-
-
-        email.value =
-            teacher.email || "";
-
-
-        department.value =
-            teacher.department || "";
-
-
-        status.value =
-            teacher.status || "active";
-
-
-        password.value = "";
-
-
-        // Email is tied to Firebase Auth,
-        // so don't change it here.
-
-        email.disabled = true;
-
-
-        // Password is not required while editing
-
-        password.required = false;
-
-
-        modal.style.display = "flex";
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Edit teacher error:",
-            error
-        );
-
-        alert(
-            "Failed to load teacher information."
-        );
-
-    }
-
-};
-
-
-// ======================================================
-// DELETE / DEACTIVATE TEACHER
-// ======================================================
-
-window.deleteTeacher = async (id) => {
-
-    const confirmDelete =
-        confirm(
-            "Delete this teacher account?\n\n" +
-            "The teacher will no longer have a Firestore profile."
-        );
-
-
-    if (!confirmDelete) {
-
-        return;
-
-    }
-
-
-    try {
-
-        await deleteDoc(
-            doc(
-                db,
-                "users",
-                id
-            )
-        );
-
-
-        alert(
-            "Teacher removed from the system."
-        );
-
-
-        loadTeachers();
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Delete teacher error:",
-            error
-        );
-
-        alert(
-            "Failed to delete teacher:\n\n" +
-            error.message
-        );
-
-    }
-
-};
-
-
-// ======================================================
-// ESCAPE HTML
-// Prevent HTML injection when displaying user data
-// ======================================================
-
-function escapeHTML(value) {
-
-    const div =
-        document.createElement("div");
-
-    div.textContent =
-        value;
-
-    return div.innerHTML;
-
+function closeTeacherEditor() {
+  modal.classList.remove("show");
+  modal.setAttribute("aria-hidden", "true");
+  editingId = null;
+  editingTeacherName = "";
+  departmentInput.value = "";
+}
+
+cancelButton.addEventListener("click", closeTeacherEditor);
+closeModalButton.addEventListener("click", closeTeacherEditor);
+modal.addEventListener("click", (event) => {
+  if (event.target.matches("[data-close-modal]")) closeTeacherEditor();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && modal.classList.contains("show")) closeTeacherEditor();
+});
+
+saveTeacherButton.addEventListener("click", async () => {
+  if (!editingId) return;
+
+  const departmentValue = departmentInput.value.trim();
+  if (!departmentValue) {
+    alert("Department is required.");
+    departmentInput.focus();
+    return;
+  }
+
+  saveTeacherButton.disabled = true;
+  saveTeacherButton.textContent = "Saving...";
+
+  try {
+    await updateDoc(doc(db, "users", editingId), {
+      department: departmentValue,
+      updatedAt: serverTimestamp()
+    });
+
+    closeTeacherEditor();
+    await loadTeachers();
+  } catch (error) {
+    console.error("Update teacher error:", error);
+    alert("Failed to update teacher: " + (error.message || "Unknown error"));
+  } finally {
+    saveTeacherButton.disabled = false;
+    saveTeacherButton.textContent = "Save changes";
+  }
+});
+
+/* =========================================================
+   DELETE TEACHER PROFILE
+   This retains the existing behavior: removes the Firestore user profile.
+========================================================= */
+async function removeTeacher(id) {
+  const confirmed = confirm(
+    "Remove this teacher's EqualLearn profile?\n\nThis action deletes the Firestore profile record."
+  );
+  if (!confirmed) return;
+
+  try {
+    await deleteDoc(doc(db, "users", id));
+    await loadTeachers();
+  } catch (error) {
+    console.error("Delete teacher error:", error);
+    alert("Failed to remove teacher: " + (error.message || "Unknown error"));
+  }
 }

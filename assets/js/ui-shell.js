@@ -384,18 +384,23 @@ function setupLumiCompanion() {
       }
 
       html {
-        min-height: 100%;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
         margin: 0;
+        overflow: hidden !important;
         scroll-behavior: smooth;
       }
 
       body {
-        min-height: 100vh;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
         margin: 0 !important;
         padding: 0 !important;
+        overflow: hidden !important;
         background: var(--el-bg) !important;
         color: var(--el-text);
-        overflow-x: hidden;
       }
 
       body,
@@ -406,26 +411,36 @@ function setupLumiCompanion() {
       .el-app-shell {
         display: grid !important;
         grid-template-columns: var(--el-sidebar-width) minmax(0, 1fr);
+        align-items: stretch;
         width: 100%;
-        min-height: 100vh;
+        height: 100vh;
+        height: 100dvh;
+        min-height: 0;
+        max-height: 100dvh;
         margin: 0;
         padding: 0;
+        overflow: hidden;
         background: var(--el-bg);
         transition: grid-template-columns .25s ease;
       }
 
       .el-sidebar {
-        position: sticky !important;
-        inset: 0 auto auto 0;
+        /* The shell itself is viewport-height, so the sidebar stays in place
+           while the page-content pane scrolls independently. */
+        position: relative !important;
+        inset: auto;
+        align-self: stretch;
         z-index: 1000;
         display: flex !important;
         flex-direction: column;
         width: 100%;
-        height: 100vh;
-        min-height: 100vh;
+        height: 100%;
+        min-height: 0;
+        max-height: 100dvh;
         padding: 22px 15px 17px;
         overflow-x: hidden;
         overflow-y: auto;
+        overscroll-behavior: contain;
         color: var(--el-text);
         background: linear-gradient(180deg,#20212e 0%,#191a25 100%) !important;
         border-right: 1px solid var(--el-border);
@@ -601,15 +616,20 @@ function setupLumiCompanion() {
         flex-direction: column;
         width: 100%;
         min-width: 0;
-        min-height: 100vh;
-        overflow-x: clip;
+        height: 100vh;
+        height: 100dvh;
+        min-height: 0;
+        max-height: 100dvh;
+        overflow: hidden;
         background: var(--el-bg);
       }
 
       .el-topbar {
-        position: sticky;
-        top: 0;
+        /* It sits outside the scrolling content pane and remains visible. */
+        position: relative;
+        top: auto;
         z-index: 500;
+        flex: 0 0 auto;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -656,6 +676,161 @@ function setupLumiCompanion() {
         align-items: center;
         gap: 12px;
       }
+
+      .el-notification-wrap {
+        position: relative;
+        flex: 0 0 auto;
+      }
+
+      .el-notification-bell {
+        position: relative;
+        display: grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        padding: 0;
+        color: #d8d0ff;
+        background: #252635;
+        border: 1px solid var(--el-border);
+        border-radius: 13px;
+        cursor: pointer;
+        transition: background .18s ease, border-color .18s ease, transform .18s ease;
+      }
+
+      .el-notification-bell:hover {
+        background: rgba(117,92,240,.18);
+        border-color: rgba(161,139,255,.38);
+        transform: translateY(-1px);
+      }
+
+      .el-notification-bell svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      .el-notification-count {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        display: grid;
+        place-items: center;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 5px;
+        color: #fff;
+        background: #e35d79;
+        border: 2px solid #1d1e2a;
+        border-radius: 99px;
+        font-size: 9px;
+        font-weight: 850;
+        line-height: 1;
+      }
+
+      .el-notification-count[hidden],
+      .el-notification-popover[hidden],
+      .el-notification-enable[hidden] {
+        display: none !important;
+      }
+
+      .el-notification-popover {
+        position: absolute;
+        top: calc(100% + 12px);
+        right: 0;
+        z-index: 2000;
+        width: min(370px, calc(100vw - 24px));
+        max-height: min(70vh, 520px);
+        overflow: hidden;
+        color: #f1f0fa;
+        background: #202331;
+        border: 1px solid rgba(161,139,255,.2);
+        border-radius: 17px;
+        box-shadow: 0 20px 55px rgba(0,0,0,.42);
+      }
+
+      .el-notification-popover-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 15px 16px 12px;
+        border-bottom: 1px solid var(--el-border);
+      }
+
+      .el-notification-popover-head strong {
+        display: block;
+        color: #f4f2ff;
+        font-size: 13px;
+        font-weight: 850;
+      }
+
+      .el-notification-popover-head small {
+        display: block;
+        margin-top: 3px;
+        color: #9fa6bb;
+        font-size: 10px;
+      }
+
+      .el-notification-live-state {
+        flex: 0 0 auto;
+        padding: 5px 8px;
+        color: #7ce0b8;
+        background: rgba(57,190,137,.1);
+        border-radius: 99px;
+        font-size: 9px;
+        font-weight: 800;
+      }
+
+      .el-notification-permission {
+        padding: 9px 16px 5px;
+        color: #9ea8bf;
+        font-size: 10px;
+        line-height: 1.45;
+      }
+
+      .el-notification-enable {
+        margin: 6px 16px 8px;
+        padding: 7px 10px;
+        color: #eae5ff;
+        background: rgba(117,92,240,.2);
+        border: 1px solid rgba(161,139,255,.25);
+        border-radius: 9px;
+        font: inherit;
+        font-size: 10px;
+        font-weight: 750;
+        cursor: pointer;
+      }
+
+      .el-notification-list {
+        max-height: min(54vh, 390px);
+        padding: 3px 14px 10px;
+        overflow: auto;
+        overscroll-behavior: contain;
+      }
+
+      .el-notification-empty {
+        padding: 18px 3px;
+        color: #9fa6bb;
+        font-size: 11px;
+        text-align: center;
+      }
+
+      .el-notification-list .notification {
+        display: block;
+        width: 100%;
+        padding: 11px 3px;
+        color: #e7e8f2;
+        text-align: left;
+        background: transparent;
+        border: 0;
+        border-bottom: 1px solid rgba(255,255,255,.07);
+        cursor: pointer;
+      }
+
+      .el-notification-list .notification:last-child { border-bottom: 0; }
+      .el-notification-list .notification.unread { border-left: 2px solid #9b84ff; padding-left: 9px; }
+      .el-notification-list .notification-title { color: #f0edff; font-size: 11px; font-weight: 800; }
+      .el-notification-list .notification-message { margin-top: 3px; color: #aab2c7; font-size: 10px; line-height: 1.45; }
+      .el-notification-list .notification-time { margin-top: 5px; color: #7f8aa3; font-size: 9px; }
 
       .el-user-pill {
         display: flex;
@@ -712,12 +887,30 @@ function setupLumiCompanion() {
       }
 
       .el-page-content {
-        flex: 1 1 auto;
+        flex: 1 1 0%;
         width: 100%;
         min-width: 0;
+        min-height: 0;
+        height: auto;
         padding: 0;
         overflow-x: clip;
+        overflow-y: auto !important;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(161,139,255,.28) transparent;
         background: var(--el-bg);
+      }
+
+      .el-page-content::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .el-page-content::-webkit-scrollbar-thumb {
+        background: rgba(161,139,255,.28);
+        border: 2px solid transparent;
+        border-radius: 20px;
+        background-clip: padding-box;
       }
 
       .el-page-content > * {
@@ -785,7 +978,12 @@ function setupLumiCompanion() {
         .el-app-shell,
         body.el-sidebar-collapsed .el-app-shell {
           display: block !important;
-          min-height: 100vh;
+          width: 100%;
+          height: 100vh;
+          height: 100dvh;
+          min-height: 0;
+          max-height: 100dvh;
+          overflow: hidden;
         }
 
         .el-sidebar,
@@ -796,7 +994,8 @@ function setupLumiCompanion() {
           z-index: 1200;
           width: min(290px,84vw) !important;
           height: 100dvh;
-          min-height: 100dvh;
+          min-height: 0;
+          max-height: 100dvh;
           padding: 22px 15px 17px;
           transform: translateX(-110%);
           transition: transform .25s ease;
@@ -820,6 +1019,20 @@ function setupLumiCompanion() {
 
         .el-menu-toggle {
           display: grid;
+        }
+
+        .el-app-main {
+          width: 100%;
+          height: 100vh;
+          height: 100dvh;
+          min-height: 0;
+          max-height: 100dvh;
+          overflow: hidden;
+        }
+
+        .el-page-content {
+          min-height: 0;
+          overflow-y: auto !important;
         }
 
         .el-topbar {
@@ -853,6 +1066,17 @@ function setupLumiCompanion() {
 
         .el-topbar-title {
           gap: 10px;
+        }
+
+        .el-notification-bell {
+          width: 36px;
+          height: 36px;
+          border-radius: 11px;
+        }
+
+        .el-notification-popover {
+          right: -48px;
+          width: min(350px, calc(100vw - 20px));
         }
 
         .el-page-title {
@@ -980,6 +1204,45 @@ function setupLumiCompanion() {
       </div>
 
       <div class="el-topbar-actions">
+        ${role === "student" && currentPage === "dashboard.html" ? `
+          <div class="el-notification-wrap">
+            <button
+              class="el-notification-bell"
+              id="elNotificationBell"
+              type="button"
+              aria-label="Open notifications"
+              aria-expanded="false"
+              aria-controls="elNotificationPopover"
+              title="Notifications">
+              ${safeIcon("bell", 20)}
+              <span class="el-notification-count" id="notificationCount" hidden>0</span>
+            </button>
+
+            <section
+              class="el-notification-popover"
+              id="elNotificationPopover"
+              aria-label="Student notifications"
+              hidden>
+              <div class="el-notification-popover-head">
+                <div>
+                  <strong>Notifications</strong>
+                  <small>Updates for your learning account</small>
+                </div>
+                <span class="el-notification-live-state">Live</span>
+              </div>
+              <div class="el-notification-permission" id="elNotificationPermissionStatus" aria-live="polite">
+                In-app notifications are active.
+              </div>
+              <button class="el-notification-enable" id="elEnableDeviceNotifications" type="button" hidden>
+                Enable device notifications
+              </button>
+              <div id="notificationList" class="el-notification-list">
+                <p class="el-notification-empty">Loading notifications...</p>
+              </div>
+            </section>
+          </div>
+        ` : ""}
+
         <div class="el-user-pill">
           <span class="el-avatar">${config.title.charAt(0)}</span>
           <div>
@@ -1220,6 +1483,150 @@ function setupUserNameSync() {
   }
 
   /* -------------------------------------------------------
+     STUDENT DASHBOARD NOTIFICATIONS
+  ------------------------------------------------------- */
+
+  function setupStudentNotificationBell() {
+    if (role !== "student" || currentPage !== "dashboard.html") return;
+
+    const bell = topbar.querySelector("#elNotificationBell");
+    const popover = topbar.querySelector("#elNotificationPopover");
+    const status = topbar.querySelector("#elNotificationPermissionStatus");
+    const enableButton = topbar.querySelector("#elEnableDeviceNotifications");
+
+    if (!bell || !popover || !status || !enableButton) return;
+
+    const isNativeApp = () => Boolean(
+      window.Capacitor?.isNativePlatform?.() ||
+      ["android", "ios"].includes(window.Capacitor?.getPlatform?.())
+    );
+
+    function updatePermissionState(messageOverride = "") {
+      if (messageOverride) status.textContent = messageOverride;
+
+      if (isNativeApp()) {
+        if (!messageOverride) {
+          status.textContent = "Phone notifications use Android notification settings, including the device's notification volume.";
+        }
+        enableButton.hidden = false;
+        enableButton.textContent = "Enable phone notifications";
+        return;
+      }
+
+      if (!("Notification" in window)) {
+        status.textContent = "In-app alerts are active. This browser does not support device notifications.";
+        enableButton.hidden = true;
+        return;
+      }
+
+      if (Notification.permission === "granted") {
+        if (!messageOverride) {
+          status.textContent = location.origin === "https://equallearn.pages.dev"
+            ? "Device notification permission is enabled. Background push registration syncs automatically; sound and volume follow your device/browser settings."
+            : "Browser notifications are allowed for this preview. Background push is registered on the deployed EqualLearn domain; in-app and foreground alerts work here.";
+        }
+        enableButton.hidden = true;
+      } else if (Notification.permission === "denied") {
+        if (!messageOverride) {
+          status.textContent = "Device alerts are blocked by the browser. Allow notifications for this site in browser settings. In-app alerts remain active.";
+        }
+        enableButton.hidden = true;
+      } else {
+        if (!messageOverride) {
+          status.textContent = "In-app alerts are active. Enable device notifications to receive browser/OS alerts.";
+        }
+        enableButton.hidden = false;
+        enableButton.textContent = "Enable device notifications";
+      }
+    }
+
+    async function requestDevicePermission() {
+      if (isNativeApp()) {
+        if (typeof window.EqualLearnPush?.register !== "function") {
+          updatePermissionState("Phone notification service is still starting. Try again in a moment.");
+          return;
+        }
+        enableButton.disabled = true;
+        try {
+          await window.EqualLearnPush.register();
+          updatePermissionState("This phone is registered for EqualLearn notifications. Sound and volume are controlled by Android notification settings.");
+        } catch (error) {
+          updatePermissionState(error?.message || "Unable to register phone notifications.");
+        } finally {
+          enableButton.disabled = false;
+        }
+        return;
+      }
+
+      if (!("Notification" in window)) {
+        updatePermissionState();
+        return;
+      }
+
+      if (Notification.permission === "default") {
+        try {
+          await Notification.requestPermission();
+        } catch (error) {
+          console.warn("Notification permission request failed:", error);
+        }
+      }
+
+      if (Notification.permission === "granted" && location.origin === "https://equallearn.pages.dev" && typeof window.EqualLearnPush?.register === "function") {
+        enableButton.disabled = true;
+        try {
+          await window.EqualLearnPush.register();
+          updatePermissionState("This device is registered for EqualLearn background notifications. Sound and volume follow your device/browser notification settings.");
+        } catch (error) {
+          updatePermissionState(error?.message || "Device permission is enabled, but background registration could not be completed.");
+        } finally {
+          enableButton.disabled = false;
+        }
+        return;
+      }
+
+      updatePermissionState();
+    }
+
+    function setOpen(open) {
+      popover.hidden = !open;
+      bell.setAttribute("aria-expanded", String(open));
+      if (open) updatePermissionState();
+    }
+
+    bell.addEventListener("click", async event => {
+      event.stopPropagation();
+      const willOpen = popover.hidden;
+      setOpen(willOpen);
+      // Permission is requested only in response to the student's click.
+      if (willOpen && "Notification" in window && Notification.permission === "default") {
+        await requestDevicePermission();
+      }
+    });
+
+    enableButton.addEventListener("click", async event => {
+      event.stopPropagation();
+      await requestDevicePermission();
+    });
+
+    popover.addEventListener("click", event => event.stopPropagation());
+
+    document.addEventListener("click", event => {
+      if (!popover.hidden && !popover.contains(event.target) && !bell.contains(event.target)) {
+        setOpen(false);
+      }
+    });
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && !popover.hidden) {
+        setOpen(false);
+        bell.focus();
+      }
+    });
+
+    updatePermissionState();
+  }
+
+  /* -------------------------------------------------------
      BUILD APPLICATION SHELL
   ------------------------------------------------------- */
 
@@ -1258,9 +1665,15 @@ function setupUserNameSync() {
 setupLogout();
 setupUserNameSync();
 setupRouteProgress();
+setupStudentNotificationBell();
 
 // Initialize Lumi outside the dashboard shell.
 setupLumiCompanion();
+
+    // Let page modules bind to shell-owned elements after the shell exists.
+    window.dispatchEvent(new CustomEvent("equallearn:shell-ready", {
+      detail: { role, page: currentPage }
+    }));
 
     console.info(
       `[EqualLearn Shell] ${role} shell initialized successfully.`

@@ -1,208 +1,139 @@
-﻿
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <script id="EQUALLEARN_FORCE_DARK_BOOTSTRAP">document.documentElement.dataset.theme="dark";document.documentElement.style.colorScheme="dark";</script>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#0b1020">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1020">
+  <title>Teacher Dashboard - EqualLearn</title>
 
-    <title>Teacher Dashboard - EqualLearn</title>
-
-    <link rel="manifest" href="../manifest.webmanifest">
-    <link rel="icon" href="../assets/icons/icon-192.png">
-
-    <!-- Shared sidebar and application shell only -->
-    <link rel="stylesheet" href="../assets/css/sidebar-skeuomorphism.css">
-
-    <!-- Independent Teacher Dashboard styling -->
-    <link rel="stylesheet" href="../assets/css/teacher-dashboard.css">
-    <link rel="stylesheet" href="../assets/css/responsive-layout.css">
-    <link rel="stylesheet" href="../assets/css/responsive-auto-fit.css">
+  <link rel="manifest" href="../manifest.webmanifest">
+  <link rel="icon" href="../assets/icons/icon-192.png">
+  <link rel="stylesheet" href="../assets/css/sidebar-skeuomorphism.css">
+  <link rel="stylesheet" href="../assets/css/teacher-dashboard.css?v=20261121-analytics">
+  <link rel="stylesheet" href="../assets/css/responsive-layout.css">
+  <link rel="stylesheet" href="../assets/css/responsive-auto-fit.css">
   <link rel="stylesheet" href="../assets/css/forced-dark-theme.css?v=1">
 </head>
-
 <body>
+  <main class="el-dashboard teacher-dashboard-page">
+    <!-- Kept for the global UI Shell's profile-name synchronization. -->
+    <span id="teacherName" class="teacher-visually-hidden">Loading teacher...</span>
 
-<div class="el-dashboard">
-
-    <header class="el-page-header">
+    <section class="teacher-overview-card" aria-label="Teacher dashboard overview">
+      <div class="teacher-overview-heading">
         <div>
-            <div class="el-page-kicker">Teaching workspace</div>
-            <h1>Teacher dashboard</h1>
-            <p id="teacherName">Loading teacher...</p>
+          <span class="teacher-eyebrow">TEACHING WORKSPACE</span>
+          <h1>My teaching overview</h1>
+          <p>Live snapshot of your learning resources and assigned students.</p>
         </div>
+        <div class="teacher-live-status" id="dashboardLiveStatus">
+          <span class="teacher-live-dot"></span>
+          <span>LIVE DATA</span>
+        </div>
+      </div>
 
-        <a class="el-btn el-btn-primary" href="modules.html">
-            <span data-icon="plus"></span>
-            New module
-        </a>
-    </header>
-
-    <section class="el-grid el-grid-4">
-
-        <article class="el-card el-stat">
-            <div class="el-stat-icon"><span data-icon="modules"></span></div>
-            <div class="el-stat-label">Modules</div>
-            <div id="moduleCount" class="el-stat-value">0</div>
-            <div class="el-stat-meta">Learning units</div>
+      <div class="teacher-metrics-row" aria-label="Teaching statistics">
+        <article class="teacher-metric">
+          <div class="teacher-metric-ring" style="--metric-color:#A995FF">
+            <svg viewBox="0 0 64 64" aria-hidden="true">
+              <circle class="teacher-ring-track" cx="32" cy="32" r="25"></circle>
+              <circle class="teacher-ring-value" data-metric-ring="modules" cx="32" cy="32" r="25"></circle>
+            </svg>
+            <span id="moduleCount">—</span>
+          </div>
+          <div class="teacher-metric-copy">
+            <strong>Modules</strong>
+            <small>My learning units</small>
+          </div>
         </article>
 
-        <article class="el-card el-stat">
-            <div class="el-stat-icon"><span data-icon="lesson"></span></div>
-            <div class="el-stat-label">Lessons</div>
-            <div id="lessonCount" class="el-stat-value">0</div>
-            <div class="el-stat-meta">Lesson content</div>
+        <article class="teacher-metric">
+          <div class="teacher-metric-ring" style="--metric-color:#64C8E8">
+            <svg viewBox="0 0 64 64" aria-hidden="true">
+              <circle class="teacher-ring-track" cx="32" cy="32" r="25"></circle>
+              <circle class="teacher-ring-value" data-metric-ring="lessons" cx="32" cy="32" r="25"></circle>
+            </svg>
+            <span id="lessonCount">—</span>
+          </div>
+          <div class="teacher-metric-copy">
+            <strong>Lessons</strong>
+            <small>My lesson content</small>
+          </div>
         </article>
 
-        <article class="el-card el-stat">
-            <div class="el-stat-icon"><span data-icon="quiz"></span></div>
-            <div class="el-stat-label">Quizzes</div>
-            <div id="quizCount" class="el-stat-value">0</div>
-            <div class="el-stat-meta">Assessment questions</div>
+        <article class="teacher-metric">
+          <div class="teacher-metric-ring" style="--metric-color:#59CDA8">
+            <svg viewBox="0 0 64 64" aria-hidden="true">
+              <circle class="teacher-ring-track" cx="32" cy="32" r="25"></circle>
+              <circle class="teacher-ring-value" data-metric-ring="quizzes" cx="32" cy="32" r="25"></circle>
+            </svg>
+            <span id="quizCount">—</span>
+          </div>
+          <div class="teacher-metric-copy">
+            <strong>Quizzes</strong>
+            <small>My assessments</small>
+          </div>
         </article>
 
-        <article class="el-card el-stat">
-            <div class="el-stat-icon"><span data-icon="users"></span></div>
-            <div class="el-stat-label">Students</div>
-            <div id="studentCount" class="el-stat-value">0</div>
-            <div class="el-stat-meta">Assigned learners</div>
+        <article class="teacher-metric">
+          <div class="teacher-metric-ring" style="--metric-color:#E5B86B">
+            <svg viewBox="0 0 64 64" aria-hidden="true">
+              <circle class="teacher-ring-track" cx="32" cy="32" r="25"></circle>
+              <circle class="teacher-ring-value" data-metric-ring="students" cx="32" cy="32" r="25"></circle>
+            </svg>
+            <span id="studentCount">—</span>
+          </div>
+          <div class="teacher-metric-copy">
+            <strong>Students</strong>
+            <small>Assigned learners</small>
+          </div>
         </article>
+      </div>
 
+      <div class="teacher-overview-note">
+        <span class="teacher-note-dot"></span>
+        Ring length compares each count with the largest metric above.
+      </div>
+
+      <div class="teacher-section-divider"></div>
+
+      <div class="teacher-chart-heading">
+        <div>
+          <h2>Class engagement</h2>
+          <p>Recorded lesson progress and quiz submissions · last 7 days</p>
+        </div>
+        <span class="teacher-chart-updated" id="engagementUpdated">Waiting for activity data</span>
+      </div>
+
+      <div class="teacher-chart-legend" aria-label="Chart legend">
+        <span><i class="legend-progress"></i> Lesson progress</span>
+        <span><i class="legend-quiz"></i> Quiz submissions</span>
+      </div>
+
+      <div class="teacher-chart-wrap">
+        <div id="teacherEngagementChart" class="teacher-engagement-chart" role="img" aria-label="Live line graph of assigned students' lesson progress and quiz submissions over the last seven days">
+          <div class="teacher-chart-loading">Collecting your students' learning activity...</div>
+        </div>
+      </div>
+      <p class="teacher-chart-footnote" id="engagementSummary">The graph updates automatically when assigned students record progress or submit a quiz.</p>
     </section>
 
-    <section class="el-grid el-grid-2" style="margin-top:18px">
+    <a id="logout" href="../login.html" hidden>Logout</a>
+  </main>
 
-        <article class="el-card">
-            <div class="el-card-title">
-                <div>
-                    <h3>Quick actions</h3>
-                    <span>Create and manage learning content</span>
-                </div>
-            </div>
+  <script type="module" src="../assets/js/teacher_dashboard.js?v=20261121-analytics"></script>
+  <script type="module" src="../assets/js/ui-shell.js"></script>
+  <script type="module" src="../assets/js/pwa.js"></script>
+  <script type="module" src="../assets/js/theme.js"></script>
 
-            <div class="el-quick-grid">
-
-                <a class="el-quick" href="modules.html">
-                    <span class="icon"><span data-icon="modules"></span></span>
-                    <strong>Modules</strong>
-                    <span>Create and organize modules.</span>
-                </a>
-
-                <a class="el-quick" href="lessons.html">
-                    <span class="icon"><span data-icon="lesson"></span></span>
-                    <strong>Lessons</strong>
-                    <span>Add lesson material.</span>
-                </a>
-
-                <a class="el-quick" href="quiz_builder.html">
-                    <span class="icon"><span data-icon="quiz"></span></span>
-                    <strong>Quiz builder</strong>
-                    <span>Build assessments.</span>
-                </a>
-
-                <a class="el-quick" href="live.html">
-                    <span class="icon"><span data-icon="video"></span></span>
-                    <strong>Live Classes</strong>
-                    <span>Start livestream or interactive classroom meetings.</span>
-                </a>
-
-            </div>
-        </article>
-
-        <article class="el-card">
-            <div class="el-card-title">
-                <div>
-                    <h3>Class engagement</h3>
-                    <span>Example visualization</span>
-                </div>
-            </div>
-
-            <div class="teacher-engagement-list">
-
-                <div class="teacher-engagement-item">
-                    <div class="teacher-engagement-heading">
-                        <span>Module completion</span>
-                        <strong>78%</strong>
-                    </div>
-                    <div class="el-progress"><span style="width:78%"></span></div>
-                </div>
-
-                <div class="teacher-engagement-item">
-                    <div class="teacher-engagement-heading">
-                        <span>Quiz participation</span>
-                        <strong>64%</strong>
-                    </div>
-                    <div class="el-progress"><span style="width:64%"></span></div>
-                </div>
-
-                <div class="teacher-engagement-item">
-                    <div class="teacher-engagement-heading">
-                        <span>Lesson activity</span>
-                        <strong>86%</strong>
-                    </div>
-                    <div class="el-progress"><span style="width:86%"></span></div>
-                </div>
-
-            </div>
-        </article>
-
-    </section>
-
-    <section class="teacher-live-banner" style="margin-top:18px">
-
-        <div class="teacher-live-content">
-            <div class="teacher-live-label">
-                <span class="teacher-live-indicator"></span>
-                EqualLearn Live
-            </div>
-
-            <h2>Bring your classroom online.</h2>
-
-            <p>
-                Conduct live lessons, interact with students,
-                and manage your virtual classroom using EqualLearn Live.
-                Connect with your learners through interactive classroom sessions.
-            </p>
-        </div>
-
-        <div class="teacher-live-action">
-            <a href="live.html" class="el-btn el-btn-primary">
-                <span data-icon="video"></span>
-                Open Live Classes
-            </a>
-        </div>
-
-    </section>
-
-    <a id="logout" href="../login.html" style="display:none">Logout</a>
-
-</div>
-
-<script type="module" src="../assets/js/teacher_dashboard.js"></script>
-<script type="module" src="../assets/js/ui-shell.js"></script>
-<script type="module" src="../assets/js/pwa.js"></script>
-<script type="module" src="../assets/js/theme.js"></script>
-
-<iframe
+  <iframe
     src="../assets/widgets/lumi.html"
     title="Lumi — EqualLearn Companion"
     id="equallearn-lumi-frame"
     allow="autoplay"
-    style="
-        position:fixed;
-        right:8px;
-        bottom:8px;
-        width:210px;
-        height:255px;
-        border:0;
-        background:transparent;
-        z-index:99999;
-        overflow:hidden;
-        pointer-events:auto;
-    ">
-</iframe>
-
+    allowtransparency="true"
+    frameborder="0"
+    scrolling="no"></iframe>
 </body>
 </html>
-

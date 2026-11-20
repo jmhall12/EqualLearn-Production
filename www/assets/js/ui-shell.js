@@ -35,7 +35,6 @@ import {
         ["dashboard.html", "home", "Dashboard"],
         ["students.html", "users", "Students"],
         ["manage-teachers.html", "teacher", "Teachers"],
-        ["register-teacher.html", "userPlus", "Register Teacher"],
         ["class-assignments.html", "classes", "Class Assignments"],
         ["check-content.html", "lesson", "Check Lessons & Modules"],
         ["reports.html", "chart", "Reports"],
@@ -384,18 +383,23 @@ function setupLumiCompanion() {
       }
 
       html {
-        min-height: 100%;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
         margin: 0;
+        overflow: hidden !important;
         scroll-behavior: smooth;
       }
 
       body {
-        min-height: 100vh;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
         margin: 0 !important;
         padding: 0 !important;
+        overflow: hidden !important;
         background: var(--el-bg) !important;
         color: var(--el-text);
-        overflow-x: hidden;
       }
 
       body,
@@ -406,26 +410,36 @@ function setupLumiCompanion() {
       .el-app-shell {
         display: grid !important;
         grid-template-columns: var(--el-sidebar-width) minmax(0, 1fr);
+        align-items: stretch;
         width: 100%;
-        min-height: 100vh;
+        height: 100vh;
+        height: 100dvh;
+        min-height: 0;
+        max-height: 100dvh;
         margin: 0;
         padding: 0;
+        overflow: hidden;
         background: var(--el-bg);
         transition: grid-template-columns .25s ease;
       }
 
       .el-sidebar {
-        position: sticky !important;
-        inset: 0 auto auto 0;
+        /* The shell itself is viewport-height, so the sidebar stays in place
+           while the page-content pane scrolls independently. */
+        position: relative !important;
+        inset: auto;
+        align-self: stretch;
         z-index: 1000;
         display: flex !important;
         flex-direction: column;
         width: 100%;
-        height: 100vh;
-        min-height: 100vh;
+        height: 100%;
+        min-height: 0;
+        max-height: 100dvh;
         padding: 22px 15px 17px;
         overflow-x: hidden;
         overflow-y: auto;
+        overscroll-behavior: contain;
         color: var(--el-text);
         background: linear-gradient(180deg,#20212e 0%,#191a25 100%) !important;
         border-right: 1px solid var(--el-border);
@@ -601,15 +615,20 @@ function setupLumiCompanion() {
         flex-direction: column;
         width: 100%;
         min-width: 0;
-        min-height: 100vh;
-        overflow-x: clip;
+        height: 100vh;
+        height: 100dvh;
+        min-height: 0;
+        max-height: 100dvh;
+        overflow: hidden;
         background: var(--el-bg);
       }
 
       .el-topbar {
-        position: sticky;
-        top: 0;
+        /* It sits outside the scrolling content pane and remains visible. */
+        position: relative;
+        top: auto;
         z-index: 500;
+        flex: 0 0 auto;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -655,6 +674,39 @@ function setupLumiCompanion() {
         display: flex;
         align-items: center;
         gap: 12px;
+      }
+
+      .el-teacher-live-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 40px;
+        padding: 8px 14px;
+        color: #f5f2ff !important;
+        background: linear-gradient(135deg, #795fe4, #5d48c7);
+        border: 1px solid rgba(181, 163, 255, .34);
+        border-radius: 12px;
+        box-shadow: 0 6px 18px rgba(92, 70, 190, .22);
+        font-size: 12px;
+        font-weight: 850;
+        text-decoration: none !important;
+        white-space: nowrap;
+        transition: transform .18s ease, box-shadow .18s ease;
+      }
+
+      .el-teacher-live-link:hover {
+        color: #fff !important;
+        transform: translateY(-1px);
+        box-shadow: 0 9px 22px rgba(92, 70, 190, .3);
+      }
+
+      .el-teacher-live-link .el-teacher-live-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #69e0b4;
+        box-shadow: 0 0 9px rgba(105, 224, 180, .62);
       }
 
       .el-user-pill {
@@ -712,12 +764,30 @@ function setupLumiCompanion() {
       }
 
       .el-page-content {
-        flex: 1 1 auto;
+        flex: 1 1 0%;
         width: 100%;
         min-width: 0;
+        min-height: 0;
+        height: auto;
         padding: 0;
         overflow-x: clip;
+        overflow-y: auto !important;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(161,139,255,.28) transparent;
         background: var(--el-bg);
+      }
+
+      .el-page-content::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .el-page-content::-webkit-scrollbar-thumb {
+        background: rgba(161,139,255,.28);
+        border: 2px solid transparent;
+        border-radius: 20px;
+        background-clip: padding-box;
       }
 
       .el-page-content > * {
@@ -785,7 +855,12 @@ function setupLumiCompanion() {
         .el-app-shell,
         body.el-sidebar-collapsed .el-app-shell {
           display: block !important;
-          min-height: 100vh;
+          width: 100%;
+          height: 100vh;
+          height: 100dvh;
+          min-height: 0;
+          max-height: 100dvh;
+          overflow: hidden;
         }
 
         .el-sidebar,
@@ -796,7 +871,8 @@ function setupLumiCompanion() {
           z-index: 1200;
           width: min(290px,84vw) !important;
           height: 100dvh;
-          min-height: 100dvh;
+          min-height: 0;
+          max-height: 100dvh;
           padding: 22px 15px 17px;
           transform: translateX(-110%);
           transition: transform .25s ease;
@@ -820,6 +896,20 @@ function setupLumiCompanion() {
 
         .el-menu-toggle {
           display: grid;
+        }
+
+        .el-app-main {
+          width: 100%;
+          height: 100vh;
+          height: 100dvh;
+          min-height: 0;
+          max-height: 100dvh;
+          overflow: hidden;
+        }
+
+        .el-page-content {
+          min-height: 0;
+          overflow-y: auto !important;
         }
 
         .el-topbar {
@@ -849,6 +939,18 @@ function setupLumiCompanion() {
         .el-topbar {
           gap: 8px;
           padding: 10px 12px;
+        }
+
+        .el-topbar-actions {
+          gap: 6px;
+        }
+
+        .el-teacher-live-link {
+          min-height: 34px;
+          gap: 5px;
+          padding: 7px 9px;
+          border-radius: 10px;
+          font-size: 11px;
         }
 
         .el-topbar-title {
@@ -962,6 +1064,7 @@ function setupLumiCompanion() {
     topbar.className = "el-topbar";
 
     const pageTitle = escapeHTML(getPageTitle());
+    const showTeacherLiveLink = role === "teacher" && currentPage === "dashboard.html";
 
     topbar.innerHTML = `
       <div class="el-topbar-title">
@@ -980,6 +1083,12 @@ function setupLumiCompanion() {
       </div>
 
       <div class="el-topbar-actions">
+        ${showTeacherLiveLink ? `
+          <a class="el-teacher-live-link" href="live.html" aria-label="Open EqualLearn Live classes">
+            <span class="el-teacher-live-dot" aria-hidden="true"></span>
+            <span>Live</span>
+          </a>
+        ` : ""}
         <div class="el-user-pill">
           <span class="el-avatar">${config.title.charAt(0)}</span>
           <div>

@@ -1,315 +1,185 @@
-
 import { auth, db } from "./firebase-config.js";
 
-import {
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
-
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
 import {
   collection,
   query,
   where,
-  onSnapshot
+  getDocs
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
-
-/* =========================================================
-   EQUALLEARN — LIVE STUDENT PROGRESS
-   Sources:
-   - progress
-   - quizAttempts
-
-   Automatically updates when Firestore records change.
-========================================================= */
 
 const container = document.getElementById("progressContainer");
 
-let unsubscribeProgress = null;
-let unsubscribeAttempts = null;
-
-let lessonProgress = [];
-let quizAttempts = [];
-
-let currentUser = null;
-
-/* =========================================================
-   HELPERS
-========================================================= */
-
-function escapeHTML(value) {
-  const div = document.createElement("div");
-  div.textContent = String(value ?? "");
-  return div.innerHTML;
-}
-
-function number(value) {
-  const result = Number(value);
-  return Number.isFinite(result) ? result : 0;
-}
-
-function formatDate(value) {
-  if (!value) return "Date unavailable";
-
-  let date;
-
-  if (typeof value.toDate === "function") {
-    date = value.toDate();
-  } else {
-    date = new Date(value);
-  }
-
-  if (Number.isNaN(date.getTime())) {
-    return "Date unavailable";
-  }
-
-  return date.toLocaleString("en-PH", {
-    dateStyle: "medium",
-    timeStyle: "short"
-  });
-}
-
-function stopListeners() {
-  if (unsubscribeProgress) {
-    unsubscribeProgress();
-    unsubscribeProgress = null;
-  }
-
-  if (unsubscribeAttempts) {
-    unsubscribeAttempts();
-    unsubscribeAttempts = null;
-  }
-}
-
-/* =========================================================
-   RENDER
-========================================================= */
-
-function renderProgress() {
-  if (!container) return;
-
-  const records = [
-    ...lessonProgress.map(item => ({
-      ...item,
-      recordType: "lesson"
-    })),
-
-    ...quizAttempts.map(item => ({
-      ...item,
-      recordType: "quiz"
-    }))
-  ];
-
-  records.sort((a, b) => {
-    const dateA = a.submittedAt?.toDate?.()?.getTime()
-      || a.completedAt?.toDate?.()?.getTime()
-      || a.updatedAt?.toDate?.()?.getTime()
-      || 0;
-
-    const dateB = b.submittedAt?.toDate?.()?.getTime()
-      || b.completedAt?.toDate?.()?.getTime()
-      || b.updatedAt?.toDate?.()?.getTime()
-      || 0;
-
-    return dateB - dateA;
-  });
-
-  if (!records.length) {
-    container.innerHTML = `
-      <div class="progress-empty">
-        <h3>No progress yet</h3>
-        <p>
-          Your completed lessons and submitted quizzes
-          will appear here automatically.
-        </p>
-      </div>
-    `;
-    return;
-  }
-
-  container.innerHTML = records.map(record => {
-    const isQuiz = record.recordType === "quiz";
-
-    const title = isQuiz
-      ? record.quizTitle || "Quiz Assessment"
-      : record.lessonId || record.lessonTitle || "Learning Lesson";
-
-    const hasScore =
-      record.score !== null &&
-      record.score !== undefined &&
-      record.total !== null &&
-      record.total !== undefined &&
-      number(record.total) > 0;
-
-    const percentage = hasScore
-      ? Math.round((number(record.score) / number(record.total)) * 100)
-      : null;
-
-    const result = hasScore
-      ? (
-          percentage >= number(record.passingScore || 60)
-            ? "PASSING"
-            : "FAILING"
-        )
-      : "PENDING GRADING";
-
-    const resultClass = hasScore
-      ? (result === "PASSING" ? "passing" : "failing")
-      : "pending";
-
-    const date = isQuiz
-      ? record.submittedAt
-      : record.completedAt || record.updatedAt || record.createdAt;
-
-    const scoreText = hasScore
-      ? `${number(record.score)} / ${number(record.total)}`
-      : "Not graded yet";
-
-    const gradeText = hasScore
-      ? `${percentage}%`
-      : "Pending";
-
-    return `
-      <article class="progress-card">
-        <div class="progress-card-header">
-          <span class="progress-type">
-            ${isQuiz ? "QUIZ ASSESSMENT" : "LESSON PROGRESS"}
-          </span>
-
-          <span class="progress-status ${resultClass}">
-            ${result}
-          </span>
-        </div>
-
-        <h3>${escapeHTML(title)}</h3>
-
-        <p>
-          Score:
-          <strong>${escapeHTML(scoreText)}</strong>
-        </p>
-
-        <p>
-          Grade:
-          <strong>${escapeHTML(gradeText)}</strong>
-        </p>
-
-        <p>
-          Status:
-          <strong>
-            ${escapeHTML(record.status || "Recorded")}
-          </strong>
-        </p>
-
-        <p class="progress-date">
-          ${escapeHTML(formatDate(date))}
-        </p>
-      </article>
-    `;
-  }).join("");
-}
-
-/* =========================================================
-   REAL-TIME FIRESTORE LISTENERS
-========================================================= */
-
-function listenToProgress(user) {
-  const progressQuery = query(
-    collection(db, "progress"),
-    where("userId", "==", user.uid)
-  );
-
-  unsubscribeProgress = onSnapshot(
-    progressQuery,
-
-    snapshot => {
-      lessonProgress = snapshot.docs.map(item => ({
-        id: item.id,
-        ...item.data()
-      }));
-
-      renderProgress();
-
-      console.log("[EqualLearn] Live lesson progress:", {
-        count: lessonProgress.length
-      });
-    },
-
-    error => {
-      console.error(
-        "[EqualLearn] Progress listener error:",
-        error
-      );
-
-      container.innerHTML = `
-        <div class="progress-error">
-          <h3>Unable to load lesson progress</h3>
-          <p>${escapeHTML(error.message)}</p>
-        </div>
-      `;
-    }
-  );
-}
-
-function listenToQuizAttempts(user) {
-  const attemptsQuery = query(
-    collection(db, "quizAttempts"),
-    where("userId", "==", user.uid)
-  );
-
-  unsubscribeAttempts = onSnapshot(
-    attemptsQuery,
-
-    snapshot => {
-      quizAttempts = snapshot.docs.map(item => ({
-        id: item.id,
-        ...item.data()
-      }));
-
-      renderProgress();
-
-      console.log("[EqualLearn] Live quiz attempts:", {
-        count: quizAttempts.length
-      });
-    },
-
-    error => {
-      console.error(
-        "[EqualLearn] Quiz attempts listener error:",
-        error
-      );
-    }
-  );
-}
-
-/* =========================================================
-   AUTHENTICATION
-========================================================= */
-
-onAuthStateChanged(auth, user => {
-  stopListeners();
-
+onAuthStateChanged(auth, async (user) => {
   if (!user) {
     window.location.href = "../login.html";
     return;
   }
 
-  currentUser = user;
-
-  lessonProgress = [];
-  quizAttempts = [];
-
-  if (container) {
-    container.innerHTML = `
-      <div class="progress-loading">
-        Loading your learning progress...
-      </div>
-    `;
+  if (!container) {
+    console.error("Progress container was not found.");
+    return;
   }
 
-  listenToProgress(currentUser);
-  listenToQuizAttempts(currentUser);
+  container.setAttribute("aria-busy", "true");
+  container.replaceChildren(createState("Loading your results..."));
+
+  try {
+    // Keep the existing Firestore source and per-student filter unchanged.
+    const progressQuery = query(
+      collection(db, "progress"),
+      where("userId", "==", user.uid)
+    );
+
+    const snapshot = await getDocs(progressQuery);
+    container.replaceChildren();
+
+    if (snapshot.empty) {
+      container.appendChild(createState("No progress yet."));
+      return;
+    }
+
+    snapshot.forEach((item, index) => {
+      container.appendChild(createProgressCard(item.data(), index));
+    });
+  } catch (error) {
+    console.error("Progress error:", error);
+    container.replaceChildren(
+      createState("Failed to load progress. Please refresh and try again.")
+    );
+  } finally {
+    container.setAttribute("aria-busy", "false");
+  }
 });
 
-/* =========================================================
-   CLEANUP
-========================================================= */
+function createProgressCard(data, index) {
+  const score = Number(data.score ?? 0);
+  const total = Number(data.total ?? 0);
+  const percentage = Number(
+    data.percentage ?? (total > 0 ? (score / total) * 100 : 0)
+  );
+  const safePercentage = Number.isFinite(percentage)
+    ? Math.max(0, Math.min(100, percentage))
+    : 0;
 
-window.addEventListener("pagehide", stopListeners);
+  const rawResult = String(data.result ?? "").trim().toLowerCase();
+  const rawStatus = String(data.status ?? "graded").trim();
+  const pending = ["pending", "submitted", "for checking", "pending grading"].includes(rawStatus.toLowerCase())
+    && !["passing", "passed", "pass", "failing", "failed", "fail"].includes(rawResult);
+  const passed = ["passing", "passed", "pass"].includes(rawResult);
+  const resultLabel = pending ? "PENDING" : passed ? "PASSING" : "FAILING";
+  const resultClass = pending ? "pending" : passed ? "passing" : "failing";
+  const title = data.quizTitle || data.title || data.lessonId || data.activityTitle || "Quiz assessment";
+  const date = formatDate(
+    data.submittedAt || data.createdAt || data.completedAt || data.updatedAt || data.timestamp || data.date
+  );
+
+  const card = document.createElement("article");
+  card.className = "progress-card";
+
+  const revealButton = document.createElement("button");
+  revealButton.type = "button";
+  revealButton.className = "progress-reveal";
+  revealButton.setAttribute("aria-expanded", "false");
+  revealButton.setAttribute("aria-controls", `progress-details-${index}`);
+  revealButton.setAttribute("aria-label", `Reveal result details for ${title}`);
+
+  const copy = document.createElement("span");
+  copy.className = "progress-reveal-copy";
+
+  const kicker = document.createElement("span");
+  kicker.className = "progress-kicker";
+  kicker.textContent = String(data.type || data.category || "Quiz assessment").toUpperCase();
+
+  const heading = document.createElement("span");
+  heading.className = "progress-title";
+  heading.textContent = String(title);
+
+  copy.append(kicker, heading);
+
+  const resultBadge = document.createElement("span");
+  resultBadge.className = `progress-result ${resultClass}`;
+  resultBadge.textContent = resultLabel;
+
+  const chevron = document.createElement("span");
+  chevron.className = "progress-chevron";
+  chevron.setAttribute("aria-hidden", "true");
+  chevron.textContent = "⌄";
+
+  revealButton.append(copy, resultBadge, chevron);
+
+  const details = document.createElement("div");
+  details.className = "progress-details";
+  details.id = `progress-details-${index}`;
+  details.hidden = true;
+
+  details.append(
+    createDetail("Score", `${formatNumber(score)} / ${formatNumber(total)}`),
+    createDetail("Grade", `${formatNumber(safePercentage)}%`),
+    createDetail("Status", rawStatus || "Graded"),
+    createDetail("Date", date)
+  );
+
+  revealButton.addEventListener("click", () => {
+    const isExpanded = revealButton.getAttribute("aria-expanded") === "true";
+    revealButton.setAttribute("aria-expanded", String(!isExpanded));
+    details.hidden = isExpanded;
+  });
+
+  card.append(revealButton, details);
+  return card;
+}
+
+function createDetail(label, value) {
+  const item = document.createElement("div");
+  item.className = "progress-detail";
+
+  const labelElement = document.createElement("span");
+  labelElement.className = "progress-detail-label";
+  labelElement.textContent = label;
+
+  const valueElement = document.createElement("strong");
+  valueElement.className = "progress-detail-value";
+  valueElement.textContent = value || "—";
+
+  item.append(labelElement, valueElement);
+  return item;
+}
+
+function createState(message) {
+  const state = document.createElement("p");
+  state.className = "progress-state";
+  state.textContent = message;
+  return state;
+}
+
+function formatNumber(value) {
+  return Number.isFinite(Number(value))
+    ? Number(value).toLocaleString(undefined, { maximumFractionDigits: 2 })
+    : "0";
+}
+
+function formatDate(value) {
+  if (!value) return "Date unavailable";
+
+  let dateValue = value;
+  if (typeof value.toDate === "function") {
+    dateValue = value.toDate();
+  } else if (typeof value === "object" && typeof value.seconds === "number") {
+    dateValue = new Date(value.seconds * 1000);
+  } else if (!(value instanceof Date)) {
+    dateValue = new Date(value);
+  }
+
+  if (!(dateValue instanceof Date) || Number.isNaN(dateValue.getTime())) {
+    return "Date unavailable";
+  }
+
+  return dateValue.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
+  });
+}

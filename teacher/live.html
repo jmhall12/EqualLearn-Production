@@ -1,11 +1,10 @@
-﻿
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script id="EQUALLEARN_FORCE_DARK_BOOTSTRAP">document.documentElement.dataset.theme="dark";document.documentElement.style.colorScheme="dark";</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0b1020">
+  <meta name="theme-color" content="#111827">
   <title>EqualLearn Live - Teacher</title>
 
   <link rel="manifest" href="../manifest.webmanifest">
@@ -455,50 +454,22 @@
   border-radius:10px; background:#3b4962; color:#fff; font-weight:700;
 }
 
-  </style>
-<style>
-
-/* EqualLearn Live premium call controls, minimizable dock, camera mirror and effects */
-.equallearn-extra-control {
-  min-height:38px; padding:8px 12px; border:1px solid #46536b; border-radius:10px;
-  background:#263247; color:#f8fafc; font-size:12px; font-weight:700; cursor:pointer;
-}
-.equallearn-extra-control:hover { background:#35445f; border-color:#8292b2; }
-.equallearn-delete-session { margin-top:14px; background:#9f1239; color:#fff; border:0; padding:11px 14px; border-radius:10px; font-weight:700; cursor:pointer; }
-.equallearn-delete-session:disabled { opacity:.45; cursor:not-allowed; }
-.participant-tile video.is-selfie, .sm-tile video.is-selfie { transform:scaleX(-1); }
-.participant-tile video.is-local-camera, .sm-tile video.is-local-camera { will-change:transform; }
-.participant-tile.screen-share-tile video, .sm-tile.screen-share-tile video { transform:none !important; }
-.equallearn-floating-call[hidden] { display:none !important; }
-.equallearn-floating-call {
-  position:fixed; right:14px; bottom:14px; z-index:100200; width:min(390px,calc(100vw - 28px));
-  min-height:92px; display:grid; grid-template-columns:112px minmax(0,1fr); align-items:center; gap:12px;
-  padding:10px; border:1px solid rgba(148,163,184,.35); border-radius:18px;
-  background:rgba(15,23,42,.96); color:#f8fafc; box-shadow:0 18px 55px rgba(0,0,0,.42);
-  backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
-}
-.equallearn-floating-preview {
-  position:relative; width:112px; aspect-ratio:16/10; overflow:hidden; border-radius:12px;
-  background:#263247; display:grid; place-items:center;
-}
-.equallearn-floating-video { width:100%; height:100%; object-fit:cover; }
-.equallearn-floating-fallback { font-size:22px; font-weight:900; color:#a5b4fc; }
-.equallearn-floating-details { min-width:0; display:flex; flex-direction:column; gap:5px; }
-.equallearn-floating-details strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; }
-.equallearn-floating-details span { color:#aab6cb; font-size:11px; }
-.equallearn-floating-actions { grid-column:1 / -1; display:flex; gap:8px; }
-.equallearn-floating-actions button { flex:1; min-height:36px; border:0; border-radius:10px; background:#4f46e5; color:white; font-weight:700; }
-.equallearn-floating-actions button.is-danger { background:#be123c; }
-#meetingScreen.is-minimized, #studentMeetingScreen.is-minimized { display:none !important; }
-@media(max-width:520px) {
-  .equallearn-floating-call { right:9px; bottom:9px; width:min(340px,calc(100vw - 18px)); }
-  .equallearn-extra-control { min-height:35px; padding:7px 9px; font-size:11px; }
-}
-
+  
+/* Meet-style tile behavior: mirror only local camera; pin presentations across the meeting stage. */
+.participant-tile video.local-mirror{transform:scaleX(-1);}
+.participant-tile.screen-share-tile{grid-column:1/-1;min-height:0!important;aspect-ratio:auto!important;}
+.participant-tile.screen-share-tile video{object-fit:contain!important;background:#02050a;}
+#meetingScreen.has-screen-share .meeting-main{display:flex!important;}
+#meetingScreen.has-screen-share .meeting-sidebar{display:none!important;}
+#meetingScreen.has-screen-share .meeting-stage{width:100%;min-width:0;min-height:0;padding:0!important;}
+#meetingScreen.has-screen-share #participantGrid{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);height:100%;min-height:0;overflow:hidden;}
+#meetingScreen.has-screen-share .participant-tile:not(.screen-share-tile){display:none!important;}
+#meetingScreen.has-screen-share .participant-tile.screen-share-tile{display:flex;width:100%;height:100%;min-height:0;grid-column:1/-1;border:0;border-radius:0;}
+.live-hand-indicator{position:absolute;z-index:4;top:9px;right:9px;display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border:1px solid #fbbf2466;border-radius:999px;background:#fbbf2430;color:#ffe29a;font-size:10px;font-weight:800;}
+.live-hand-indicator svg,.teacher-hand-toast svg{width:15px;height:15px;flex:0 0 auto;}
+.teacher-hand-toast{position:absolute;z-index:100010;top:72px;left:50%;display:flex;align-items:center;gap:8px;max-width:min(92vw,370px);padding:10px 14px;transform:translateX(-50%);border:1px solid #fbbf2466;border-radius:12px;background:#1d2638f5;color:#fff0c2;box-shadow:0 10px 32px #0007;font-size:11px;font-weight:800;pointer-events:none;}
+@media(max-width:800px){#meetingScreen.has-screen-share .meeting-stage{padding:0!important;}}
 </style>
-    <link rel="stylesheet" href="../assets/css/responsive-layout.css">
-    <link rel="stylesheet" href="../assets/css/responsive-auto-fit.css">
-  <link rel="stylesheet" href="../assets/css/forced-dark-theme.css?v=1">
 </head>
 
 <body>
@@ -883,4 +854,3 @@
 
 </body>
 </html>
-

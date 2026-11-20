@@ -139,10 +139,37 @@ export const getLessons = async (sectionId = '') => {
   return snap.docs.map(row => ({ id: row.id, ...row.data() }))
     .sort((a,b)=>clean(a.moduleName).localeCompare(clean(b.moduleName)) || clean(a.title).localeCompare(clean(b.title)));
 };
-export const getQuestions = async () => list(COLLECTIONS.questions);
+export const getQuestions = async (sectionId = '') => {
+  const section = clean(sectionId);
+  if (!section) return list(COLLECTIONS.questions);
+
+  const publishedLessons = (await getLessons(section)).filter(lessonQuizIsPublished);
+  const lessonIds = publishedLessons.map(lesson => lesson.id).filter(Boolean);
+  if (!lessonIds.length) return [];
+
+  // Firestore "in" supports up to 30 values per query. Chunk the IDs so
+  // students only read questions attached to their own published lessons.
+  const chunks = [];
+  for (let index = 0; index < lessonIds.length; index += 30) {
+    chunks.push(lessonIds.slice(index, index + 30));
+  }
+
+  const snapshots = await Promise.all(chunks.map(ids => getDocs(query(
+    collection(db, COLLECTIONS.questions),
+    where('lessonId', 'in', ids),
+  ))));
+
+  return snapshots.flatMap(snapshot => snapshot.docs.map(row => ({ id: row.id, ...row.data() })));
+};
+
 export const getProgress = async userId => {
-  const rows = await list(COLLECTIONS.progress);
-  return (userId ? rows.filter(row => row.userId === userId) : rows).sort((a,b)=>timestampMs(b.completedAt)-timestampMs(a.completedAt));
+  if (!userId) return list(COLLECTIONS.progress);
+  const snap = await getDocs(query(
+    collection(db, COLLECTIONS.progress),
+    where('userId', '==', userId),
+  ));
+  return snap.docs.map(row => ({ id: row.id, ...row.data() }))
+    .sort((a,b)=>timestampMs(b.completedAt)-timestampMs(a.completedAt));
 };
 export const getClassGroups = async () => {
   const [students, stored] = await Promise.all([getUsers('student'), list(COLLECTIONS.classGroups)]);
@@ -164,9 +191,13 @@ export const getClassGroups = async () => {
 };
 export const getAssignments = async () => (await list(COLLECTIONS.assignments)).sort((a,b)=>clean(a.className).localeCompare(clean(b.className)) || clean(a.yearLevel).localeCompare(clean(b.yearLevel)));
 export const getNotifications = async uid => {
-  // Intentionally filter client-side to preserve the old branch behavior without requiring a new composite index.
-  const rows = await list(COLLECTIONS.notifications);
-  return rows.filter(row => row.userId === uid).sort((a,b)=>timestampMs(b.createdAt)-timestampMs(a.createdAt)).slice(0,20);
+  if (!uid) return [];
+  const snap = await getDocs(query(
+    collection(db, COLLECTIONS.notifications),
+    where('userId', '==', uid),
+  ));
+  return snap.docs.map(row => ({ id: row.id, ...row.data() }))
+    .sort((a,b)=>timestampMs(b.createdAt)-timestampMs(a.createdAt)).slice(0,20);
 };
 
 export const markNotificationRead = id => updateDoc(doc(db, COLLECTIONS.notifications, id), { read: true, readAt: serverTimestamp() });
@@ -176,7 +207,14 @@ export const markAllNotificationsRead = async uid => {
 };
 
 export const getStudentAssignment = async student => {
-  const rows = await getAssignments();
+  const sectionId = clean(student?.sectionId);
+  if (!sectionId) return null;
+
+  const assignmentSnap = await getDocs(query(
+    collection(db, COLLECTIONS.assignments),
+    where('sectionId', '==', sectionId),
+  ));
+  const rows = assignmentSnap.docs.map(row => ({ id: row.id, ...row.data() }));
   const section = studentSection(student);
   const course = studentCourse(student);
   const year = normalizeYearLevel(student?.yearLevel);

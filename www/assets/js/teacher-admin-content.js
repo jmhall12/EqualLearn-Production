@@ -64,13 +64,18 @@ function getStatus(item) {
 }
 
 function isAssignedToTeacher(item) {
+    const publishedStatus = item.collectionName === "modulesV2"
+        ? "published"
+        : "active";
+
     return item.assignedTeacherId === currentTeacher?.uid
-        && item.status === "active"
+        && item.status === publishedStatus
         && getStatus(item) === "approved";
 }
 
 function getCollectionName(item) {
-    return item.type === "module" ? "modules" : "lessons";
+    // Keep older Admin modules working while all new Admin modules use V2.
+    return item.collectionName || (item.type === "module" ? "modulesV2" : "lessons");
 }
 
 function safeUrl(value) {
@@ -100,7 +105,7 @@ function updateSummary() {
 
     const approved = allContent.filter(item =>
         getStatus(item) === "approved" &&
-        !isAssignedToTeacher(item)
+        !item.assignedTeacherId
     ).length;
 
     const assigned = allContent.filter(isAssignedToTeacher).length;
@@ -158,36 +163,120 @@ async function loadAdminContent() {
         <div class="empty">Loading Admin content...</div>
     `;
 
-    const modulesQuery = query(
-        collection(db, "modules"),
-        where("createdByRole", "==", "admin"),
-        where("reviewStatus", "in", ["pending", "approved"])
-    );
+    const modulesV2 = collection(db, "modulesV2");
+    const legacyModules = collection(db, "modules");
 
-    const lessonsQuery = query(
-        collection(db, "lessons"),
-        where("createdByRole", "==", "admin"),
-        where("reviewStatus", "in", ["pending", "approved"])
-    );
+    // Each query is constrained to documents the current Teacher is allowed
+    // to read. Do not query all approved modules: that would include content
+    // already assigned to other Teachers and Firestore would deny the query.
+    const jobs = [
+        {
+            label: "V2 modules pending review",
+            collectionName: "modulesV2",
+            type: "module",
+            request: getDocs(query(
+                modulesV2,
+                where("createdByRole", "==", "admin"),
+                where("reviewStatus", "==", "pending")
+            ))
+        },
+        {
+            label: "V2 modules approved and unassigned",
+            collectionName: "modulesV2",
+            type: "module",
+            request: getDocs(query(
+                modulesV2,
+                where("createdByRole", "==", "admin"),
+                where("reviewStatus", "==", "approved"),
+                where("assignedTeacherId", "==", null)
+            ))
+        },
+        {
+            label: "V2 modules assigned to this Teacher",
+            collectionName: "modulesV2",
+            type: "module",
+            request: getDocs(query(
+                modulesV2,
+                where("createdByRole", "==", "admin"),
+                where("reviewStatus", "==", "approved"),
+                where("assignedTeacherId", "==", currentTeacher.uid)
+            ))
+        },
+        {
+            // Backward compatibility for Admin modules created before this fix.
+            label: "Legacy modules pending review",
+            collectionName: "modules",
+            type: "module",
+            request: getDocs(query(
+                legacyModules,
+                where("createdByRole", "==", "admin"),
+                where("reviewStatus", "==", "pending")
+            ))
+        },
+        {
+            label: "Legacy modules assigned to this Teacher",
+            collectionName: "modules",
+            type: "module",
+            request: getDocs(query(
+                legacyModules,
+                where("createdByRole", "==", "admin"),
+                where("reviewStatus", "==", "approved"),
+                where("assignedTeacherId", "==", currentTeacher.uid)
+            ))
+        },
+        {
+            label: "Admin lessons",
+            collectionName: "lessons",
+            type: "lesson",
+            request: getDocs(query(
+                collection(db, "lessons"),
+                where("createdByRole", "==", "admin"),
+                where("reviewStatus", "in", ["pending", "approved"])
+            ))
+        }
+    ];
 
-    const [modulesSnapshot, lessonsSnapshot] = await Promise.all([
-        getDocs(modulesQuery),
-        getDocs(lessonsQuery)
-    ]);
+    const results = await Promise.allSettled(jobs.map(job => job.request));
+    const contentByKey = new Map();
+    const failures = [];
 
-    const modules = modulesSnapshot.docs.map(snapshot => ({
-        id: snapshot.id,
-        type: "module",
-        ...snapshot.data()
-    }));
+    results.forEach((result, index) => {
+        const job = jobs[index];
 
-    const lessons = lessonsSnapshot.docs.map(snapshot => ({
-        id: snapshot.id,
-        type: "lesson",
-        ...snapshot.data()
-    }));
+        if (result.status === "rejected") {
+            failures.push({ label: job.label, error: result.reason });
+            console.warn(`[TEACHER ADMIN CONTENT] ${job.label} could not be loaded:`, {
+                code: result.reason?.code,
+                message: result.reason?.message,
+                error: result.reason
+            });
+            return;
+        }
 
-    allContent = [...modules, ...lessons].sort((a, b) => {
+        result.value.docs.forEach(snapshot => {
+            const item = {
+                id: snapshot.id,
+                type: job.type,
+                collectionName: job.collectionName,
+                ...snapshot.data()
+            };
+
+            contentByKey.set(`${job.collectionName}/${snapshot.id}`, item);
+        });
+    });
+
+    if (!contentByKey.size && failures.length === jobs.length) {
+        throw failures[0].error || new Error("No Admin content query could be loaded.");
+    }
+
+    if (failures.length) {
+        showMessage(
+            `Some content sources could not be loaded (${failures.length}/${jobs.length}). Check the console for details.`,
+            "error"
+        );
+    }
+
+    allContent = [...contentByKey.values()].sort((a, b) => {
         const aTime = a.createdAt?.toMillis?.() || 0;
         const bTime = b.createdAt?.toMillis?.() || 0;
         return bTime - aTime;
@@ -315,8 +404,11 @@ function renderAttachments(item) {
 function renderCard(item) {
     const status = getStatus(item);
     const assigned = isAssignedToTeacher(item);
+    const assignedToOtherTeacher = Boolean(
+        item.assignedTeacherId && item.assignedTeacherId !== currentTeacher?.uid
+    );
 
-    const statusClass = assigned
+    const statusClass = (assigned || assignedToOtherTeacher)
         ? "published"
         : status === "approved"
             ? "approved"
@@ -326,7 +418,9 @@ function renderCard(item) {
 
     const statusLabel = assigned
         ? "Published"
-        : status === "approved"
+        : assignedToOtherTeacher
+            ? "Already published"
+            : status === "approved"
             ? "Approved — awaiting assignment"
             : status === "rejected"
                 ? "Rejected"
@@ -341,7 +435,13 @@ function renderCard(item) {
 
     let actionArea = "";
 
-    if (status === "pending") {
+    if (assignedToOtherTeacher) {
+        actionArea = `
+            <div class="published-info">
+                This Admin content has already been assigned and published by another teacher.
+            </div>
+        `;
+    } else if (status === "pending") {
         actionArea = `
             <div class="assignment">
                 <p class="review-hint">
@@ -352,14 +452,16 @@ function renderCard(item) {
                     <button class="btn approve"
                         data-action="approve"
                         data-id="${escapeHTML(item.id)}"
-                        data-type="${item.type}">
+                        data-type="${item.type}"
+                        data-collection-name="${escapeHTML(item.collectionName || getCollectionName(item))}">
                         ✓ Approve Content
                     </button>
 
                     <button class="btn reject"
                         data-action="reject"
                         data-id="${escapeHTML(item.id)}"
-                        data-type="${item.type}">
+                        data-type="${item.type}"
+                        data-collection-name="${escapeHTML(item.collectionName || getCollectionName(item))}">
                         Reject
                     </button>
                 </div>
@@ -382,6 +484,7 @@ function renderCard(item) {
                         data-action="publish"
                         data-id="${escapeHTML(item.id)}"
                         data-type="${item.type}"
+                        data-collection-name="${escapeHTML(item.collectionName || getCollectionName(item))}"
                         ${!teacherSections.length ? "disabled" : ""}>
                         Publish to Students
                     </button>
@@ -545,9 +648,14 @@ async function publishContent(item, sectionId) {
         currentTeacher.email ||
         "Teacher";
 
+    // V2 modules are read by students only when status is "published".
+    // Legacy lessons/modules keep their existing "active" status contract.
+    const collectionName = getCollectionName(item);
+    const publishedStatus = collectionName === "modulesV2" ? "published" : "active";
+
     // Firestore rules intentionally allow one teacher-assigned section per Admin item.
-    await updateDoc(doc(db, getCollectionName(item), item.id), {
-        status: "active",
+    await updateDoc(doc(db, collectionName, item.id), {
+        status: publishedStatus,
         reviewStatus: "approved",
         sectionIds: [sectionId],
         assignedTeacherId: currentTeacher.uid,
@@ -568,10 +676,12 @@ contentList.addEventListener("click", async event => {
     const button = event.target.closest("button[data-action]");
     if (!button || button.disabled) return;
 
-    const { action, id, type } = button.dataset;
+    const { action, id, type, collectionName } = button.dataset;
 
     const item = allContent.find(content =>
-        content.id === id && content.type === type
+        content.id === id
+        && content.type === type
+        && (!collectionName || getCollectionName(content) === collectionName)
     );
 
     if (!item) return;

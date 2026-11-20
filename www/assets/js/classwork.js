@@ -118,7 +118,7 @@ async function loadStudentProfile() {
 
 /* =========================================================
    PERMISSION DIAGNOSTICS
-   Current student workflow uses V2 collections only.
+   Student workflow supports V2 publishing and approved Admin legacy modules.
 ========================================================= */
 
 async function testClassworkPermissions() {
@@ -126,6 +126,10 @@ async function testClassworkPermissions() {
     {
       name: "modulesV2",
       run: () => fetchPublishedSectionDocuments("modulesV2")
+    },
+    {
+      name: "adminModules",
+      run: () => fetchApprovedLegacySectionDocuments("modules")
     },
     {
       name: "teacherActivitiesV2",
@@ -258,6 +262,40 @@ async function fetchPublishedSectionDocuments(collectionName) {
 }
 
 /* =========================================================
+   APPROVED ADMIN MODULES (LEGACY COLLECTION)
+   Admin items stay hidden until a teacher approves them,
+   assigns them to a section, and changes status to active.
+========================================================= */
+
+async function fetchApprovedLegacySectionDocuments(collectionName) {
+  if (!studentSectionId) {
+    throw new Error("Student section ID is missing.");
+  }
+
+  const q = query(
+    collection(db, collectionName),
+    where("status", "==", "active"),
+    where("reviewStatus", "==", "approved"),
+    where("sectionIds", "array-contains", studentSectionId)
+  );
+
+  const snapshot = await getDocs(q);
+  const documents = snapshot.docs.map(item => ({
+    id: item.id,
+    ...item.data()
+  }));
+
+  console.log("[CLASSWORK] Approved Admin content loaded:", {
+    collection: collectionName,
+    sectionId: studentSectionId,
+    count: documents.length,
+    ids: documents.map(item => item.id)
+  });
+
+  return documents;
+}
+
+/* =========================================================
    ANNOUNCEMENTS
 ========================================================= */
 
@@ -323,40 +361,55 @@ async function loadAnnouncements() {
 ========================================================= */
 
 async function loadModules() {
-  const documents = await fetchPublishedSectionDocuments("modulesV2");
+  const [v2Result, adminResult] = await Promise.allSettled([
+    fetchPublishedSectionDocuments("modulesV2"),
+    fetchApprovedLegacySectionDocuments("modules")
+  ]);
 
-  documents.forEach(data => {
-    allActivities.push({
+  if (v2Result.status === "rejected" && adminResult.status === "rejected") {
+    throw adminResult.reason || v2Result.reason;
+  }
+  if (v2Result.status === "rejected") {
+    console.warn("[CLASSWORK] V2 modules could not be loaded:", v2Result.reason);
+  }
+  if (adminResult.status === "rejected") {
+    console.warn("[CLASSWORK] Approved Admin modules could not be loaded:", adminResult.reason);
+  }
+
+  const v2Documents = v2Result.status === "fulfilled" ? v2Result.value : [];
+  const adminDocuments = adminResult.status === "fulfilled" ? adminResult.value : [];
+  const byId = new Map();
+
+  v2Documents.forEach(data => {
+    byId.set(data.id, {
       id: data.id,
       collectionName: "modulesV2",
       category: "module",
-
-      title:
-        data.title ||
-        data.moduleTitle ||
-        "Untitled Learning Module",
-
-      description:
-        data.description ||
-        data.content ||
-        data.moduleDescription ||
-        "Open this learning module to view its resources.",
-
-      teacherName:
-        data.teacherName ||
-        data.assignedTeacherName ||
-        "Your Teacher",
-
-      date: toDate(
-        data.publishedAt ||
-        data.createdAt ||
-        data.updatedAt
-      ),
-
+      title: data.title || data.moduleTitle || "Untitled Learning Module",
+      description: data.description || data.content || data.moduleDescription || "Open this learning module to view its resources.",
+      teacherName: data.teacherName || data.assignedTeacherName || "Your Teacher",
+      date: toDate(data.publishedAt || data.createdAt || data.updatedAt),
       status: "Published",
       original: data
     });
   });
+
+  // Admin-originated records are authoritative when IDs overlap.
+  adminDocuments.forEach(data => {
+    byId.set(data.id, {
+      id: data.id,
+      collectionName: "modules",
+      category: "module",
+      title: data.title || data.moduleTitle || "Untitled Learning Module",
+      description: data.description || data.content || data.moduleDescription || "Your teacher published this Admin learning module for your section.",
+      teacherName: data.assignedTeacherName || data.teacherName || data.createdByName || "Your Teacher",
+      date: toDate(data.publishedAt || data.createdAt || data.updatedAt),
+      status: "Published",
+      original: data
+    });
+  });
+
+  allActivities.push(...byId.values());
 }
 
 /* =========================================================
@@ -687,7 +740,7 @@ function getDestination(item) {
 
   if (item.collectionName === "modules" ||
       item.collectionName === "modulesV2") {
-    return `modules.html?id=${id}&type=module`;
+    return `modules.html?openModule=${id}`;
   }
 
   switch (item.category) {

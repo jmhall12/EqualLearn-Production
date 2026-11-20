@@ -1,12 +1,11 @@
-﻿
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-  <script id="EQUALLEARN_FORCE_DARK_BOOTSTRAP">document.documentElement.dataset.theme="dark";document.documentElement.style.colorScheme="dark";</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0b1020">
+    <meta name="theme-color" content="#635bff">
 
     <title>Students & Academic Verification | EqualLearn</title>
 
@@ -409,7 +408,7 @@
 
         .table-wrap {
             width: 100%;
-            overflow: auto;
+            overflow: hidden;
             border: 1px solid rgba(255,255,255,.8);
             border-radius: 14px;
             background: rgba(255,255,255,.4);
@@ -428,7 +427,8 @@
 
         table {
             width: 100%;
-            min-width: 1000px;
+            min-width: 0;
+            table-layout: fixed;
             border-collapse: separate;
             border-spacing: 0;
             color: var(--verification-text);
@@ -924,56 +924,507 @@ body[data-theme="dark"] select {
 
 
 
+    
+
+        /* =====================================================
+           STUDENT VERIFICATION - COMPACT LAYOUT
+           One summary rail, no oversized hero, no horizontal table scroll.
+        ===================================================== */
+        .container {
+            width: min(1500px, calc(100% - 32px));
+            margin: 16px auto;
+            padding: 20px;
+        }
+
+        .back {
+            margin-bottom: 14px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0;
+            margin: 0 0 14px;
+            padding: 8px 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,.10);
+            border-radius: 15px;
+            background: rgba(255,255,255,.72);
+            box-shadow: 0 9px 24px rgba(35,38,75,.07);
+        }
+
+        .stat {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            grid-template-rows: auto auto;
+            align-items: center;
+            column-gap: 12px;
+            min-width: 0;
+            min-height: 66px;
+            padding: 8px 17px;
+            overflow: hidden;
+            border: 0;
+            border-right: 1px solid rgba(172, 165, 220, .20);
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            transition: background .2s ease;
+        }
+
+        .stat:last-child { border-right: 0; }
+        .stat::after { display: none; }
+        .stat:hover {
+            transform: none;
+            border-color: transparent;
+            box-shadow: none;
+            background: rgba(157, 139, 255, .07);
+        }
+
+        .stat-copy { min-width: 0; grid-column: 1; grid-row: 1 / 3; }
+        .stat-label {
+            color: #68728a;
+            font-size: 10px;
+            line-height: 1.35;
+            font-weight: 750;
+        }
+        .stat-note {
+            margin-top: 4px;
+            color: #9299aa;
+            font-size: 9px;
+            line-height: 1.35;
+        }
+        .stat-value {
+            grid-column: 2;
+            grid-row: 1 / 3;
+            align-self: center;
+            margin: 0;
+            color: var(--verification-text);
+            font-size: clamp(22px, 2.2vw, 28px);
+            line-height: 1;
+            letter-spacing: -.6px;
+        }
+
+        .panel {
+            padding: 16px;
+        }
+
+        .toolbar {
+            grid-template-columns: minmax(0, 1fr) minmax(190px, 230px);
+            gap: 9px;
+            margin-bottom: 10px;
+        }
+
+        .actions {
+            gap: 7px;
+            margin: 10px 0 12px;
+            padding: 9px 10px;
+        }
+
+        .btn {
+            min-height: 32px;
+            padding: 7px 10px;
+            font-size: 10px;
+        }
+
+        .table-wrap {
+            width: 100%;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+
+        .verification-table {
+            width: 100%;
+            min-width: 0;
+            table-layout: fixed;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .verification-table .col-select { width: 3.5%; }
+        .verification-table .col-student { width: 17%; }
+        .verification-table .col-student-id { width: 10%; }
+        .verification-table .col-email { width: 19%; }
+        .verification-table .col-course { width: 12%; }
+        .verification-table .col-section { width: 14%; }
+        .verification-table .col-verification { width: 10%; }
+        .verification-table .col-actions { width: 14.5%; }
+
+        .verification-table th {
+            padding: 10px 8px;
+            font-size: 9px;
+            letter-spacing: .3px;
+            white-space: normal;
+            line-height: 1.3;
+        }
+
+        .verification-table td {
+            min-width: 0;
+            padding: 9px 8px;
+            font-size: 10px;
+            line-height: 1.4;
+            overflow-wrap: anywhere;
+            word-break: normal;
+        }
+
+        .verification-table td:first-child,
+        .verification-table th:first-child {
+            text-align: center;
+        }
+
+        .verification-table input[type="checkbox"] {
+            width: 14px;
+            height: 14px;
+            accent-color: #9b88ff;
+        }
+
+        .admin-student-identity {
+            min-width: 0 !important;
+            gap: 7px !important;
+        }
+
+        .admin-student-photo {
+            width: 34px !important;
+            height: 34px !important;
+            min-width: 34px !important;
+            font-size: 11px !important;
+        }
+
+        .admin-student-details { min-width: 0; overflow-wrap: anywhere; }
+        .admin-student-details strong { display: block; font-size: 10px; line-height: 1.3; }
+        .admin-student-identity .muted { font-size: 8px !important; line-height: 1.25; }
+
+        .verification-table .muted {
+            margin-top: 2px;
+            font-size: 8.5px;
+            line-height: 1.35;
+            overflow-wrap: anywhere;
+        }
+
+        .verification-table .pill {
+            padding: 4px 7px;
+            font-size: 9px;
+        }
+
+        .row-actions {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .row-actions .btn {
+            min-width: 0;
+            min-height: 27px;
+            padding: 5px 7px;
+            font-size: 9px;
+            white-space: normal;
+            line-height: 1.15;
+        }
+
+        .hint {
+            margin-top: 10px;
+            font-size: 10px;
+            line-height: 1.6;
+        }
+
+        /* Dark-mode single summary surface */
+        body[data-theme="dark"] .stats {
+            color: #edf0fa !important;
+            background: #202638 !important;
+            border: 1px solid #3a4055 !important;
+            box-shadow: 0 9px 24px rgba(0,0,0,.16) !important;
+        }
+        body[data-theme="dark"] .stat {
+            background: transparent !important;
+            border: 0 !important;
+            border-right: 1px solid rgba(172,165,220,.20) !important;
+            box-shadow: none !important;
+        }
+        body[data-theme="dark"] .stat:last-child { border-right: 0 !important; }
+        body[data-theme="dark"] .stat:hover { background: rgba(157,139,255,.07) !important; }
+        body[data-theme="dark"] .stat-label { color: #c5c9dc !important; }
+        body[data-theme="dark"] .stat-note { color: #929bb3 !important; }
+        body[data-theme="dark"] .stat-value { color: #f3f1ff !important; }
+
+        /* Compact table: retain every field but wrap text instead of scrolling sideways. */
+        body[data-theme="dark"] .verification-table th { background: #30364b !important; }
+        body[data-theme="dark"] .verification-table td { background: #252a3b !important; }
+        body[data-theme="dark"] .verification-table tbody tr:hover td { background: #30364b !important; }
+
+        @media (max-width: 1050px) {
+            .container { width: calc(100% - 24px); padding: 16px; }
+            .panel { padding: 13px; }
+            .verification-table th { padding: 8px 6px; font-size: 8px; }
+            .verification-table td { padding: 8px 6px; font-size: 9px; }
+            .row-actions { flex-wrap: wrap; }
+        }
+
+        @media (max-width: 760px) {
+            .container { width: calc(100% - 18px); margin: 10px auto; padding: 12px; }
+            .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 5px 8px; }
+            .stat { min-height: 60px; padding: 8px 10px; }
+            .stat:nth-child(2) { border-right: 0 !important; }
+            .stat:nth-child(-n+2) { border-bottom: 1px solid rgba(172,165,220,.20) !important; }
+            .stat-value { font-size: 22px; }
+            .toolbar { grid-template-columns: 1fr; }
+            .panel { padding: 10px; }
+            .actions { align-items: center; }
+            .selection { width: auto; margin-right: auto; }
+
+            .table-wrap { overflow: visible; border: 0; background: transparent; }
+            .verification-table,
+            .verification-table tbody { display: block; width: 100%; }
+            .verification-table colgroup,
+            .verification-table thead { display: none; }
+            .verification-table tbody tr {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 0 10px;
+                margin: 0 0 10px;
+                overflow: hidden;
+                border: 1px solid #3a4055;
+                border-radius: 12px;
+                background: #252a3b;
+            }
+            .verification-table tbody td {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                min-width: 0;
+                padding: 8px 9px;
+                border: 0;
+                border-bottom: 1px solid rgba(160,170,195,.10);
+                background: transparent !important;
+                color: #dce0ef;
+                font-size: 10px;
+            }
+            .verification-table tbody td::before {
+                content: attr(data-label);
+                display: block;
+                margin-bottom: 3px;
+                color: #9ca7c0;
+                font-size: 8px;
+                font-weight: 850;
+                letter-spacing: .45px;
+                text-transform: uppercase;
+            }
+            .verification-table tbody td:first-child {
+                grid-column: 1 / -1;
+                flex-direction: row;
+                align-items: center;
+                min-height: 30px;
+                padding: 6px 9px;
+            }
+            .verification-table tbody td:first-child::before { margin: 0 7px 0 0; }
+            .verification-table tbody td:nth-child(2) { grid-column: 1 / -1; }
+            .verification-table tbody td:last-child { grid-column: 1 / -1; border-bottom: 0; }
+            .verification-table .row-actions { width: 100%; flex-wrap: nowrap; }
+            .verification-table .row-actions .btn { flex: 1 1 0; }
+            .admin-student-photo { width: 32px !important; height: 32px !important; min-width: 32px !important; }
+        }
+
+        @media (max-width: 420px) {
+            .stat { column-gap: 6px; padding: 7px 8px; }
+            .stat-label { font-size: 9px; }
+            .stat-note { font-size: 8px; }
+            .stat-value { font-size: 20px; }
+            .actions .btn { flex: 1 1 calc(50% - 8px); }
+            .selection { font-size: 9px; }
+            .verification-table tbody tr { grid-template-columns: 1fr 1fr; }
+        }
+
+
+
+        /* =====================================================
+           LIVE DONUT SUMMARY — smooth updates, no chart redraw
+        ===================================================== */
+        .back { display: none !important; }
+
+        .stats {
+            display: block !important;
+            margin: 0 0 14px !important;
+            padding: 13px 15px 10px !important;
+            border: 1px solid #3a4055 !important;
+            border-radius: 16px !important;
+            background: #202638 !important;
+            box-shadow: 0 9px 24px rgba(0,0,0,.16) !important;
+            color: #edf0fa !important;
+        }
+
+        .stats-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 0 3px 10px;
+            border-bottom: 1px solid rgba(172,165,220,.16);
+        }
+        .stats-heading > div:first-child { display: grid; gap: 2px; }
+        .stats-heading strong { color: #f1f2fb; font-size: 12px; font-weight: 800; }
+        .stats-heading span:not(.stats-live-dot) { color: #929bb3; font-size: 9px; }
+        .stats-live { display: inline-flex; align-items: center; gap: 7px; color: #9bdcc4; font-size: 9px; font-weight: 700; white-space: nowrap; }
+        .stats-live-dot { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: #65d6a8; box-shadow: 0 0 0 3px rgba(101,214,168,.12); }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0;
+        }
+        .stats-grid .stat {
+            display: flex !important;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            min-width: 0;
+            min-height: 76px;
+            padding: 10px 16px !important;
+            overflow: hidden;
+            border: 0 !important;
+            border-right: 1px solid rgba(172,165,220,.16) !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+        .stats-grid .stat:last-child { border-right: 0 !important; }
+        .stats-grid .stat:hover { background: rgba(157,139,255,.045) !important; }
+        .stats-grid .stat-copy { min-width: 0; }
+        .stats-grid .stat-label { color: #c5c9dc !important; font-size: 10px; font-weight: 800; line-height: 1.35; }
+        .stats-grid .stat-note { margin-top: 4px; color: #929bb3 !important; font-size: 8.5px; line-height: 1.35; }
+
+        .stat-donut {
+            position: relative;
+            width: 53px;
+            height: 53px;
+            flex: 0 0 53px;
+            display: grid;
+            place-items: center;
+        }
+        .stat-donut svg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+            overflow: visible;
+        }
+        .stat-donut circle { fill: none; stroke-width: 4.5; }
+        .stat-donut-track { stroke: #3b4359; }
+        .stat-donut-progress {
+            stroke-linecap: round;
+            transition: stroke-dashoffset .75s cubic-bezier(.22,.8,.25,1), opacity .35s ease;
+        }
+        .stat-donut-progress.total { stroke: #a995ff; }
+        .stat-donut-progress.pending-ring { stroke: #f2bd68; }
+        .stat-donut-progress.verified-ring { stroke: #63d4a7; }
+        .stat-donut-progress.rejected-ring { stroke: #f28d9a; }
+        .stats-grid .stat-value {
+            position: relative;
+            z-index: 1;
+            display: block;
+            margin: 0 !important;
+            color: #f3f1ff !important;
+            font-size: 12px !important;
+            line-height: 1;
+            font-weight: 850;
+            letter-spacing: -.2px;
+            font-variant-numeric: tabular-nums;
+            transition: opacity .2s ease;
+        }
+        .stats-grid .stat-value.is-updating { opacity: .65; }
+
+        @media (max-width: 850px) {
+            .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .stats-grid .stat:nth-child(2) { border-right: 0 !important; }
+            .stats-grid .stat:nth-child(-n+2) { border-bottom: 1px solid rgba(172,165,220,.16) !important; }
+        }
+        @media (max-width: 480px) {
+            .stats { padding: 10px 10px 7px !important; }
+            .stats-grid .stat { min-height: 66px; padding: 8px 7px !important; gap: 6px; }
+            .stats-grid .stat-label { font-size: 9px; }
+            .stats-grid .stat-note { font-size: 7.5px; }
+            .stat-donut { width: 45px; height: 45px; flex-basis: 45px; }
+            .stats-grid .stat-value { font-size: 11px !important; }
+        }
+
     </style>
-    <link rel="stylesheet" href="../assets/css/responsive-layout.css">
-    <link rel="stylesheet" href="../assets/css/responsive-auto-fit.css">
-  <link rel="stylesheet" href="../assets/css/forced-dark-theme.css?v=1">
 </head>
 
 <body>
 
     <main class="container">
+        <!-- LIVE VERIFICATION OVERVIEW: one combined panel with four animated doughnuts -->
+        <section class="stats" aria-label="Live student verification statistics">
+            <div class="stats-heading">
+                <div>
+                    <strong>Student overview</strong>
+                    <span>Verification summary</span>
+                </div>
+                <div class="stats-live" aria-label="Live updates enabled">
+                    <span class="stats-live-dot"></span>
+                    Live updates
+                </div>
+            </div>
 
-        <!-- BACK LINK -->
-        <a href="dashboard.html" class="back">
-            ← Back to Admin Dashboard
-        </a>
+            <div class="stats-grid">
+                <article class="stat" aria-label="Total students">
+                    <div class="stat-copy">
+                        <div class="stat-label">Total Students</div>
+                        <div class="stat-note">Registered accounts</div>
+                    </div>
+                    <div class="stat-donut" role="img" aria-label="Total student count">
+                        <svg viewBox="0 0 52 52" aria-hidden="true">
+                            <circle class="stat-donut-track" cx="26" cy="26" r="20"></circle>
+                            <circle class="stat-donut-progress total" id="totalStudentsRing" cx="26" cy="26" r="20" stroke-dasharray="125.66" stroke-dashoffset="0"></circle>
+                        </svg>
+                        <span class="stat-value" id="totalStudents">—</span>
+                    </div>
+                </article>
 
-        <!-- HERO -->
-        <header class="hero">
-            <h1>Student Verification</h1>
-            <p>
-                Review student academic profiles, automatically assign permanent EqualLearn IDs, and approve eligible records in batches.
-            </p>
-        </header>
+                <article class="stat" aria-label="Pending student reviews">
+                    <div class="stat-copy">
+                        <div class="stat-label">Pending Review</div>
+                        <div class="stat-note">Awaiting a decision</div>
+                    </div>
+                    <div class="stat-donut" role="img" aria-label="Pending review percentage of all students">
+                        <svg viewBox="0 0 52 52" aria-hidden="true">
+                            <circle class="stat-donut-track" cx="26" cy="26" r="20"></circle>
+                            <circle class="stat-donut-progress pending-ring" id="pendingStudentsRing" cx="26" cy="26" r="20" stroke-dasharray="125.66" stroke-dashoffset="125.66"></circle>
+                        </svg>
+                        <span class="stat-value" id="pendingStudents">—</span>
+                    </div>
+                </article>
 
-        <!-- STATISTICS -->
-        <section class="stats" aria-label="Verification statistics">
+                <article class="stat" aria-label="Verified students">
+                    <div class="stat-copy">
+                        <div class="stat-label">Verified</div>
+                        <div class="stat-note">Approved profiles</div>
+                    </div>
+                    <div class="stat-donut" role="img" aria-label="Verified percentage of all students">
+                        <svg viewBox="0 0 52 52" aria-hidden="true">
+                            <circle class="stat-donut-track" cx="26" cy="26" r="20"></circle>
+                            <circle class="stat-donut-progress verified-ring" id="verifiedStudentsRing" cx="26" cy="26" r="20" stroke-dasharray="125.66" stroke-dashoffset="125.66"></circle>
+                        </svg>
+                        <span class="stat-value" id="verifiedStudents">—</span>
+                    </div>
+                </article>
 
-            <article class="stat">
-                <div class="stat-label">Total Students</div>
-                <div class="stat-value" id="totalStudents">—</div>
-                <div class="stat-note">Registered student accounts</div>
-            </article>
-
-            <article class="stat">
-                <div class="stat-label">Pending Review</div>
-                <div class="stat-value" id="pendingStudents">—</div>
-                <div class="stat-note">Awaiting a decision</div>
-            </article>
-
-            <article class="stat">
-                <div class="stat-label">Verified</div>
-                <div class="stat-value" id="verifiedStudents">—</div>
-                <div class="stat-note">Approved academic profiles</div>
-            </article>
-
-            <article class="stat">
-                <div class="stat-label">Rejected</div>
-                <div class="stat-value" id="rejectedStudents">—</div>
-                <div class="stat-note">Scheduled for deletion after 7 days</div>
-            </article>
-
+                <article class="stat" aria-label="Rejected students">
+                    <div class="stat-copy">
+                        <div class="stat-label">Rejected</div>
+                        <div class="stat-note">Scheduled for deletion</div>
+                    </div>
+                    <div class="stat-donut" role="img" aria-label="Rejected percentage of all students">
+                        <svg viewBox="0 0 52 52" aria-hidden="true">
+                            <circle class="stat-donut-track" cx="26" cy="26" r="20"></circle>
+                            <circle class="stat-donut-progress rejected-ring" id="rejectedStudentsRing" cx="26" cy="26" r="20" stroke-dasharray="125.66" stroke-dashoffset="125.66"></circle>
+                        </svg>
+                        <span class="stat-value" id="rejectedStudents">—</span>
+                    </div>
+                </article>
+            </div>
         </section>
 
         <!-- VERIFICATION PANEL -->
@@ -1067,14 +1518,14 @@ body[data-theme="dark"] select {
     </main>
 
     <!-- APPLICATION SCRIPTS -->
-    <script type="module" src="../assets/js/admin-students.js"></script>
+    <script type="module" src="../assets/js/admin-students.js?v=student-verification-live-donut-20261120"></script>
     <script type="module" src="../assets/js/ui-shell.js"></script>
     <script type="module" src="../assets/js/pwa.js"></script>
     <script type="module" src="../assets/js/theme.js"></script>
 
 <!-- EQUALLEARN LUMI COMPANION -->
 <iframe
-  src="../assets/widgets/lumi.html"
+  src="/assets/widgets/lumi.html"
   title="Lumi — EqualLearn Companion"
   id="equallearn-lumi-frame"
   allow="autoplay"
@@ -1095,4 +1546,3 @@ body[data-theme="dark"] select {
 
 </body>
 </html>
-

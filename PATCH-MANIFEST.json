@@ -1,0 +1,17 @@
+{
+  "patch": "EqualLearn Lumi Compact Transparent Appearance Sync Fix",
+  "workerUrl": "https://equallearn-lumi.jmhallig-a48.workers.dev",
+  "appearanceEndpoint": "GET /appearance",
+  "compactFrame": {
+    "desktop": {"width": 176, "height": 224},
+    "mobile": {"width": 142, "height": 184}
+  },
+  "charactersSupported": ["humanoid", "orb", "puppy", "cube", "bird", "rover", "cat", "drone"],
+  "files": [
+    "assets/widgets/lumi.html",
+    "assets/js/lumi-ai-config.js",
+    "www/assets/widgets/lumi.html",
+    "www/assets/js/lumi-ai-config.js"
+  ],
+  "note": "Add the documented one-line self-managed guard to both ui-shell.js copies if the shell is resetting iframe dimensions."
+}

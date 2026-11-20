@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script id="EQUALLEARN_FORCE_DARK_BOOTSTRAP">document.documentElement.dataset.theme="dark";document.documentElement.style.colorScheme="dark";</script>
@@ -23,96 +23,6 @@
       max-width: 1450px;
       margin: auto;
       padding-bottom: 40px;
-    }
-
-    .students-hero {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 20px;
-      flex-wrap: wrap;
-      margin-bottom: 25px;
-    }
-
-    .students-hero h1 {
-      font-size: clamp(26px, 4vw, 34px);
-      font-weight: 850;
-      letter-spacing: -1px;
-      margin: 5px 0;
-    }
-
-    .students-hero p {
-      color: var(--el-muted);
-      margin: 7px 0 0;
-    }
-
-    .directory-kicker {
-      color: var(--directory-primary);
-      font-size: 11px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-    }
-
-    .directory-date {
-      padding: 11px 15px;
-      background: var(--el-surface);
-      border: 1px solid var(--directory-border);
-      border-radius: 13px;
-      color: var(--el-muted);
-      font-size: 12px;
-    }
-
-    .directory-stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 15px;
-      margin-bottom: 23px;
-    }
-
-    .directory-stat {
-      background: var(--el-surface);
-      border: 1px solid var(--directory-border);
-      border-radius: 18px;
-      padding: 19px;
-      box-shadow: 0 8px 28px rgba(30, 35, 65, .035);
-    }
-
-    .directory-stat-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .directory-stat-label {
-      color: var(--el-muted);
-      font-size: 12px;
-      font-weight: 650;
-    }
-
-    .directory-stat-icon {
-      width: 39px;
-      height: 39px;
-      display: grid;
-      place-items: center;
-      border-radius: 12px;
-      background: #efedff;
-      color: var(--directory-primary);
-      font-size: 19px;
-    }
-
-    .directory-stat-number {
-      font-size: 29px;
-      font-weight: 850;
-      margin-top: 12px;
-      letter-spacing: -1px;
-    }
-
-    .directory-stat-note {
-      color: var(--el-muted);
-      font-size: 11px;
-      margin-top: 4px;
     }
 
     .directory-panel {
@@ -489,53 +399,38 @@
     }
   </style>
   <link rel="stylesheet" href="../assets/css/forced-dark-theme.css?v=1">
+  <link rel="stylesheet" href="../assets/css/teacher-students-compact.css?v=1">
 </head>
 
 <body>
 
 <main class="el-dashboard students-page">
 
-  <header class="students-hero">
-    <div>
-      <div class="directory-kicker">Teacher workspace / Directory</div>
-      <h1>Student Directory</h1>
-      <p>Manage and review your registered learners and academic profiles.</p>
+  <section class="directory-summary-panel" aria-label="Student overview">
+    <div class="directory-summary-title">
+      <span>Student overview</span>
+      <span class="directory-live-indicator">Live data</span>
     </div>
 
-    <div class="directory-date" id="directoryDate">
-      Academic Student Records
+    <div class="directory-stats">
+      <article class="directory-stat">
+        <div class="directory-stat-label">Total Students</div>
+        <div class="directory-stat-number" id="totalStudents">—</div>
+        <div class="directory-stat-note">Assigned learner accounts</div>
+      </article>
+
+      <article class="directory-stat">
+        <div class="directory-stat-label">Completed Profiles</div>
+        <div class="directory-stat-number" id="completedProfiles">—</div>
+        <div class="directory-stat-note">Students with academic details</div>
+      </article>
+
+      <article class="directory-stat">
+        <div class="directory-stat-label">Pending Verification</div>
+        <div class="directory-stat-number" id="pendingProfiles">—</div>
+        <div class="directory-stat-note">Awaiting academic verification</div>
+      </article>
     </div>
-  </header>
-
-  <section class="directory-stats">
-
-    <article class="directory-stat">
-      <div class="directory-stat-top">
-        <span class="directory-stat-label">Total Students</span>
-        <span class="directory-stat-icon">♙</span>
-      </div>
-      <div class="directory-stat-number" id="totalStudents">—</div>
-      <div class="directory-stat-note">Registered student accounts</div>
-    </article>
-
-    <article class="directory-stat">
-      <div class="directory-stat-top">
-        <span class="directory-stat-label">Completed Profiles</span>
-        <span class="directory-stat-icon">✓</span>
-      </div>
-      <div class="directory-stat-number" id="completedProfiles">—</div>
-      <div class="directory-stat-note">Students with academic details</div>
-    </article>
-
-    <article class="directory-stat">
-      <div class="directory-stat-top">
-        <span class="directory-stat-label">Pending Verification</span>
-        <span class="directory-stat-icon">◷</span>
-      </div>
-      <div class="directory-stat-number" id="pendingProfiles">—</div>
-      <div class="directory-stat-note">Awaiting academic verification</div>
-    </article>
-
   </section>
 
   <section class="directory-panel">
@@ -578,18 +473,6 @@
 <script type="module" src="../assets/js/ui-shell.js"></script>
 <script type="module" src="../assets/js/pwa.js"></script>
 <script type="module" src="../assets/js/theme.js"></script>
-
-<script>
-  const dateElement = document.getElementById("directoryDate");
-
-  if (dateElement) {
-    dateElement.textContent =
-      new Intl.DateTimeFormat("en-PH", {
-        month: "long",
-        year: "numeric"
-      }).format(new Date());
-  }
-</script>
 
 <!-- EQUALLEARN LUMI COMPANION -->
 <iframe

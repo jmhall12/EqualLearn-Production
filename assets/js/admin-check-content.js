@@ -6,6 +6,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
 
 import {
+  addDoc,
   collection,
   doc,
   getDoc,
@@ -27,11 +28,15 @@ const contentSearch = $("contentSearch");
 const contentStatusFilter = $("contentStatusFilter");
 const contentSort = $("contentSort");
 
-const totalPublished = $("totalPublished");
 const totalLessons = $("totalLessons");
 const totalModules = $("totalModules");
+const totalActivities = $("totalActivities");
 const totalFlagged = $("totalFlagged");
 const contentLastUpdated = $("contentLastUpdated");
+const lessonTrend = $("lessonTrend");
+const moduleTrend = $("moduleTrend");
+const activityTrend = $("activityTrend");
+const flaggedTrend = $("flaggedTrend");
 
 // =====================================================
 // STATE
@@ -40,20 +45,20 @@ const contentLastUpdated = $("contentLastUpdated");
 let currentUser = null;
 let allContent = [];
 let teacherNames = {};
+let teacherUids = new Set();
+let teacherActivityItems = [];
 
 let activeTab = "all";
 let isProcessing = false;
 let isAuthenticated = false;
 
 let unsubscribeLessons = null;
-let unsubscribeModules = null;
+let unsubscribeModulesV2 = null;
+let unsubscribeLegacyModules = null;
+let unsubscribeTeacherActivities = null;
 
-let firstLessonsSnapshot = true;
-let firstModulesSnapshot = true;
-
-// Remember previous module publication status.
-// This prevents notifications on ordinary edits.
-const previousModuleStates = new Map();
+const firstSnapshotByCollection = new Set();
+const previousPublicationStates = new Map();
 
 // Prevent duplicate notifications during the same session.
 const notifiedPosts = new Set();
@@ -120,31 +125,84 @@ function getTeacherName(uid) {
   return teacherNames[uid] || "Unknown Teacher";
 }
 
-function getModerationStatus(item) {
-  return String(item.moderationStatus || "").toLowerCase();
+function isTeacherCreated(data = {}) {
+  const explicitRole = String(
+    data.createdByRole || data.creatorRole || ""
+  ).trim().toLowerCase();
+
+  if (explicitRole) return explicitRole === "teacher";
+
+  const creatorUid = data.createdBy || data.teacherId || data.ownerId || "";
+  return Boolean(creatorUid && teacherUids.has(creatorUid));
+}
+
+// Return the administrator's moderation decision for a content item.
+// Values are written by the Keep and Flag actions (and may exist on older
+// records as "removed" when removal was recorded instead of deleting).
+function getModerationStatus(item = {}) {
+  return String(item.moderationStatus || "").trim().toLowerCase();
+}
+
+function normalizePublishedStatus(value) {
+  const status = String(value || "draft").trim().toLowerCase();
+  if (["active", "published", "approved", "kept", "flagged"].includes(status)) {
+    return "published";
+  }
+  if (["archived", "inactive"].includes(status)) return "archived";
+  if (["removed", "deleted"].includes(status)) return "removed";
+  return "draft";
 }
 
 function getDisplayStatus(item) {
   const moderation = getModerationStatus(item);
-
   if (moderation === "removed") return "removed";
   if (moderation === "flagged") return "flagged";
   if (moderation === "kept") return "kept";
-
-  if (item.type === "module") {
-    return String(item.status || "draft").toLowerCase();
-  }
-
-  // Teacher lesson records currently have no status field.
-  return "active";
+  return normalizePublishedStatus(item.status || item.reviewStatus || "draft");
 }
 
 function isPublished(item) {
-  return [
-    "active",
-    "kept",
-    "flagged"
-  ].includes(getDisplayStatus(item));
+  return ["published", "kept", "flagged"].includes(getDisplayStatus(item));
+}
+
+function setMetricValue(element, value) {
+  if (element) element.textContent = Number(value || 0).toLocaleString("en-PH");
+}
+
+function lastSevenDayCounts(items, dateSelector = item => item.createdAt) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const days = Array.from({ length: 7 }, (_, index) => {
+    const day = new Date(today);
+    day.setDate(today.getDate() - (6 - index));
+    return day;
+  });
+  const counts = Array(7).fill(0);
+
+  items.forEach(item => {
+    const date = toDate(dateSelector(item));
+    if (!date) return;
+    date.setHours(0, 0, 0, 0);
+    const index = days.findIndex(day => day.getTime() === date.getTime());
+    if (index >= 0) counts[index] += 1;
+  });
+
+  return counts;
+}
+
+function updateMiniBars(container, values) {
+  if (!container) return;
+  const bars = [...container.querySelectorAll(".mini-bar")];
+  const max = Math.max(1, ...values);
+
+  bars.forEach((bar, index) => {
+    const value = values[index] || 0;
+    const height = value === 0 ? 5 : Math.max(12, (value / max) * 100);
+    bar.style.height = `${height}%`;
+    bar.dataset.value = String(value);
+  });
+
+  container.setAttribute("aria-label", `Seven day activity: ${values.join(", ")}`);
 }
 
 function safeExternalURL(value) {
@@ -532,6 +590,21 @@ function getYouTubeEmbed(value) {
 // =====================================================
 
 function renderPreviewFile(item) {
+  if (item.collectionName === "modulesV2" && Array.isArray(item.resources) && item.resources.length) {
+    const resources = item.resources.map(resource => {
+      const label = escapeHTML(resource.label || resource.fileName || "Learning resource");
+      let url = "";
+      if (resource.type === "file" && resource.base64) {
+        url = `data:${resource.mimeType || "application/octet-stream"};base64,${resource.base64}`;
+      } else {
+        url = safeExternalURL(resource.url || "");
+      }
+      if (!url) return `<div class="preview-file">${label} <small>Preview unavailable</small></div>`;
+      return `<a class="preview-file" href="${escapeHTML(url)}" target="_blank" rel="noopener noreferrer">${label} · Open resource</a>`;
+    }).join("");
+    return `<div class="preview-resource-list">${resources}</div>`;
+  }
+
   let fileURL = "";
   let fileName = item.fileName || "Attached file";
   let mimeType = item.fileMimeType || "";
@@ -630,7 +703,11 @@ function openContentPreview(item) {
     item.title || "Untitled Content";
 
   $("previewTeacher").textContent =
-    "Posted by: " + getTeacherName(item.createdBy);
+    "Posted by: " + (
+      item.teacherName ||
+      item.createdByName ||
+      getTeacherName(item.createdBy || item.teacherId)
+    );
 
   const sections = [];
 
@@ -823,7 +900,7 @@ function showNewPostNotification(item) {
           font-size:11px;
           color:var(--muted);
           margin:0 0 12px;">
-          Posted by ${escapeHTML(getTeacherName(item.createdBy))}
+          Posted by ${escapeHTML(item.teacherName || item.createdByName || getTeacherName(item.createdBy || item.teacherId))}
         </p>
 
         <button
@@ -926,31 +1003,92 @@ onAuthStateChanged(auth, async (user) => {
 
 async function loadTeacherNames() {
   try {
-    const snapshot = await getDocs(
-      collection(db, "users")
-    );
-
+    const snapshot = await getDocs(collection(db, "users"));
     teacherNames = {};
+    teacherUids = new Set();
 
-    snapshot.forEach((item) => {
+    snapshot.forEach(item => {
       const data = item.data();
+      const role = String(data.role || "").trim().toLowerCase();
+      if (role !== "teacher") return;
 
+      teacherUids.add(item.id);
       teacherNames[item.id] =
-        data.fullName ||
-        data.displayName ||
-        data.name ||
-        data.email ||
-        "Unknown Teacher";
+        data.fullname || data.fullName || data.displayName ||
+        data.name || data.email || "Unknown Teacher";
     });
-
   } catch (error) {
-    console.warn("Unable to load teacher names:", error);
+    console.warn("Unable to load teacher profiles:", error);
   }
 }
 
 // =====================================================
-// REALTIME FIRESTORE LISTENERS
+// TEACHER CONTENT LISTENERS
 // =====================================================
+
+function shouldNotifyPublishedChange(collectionName, change, data) {
+  if (!isTeacherCreated(data)) return false;
+
+  const key = `${collectionName}:${change.doc.id}`;
+  const nextStatus = normalizePublishedStatus(data.status || data.reviewStatus);
+  const previousStatus = previousPublicationStates.get(key);
+  previousPublicationStates.set(key, nextStatus);
+
+  if (!firstSnapshotByCollection.has(collectionName)) return false;
+
+  return (
+    (change.type === "added" && nextStatus === "published") ||
+    (change.type === "modified" && previousStatus !== "published" && nextStatus === "published")
+  );
+}
+
+function startTeacherContentListener(collectionName, type, onItems, options = {}) {
+  return onSnapshot(
+    collection(db, collectionName),
+    snapshot => {
+      if (options.notify) {
+        snapshot.docChanges().forEach(change => {
+          const data = change.doc.data();
+          if (!shouldNotifyPublishedChange(collectionName, change, data)) return;
+          showNewPostNotification({
+            id: change.doc.id,
+            type,
+            collectionName,
+            ...data
+          });
+        });
+
+        snapshot.docs.forEach(docSnap => {
+          const data = docSnap.data();
+          previousPublicationStates.set(
+            `${collectionName}:${docSnap.id}`,
+            normalizePublishedStatus(data.status || data.reviewStatus)
+          );
+        });
+      }
+
+      const items = snapshot.docs
+        .map(docSnap => ({
+          id: docSnap.id,
+          type,
+          collectionName,
+          ...docSnap.data()
+        }))
+        .filter(isTeacherCreated);
+
+      firstSnapshotByCollection.add(collectionName);
+      onItems(items);
+    },
+    error => {
+      console.error(`[${collectionName}] teacher content listener error:`, error);
+      if (options.critical) {
+        showError(`Unable to load teacher ${type === "lesson" ? "lessons" : "modules"}.`, error);
+      } else {
+        console.warn(`Optional teacher collection unavailable: ${collectionName}`, error);
+      }
+    }
+  );
+}
 
 function startContentListeners() {
   if (!contentList) {
@@ -958,185 +1096,92 @@ function startContentListeners() {
     return;
   }
 
-  contentList.innerHTML = `
-    <div class="loading-message">
-      Loading lessons and modules...
-    </div>
-  `;
+  contentList.innerHTML = '<div class="loading-message">Loading teacher lessons and modules...</div>';
 
-  // ---------------------------------------------------
-  // LESSONS
-  // New lesson document = new teacher lesson post.
-  // Existing lesson edits do not trigger a notification.
-  // ---------------------------------------------------
-
-  unsubscribeLessons = onSnapshot(
-    collection(db, "lessons"),
-
-    (snapshot) => {
-      if (!firstLessonsSnapshot) {
-        snapshot.docChanges().forEach((change) => {
-          if (change.type !== "added") return;
-
-          const data = change.doc.data();
-
-          if (
-            !data.createdBy ||
-            data.createdBy === currentUser.uid
-          ) {
-            return;
-          }
-
-          const item = {
-            id: change.doc.id,
-            type: "lesson",
-            ...data
-          };
-
-          showNewPostNotification(item);
-        });
-      }
-
-      firstLessonsSnapshot = false;
-
-      const lessons = snapshot.docs.map((item) => ({
-        id: item.id,
-        type: "lesson",
-        ...item.data()
-      }));
-
-      replaceContentType("lesson", lessons);
-    },
-
-    (error) => {
-      console.error("Lessons listener error:", error);
-      showError("Unable to load lessons.", error);
-    }
+  // Teacher-created lessons.
+  unsubscribeLessons = startTeacherContentListener(
+    "lessons",
+    "lesson",
+    items => replaceContentSource("lessons", items),
+    { notify: true, critical: true }
   );
 
-  // ---------------------------------------------------
-  // MODULES
-  // Notify when:
-  // 1. A new module is created as active.
-  // 2. An existing draft becomes active.
-  //
-  // Ordinary edits to an active module do not notify.
-  // ---------------------------------------------------
+  // Current teacher modules created in modulesV2.
+  unsubscribeModulesV2 = startTeacherContentListener(
+    "modulesV2",
+    "module",
+    items => replaceContentSource("modulesV2", items),
+    { notify: true }
+  );
 
-  unsubscribeModules = onSnapshot(
-    collection(db, "modules"),
+  // Include older teacher modules from the legacy collection for compatibility.
+  unsubscribeLegacyModules = startTeacherContentListener(
+    "modules",
+    "module",
+    items => replaceContentSource("modules", items),
+    { notify: true }
+  );
 
-    (snapshot) => {
-      if (!firstModulesSnapshot) {
-        snapshot.docChanges().forEach((change) => {
-          const data = change.doc.data();
-          const moduleId = change.doc.id;
-
-          const newStatus = String(
-            data.status || "draft"
-          ).toLowerCase();
-
-          const oldStatus = previousModuleStates.get(moduleId);
-
-          const isNewPublishedModule =
-            change.type === "added" &&
-            newStatus === "active";
-
-          const isDraftNowPublished =
-            change.type === "modified" &&
-            oldStatus !== "active" &&
-            newStatus === "active";
-
-          if (
-            (isNewPublishedModule || isDraftNowPublished) &&
-            data.createdBy &&
-            data.createdBy !== currentUser.uid
-          ) {
-            showNewPostNotification({
-              id: moduleId,
-              type: "module",
-              ...data
-            });
-          }
-        });
+  // Other teacher activities are summarized only. This page remains focused
+  // on reviewing lesson and module posts.
+  unsubscribeTeacherActivities = onSnapshot(
+    collection(db, "teacherActivitiesV2"),
+    snapshot => {
+      teacherActivityItems = snapshot.docs
+        .map(docSnap => ({ id: docSnap.id, ...docSnap.data() }))
+        .filter(isTeacherCreated)
+        .filter(item => String(item.type || "").toLowerCase() !== "module");
+      updateStatistics();
+      if (contentLastUpdated) {
+        contentLastUpdated.textContent = `Live data • Updated ${new Date().toLocaleTimeString("en-PH")}`;
       }
-
-      // Refresh remembered module statuses.
-      snapshot.docs.forEach((item) => {
-        const data = item.data();
-
-        previousModuleStates.set(
-          item.id,
-          String(data.status || "draft").toLowerCase()
-        );
-      });
-
-      firstModulesSnapshot = false;
-
-      const modules = snapshot.docs.map((item) => ({
-        id: item.id,
-        type: "module",
-        ...item.data()
-      }));
-
-      replaceContentType("module", modules);
     },
-
-    (error) => {
-      console.error("Modules listener error:", error);
-      showError("Unable to load modules.", error);
+    error => {
+      console.warn("Teacher activity summary unavailable:", error);
+      teacherActivityItems = [];
+      updateStatistics();
     }
   );
 }
 
 // =====================================================
-// UPDATE LOCAL CONTENT
+// UPDATE LOCAL CONTENT BY SOURCE COLLECTION
 // =====================================================
 
-function replaceContentType(type, newItems) {
-  allContent = allContent.filter(
-    (item) => item.type !== type
-  );
-
+function replaceContentSource(collectionName, newItems) {
+  allContent = allContent.filter(item => item.collectionName !== collectionName);
   allContent.push(...newItems);
-
   updateStatistics();
   renderContent();
 
   if (contentLastUpdated) {
-    contentLastUpdated.textContent =
-      "Last synchronized: " +
-      new Date().toLocaleTimeString("en-PH");
+    contentLastUpdated.textContent = `Live data • Updated ${new Date().toLocaleTimeString("en-PH")}`;
   }
 }
 
 // =====================================================
-// STATISTICS
+// COMBINED OVERVIEW + MICRO-CHARTS
 // =====================================================
 
 function updateStatistics() {
-  const visibleContent = allContent.filter(
-    (item) => getDisplayStatus(item) !== "removed"
-  );
+  const activeContent = allContent.filter(item => getDisplayStatus(item) !== "removed");
+  const lessons = activeContent.filter(item => item.type === "lesson");
+  const modules = activeContent.filter(item => item.type === "module");
+  const flagged = allContent.filter(item => getModerationStatus(item) === "flagged");
+  const activities = teacherActivityItems;
 
-  const lessons = visibleContent.filter(
-    (item) => item.type === "lesson"
-  );
+  setMetricValue(totalLessons, lessons.length);
+  setMetricValue(totalModules, modules.length);
+  setMetricValue(totalActivities, activities.length);
+  setMetricValue(totalFlagged, flagged.length);
 
-  const modules = visibleContent.filter(
-    (item) => item.type === "module"
-  );
-
-  const published = visibleContent.filter(isPublished);
-
-  const flagged = visibleContent.filter(
-    (item) => getModerationStatus(item) === "flagged"
-  );
-
-  if (totalPublished) totalPublished.textContent = published.length;
-  if (totalLessons) totalLessons.textContent = lessons.length;
-  if (totalModules) totalModules.textContent = modules.length;
-  if (totalFlagged) totalFlagged.textContent = flagged.length;
+  updateMiniBars(lessonTrend, lastSevenDayCounts(lessons));
+  updateMiniBars(moduleTrend, lastSevenDayCounts(modules));
+  updateMiniBars(activityTrend, lastSevenDayCounts(activities));
+  updateMiniBars(flaggedTrend, lastSevenDayCounts(
+    flagged,
+    item => item.flaggedAt || item.updatedAt || item.createdAt
+  ));
 }
 
 // =====================================================
@@ -1207,8 +1252,10 @@ function getFilteredContent() {
         item.description || ""
       ).toLowerCase();
 
-      const teacher = getTeacherName(
-        item.createdBy
+      const teacher = String(
+        item.teacherName ||
+        item.createdByName ||
+        getTeacherName(item.createdBy || item.teacherId)
       ).toLowerCase();
 
       return (
@@ -1326,7 +1373,7 @@ function createContentCard(item) {
   );
 
   const teacher = escapeHTML(
-    getTeacherName(item.createdBy)
+    item.teacherName || item.createdByName || getTeacherName(item.createdBy || item.teacherId)
   );
 
   const createdAt = escapeHTML(
@@ -1360,8 +1407,8 @@ function createContentCard(item) {
       <p class="content-description">${description}</p>
 
       <div class="content-meta">
-        <span>👤 ${teacher}</span>
-        <span>📅 ${createdAt}</span>
+        <span>${teacher}</span>
+        <span>${createdAt}</span>
       </div>
 
       ${flagReason}
@@ -1375,8 +1422,9 @@ function createContentCard(item) {
         class="action-button"
         data-action="view"
         data-id="${escapeHTML(item.id)}"
-        data-type="${item.type}">
-        👁 View Post
+        data-type="${item.type}"
+        data-collection="${escapeHTML(item.collectionName || (item.type === "lesson" ? "lessons" : "modules"))}">
+        View
       </button>
 
       ${
@@ -1387,8 +1435,9 @@ function createContentCard(item) {
               class="action-button keep"
               data-action="keep"
               data-id="${escapeHTML(item.id)}"
-              data-type="${item.type}">
-              ✓ Keep
+              data-type="${item.type}"
+              data-collection="${escapeHTML(item.collectionName || (item.type === "lesson" ? "lessons" : "modules"))}">
+              Keep
             </button>
 
             <button
@@ -1396,8 +1445,9 @@ function createContentCard(item) {
               class="action-button flag"
               data-action="flag"
               data-id="${escapeHTML(item.id)}"
-              data-type="${item.type}">
-              ⚑ Flag
+              data-type="${item.type}"
+              data-collection="${escapeHTML(item.collectionName || (item.type === "lesson" ? "lessons" : "modules"))}">
+              Flag
             </button>
 
             <button
@@ -1405,8 +1455,9 @@ function createContentCard(item) {
               class="action-button remove"
               data-action="remove"
               data-id="${escapeHTML(item.id)}"
-              data-type="${item.type}">
-              ✕ Remove
+              data-type="${item.type}"
+              data-collection="${escapeHTML(item.collectionName || (item.type === "lesson" ? "lessons" : "modules"))}">
+              Remove
             </button>
           `
           : `
@@ -1423,6 +1474,29 @@ function createContentCard(item) {
 }
 
 
+// Record successful moderation actions in the existing admin audit collection.
+// This is best-effort: an audit-write issue must never roll back a completed review action.
+async function recordContentAudit(action, item, reason = "") {
+  if (!currentUser?.uid) return;
+
+  try {
+    await addDoc(collection(db, "activityLogs"), {
+      userId: currentUser.uid,
+      actorId: currentUser.uid,
+      actorRole: "admin",
+      action,
+      contentId: String(item.id || ""),
+      contentTitle: String(item.title || "Untitled Content"),
+      contentType: String(item.type || "content"),
+      collectionName: String(item.collectionName || ""),
+      reason: String(reason || ""),
+      createdAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.warn("Content moderation audit log could not be saved:", error);
+  }
+}
+
 // =====================================================
 // ADMIN ACTIONS
 // =====================================================
@@ -1435,13 +1509,14 @@ contentList?.addEventListener("click", async (event) => {
   const action = button.dataset.action;
   const id = button.dataset.id;
   const type = button.dataset.type;
+  const collectionName = button.dataset.collection || (type === "lesson" ? "lessons" : "modules");
 
-  if (!id || !type) return;
+  if (!id || !type || !collectionName) return;
 
-  const item = allContent.find(
-    (content) =>
-      content.id === id &&
-      content.type === type
+  const item = allContent.find(content =>
+    content.id === id &&
+    content.type === type &&
+    content.collectionName === collectionName
   );
 
   if (!item) {
@@ -1455,13 +1530,11 @@ contentList?.addEventListener("click", async (event) => {
     return;
   }
 
-  const collectionName =
-    type === "lesson" ? "lessons" : "modules";
-
   const contentTitle =
     item.title || "Untitled Content";
 
   let updatePayload = null;
+  let actionReason = "";
 
   // KEEP
   if (action === "keep") {
@@ -1492,9 +1565,10 @@ contentList?.addEventListener("click", async (event) => {
       return;
     }
 
+    actionReason = reason.trim();
     updatePayload = {
       moderationStatus: "flagged",
-      flagReason: reason.trim(),
+      flagReason: actionReason,
       flaggedBy: currentUser.uid,
       flaggedAt: serverTimestamp(),
       updatedAt: serverTimestamp()
@@ -1514,6 +1588,7 @@ contentList?.addEventListener("click", async (event) => {
       return;
     }
 
+    actionReason = reason.trim();
     const confirmed = confirm(
       `PERMANENT DELETE\n\n"${contentTitle}" will be permanently deleted from Firestore.\n\nIt will no longer appear in the teacher and student content lists.\n\nThis action cannot be undone.\n\nContinue?`
     );
@@ -1536,13 +1611,15 @@ contentList?.addEventListener("click", async (event) => {
     if (action === "remove") {
       // Permanently delete the Firestore document.
       await deleteDoc(contentRef);
+      await recordContentAudit("content_removed", item, actionReason);
 
       // Immediately remove from the local admin list.
       allContent = allContent.filter(
         (content) =>
           !(
             content.id === id &&
-            content.type === type
+            content.type === type &&
+            content.collectionName === collectionName
           )
       );
 
@@ -1562,6 +1639,7 @@ contentList?.addEventListener("click", async (event) => {
         contentRef,
         updatePayload
       );
+      await recordContentAudit(action === "keep" ? "content_kept" : "content_flagged", item, actionReason);
 
       if (action === "keep") {
         alert("Content marked as kept.");
@@ -1607,5 +1685,7 @@ document.addEventListener("keydown", (event) => {
 
 window.addEventListener("beforeunload", () => {
   unsubscribeLessons?.();
-  unsubscribeModules?.();
+  unsubscribeModulesV2?.();
+  unsubscribeLegacyModules?.();
+  unsubscribeTeacherActivities?.();
 });

@@ -1,11 +1,10 @@
-﻿
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script id="EQUALLEARN_FORCE_DARK_BOOTSTRAP">document.documentElement.dataset.theme="dark";document.documentElement.style.colorScheme="dark";</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0b1020">
+  <meta name="theme-color" content="#14151e">
 
   <title>Check Lessons & Modules - EqualLearn</title>
 
@@ -453,80 +452,206 @@
         grid-template-columns: 1fr;
       }
     }
-  </style>
-    <link rel="stylesheet" href="../assets/css/responsive-layout.css">
-    <link rel="stylesheet" href="../assets/css/responsive-auto-fit.css">
-  <link rel="stylesheet" href="../assets/css/forced-dark-theme.css?v=1">
+  
+    /* =====================================================
+       COMPACT TEACHER CONTENT MONITOR
+       ===================================================== */
+    .content-page { max-width: 1500px; padding: 17px 20px 28px; }
+
+    .teacher-content-overview {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0;
+      padding: 9px 12px;
+      margin: 0 0 14px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .overview-metric {
+      min-width: 0;
+      padding: 9px 16px 8px;
+    }
+
+    .overview-metric + .overview-metric {
+      border-left: 1px solid var(--border);
+    }
+
+    .overview-metric-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 750;
+    }
+
+    .overview-metric-top strong {
+      color: var(--text);
+      font-size: 22px;
+      line-height: 1;
+      font-weight: 850;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .overview-metric small {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 9px;
+      line-height: 1.35;
+    }
+
+    .mini-bars {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      align-items: end;
+      gap: 4px;
+      height: 22px;
+      margin-top: 8px;
+      padding: 0 1px;
+    }
+
+    .mini-bar {
+      display: block;
+      width: 100%;
+      min-height: 3px;
+      height: 5%;
+      border-radius: 3px 3px 1px 1px;
+      background: var(--purple);
+      opacity: .83;
+      transition: height .42s cubic-bezier(.22,.8,.25,1), opacity .25s ease;
+    }
+
+    .mini-bar[data-value="0"] { opacity: .24; }
+    .modules-bars .mini-bar { background: var(--green); }
+    .activities-bars .mini-bar { background: #6f9bdc; }
+    .flagged-bars .mini-bar { background: var(--red); }
+
+    .panel {
+      padding: 15px;
+      margin-bottom: 12px;
+      border-radius: 16px;
+    }
+
+    .panel-heading { display: none; }
+    .tabs { gap: 7px; margin-bottom: 11px; }
+    .tab-button { padding: 8px 12px; font-size: 11px; }
+
+    .filter-bar {
+      grid-template-columns: minmax(180px, 1.5fr) repeat(2, minmax(125px, .8fr));
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .filter-control { min-height: 37px; padding: 8px 10px; border-radius: 9px; font-size: 11px; }
+    .content-list { gap: 9px; }
+
+    .content-item {
+      align-items: center;
+      gap: 12px;
+      padding: 12px 13px;
+      border-radius: 12px;
+    }
+
+    .content-top { gap: 6px; margin-bottom: 6px; }
+    .content-type, .content-status { padding: 4px 7px; font-size: 9px; }
+    .content-title { font-size: 13px; }
+    .content-description {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      overflow: hidden;
+      margin: 3px 0 7px;
+      font-size: 11px;
+      line-height: 1.45;
+    }
+    .content-meta { gap: 9px; font-size: 10px; }
+    .content-actions { gap: 5px; }
+    .action-button { padding: 7px 9px; border-radius: 8px; font-size: 10px; }
+    .content-sync-meta {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 7px;
+      margin: 0 2px 9px;
+      color: var(--muted);
+      font-size: 9px;
+    }
+    .content-sync-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 3px rgba(70,155,126,.10);
+    }
+
+    @media (max-width: 950px) {
+      .teacher-content-overview { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .overview-metric:nth-child(3) { border-left: 0; border-top: 1px solid var(--border); }
+      .overview-metric:nth-child(4) { border-top: 1px solid var(--border); }
+    }
+
+    @media (max-width: 650px) {
+      .content-page { padding: 12px; }
+      .teacher-content-overview { padding: 6px; }
+      .overview-metric { padding: 9px; }
+      .overview-metric-top strong { font-size: 19px; }
+      .filter-bar { grid-template-columns: 1fr; }
+      .content-item { flex-direction: column; align-items: stretch; }
+      .content-actions { justify-content: flex-start; width: 100%; }
+      .content-actions button { flex: 1; }
+      .panel { padding: 11px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .mini-bar { transition: none !important; }
+    }
+
+</style>
 </head>
 
 <body>
 
   <main class="content-page">
-
-    <!-- PAGE HEADER -->
-    <header class="page-heading">
-      <div>
-        <h1>Content Monitoring</h1>
-        <p>
-          Review and monitor lessons and modules published by teachers.
-          Check content quality and manage inappropriate submissions.
-        </p>
-      </div>
-
-      <div class="live-indicator">
-        <span class="live-dot"></span>
-        CONTENT MONITORING
-      </div>
-    </header>
-
-    <!-- ADMIN NOTICE -->
-    <div class="notice">
-      <strong>Review After Publishing:</strong>
-      Published lessons and modules remain visible to students while
-      the administrator monitors their content. Flag or remove content
-      when necessary.
-    </div>
-
-    <!-- SUMMARY CARDS -->
-    <section class="stats-grid">
-
-      <article class="stat-card pending">
-        <span class="stat-label">Published Content</span>
-        <strong class="stat-value" id="totalPublished">0</strong>
-        <span class="stat-note">Active lessons and modules</span>
+    <!-- COMBINED TEACHER CONTENT OVERVIEW -->
+    <section class="teacher-content-overview" aria-label="Teacher content overview">
+      <article class="overview-metric">
+        <div class="overview-metric-top"><span>Teacher Lessons</span><strong id="totalLessons">0</strong></div>
+        <div class="mini-bars" id="lessonTrend" aria-label="Seven day lesson uploads">
+          <span class="mini-bar"></span><span class="mini-bar"></span><span class="mini-bar"></span><span class="mini-bar"></span><span class="mini-bar"></span><span class="mini-bar"></span><span class="mini-bar"></span>
+        </div>
+        <small>Lessons uploaded by teachers</small>
       </article>
-
-      <article class="stat-card lessons">
-        <span class="stat-label">Total Lessons</span>
-        <strong class="stat-value" id="totalLessons">0</strong>
-        <span class="stat-note">Lesson submissions</span>
+      <article class="overview-metric">
+        <div class="overview-metric-top"><span>Teacher Modules</span><strong id="totalModules">0</strong></div>
+        <div class="mini-bars modules-bars" id="moduleTrend" aria-label="Seven day module uploads">
+          <span class="mini-bar"></span><span class="mini-bar"></span><span class="mini-bar"></span><span class="mini-bar"></span><span class="mini-bar"></span><span class="mini-bar"></span><span class="mini-bar"></span>
+        </div>
+        <small>Published and draft modules</small>
       </article>
-
-      <article class="stat-card modules">
-        <span class="stat-label">Total Modules</span>
-        <strong class="stat-value" id="totalModules">0</strong>
-        <span class="stat-note">Module submissions</span>
+      <article class="overview-metric">
+        <div class="overview-metric-top"><span>Other Activities</span><strong id="totalActivities">0</strong></div>
+        <div class="mini-bars activities-bars" id="activityTrend" aria-label="Seven day teacher activities">
+          <span class="mini-bar"></span><span class="mini-bar"></span><span class="mini-bar"></span><span class="mini-bar"></span><span class="mini-bar"></span><span class="mini-bar"></span><span class="mini-bar"></span>
+        </div>
+        <small>Assignments, quizzes and discussions</small>
       </article>
-
-      <article class="stat-card flagged">
-        <span class="stat-label">Flagged Content</span>
-        <strong class="stat-value" id="totalFlagged">0</strong>
-        <span class="stat-note">Content requiring attention</span>
+      <article class="overview-metric">
+        <div class="overview-metric-top"><span>Flagged Content</span><strong id="totalFlagged">0</strong></div>
+        <div class="mini-bars flagged-bars" id="flaggedTrend" aria-label="Seven day flagged content">
+          <span class="mini-bar"></span><span class="mini-bar"></span><span class="mini-bar"></span><span class="mini-bar"></span><span class="mini-bar"></span><span class="mini-bar"></span><span class="mini-bar"></span>
+        </div>
+        <small>Items requiring attention</small>
       </article>
-
     </section>
 
-    <!-- CONTENT MANAGEMENT -->
+<!-- CONTENT MANAGEMENT -->
     <section class="panel">
-
-      <div class="panel-heading">
-        <div>
-          <h2>Lessons & Modules</h2>
-          <p>Review the content submitted by EqualLearn teachers.</p>
-        </div>
-      </div>
-
-      <!-- TABS -->
+<!-- TABS -->
       <div class="tabs">
         <button class="tab-button active" data-content-tab="all">
           All Content
@@ -557,7 +682,7 @@
 
         <select class="filter-control" id="contentStatusFilter">
           <option value="all">All Statuses</option>
-          <option value="active">Published</option>
+          <option value="published">Published</option>
           <option value="draft">Draft</option>
           <option value="archived">Archived</option>
         </select>
@@ -569,6 +694,7 @@
         </select>
 
       </div>
+      <div class="content-sync-meta"><span class="content-sync-dot"></span><span id="contentLastUpdated">Waiting for live teacher content...</span></div>
 
       <!-- CONTENT LIST -->
       <div class="content-list" id="contentList">
@@ -580,16 +706,7 @@
       </div>
 
     </section>
-
-    <!-- LAST UPDATED -->
-    <p
-      id="contentLastUpdated"
-      style="text-align:right;color:var(--muted);font-size:11px;margin:0 3px 20px;"
-    >
-      Waiting for content data...
-    </p>
-
-  </main>
+</main>
 
   <!-- APPLICATION SCRIPTS -->
 <script type="module" src="../assets/js/ui-shell.js"></script>
@@ -805,7 +922,7 @@
 
 <!-- EQUALLEARN LUMI COMPANION -->
 <iframe
-  src="../assets/widgets/lumi.html"
+  src="/assets/widgets/lumi.html"
   title="Lumi — EqualLearn Companion"
   id="equallearn-lumi-frame"
   allow="autoplay"
@@ -826,4 +943,3 @@
 
 </body>
 </html>
-

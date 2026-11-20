@@ -8,15 +8,23 @@ import { ProfilePhotoUploader } from '../components/AppwriteUploaders';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLoad } from '../hooks/useLoad';
-import { formatWhen, getLessons, getModules, getProgress, getQuestions, getStudentAssignment, lessonQuizIsPublished, lower, normalizeYearLevel, progressSummary, saveProfile, saveQuizProgress, studentCourse, studentSection } from '../lib/data';
+import { formatWhen, getLessons, getModules, getProgress, getQuestions, getStudentAssignment, lessonQuizIsPublished, lower, normalizeSection, normalizeYearLevel, progressSummary, saveProfile, saveQuizProgress, studentCourse, studentSection, YEAR_LEVELS } from '../lib/data';
 import { hasExternalUrl, openExternalUrl } from '../lib/links';
 
+function requireStudentSectionId(profile) {
+  const sectionId = String(profile?.sectionId || '').trim();
+  if (!sectionId) {
+    throw new Error('Your account has no assigned section yet. Please contact your school administrator.');
+  }
+  return sectionId;
+}
+
 async function studentBundle(uid, profile) {
-  const sectionId = profile?.sectionId || '';
+  const sectionId = requireStudentSectionId(profile);
   const [modules, lessons, questions, progress, assignment] = await Promise.all([
     getModules(sectionId),
     getLessons(sectionId),
-    getQuestions(),
+    getQuestions(sectionId),
     getProgress(uid),
     getStudentAssignment(profile)
   ]);
@@ -53,7 +61,7 @@ export function StudentLearning() {
   const { firebaseUser, profile } = useAuth();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
-  const load = useLoad(async () => { const [modules, lessons, progress] = await Promise.all([getModules(profile?.sectionId), getLessons(profile?.sectionId), getProgress(firebaseUser.uid)]); return { modules, lessons, progress }; }, [firebaseUser.uid, profile?.sectionId]);
+  const load = useLoad(async () => { const sectionId = requireStudentSectionId(profile); const [modules, lessons, progress] = await Promise.all([getModules(sectionId), getLessons(sectionId), getProgress(firebaseUser.uid)]); return { modules, lessons, progress }; }, [firebaseUser.uid, profile?.sectionId]);
   if (load.loading) return <LoadingState/>;
   const done = new Set((load.data?.progress || []).filter(x => x.completed).map(x => x.lessonId));
   let rows = (load.data?.modules || []).filter(m => !['inactive','draft'].includes(lower(m.status || 'active'))).map(m => {
@@ -73,15 +81,13 @@ export function StudentLearning() {
 export function StudentModule() {
   const { moduleId } = useLocalSearchParams();
   const { firebaseUser, profile } = useAuth();
-  const load = useLoad(async () => { const [modules, lessons, questions, progress] = await Promise.all([getModules(profile?.sectionId), getLessons(profile?.sectionId), getQuestions(), getProgress(firebaseUser.uid)]); return { module: modules.find(x => x.id === moduleId), lessons: lessons.filter(x => x.moduleId === moduleId), questions, progress }; }, [moduleId, firebaseUser.uid, profile?.sectionId]);
+  const load = useLoad(async () => { const sectionId = requireStudentSectionId(profile); const [modules, lessons, questions, progress] = await Promise.all([getModules(sectionId), getLessons(sectionId), getQuestions(sectionId), getProgress(firebaseUser.uid)]); return { module: modules.find(x => x.id === moduleId), lessons: lessons.filter(x => x.moduleId === moduleId), questions, progress }; }, [moduleId, firebaseUser.uid, profile?.sectionId]);
   if (load.loading) return <LoadingState/>;
   if (!load.data?.module) return <ErrorState message="This module is unavailable."/>;
   const { module, lessons, questions, progress } = load.data;
   const progressMap = new Map(progress.map(x => [x.lessonId, x]));
   return <Screen><ActionButton variant="secondary" onPress={() => router.back()} style={{alignSelf:'flex-start',marginBottom:14}}>Back to Learning</ActionButton><Header eyebrow="Module" title={module.title} text={module.description}/>
     {hasExternalUrl(module.fileURL) ? <Panel style={{marginBottom:10}}><Row title={module.fileName || 'Module resource'} subtitle="External learning resource" left={<FileText size={20}/>} onPress={() => openExternalUrl(module.fileURL, 'Module resource')}/></Panel> : null}
-    {Array.isArray(module.attachments) && module.attachments.length ? <Panel style={{marginBottom:10}}>{module.attachments.map((file,index)=>{const url=file.fileUrl||file.fileURL||file.url||file.downloadURL||file.downloadUrl;return hasExternalUrl(url)?<Row key={`${file.fileName||file.name||'resource'}-${index}`} title={file.fileName||file.name||'Module attachment'} subtitle="Learning resource" left={<FileText size={20}/>} onPress={()=>openExternalUrl(url,file.fileName||'Module attachment')}/>:null;})}</Panel> : null}
-    {Array.isArray(module.resourceLinks) && module.resourceLinks.length ? <Panel style={{marginBottom:10}}>{module.resourceLinks.map((resource,index)=>{const url=typeof resource==='string'?resource:(resource.url||resource.link);const label=typeof resource==='string'?resource:(resource.title||resource.label||'Learning resource');return hasExternalUrl(url)?<Row key={`${label}-${index}`} title={label} subtitle="External learning resource" left={<ExternalLink size={20}/>} onPress={()=>openExternalUrl(url,label)}/>:null;})}</Panel> : null}
     <SectionTitle title="Lessons"/>
     <Panel>{lessons.map((lesson, index) => { const count = lessonQuizIsPublished(lesson) ? questions.filter(q => q.lessonId === lesson.id).length : 0; const saved = progressMap.get(lesson.id); return <View key={lesson.id}><Row title={`${index + 1}. ${lesson.title}`} subtitle={lesson.description || 'No description.'} meta={`${count} questions${saved ? ` · Last ${pct(saved.percentage)}` : ''}`} right={<View style={s.lessonActions}>{hasExternalUrl(lesson.fileUrl) ? <Pressable onPress={() => openExternalUrl(lesson.fileUrl, 'Lesson resource')}><FileText size={18}/></Pressable> : null}{hasExternalUrl(lesson.videoUrl) ? <Pressable onPress={() => openExternalUrl(lesson.videoUrl, 'Lesson video')}><Video size={18}/></Pressable> : null}{count ? <Pressable onPress={() => router.push(`/student/quiz/${lesson.id}`)}><ClipboardCheck size={19}/></Pressable> : null}</View>}/></View>; })}{!lessons.length ? <EmptyState title="No lessons yet"/> : null}</Panel>
   </Screen>;
@@ -91,7 +97,7 @@ export function StudentQuizzes() {
   const { firebaseUser, profile } = useAuth();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
-  const load = useLoad(async () => { const [lessons, questions, progress] = await Promise.all([getLessons(profile?.sectionId), getQuestions(), getProgress(firebaseUser.uid)]); return { lessons, questions, progress }; }, [firebaseUser.uid, profile?.sectionId]);
+  const load = useLoad(async () => { const sectionId = requireStudentSectionId(profile); const [lessons, questions, progress] = await Promise.all([getLessons(sectionId), getQuestions(sectionId), getProgress(firebaseUser.uid)]); return { lessons, questions, progress }; }, [firebaseUser.uid, profile?.sectionId]);
   if (load.loading) return <LoadingState/>;
   const pm = new Map((load.data?.progress || []).map(x => [x.lessonId, x]));
   let rows = (load.data?.lessons || []).filter(lessonQuizIsPublished).map(x => ({ ...x, count: load.data.questions.filter(q => q.lessonId === x.id).length, progress: pm.get(x.id) })).filter(x => x.count);
@@ -107,13 +113,13 @@ export function StudentQuizzes() {
 export function StudentQuiz() {
   const { theme } = useTheme();
   const { lessonId } = useLocalSearchParams();
-  const { firebaseUser } = useAuth();
+  const { firebaseUser, profile } = useAuth();
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState('');
   const [answers, setAnswers] = useState([]);
   const [result, setResult] = useState(null);
   const [message, setMessage] = useState('');
-  const load = useLoad(async () => { const [lessons, questions] = await Promise.all([getLessons(), getQuestions()]); const lesson = lessons.find(x => x.id === lessonId); return { lesson, questions: lesson && lessonQuizIsPublished(lesson) ? questions.filter(x => x.lessonId === lessonId) : [] }; }, [lessonId]);
+  const load = useLoad(async () => { const sectionId = requireStudentSectionId(profile); const [lessons, questions] = await Promise.all([getLessons(sectionId), getQuestions(sectionId)]); const lesson = lessons.find(x => x.id === lessonId); return { lesson, questions: lesson && lessonQuizIsPublished(lesson) ? questions.filter(x => x.lessonId === lessonId) : [] }; }, [lessonId, profile?.sectionId]);
   if (load.loading) return <LoadingState/>;
   const questions = load.data?.questions || [];
   if (!questions.length) return <ErrorState message="No questions are available for this lesson."/>;
@@ -131,8 +137,8 @@ export function StudentQuiz() {
 }
 
 export function StudentProgress() {
-  const { firebaseUser } = useAuth();
-  const load = useLoad(async () => { const [progress, lessons, questions] = await Promise.all([getProgress(firebaseUser.uid), getLessons(), getQuestions()]); return { progress, lessons, questions }; }, [firebaseUser.uid]);
+  const { firebaseUser, profile } = useAuth();
+  const load = useLoad(async () => { const sectionId = requireStudentSectionId(profile); const [progress, lessons, questions] = await Promise.all([getProgress(firebaseUser.uid), getLessons(sectionId), getQuestions(sectionId)]); return { progress, lessons, questions }; }, [firebaseUser.uid, profile?.sectionId]);
   if (load.loading) return <LoadingState/>;
   const summary = progressSummary(load.data.progress, load.data.questions);
   const lessons = new Map(load.data.lessons.map(x => [x.id, x]));
@@ -141,63 +147,22 @@ export function StudentProgress() {
 
 export function StudentProfile() {
   const { firebaseUser, profile, refreshProfile, logout } = useAuth();
-  const [form, setForm] = useState({
-    fullname: profile?.fullname || '',
-    phone: profile?.phone || '',
-    bio: profile?.bio || ''
-  });
+  const [form, setForm] = useState({ fullname: profile?.fullname || '', course: 'BSIT', yearLevel: normalizeYearLevel(profile?.yearLevel) || '', section: studentSection(profile) || '', phone: profile?.phone || '', bio: profile?.bio || '' });
   const [message, setMessage] = useState('');
-  const preview = useMemo(() => ({ ...profile, ...form }), [profile, form]);
-  const set = (key, value) => setForm(current => ({ ...current, [key]: value }));
-
+  const preview = useMemo(() => ({ ...profile, ...form, course: 'BSIT' }), [profile, form]);
+  const set = (key, value) => setForm(x => ({ ...x, [key]: value }));
   async function save() {
-    if (!form.fullname.trim()) {
-      setMessage('Enter your full name.');
-      return;
-    }
-    try {
-      await saveProfile(firebaseUser.uid, {
-        fullname: form.fullname.trim(),
-        phone: form.phone.trim(),
-        bio: form.bio.trim()
-      });
-      await refreshProfile();
-      setMessage('Personal profile updated successfully.');
-    } catch (error) {
-      setMessage(error?.message || 'Unable to update your profile.');
-    }
+    if (!form.fullname.trim()) { setMessage('Enter your full name.'); return; }
+    if (!YEAR_LEVELS.includes(form.yearLevel)) { setMessage('Choose 1st, 2nd, 3rd, or 4th year.'); return; }
+    const section = normalizeSection(form.section);
+    if (!section) { setMessage('Section must contain 1 to 3 letters or numbers.'); return; }
+    await saveProfile(firebaseUser.uid, { fullname: form.fullname.trim(), course: 'BSIT', yearLevel: form.yearLevel, section, classGroupId: `SECTION_BSIT_${section}`, phone: form.phone.trim(), bio: form.bio.trim() });
+    await refreshProfile();
+    set('section', section);
+    setMessage('Profile updated successfully.');
   }
-
-  const leave = () => Alert.alert('Logout', 'Are you sure you want to logout?', [
-    { text: 'Cancel', style: 'cancel' },
-    { text: 'Logout', style: 'destructive', onPress: async () => { await logout(); router.replace('/login'); } }
-  ]);
-
-  return <Screen>
-    <Header eyebrow="Profile" title="Your student profile" text="Manage your personal information and profile picture. Class placement is managed by your school administrator."/>
-    <ProfileBlock person={preview} role="student" showAcademic={false}/>
-    <ProfilePhotoUploader/>
-    <SectionTitle title="Personal information"/>
-    <Panel>
-      <Input label="Full name" value={form.fullname} onChangeText={value => set('fullname', value)}/>
-      <Input label="Email" value={profile?.email || ''} editable={false}/>
-      <Input label="Phone" value={form.phone} onChangeText={value => set('phone', value)} keyboardType="phone-pad"/>
-      <Input label="Bio" value={form.bio} onChangeText={value => set('bio', value)} multiline/>
-      <Notice type={message.includes('success') ? 'success' : 'error'}>{message}</Notice>
-      <ActionButton onPress={save}>Save personal profile</ActionButton>
-    </Panel>
-    <View style={{height:10}}/>
-    <Panel>
-      <TitleText>Class placement</TitleText>
-      <BodyText>Your Student ID, course, year level, section, and academic year are assigned and maintained by an authorized administrator through Class Assignments. Contact your school administrator if your placement needs to be changed.</BodyText>
-    </Panel>
-    <View style={{height:10}}/>
-    <ActionButton variant="secondary" onPress={() => router.push('/settings')}>Settings</ActionButton>
-    <View style={{height:8}}/>
-    <ActionButton variant="secondary" onPress={() => router.push('/about')}>About EqualLearn</ActionButton>
-    <View style={{height:8}}/>
-    <ActionButton variant="danger" onPress={leave}>Logout</ActionButton>
-  </Screen>;
+  const leave = () => Alert.alert('Logout', 'Are you sure you want to logout?', [{text:'Cancel',style:'cancel'},{text:'Logout',style:'destructive',onPress:async()=>{await logout();router.replace('/login');}}]);
+  return <Screen><Header eyebrow="Profile" title="Your student profile" text="Keep your contact and academic information current."/><ProfileBlock person={preview} role="student"/><ProfilePhotoUploader/><SectionTitle title="Edit profile"/><Panel><Input label="Full name" value={form.fullname} onChangeText={v=>set('fullname',v)}/><Input label="Email" value={profile?.email || ''} editable={false}/><Input label="Student number" value={profile?.studentNumber || ''} editable={false}/><Input label="Course" value="BSIT" editable={false}/><Label>Year Level</Label><ChoiceRow value={form.yearLevel} onChange={v=>set('yearLevel',v)} options={YEAR_LEVELS}/><Input label="Section (1–3 letters/numbers)" value={form.section} onChangeText={v=>set('section',normalizeSection(v))} maxLength={3} autoCapitalize="characters"/><Input label="Phone" value={form.phone} onChangeText={v=>set('phone',v)} keyboardType="phone-pad"/><Input label="Bio" value={form.bio} onChangeText={v=>set('bio',v)} multiline/><Notice type={message.includes('success') ? 'success' : 'error'}>{message}</Notice><ActionButton onPress={save}>Save profile</ActionButton></Panel><View style={{height:10}}/><ActionButton variant="secondary" onPress={()=>router.push('/settings')}>Settings</ActionButton><View style={{height:8}}/><ActionButton variant="secondary" onPress={()=>router.push('/about')}>About EqualLearn</ActionButton><View style={{height:8}}/><ActionButton variant="danger" onPress={leave}>Logout</ActionButton></Screen>;
 }
 
 function Fact({ label, value }) { const {theme}=useTheme(); return <View style={s.fact}><Text style={[s.factLabel,{color:theme.muted}]}>{label}</Text><Text style={[s.factValue,{color:theme.text}]}>{value}</Text></View>; }

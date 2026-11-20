@@ -1,4 +1,4 @@
-﻿
+
 const CACHE = "equallearn-shell-v10";
 
 const CORE = [
@@ -9,7 +9,6 @@ const CORE = [
     "./manifest.webmanifest",
 
     "./assets/css/equallearn.css",
-    "./assets/css/forced-dark-theme.css",
     "./assets/css/loading-screen.css",
 
     "./assets/js/icons.js",
@@ -31,8 +30,8 @@ const OFFLINE_MESSAGE = `
             min-height: 100vh;
             display: grid;
             place-items: center;
-            background: #0b1020;
-            color: #edf1fb;
+            background: #f5f7fb;
+            color: #243047;
             font-family: Arial, sans-serif;
             text-align: center;
         }
@@ -278,19 +277,23 @@ self.addEventListener("push", event => {
                     "equallearn-update"
                 ).slice(0, 100),
 
-                icon: "/assets/icons/icon-192.png",
-                badge: "/assets/icons/icon-192.png",
-                timestamp: Date.now(),
-                vibrate: [200, 100, 200],
-                silent: false,
-                renotify: true,
-                requireInteraction: true,
                 data: {
                     url: targetUrl,
-                    notificationId: payload.notificationId || null,
-                    contentType: payload.contentType || null,
-                    contentId: payload.contentId || null
-                }
+                    notificationId:
+                        payload.notificationId || null,
+                    contentType:
+                        payload.contentType || null,
+                    contentId:
+                        payload.contentId || null
+                },
+
+                timestamp: Date.now(),
+
+                vibrate: [200, 100, 200],
+
+                renotify: true,
+
+                requireInteraction: false
             };
 
             await self.registration.showNotification(
@@ -400,4 +403,3 @@ self.addEventListener("notificationclose", event => {
 console.info(
     "EqualLearn: Offline cache and background push handlers initialized."
 );
-

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 
 <html lang="en">
 
@@ -1163,7 +1163,7 @@
 
     .tm-state::before {
 
-      content: "📚";
+      content: "";
 
       display: grid;
 
@@ -2006,6 +2006,7 @@
     <link rel="stylesheet" href="../assets/css/responsive-layout.css">
     <link rel="stylesheet" href="../assets/css/responsive-auto-fit.css">
   <link rel="stylesheet" href="../assets/css/forced-dark-theme.css?v=1">
+  <link rel="stylesheet" href="../assets/css/teacher-modules-compact.css?v=1">
 </head>
 
 <body>
@@ -2014,261 +2015,79 @@
 
   <div class="tm-container">
 
-    <!-- TOP BAR -->
-
-    <header class="tm-topbar">
-
-      <div class="tm-brand">
-
-        <div class="tm-brand-icon">📚</div>
-
-        <div>
-
-          <div class="tm-brand-name">
-
-            Equal<span>Learn</span>
-
-          </div>
-
-          <div class="tm-breadcrumb">
-
-            Teacher Workspace / Teaching Activities
-
-          </div>
-
+    <!-- COMPACT ACTIVITY OVERVIEW -->
+    <section class="tm-overview" aria-label="Teaching activity overview">
+      <div class="tm-overview-item">
+        <div class="tm-donut" aria-hidden="true">
+          <svg viewBox="0 0 52 52"><circle class="tm-donut-track" cx="26" cy="26" r="21"></circle><circle class="tm-donut-ring ring-total" id="totalRing" cx="26" cy="26" r="21"></circle></svg>
+          <strong id="totalCount">0</strong>
         </div>
-
+        <div class="tm-overview-copy"><strong>Total Created</strong><small>All activities</small></div>
       </div>
-
-      <div class="tm-user">
-
-        <div class="tm-avatar" id="avatar">T</div>
-
-        <div>
-
-          <small id="teacherRole">TEACHER</small>
-
-          <strong id="teacherName">Teacher</strong>
-
+      <div class="tm-overview-item">
+        <div class="tm-donut" aria-hidden="true">
+          <svg viewBox="0 0 52 52"><circle class="tm-donut-track" cx="26" cy="26" r="21"></circle><circle class="tm-donut-ring ring-published" id="publishedRing" cx="26" cy="26" r="21"></circle></svg>
+          <strong id="publishedCount">0</strong>
         </div>
-
+        <div class="tm-overview-copy"><strong>Published</strong><small>Visible to sections</small></div>
       </div>
-
-    </header>
-
-    <!-- HERO -->
-
-    <section class="tm-hero">
-
-      <div class="tm-hero-content">
-
-        <div class="tm-eyebrow">
-
-          <span class="tm-eyebrow-dot"></span>
-
-          EQUALLEARN • TEACHING WORKSPACE
-
+      <div class="tm-overview-item">
+        <div class="tm-donut" aria-hidden="true">
+          <svg viewBox="0 0 52 52"><circle class="tm-donut-track" cx="26" cy="26" r="21"></circle><circle class="tm-donut-ring ring-draft" id="draftRing" cx="26" cy="26" r="21"></circle></svg>
+          <strong id="draftCount">0</strong>
         </div>
-
-        <h1>Teaching Activities</h1>
-
-        <p>
-
-          Create meaningful learning experiences, organize classroom
-
-          activities, and keep your students engaged in one place.
-
-        </p>
-
+        <div class="tm-overview-copy"><strong>Drafts</strong><small>Not yet published</small></div>
       </div>
-
-      <div class="tm-hero-art" aria-hidden="true">🎓</div>
-
-    </section>
-
-    <!-- STATISTICS -->
-
-    <section class="tm-stats">
-
-      <div class="tm-stat">
-
-        <div class="tm-stat-top">
-
-          <small>Total Created</small>
-
-          <div class="tm-stat-icon">📚</div>
-
+      <div class="tm-overview-item">
+        <div class="tm-donut" aria-hidden="true">
+          <svg viewBox="0 0 52 52"><circle class="tm-donut-track" cx="26" cy="26" r="21"></circle><circle class="tm-donut-ring ring-sections" id="sectionRing" cx="26" cy="26" r="21"></circle></svg>
+          <strong id="sectionCount">0</strong>
         </div>
-
-        <strong id="totalCount">0</strong>
-
-        <div class="tm-stat-caption">All your learning activities</div>
-
+        <div class="tm-overview-copy"><strong>Assigned Sections</strong><small>Your class sections</small></div>
       </div>
-
-      <div class="tm-stat">
-
-        <div class="tm-stat-top">
-
-          <small>Published</small>
-
-          <div class="tm-stat-icon">✓</div>
-
-        </div>
-
-        <strong id="publishedCount">0</strong>
-
-        <div class="tm-stat-caption">Visible to assigned students</div>
-
-      </div>
-
-      <div class="tm-stat">
-
-        <div class="tm-stat-top">
-
-          <small>Drafts</small>
-
-          <div class="tm-stat-icon">📝</div>
-
-        </div>
-
-        <strong id="draftCount">0</strong>
-
-        <div class="tm-stat-caption">Activities still in progress</div>
-
-      </div>
-
-      <div class="tm-stat">
-
-        <div class="tm-stat-top">
-
-          <small>Assigned Sections</small>
-
-          <div class="tm-stat-icon">👥</div>
-
-        </div>
-
-        <strong id="sectionCount">0</strong>
-
-        <div class="tm-stat-caption">Your available class sections</div>
-
-      </div>
-
-    </section>
-
-    <!-- ACTIVITIES HEADING -->
-
-    <section class="tm-action-row">
-
-      <div class="tm-section-heading">
-
-        <div class="tm-heading-icon">🗂️</div>
-
-        <div>
-
-          <h2>My Learning Activities</h2>
-
-          <p>Manage the learning experience of your classes.</p>
-
-        </div>
-
-      </div>
-
-      <button class="tm-primary" id="createBtn" type="button">
-
-        <span>＋</span>
-
-        Create Activity
-
-      </button>
-
     </section>
 
     <div class="tm-notice" id="notice" role="status"></div>
 
-    <!-- FILTERS -->
-
+    <!-- COMPACT FILTERS + CREATE ACTION -->
     <section class="tm-toolbar-wrap">
-
-      <div class="tm-toolbar-label">Find and organize activities</div>
-
       <div class="tm-toolbar">
-
         <div class="tm-control">
-
-          <input
-
-            class="tm-input"
-
-            id="searchInput"
-
-            type="search"
-
-            placeholder="⌕  Search activities..."
-
-            aria-label="Search activities"
-
-          >
-
+          <input class="tm-input" id="searchInput" type="search" placeholder="Search activities..." aria-label="Search activities">
         </div>
-
         <div class="tm-control">
-
-          <select class="tm-select" id="statusFilter"
-
-            aria-label="Filter by status">
-
+          <select class="tm-select" id="statusFilter" aria-label="Filter by status">
             <option value="all">All statuses</option>
-
             <option value="published">Published</option>
-
             <option value="draft">Draft</option>
-
             <option value="archived">Archived</option>
-
           </select>
-
         </div>
-
         <div class="tm-control">
-
-          <select class="tm-select" id="typeFilter"
-
-            aria-label="Filter by activity type">
-
+          <select class="tm-select" id="typeFilter" aria-label="Filter by activity type">
             <option value="all">All activity types</option>
-
             <option value="module">Modules</option>
-
             <option value="quiz">Quizzes</option>
-
             <option value="assignment">Assignments</option>
-
             <option value="discussion">Discussions</option>
-
+            <option value="announcement">Announcements</option>
           </select>
-
         </div>
-
         <div class="tm-control">
-
-          <select class="tm-select" id="sectionFilter"
-
-            aria-label="Filter by section">
-
+          <select class="tm-select" id="sectionFilter" aria-label="Filter by section">
             <option value="all">All sections</option>
-
           </select>
-
         </div>
-
+        <button class="tm-primary tm-create-inline" id="createBtn" type="button">
+          <span class="tm-button-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+          <span>Create Activity</span>
+        </button>
       </div>
-
     </section>
 
     <!-- ACTIVITY CARDS -->
 
-    <section class="tm-grid" id="moduleGrid">
+    <section class="tm-list" id="moduleGrid" aria-label="My teaching activities">
 
       <div class="tm-state">
 
@@ -2304,7 +2123,7 @@
 
       <div class="tm-modal-title-wrap">
 
-        <div class="tm-modal-icon">✏️</div>
+        <div class="tm-modal-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></div>
 
         <div>
 
@@ -2330,94 +2149,27 @@
 
     </div>
 
-    <div class="tm-form-intro">
-
-      💡 Create an activity, select your class sections, and provide
-
-      the learning materials your students need.
-
-    </div>
-
     <div class="tm-notice" id="formNotice" role="status"></div>
 
     <form id="activityForm">
 
-      <!-- ACTIVITY TYPE -->
+      <!-- BASIC ACTIVITY DETAILS -->
+      <div class="tm-form-grid tm-form-grid-top">
+        <div class="tm-field">
+          <label for="activityType">Activity Type <span class="tm-required">*</span></label>
+          <select id="activityType" required>
+            <option value="module">Learning Module</option>
+            <option value="quiz">Quiz</option>
+            <option value="assignment">Assignment</option>
+            <option value="discussion">Discussion</option>
+            <option value="announcement">Announcement</option>
+          </select>
+        </div>
 
-      <div class="tm-field">
-
-        <label for="activityType">
-
-          Activity Type <span class="tm-required">*</span>
-
-        </label>
-
-        <select id="activityType" required>
-
-          <option value="module">📚 Learning Module</option>
-
-          <option value="quiz">📝 Quiz</option>
-
-          <option value="assignment">📄 Assignment</option>
-
-          <option value="discussion">💬 Discussion</option>
-
-        </select>
-
-        <small class="tm-help">
-
-          Choose the type of learning activity you want to create.
-
-        </small>
-
-      </div>
-
-      <!-- TITLE -->
-
-      <div class="tm-field">
-
-        <label for="activityTitle">
-
-          Activity Title <span class="tm-required">*</span>
-
-        </label>
-
-        <input
-
-          id="activityTitle"
-
-          maxlength="150"
-
-          required
-
-          placeholder="e.g. Introduction to Gender Equality"
-
-        >
-
-      </div>
-
-      <!-- CATEGORY -->
-
-      <div class="tm-field">
-
-        <label for="activityCategory">Category</label>
-
-        <select id="activityCategory">
-
-          <option value="Lesson">Lesson</option>
-
-          <option value="Reading Material">Reading Material</option>
-
-          <option value="Practice">Practice</option>
-
-          <option value="Assessment">Assessment</option>
-
-          <option value="Performance Task">Performance Task</option>
-
-          <option value="General">General</option>
-
-        </select>
-
+        <div class="tm-field">
+          <label for="activityTitle">Title <span class="tm-required">*</span></label>
+          <input id="activityTitle" maxlength="150" required placeholder="e.g. Introduction to Gender Equality">
+        </div>
       </div>
 
       <!-- DESCRIPTION -->
@@ -2450,76 +2202,39 @@
 
       </div>
 
-      <!-- SECTIONS -->
-
-      <div class="tm-field">
-
-        <span class="tm-label">
-
-          Assign to Sections <span class="tm-required">*</span>
-
-        </span>
-
-        <small class="tm-help">
-
-          Select one or more sections that can access this activity.
-
-        </small>
-
-        <div class="tm-sections" id="sectionList">
-
-          Loading sections...
-
+      <!-- SECTION MULTI-SELECT DROPDOWN -->
+      <div class="tm-field tm-section-field">
+        <label for="sectionPickerToggle">Assign Sections <span class="tm-required">*</span></label>
+        <div class="tm-section-picker" id="sectionPicker">
+          <button class="tm-section-picker-toggle" id="sectionPickerToggle" type="button" aria-expanded="false" aria-controls="sectionList">
+            <span id="sectionPickerLabel">Select one or more sections</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="tm-sections" id="sectionList" hidden>Loading sections...</div>
         </div>
-
+        <small class="tm-help">Choose the class sections that can access this activity.</small>
       </div>
 
       <!-- DYNAMIC TYPE FIELDS -->
 
       <div id="typeFields" class="tm-activity-fields"></div>
 
-      <!-- RESOURCES -->
-
+      <!-- OPTIONAL FILES AND LINKS -->
       <div id="resourceArea" class="tm-attachment-area">
-
         <div class="tm-resource-heading">
-
-          <div class="tm-label">Attachments</div>
-
-          <p>
-
-            Mag-attach ng file o mag-paste ng link. Puwede kang magdagdag
-
-            ng higit sa isang attachment.
-
-          </p>
-
-          <small class="tm-help">
-
-            Supported files: PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, TXT,
-
-            JPG, PNG, WEBP, ZIP. Para sa malalaking file, gumamit ng shareable link.
-
-          </small>
-
+          <strong>Learning resources</strong>
+          <small>Optional files or shareable links.</small>
         </div>
-
+        <div class="tm-resource-guidance" id="resourceHelp" hidden>
+          <strong>Learning Module</strong>
+          <p>Attach a small file (up to 400 KB) or paste a shareable link. Use links for larger files.</p>
+          <small>Supported files: PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, TXT, JPG, PNG, WEBP, ZIP. Para sa malalaking file, gumamit ng shareable link.</small>
+        </div>
         <div id="resourceEditor" class="tm-resources"></div>
-
-        <button
-
-          class="tm-secondary"
-
-          id="addResource"
-
-          type="button"
-
-        >
-
-          ＋ Add File or Link
-
+        <button class="tm-secondary" id="addResource" type="button">
+          <span class="tm-button-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+          Add File or Link
         </button>
-
       </div>
 
       <!-- ACTIONS -->

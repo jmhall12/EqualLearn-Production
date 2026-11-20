@@ -1,0 +1,67 @@
+# EqualLearn Lumi — Cloudflare Workers AI (Free allocation)
+
+This Worker replaces the previous paid OpenAI API call with Cloudflare Workers AI using `@cf/zai-org/glm-4.7-flash`. It keeps the existing `/chat`, `/ticket`, `/tickets`, and `/ticket-status` routes. The chat endpoint does not require an OpenAI key or Firebase service-account key. The support-ticket routes still use the optional Firebase service-account secret.
+
+## Free-plan model and limits
+
+- Model: `@cf/zai-org/glm-4.7-flash`
+- Workers AI free allocation: 10,000 Neurons per day on Workers Free.
+- The daily limit resets at 00:00 UTC. If the allocation is exceeded, inference requests fail until reset; this Worker returns a friendly quota message.
+- Do not upgrade to Workers Paid or add prepaid AI Gateway credits if the goal is to stay within the free allocation. Cloudflare may change plan limits and model availability; check the official pricing page before production use.
+
+## 1. Create/update the Worker in Cloudflare Dashboard (no local npm required)
+
+1. Open Cloudflare Dashboard → **Workers & Pages**.
+2. Create a Worker named `equallearn-lumi`, or open the existing `equallearn-lumi` Worker.
+3. Open **Edit code** and replace the code with this folder's `worker.js`. Save and Deploy.
+4. Open **Settings → Bindings → Add binding → Workers AI**.
+5. Set the variable/binding name to exactly `AI`, select the Workers AI resource, save, and redeploy.
+
+The included `wrangler.toml` shows the equivalent binding: `[ai] binding = "AI"`.
+
+## 2. Set Worker variables
+
+In Worker **Settings → Variables and Secrets**, configure these plain-text variables:
+
+- `FIREBASE_PROJECT_ID` = `equallearn-eb389`
+- `FIREBASE_WEB_API_KEY` = the Web API key from EqualLearn's existing Firebase config (`assets/js/firebase-config.js`)
+- `WORKERS_AI_MODEL` = `@cf/zai-org/glm-4.7-flash`
+- `ALLOWED_ORIGINS` = comma-separated exact site origins, e.g. `http://127.0.0.1:5500,http://localhost:5500,https://equallearn.pages.dev`
+
+Origin values include scheme, no path, and no trailing slash. The sample retains the existing EqualLearn Pages origin from the previous Lumi Worker config. If your actual production domain is different, replace `https://equallearn.pages.dev` with the exact deployed domain.
+
+No OpenAI API key is needed. The Firebase Web API key is public client configuration; no private credential belongs in the browser.
+
+## 3. Firebase profile access
+
+For `/chat`, the Worker validates the Firebase ID token through Firebase Identity Toolkit, then reads `users/{uid}` from Firestore using that user's own ID token. Firestore Security Rules must allow an authenticated user to read their own profile, which the existing Lumi widget already does with `getDoc(doc(db, "users", user.uid))`. The verified profile role must be `student`, `teacher`, or `admin`. The Worker does not trust the role sent by the browser.
+
+The Worker does not send chat logs to Firestore. It sends only the current prompt and a short in-memory conversation history to the model. The widget keeps its history in memory for the current page session.
+
+## 4. Connect the widget
+
+Edit `assets/js/lumi-ai-config.js` and replace the placeholder with the deployed Worker URL, for example:
+
+```js
+export const LUMI_AI_WORKER_URL = "https://equallearn-lumi.YOUR-SUBDOMAIN.workers.dev";
+```
+
+Deploy both `assets/widgets/lumi.html` and `assets/js/lumi-ai-config.js` with the EqualLearn site. The root and `www/` copies should match if your deployment workflow uses both.
+
+## 5. Test
+
+1. Visit `https://YOUR-WORKER.workers.dev/health`. It should return JSON with `ok: true` and the model ID. This does not call the model.
+2. Sign in to EqualLearn.
+3. Open Lumi and ask a question not covered by the built-in navigation/help patterns, e.g. `Explain the difference between gender equality and gender equity with examples.`
+4. Confirm the response appears and check Worker logs if it fails.
+
+## Support tickets
+
+The old support-ticket endpoints are retained. To keep them working, configure the `FIREBASE_SERVICE_ACCOUNT_JSON` secret for the same EqualLearn Firebase project. It is only used by the existing ticket storage/admin inbox routes, not by the `/chat` inference route. Never expose the service-account JSON in browser files or commit it.
+
+## Privacy and limits
+
+- The Worker does not persist chat history.
+- The model prompt prohibits disclosing answer keys, grades, or private records. This is a prompt-level safety measure, not a replacement for real access control. The Worker does not fetch grades, quiz answers, or private student documents.
+- This version has no live web-search tool; it will not claim to have browsed the web.
+- A Worker AI binding is required. Without it, `/chat` returns a configuration error.

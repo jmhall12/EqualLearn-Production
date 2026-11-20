@@ -1,4 +1,3 @@
-
 import { auth, db } from "./firebase-config.js";
 
 import {
@@ -9,7 +8,7 @@ import {
   doc,
   getDoc,
   collection,
-  getDocs
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
 import {
@@ -30,11 +29,6 @@ const TOKEN_URL =
 ========================================= */
 
 const sessionList = document.getElementById("adminLiveList");
-const sessionCount = document.getElementById("adminTotalSessions");
-const activeCount = document.getElementById("adminActiveSessions");
-const scheduledCount = document.getElementById("adminScheduledSessions");
-
-const refreshButton = document.getElementById("adminRefreshLive");
 const searchInput = document.getElementById("adminLiveSearch");
 const statusFilter = document.getElementById("adminLiveStatusFilter");
 const modeFilter = document.getElementById("adminLiveModeFilter");
@@ -63,6 +57,7 @@ let currentUser = null;
 let currentProfile = null;
 
 let sessions = [];
+let unsubscribeSessions = null;
 let currentRoom = null;
 let currentSession = null;
 
@@ -162,7 +157,7 @@ onAuthStateChanged(auth, async user => {
     const role = normalize(profile.role);
     const accountStatus = normalize(profile.status);
 
-    if (role !== "admin" || accountStatus !== "active") {
+    if (role !== "admin" || accountStatus === "inactive") {
       alert("Access denied. Administrator access is required.");
       window.location.href = "../login.html";
       return;
@@ -171,7 +166,7 @@ onAuthStateChanged(auth, async user => {
     currentUser = user;
     currentProfile = profile;
 
-    await loadSessions();
+    startSessionsListener();
 
   } catch (error) {
     console.error("ADMIN LIVE AUTH ERROR:", error);
@@ -188,84 +183,49 @@ onAuthStateChanged(auth, async user => {
 });
 
 /* =========================================
-   LOAD ALL LIVE SESSIONS
+   LIVE SESSION LISTENER
+   Firestore pushes changes; no timer or page reload.
 ========================================= */
 
-async function loadSessions() {
-  if (!currentUser) return;
+function startSessionsListener() {
+  if (!currentUser || unsubscribeSessions) return;
 
-  if (refreshButton) refreshButton.disabled = true;
+  showMessage("Connecting to live classroom updates...");
 
-  showMessage("Loading classroom sessions...");
+  unsubscribeSessions = onSnapshot(
+    collection(db, "liveSessions"),
+    snapshot => {
+      sessions = snapshot.docs.map(item => ({
+        id: item.id,
+        ...item.data()
+      }));
 
-  try {
-    /*
-      Admin reads the liveSessions collection.
-      No status filter is applied here so scheduled,
-      live, and ended sessions can be displayed.
-    */
+      sessions.sort((a, b) => {
+        const aDate = a.createdAt?.toMillis?.() || 0;
+        const bDate = b.createdAt?.toMillis?.() || 0;
+        return bDate - aDate;
+      });
 
-    const snapshot = await getDocs(
-      collection(db, "liveSessions")
-    );
+      // Re-render only the session list. Search/filter values stay intact.
+      renderSessions();
+      showMessage(`${sessions.length} classroom session(s) · Live updates enabled.`);
+    },
+    error => {
+      console.error("ADMIN LIVE SESSION LISTENER ERROR:", error);
+      showMessage(
+        error.message || "Live updates are temporarily unavailable. Check Firestore permissions.",
+        true
+      );
 
-    sessions = snapshot.docs.map(item => ({
-      id: item.id,
-      ...item.data()
-    }));
-
-    sessions.sort((a, b) => {
-      const aDate = a.createdAt?.toMillis?.() || 0;
-      const bDate = b.createdAt?.toMillis?.() || 0;
-      return bDate - aDate;
-    });
-
-    updateStatistics();
-    renderSessions();
-
-    showMessage(
-      `${sessions.length} classroom session(s) loaded.`
-    );
-
-  } catch (error) {
-    console.error("LOAD ADMIN LIVE SESSIONS ERROR:", error);
-
-    showMessage(
-      error.message || "Unable to load classroom sessions.",
-      true
-    );
-
-    if (sessionList) {
-      sessionList.innerHTML = `
-        <div class="admin-live-empty">
-          Unable to load sessions.
-          <br>
-          Check Firestore permissions and connection.
-        </div>
-      `;
+      if (sessionList && sessions.length === 0) {
+        sessionList.innerHTML = `
+          <div class="admin-live-empty">
+            Unable to load classroom sessions. Check Firestore permissions and connection.
+          </div>
+        `;
+      }
     }
-
-  } finally {
-    if (refreshButton) refreshButton.disabled = false;
-  }
-}
-
-/* =========================================
-   STATISTICS
-========================================= */
-
-function updateStatistics() {
-  const live = sessions.filter(
-    item => sessionStatus(item) === "live"
-  ).length;
-
-  const scheduled = sessions.filter(
-    item => sessionStatus(item) === "scheduled"
-  ).length;
-
-  if (sessionCount) sessionCount.textContent = sessions.length;
-  if (activeCount) activeCount.textContent = live;
-  if (scheduledCount) scheduledCount.textContent = scheduled;
+  );
 }
 
 /* =========================================
@@ -323,48 +283,30 @@ function renderSessions() {
 
     return `
       <article class="admin-session-card">
-
         <div class="admin-session-top">
           <span class="admin-session-status ${isLive ? "live" : ""}">
             ${escapeHTML(statusValue)}
           </span>
-
-          <span class="admin-session-mode">
-            ${escapeHTML(modeLabel)}
-          </span>
+          <span class="admin-session-mode">${escapeHTML(modeLabel)}</span>
         </div>
 
-        <h3 style="margin-top:13px">
-          ${escapeHTML(session.title || "Untitled classroom")}
-        </h3>
+        <h3>${escapeHTML(session.title || "Untitled classroom")}</h3>
 
-        <p>
-          <strong>Teacher:</strong>
-          ${escapeHTML(getTeacherName(session))}
-          <br>
-
-          <strong>Section:</strong>
-          ${escapeHTML(getSectionName(session))}
-          <br>
-
-          <strong>Created:</strong>
-          ${escapeHTML(formatDate(session.createdAt))}
-          <br>
-
-          <strong>Room:</strong>
-          ${escapeHTML(session.roomId || session.id)}
-        </p>
+        <div class="admin-session-meta">
+          <span><strong>Teacher</strong> · ${escapeHTML(getTeacherName(session))}</span>
+          <span><strong>Section</strong> · ${escapeHTML(getSectionName(session))}</span>
+          <span><strong>Created</strong> · ${escapeHTML(formatDate(session.createdAt))}</span>
+        </div>
 
         <button
           type="button"
           class="admin-join-button"
           data-join-session="${escapeHTML(session.id)}"
           ${isJoinable ? "" : "disabled"}>
-          ${isJoinable ? "Join Live Classroom" :
-            statusValue === "scheduled" ? "Waiting for Teacher" :
-            "Not Joinable"}
+          ${isJoinable ? "Join classroom" :
+            statusValue === "scheduled" ? "Waiting for teacher" :
+            "Not joinable"}
         </button>
-
       </article>
     `;
   }).join("");
@@ -572,20 +514,20 @@ function handleIncomingData(payload, participant, kind, topic) {
 function updateControlButtons() {
   if (micButton) {
     micButton.textContent = micEnabled
-      ? "🔇 Mute Microphone"
-      : "🎙 Microphone Off";
+      ? "ðŸ”‡ Mute Microphone"
+      : "ðŸŽ™ Microphone Off";
   }
 
   if (cameraButton) {
     cameraButton.textContent = cameraEnabled
-      ? "📷 Camera On"
+      ? "ðŸ“· Camera On"
       : "Camera Off";
   }
 
   if (shareButton) {
     shareButton.textContent = screenShareEnabled
       ? "Stop Sharing"
-      : "▣ Share Screen";
+      : "â–£ Share Screen";
   }
 
   if (micButton) micButton.disabled = !currentRoom;
@@ -766,7 +708,7 @@ async function joinClassroom(sessionId) {
     updateControlButtons();
 
     meetingStatus.textContent =
-      `Connected · ${sessionMode(session) === "livestream" ? "Livestream" : "Interactive meeting"}`;
+      `Connected Â· ${sessionMode(session) === "livestream" ? "Livestream" : "Interactive meeting"}`;
 
     meetingNotice.textContent =
       "You joined as an administrator. Leaving will not end this classroom.";
@@ -839,12 +781,9 @@ function resetMeetingUI() {
   updateControlButtons();
 }
 
-
 /* =========================================
    EVENT LISTENERS
 ========================================= */
-
-refreshButton?.addEventListener("click", loadSessions);
 
 searchInput?.addEventListener("input", renderSessions);
 statusFilter?.addEventListener("change", renderSessions);
@@ -863,43 +802,23 @@ cameraButton?.addEventListener("click", toggleCamera);
 shareButton?.addEventListener("click", toggleScreenShare);
 leaveButton?.addEventListener("click", leaveClassroom);
 
-/* ADMIN CHAT */
 meetingChatForm?.addEventListener("submit", async event => {
   event.preventDefault();
 
-  if (!currentRoom) {
-    showMeetingError(new Error("Join a classroom before sending a message."));
-    return;
-  }
-
-  const message = meetingChatInput?.value?.trim();
+  const message = meetingChatInput.value.trim();
 
   if (!message) return;
 
-  const submitButton = meetingChatForm.querySelector(
-    'button[type="submit"], button:not([type])'
-  );
-
-  if (submitButton) submitButton.disabled = true;
-
   try {
     await sendChatMessage(message);
-
     meetingChatInput.value = "";
-    meetingChatInput.focus();
-
   } catch (error) {
-    console.error("ADMIN CHAT SEND ERROR:", error);
     showMeetingError(error);
-
-  } finally {
-    if (submitButton) submitButton.disabled = !currentRoom;
   }
 });
 
-/* DISCONNECT ONLY — NEVER END THE SESSION */
 window.addEventListener("beforeunload", () => {
-  if (currentRoom) {
-    currentRoom.disconnect();
-  }
+  // Stop the Firestore listener and disconnect the admin's local LiveKit room.
+  if (unsubscribeSessions) unsubscribeSessions();
+  currentRoom?.disconnect();
 });

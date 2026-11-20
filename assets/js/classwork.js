@@ -16,7 +16,7 @@ import {
 
 /* =========================================================
    EQUALLEARN — STUDENT CLASSWORK
-   Current collections:
+   Collections:
    announcements
    modulesV2
    teacherActivitiesV2
@@ -36,12 +36,47 @@ let allActivities = [];
 let activeCategory = "all";
 
 const categoryInfo = {
-  announcement: { label: "Announcement", icon: "📢" },
-  module: { label: "Learning Module", icon: "📚" },
-  assignment: { label: "Assignment", icon: "📝" },
-  quiz: { label: "Quiz", icon: "✍️" },
-  discussion: { label: "Discussion", icon: "💬" }
+  announcement: { label: "Announcement", icon: "megaphone" },
+  module: { label: "Module / Lesson", icon: "book-open" },
+  assignment: { label: "Assignment", icon: "clipboard-list" },
+  quiz: { label: "Quiz", icon: "file-check" },
+  discussion: { label: "Discussion", icon: "message-circle" }
 };
+
+/* =========================================================
+   INLINE SVG ICONS — no emoji or external icon dependency
+========================================================= */
+const iconPaths = {
+  megaphone: '<path d="m3 11 18-5v12L3 13v-2Z"/><path d="M11.6 14.2 14 21h-4l-2-7.6"/><path d="M3 11v2a2 2 0 0 0 2 2h1"/>',
+  "book-open": '<path d="M12 7v14"/><path d="M3 18V5a2 2 0 0 1 2-2h3a4 4 0 0 1 4 4 4 4 0 0 1 4-4h3a2 2 0 0 1 2 2v13"/><path d="M3 18a3 3 0 0 1 3-3h2a4 4 0 0 1 4 4 4 4 0 0 1 4-4h2a3 3 0 0 1 3 3"/>',
+  "clipboard-list": '<rect x="5" y="4" width="14" height="18" rx="2"/><path d="M9 4.5h6a1 1 0 0 0 1-1v-1H8v1a1 1 0 0 0 1 1Z"/><path d="M9 11h6M9 15h6M9 19h3"/>',
+  "file-check": '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 14l2.5 2.5L16 11"/>',
+  "message-circle": '<path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5Z"/>',
+  sparkles: '<path d="m12 3 1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2L12 3Z"/><path d="m19 14 1 2.5 2.5 1-2.5 1L19 21l-1-2.5-2.5-1 2.5-1L19 14ZM5 2l.8 2.2L8 5l-2.2.8L5 8l-.8-2.2L2 5l2.2-.8L5 2Z"/>',
+  "user-round": '<circle cx="12" cy="8" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/>',
+  calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',
+  "calendar-clock": '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/><circle cx="16.5" cy="16.5" r="2.5"/><path d="M16.5 15v1.7l1 .6"/>',
+  inbox: '<path d="M4 4h16l2 11v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-4L4 4Z"/><path d="M2 15h5l2 3h6l2-3h5"/>',
+  loader: '<path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83m8.48 8.48 2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48 2.83-2.83"/>',
+  warning: '<path d="m10.3 3.9-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3.1l-8-14a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4m0 4h.01"/>'
+};
+
+function createIcon(name, className = "cw-inline-icon") {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("width", "18");
+  svg.setAttribute("height", "18");
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("stroke-width", "1.8");
+  svg.setAttribute("stroke-linecap", "round");
+  svg.setAttribute("stroke-linejoin", "round");
+  svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("focusable", "false");
+  svg.classList.add(...className.split(" ").filter(Boolean));
+  svg.innerHTML = iconPaths[name] || iconPaths["book-open"];
+  return svg;
+}
 
 /* =========================================================
    AUTHENTICATION
@@ -57,16 +92,21 @@ onAuthStateChanged(auth, async user => {
   allActivities = [];
 
   try {
-    await loadStudentProfile();
-    await testClassworkPermissions();
-    await loadAllClasswork();
-  } catch (error) {
+  await loadStudentProfile();
+
+  // Run Firestore permission diagnostics first.
+  await testClassworkPermissions();
+
+  // Load the actual classwork after the test.
+  await loadAllClasswork();
+
+} catch (error) {
     console.error("[CLASSWORK HUB]", error);
 
     showState(
       "Unable to load classwork",
       getErrorMessage(error),
-      "⚠️"
+      "warning"
     );
   }
 });
@@ -116,16 +156,15 @@ async function loadStudentProfile() {
   });
 }
 
-/* =========================================================
-   PERMISSION DIAGNOSTICS
-   Current student workflow uses V2 collections only.
-========================================================= */
-
 async function testClassworkPermissions() {
   const tests = [
     {
       name: "modulesV2",
       run: () => fetchPublishedSectionDocuments("modulesV2")
+    },
+    {
+      name: "legacy lessons (optional)",
+      run: () => fetchActiveSectionContent("lessons")
     },
     {
       name: "teacherActivitiesV2",
@@ -139,16 +178,14 @@ async function testClassworkPermissions() {
 
       console.log(`[PERMISSION TEST] ${test.name}: SUCCESS`, {
         count: documents.length,
-        ids: documents.map(item => item.id),
-        sectionId: studentSectionId
+        ids: documents.map(item => item.id)
       });
     } catch (error) {
       console.error(`[PERMISSION TEST] ${test.name}: FAILED`, {
         code: error.code,
         message: error.message,
-        error,
-        projectId: db.app.options.projectId,
-        sectionId: studentSectionId
+        error: error,
+        projectId: db.app.options.projectId
       });
     }
   }
@@ -164,7 +201,7 @@ async function loadAllClasswork() {
   showState(
     "Loading your classwork",
     "Retrieving your teacher's posts and learning activities.",
-    "⏳"
+    "loader"
   );
 
   const tasks = [
@@ -179,7 +216,12 @@ async function loadAllClasswork() {
     {
       name: "Teacher Activities",
       run: loadTeacherActivities
-    }
+    },
+    {
+  name: "Lessons",
+  run: loadLessons
+},
+
   ];
 
   const results = await Promise.allSettled(
@@ -257,6 +299,35 @@ async function fetchPublishedSectionDocuments(collectionName) {
   return documents;
 }
 
+async function fetchActiveSectionContent(collectionName) {
+  if (!studentSectionId) {
+    throw new Error("Student section ID is missing.");
+  }
+
+  const q = query(
+    collection(db, collectionName),
+    where("status", "==", "active"),
+    where("sectionIds", "array-contains", studentSectionId)
+  );
+
+  const snapshot = await getDocs(q);
+
+  const documents = snapshot.docs.map(item => ({
+    id: item.id,
+    ...item.data()
+  }));
+
+  console.log("[CLASSWORK] Admin/Teacher content loaded:", {
+    collection: collectionName,
+    sectionId: studentSectionId,
+    count: documents.length
+  });
+
+  return documents;
+}
+
+
+
 /* =========================================================
    ANNOUNCEMENTS
 ========================================================= */
@@ -319,10 +390,12 @@ async function loadAnnouncements() {
 }
 
 /* =========================================================
-   LEARNING MODULES — V2
+   LEARNING MODULES
 ========================================================= */
 
 async function loadModules() {
+  // V2 is the active module collection used by the current teacher workflow.
+  // Student read rules require status == "published" and matching sectionIds.
   const documents = await fetchPublishedSectionDocuments("modulesV2");
 
   documents.forEach(data => {
@@ -331,10 +404,7 @@ async function loadModules() {
       collectionName: "modulesV2",
       category: "module",
 
-      title:
-        data.title ||
-        data.moduleTitle ||
-        "Untitled Learning Module",
+      title: data.title || "Untitled Learning Module",
 
       description:
         data.description ||
@@ -345,6 +415,39 @@ async function loadModules() {
       teacherName:
         data.teacherName ||
         data.assignedTeacherName ||
+        "Your Teacher",
+
+      date: toDate(
+        data.publishedAt ||
+        data.createdAt ||
+        data.updatedAt
+      ),
+
+      status: "Published",
+      original: data
+    });
+  });
+}
+
+async function loadLessons() {
+  const documents = await fetchActiveSectionContent("lessons");
+
+  documents.forEach(data => {
+    allActivities.push({
+      id: data.id,
+      collectionName: "lessons",
+      category: "module",
+
+      title: data.title || "Untitled Lesson",
+
+      description:
+        data.description ||
+        data.content ||
+        "Open this lesson to view its learning materials.",
+
+      teacherName:
+        data.assignedTeacherName ||
+        data.teacherName ||
         "Your Teacher",
 
       date: toDate(
@@ -458,8 +561,7 @@ function updateStatistics() {
   $("quizCount").textContent =
     countCategory("quiz");
 
-  $("allCategoryCount").textContent =
-    `${allActivities.length} activities`;
+  $("allCategoryCount").textContent = allActivities.length;
 }
 
 /* =========================================================
@@ -471,7 +573,9 @@ document.querySelectorAll(".cw-category").forEach(button => {
     activeCategory = button.dataset.category || "all";
 
     document.querySelectorAll(".cw-category").forEach(item => {
-      item.classList.toggle("active", item === button);
+      const isActive = item === button;
+      item.classList.toggle("active", isActive);
+      item.setAttribute("aria-pressed", String(isActive));
     });
 
     const titles = {
@@ -573,7 +677,7 @@ function renderActivities() {
       keyword
         ? "Try a different search term or category."
         : "Your teacher's published classwork will appear here.",
-      "📭"
+      "inbox"
     );
 
     return;
@@ -591,7 +695,7 @@ function renderActivities() {
 function createActivityCard(item) {
   const info = categoryInfo[item.category] || {
     label: "Class Activity",
-    icon: "📘"
+    icon: "book-open"
   };
 
   const card = document.createElement("article");
@@ -602,7 +706,10 @@ function createActivityCard(item) {
 
   const category = document.createElement("span");
   category.className = "cw-card-category";
-  category.textContent = `${info.icon} ${info.label}`;
+  category.append(
+    createIcon(info.icon),
+    document.createTextNode(info.label)
+  );
 
   top.appendChild(category);
 
@@ -617,18 +724,25 @@ function createActivityCard(item) {
   meta.className = "cw-card-meta";
 
   const teacher = document.createElement("span");
-  teacher.textContent = `👤 ${item.teacherName}`;
+  teacher.append(
+    createIcon("user-round"),
+    document.createTextNode(item.teacherName || "Your Teacher")
+  );
 
   const date = document.createElement("span");
-  date.textContent = item.date
-    ? `🕒 ${formatDate(item.date)}`
-    : "🕒 Date not specified";
+  date.append(
+    createIcon("calendar"),
+    document.createTextNode(item.date ? formatDate(item.date) : "Date not specified")
+  );
 
   meta.append(teacher, date);
 
   if (item.dueDate) {
     const due = document.createElement("span");
-    due.textContent = `📅 Due ${formatDate(item.dueDate)}`;
+    due.append(
+      createIcon("calendar-clock"),
+      document.createTextNode(`Due ${formatDate(item.dueDate)}`)
+    );
     meta.appendChild(due);
   }
 
@@ -685,8 +799,14 @@ function getActionLabel(category) {
 function getDestination(item) {
   const id = encodeURIComponent(item.id);
 
-  if (item.collectionName === "modules" ||
-      item.collectionName === "modulesV2") {
+  if (item.collectionName === "lessons") {
+    return `modules.html?id=${id}&type=lesson`;
+  }
+
+  if (
+    item.collectionName === "modules" ||
+    item.collectionName === "modulesV2"
+  ) {
     return `modules.html?id=${id}&type=module`;
   }
 
@@ -708,7 +828,7 @@ function getDestination(item) {
    EMPTY / ERROR STATE
 ========================================================= */
 
-function showState(title, message, icon = "📭") {
+function showState(title, message, icon = "inbox") {
   feed.replaceChildren();
 
   const state = document.createElement("div");
@@ -716,7 +836,7 @@ function showState(title, message, icon = "📭") {
 
   const stateIcon = document.createElement("div");
   stateIcon.className = "cw-state-icon";
-  stateIcon.textContent = icon;
+  stateIcon.appendChild(createIcon(icon, "cw-state-svg"));
 
   const heading = document.createElement("h3");
   heading.textContent = title;
@@ -790,3 +910,39 @@ function formatDate(date) {
     timeStyle: "short"
   });
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
