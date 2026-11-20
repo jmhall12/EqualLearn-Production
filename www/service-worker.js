@@ -1,4 +1,4 @@
-
+﻿
 const CACHE = "equallearn-shell-v10";
 
 const CORE = [
@@ -9,6 +9,7 @@ const CORE = [
     "./manifest.webmanifest",
 
     "./assets/css/equallearn.css",
+    "./assets/css/forced-dark-theme.css",
     "./assets/css/loading-screen.css",
 
     "./assets/js/icons.js",
@@ -30,8 +31,8 @@ const OFFLINE_MESSAGE = `
             min-height: 100vh;
             display: grid;
             place-items: center;
-            background: #f5f7fb;
-            color: #243047;
+            background: #0b1020;
+            color: #edf1fb;
             font-family: Arial, sans-serif;
             text-align: center;
         }
@@ -399,3 +400,4 @@ self.addEventListener("notificationclose", event => {
 console.info(
     "EqualLearn: Offline cache and background push handlers initialized."
 );
+

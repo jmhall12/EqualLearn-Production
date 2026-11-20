@@ -26,6 +26,9 @@ const studentProgress = new Map();
 const studentAttempts = new Map();
 const listeners = new Map();
 
+// Keep expanded student cards open when live progress snapshots re-render the grid.
+const expandedStudentIds = new Set();
+
 let currentTeacher = null;
 
 function $(id) {
@@ -646,6 +649,41 @@ function renderStudentProgress(studentId) {
    RENDER STUDENTS
 ========================================================= */
 
+function bindStudentCardInteractions(container) {
+  if (!container || container.dataset.studentRevealBound === "true") return;
+
+  container.addEventListener("click", event => {
+    const toggle = event.target.closest("[data-action='toggle-student-details']");
+    if (!toggle || !container.contains(toggle)) return;
+
+    const studentId = toggle.dataset.studentId;
+    const panelId = toggle.getAttribute("aria-controls");
+    const panel = panelId ? document.getElementById(panelId) : null;
+    const card = toggle.closest(".student-directory-card");
+    const isExpanded = toggle.getAttribute("aria-expanded") === "true";
+    const nextExpanded = !isExpanded;
+
+    if (studentId) {
+      if (nextExpanded) expandedStudentIds.add(studentId);
+      else expandedStudentIds.delete(studentId);
+    }
+
+    toggle.setAttribute("aria-expanded", String(nextExpanded));
+    toggle.setAttribute(
+      "aria-label",
+      `${nextExpanded ? "Hide" : "View"} details for ${toggle.dataset.studentName || "student"}`
+    );
+
+    if (panel) panel.hidden = !nextExpanded;
+    if (card) card.classList.toggle("is-expanded", nextExpanded);
+
+    const label = toggle.querySelector(".student-card-open-label");
+    if (label) label.textContent = nextExpanded ? "Hide details" : "View details";
+  });
+
+  container.dataset.studentRevealBound = "true";
+}
+
 function renderStudents() {
   const container = $("teacherStudentCards");
   const searchInput = $("studentSearch");
@@ -698,6 +736,7 @@ function renderStudents() {
   }
 
   filteredStudents.forEach(student => {
+    const studentKey = String(student.uid || "");
     const name = escapeHTML(student.fullname || "Student");
     const email = escapeHTML(student.email || "No email provided");
     const course = escapeHTML(student.course || "Not provided");
@@ -710,111 +749,101 @@ function renderStudents() {
         : "Not provided"
     );
 
-    const studentID = escapeHTML(
-      student.studentNumber || "Not provided"
-    );
-
+    const studentID = escapeHTML(student.studentNumber || "Not provided");
     const section = escapeHTML(
-      student.section ||
-      student.sectionName ||
-      student.className ||
-      "Not provided"
+      student.section || student.sectionName || student.className || "Not provided"
     );
-
     const academicYear = escapeHTML(
-      student.cohort ||
-      student.academicYear ||
-      student.cohortId ||
-      "Not provided"
+      student.cohort || student.academicYear || student.cohortId || "Not provided"
     );
 
     const complete = isProfileComplete(student);
     const verified = student.academicProfileVerified === true;
+    const expanded = expandedStudentIds.has(studentKey);
+    const safeDomId = studentKey.replace(/[^a-zA-Z0-9_-]/g, "-") || `student-${Math.random().toString(36).slice(2)}`;
+    const detailsId = `student-details-${safeDomId}`;
 
     const card = document.createElement("article");
-    card.className = "el-card student-private-card";
-    card.tabIndex = 0;
-    card.setAttribute("aria-label", "Student record. Hover or activate Reveal details to view personal information.");
+    card.className = `el-card student-directory-card${expanded ? " is-expanded" : ""}`;
+    card.dataset.studentCard = "true";
 
     card.innerHTML = `
-      ${renderStudentAvatar(student)}
-
-      <div style="
-        display:flex;
-        justify-content:space-between;
-        align-items:flex-start;
-        gap:10px;
-        flex-wrap:wrap;
-      ">
-        <h3 class="student-card-name">${name}</h3>
-
-        <span class="student-verification ${verified ? "verified" : "pending"}">
-          ${verified ? "✓ Verified" : "◷ Pending verification"}
+      <button
+        type="button"
+        class="student-card-reveal"
+        data-action="toggle-student-details"
+        data-student-id="${escapeHTML(studentKey)}"
+        data-student-name="${name}"
+        aria-expanded="${expanded}"
+        aria-controls="${escapeHTML(detailsId)}"
+        aria-label="${expanded ? "Hide" : "View"} details for ${name}"
+      >
+        <span class="student-card-summary-main">
+          ${renderStudentAvatar(student)}
+          <span class="student-card-summary-copy">
+            <span class="student-card-name-row">
+              <span class="student-card-name">${name}</span>
+              <span class="student-verification ${verified ? "verified" : "pending"}">
+                ${verified ? "✓ Verified" : "◷ Pending verification"}
+              </span>
+            </span>
+            <span class="student-card-email">${email}</span>
+            <span class="student-card-summary-meta">
+              <span>${complete ? "✓ Profile completed" : "⚠ Profile incomplete"}</span>
+              <span class="student-card-open-label">${expanded ? "Hide details" : "View details"}</span>
+            </span>
+          </span>
         </span>
-      </div>
+        <span class="student-card-chevron" aria-hidden="true">⌄</span>
+      </button>
 
-      <div class="student-card-email">${email}</div>
+      <section
+        class="student-card-expanded"
+        id="${escapeHTML(detailsId)}"
+        ${expanded ? "" : "hidden"}
+        aria-label="${name} student details"
+      >
+        <div class="student-card-details">
+          <div>
+            <span class="student-detail-label">Course</span>
+            <strong class="student-detail-value">${course}</strong>
+          </div>
 
-      <div class="student-card-details">
-        <div>
-          <span class="student-detail-label">Course</span>
-          <strong class="student-detail-value">${course}</strong>
+          <div>
+            <span class="student-detail-label">Year Level</span>
+            <strong class="student-detail-value">${year}</strong>
+          </div>
+
+          <div>
+            <span class="student-detail-label">Student ID</span>
+            <strong class="student-detail-value">${studentID}</strong>
+          </div>
+
+          <div>
+            <span class="student-detail-label">Section</span>
+            <strong class="student-detail-value">${section}</strong>
+          </div>
+
+          <div style="grid-column:1/-1">
+            <span class="student-detail-label">Academic Year</span>
+            <strong class="student-detail-value">${academicYear}</strong>
+          </div>
         </div>
 
-        <div>
-          <span class="student-detail-label">Year Level</span>
-          <strong class="student-detail-value">${year}</strong>
+        ${renderStudentProgress(student.uid)}
+
+        <div class="student-card-footer">
+          <span class="student-profile-state">
+            ${complete ? "✓ Profile completed" : "⚠ Profile incomplete"}
+          </span>
+          <span class="student-profile-state">${verified ? "Academic profile verified" : "Awaiting verification"}</span>
         </div>
-
-        <div>
-          <span class="student-detail-label">Student ID</span>
-          <strong class="student-detail-value">${studentID}</strong>
-        </div>
-
-        <div>
-          <span class="student-detail-label">Section</span>
-          <strong class="student-detail-value">${section}</strong>
-        </div>
-
-        <div style="grid-column:1/-1">
-          <span class="student-detail-label">Academic Year</span>
-          <strong class="student-detail-value">${academicYear}</strong>
-        </div>
-      </div>
-
-      ${renderStudentProgress(student.uid)}
-
-      <div class="student-card-footer">
-        <span class="student-profile-state">
-          ${complete ? "✓ Profile completed" : "⚠ Profile incomplete"}
-        </span>
-        <button type="button" class="student-reveal-toggle" aria-expanded="false">Reveal details</button>
-      </div>
+      </section>
     `;
-
-    const revealButton = card.querySelector(".student-reveal-toggle");
-    revealButton?.addEventListener("click", event => {
-      event.stopPropagation();
-      const revealed = card.classList.toggle("student-revealed");
-      revealButton.textContent = revealed ? "Hide details" : "Reveal details";
-      revealButton.setAttribute("aria-expanded", String(revealed));
-    });
-
-    card.addEventListener("keydown", event => {
-      if (event.target === card && (event.key === "Enter" || event.key === " ")) {
-        event.preventDefault();
-        const revealed = card.classList.toggle("student-revealed");
-        if (revealButton) {
-          revealButton.textContent = revealed ? "Hide details" : "Reveal details";
-          revealButton.setAttribute("aria-expanded", String(revealed));
-        }
-      }
-    });
 
     container.appendChild(card);
   });
 }
-
 /* =========================================================
    LIVE LISTENERS
 ========================================================= */
@@ -911,6 +940,7 @@ requireRole("teacher", async teacherProfile => {
 
   currentTeacher = teacherProfile;
 
+  bindStudentCardInteractions(container);
   injectProgressStyles();
   createProgressStats();
 

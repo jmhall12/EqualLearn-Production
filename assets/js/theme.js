@@ -1,34 +1,22 @@
+﻿import { hydrateIcons } from './icons.js';
 
-import { hydrateIcons } from './icons.js';
+const THEME = 'dark';
+const THEME_COLOR = '#0b1020';
 
-const themeMedia = window.matchMedia('(prefers-color-scheme: dark)');
+function applyForcedDarkTheme() {
+  const root = document.documentElement;
+  root.dataset.theme = THEME;
+  root.style.colorScheme = THEME;
 
-function applyDeviceTheme() {
-  const theme = themeMedia.matches ? 'dark' : 'light';
-
-  document.documentElement.dataset.theme = theme;
-  document.body.dataset.theme = theme;
+  if (document.body) {
+    document.body.dataset.theme = THEME;
+    document.body.style.colorScheme = THEME;
+  }
 
   const themeColor = document.querySelector('meta[name="theme-color"]');
-
-  if (themeColor) {
-    themeColor.setAttribute(
-      'content',
-      theme === 'dark' ? '#171821' : '#e3e4ec'
-    );
-  }
+  if (themeColor) themeColor.setAttribute('content', THEME_COLOR);
 }
 
-// Initial theme
-applyDeviceTheme();
-
-// Automatically update when the device theme changes
-if (typeof themeMedia.addEventListener === 'function') {
-  themeMedia.addEventListener('change', applyDeviceTheme);
-} else {
-  // Older browser support
-  themeMedia.addListener(applyDeviceTheme);
-}
-
-// Keep existing application icons working
+applyForcedDarkTheme();
+window.addEventListener('pageshow', applyForcedDarkTheme);
 hydrateIcons();

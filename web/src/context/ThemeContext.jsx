@@ -1,23 +1,21 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+﻿import { createContext, useContext, useEffect, useMemo } from 'react';
 
-const themes = [
-  { id: 'default', label: 'Soft Green' },
-  { id: 'ptc', label: 'PTC Forest' },
-  { id: 'purple', label: 'Soft Purple' },
-  { id: 'pink', label: 'Soft Pink' },
-];
-
+const themes = [{ id: 'ptc', label: 'EqualLearn Dark' }];
 const ThemeContext = createContext(null);
+const DARK_THEME = 'ptc';
 
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(() => localStorage.getItem('equallearn-theme') || 'default');
-
   useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    localStorage.setItem('equallearn-theme', theme);
-  }, [theme]);
+    document.documentElement.dataset.theme = DARK_THEME;
+    document.documentElement.style.colorScheme = 'dark';
+    if (document.body) {
+      document.body.dataset.theme = 'dark';
+      document.body.style.colorScheme = 'dark';
+    }
+    try { localStorage.setItem('equallearn-theme', DARK_THEME); } catch (_) {}
+  }, []);
 
-  const value = useMemo(() => ({ theme, setTheme, themes }), [theme]);
+  const value = useMemo(() => ({ theme: DARK_THEME, setTheme: () => {}, themes }), []);
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 

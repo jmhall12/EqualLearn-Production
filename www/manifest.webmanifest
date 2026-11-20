@@ -1,12 +1,12 @@
-{
+﻿{
   "name": "EqualLearn",
   "short_name": "EqualLearn",
   "description": "Responsive learning platform for students, teachers and administrators on web and Android.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f6f7fb",
-  "theme_color": "#5b5cf0",
+  "background_color": "#0b1020",
+  "theme_color": "#0b1020",
   "icons": [
     {
       "src": "./assets/icons/icon-192.png",
