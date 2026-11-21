@@ -333,15 +333,6 @@ function keepLumiOnTop() {
   });
 
   frame.setAttribute("allowtransparency", "true");
-
-  // Force the Lumi iframe itself to stay fully transparent.
-  frame.style.setProperty("background", "transparent", "important");
-  frame.style.setProperty("background-color", "transparent", "important");
-  frame.style.setProperty("background-image", "none", "important");
-  frame.style.setProperty("border", "0", "important");
-  frame.style.setProperty("outline", "0", "important");
-  frame.style.setProperty("box-shadow", "none", "important");
-  frame.style.setProperty("border-radius", "0", "important");
 }
 
 function setupLumiCompanion() {
@@ -742,12 +733,16 @@ function setupLumiCompanion() {
       }
 
       .el-notification-popover {
-        position: absolute;
-        top: calc(100% + 12px);
-        right: 0;
+        /* Fixed positioning is calculated from the bell's viewport rect below.
+           This prevents the menu from overflowing off-screen on narrow phones. */
+        position: fixed;
+        top: auto;
+        left: auto;
+        right: auto;
         z-index: 2000;
-        width: min(370px, calc(100vw - 24px));
-        max-height: min(70vh, 520px);
+        width: min(370px, calc(100vw - 20px));
+        max-width: calc(100vw - 20px);
+        max-height: min(70dvh, 520px);
         overflow: hidden;
         color: #f1f0fa;
         background: #202331;
@@ -1069,12 +1064,22 @@ function setupLumiCompanion() {
 
       @media (max-width: 520px) {
         .el-topbar {
+          flex-wrap: nowrap;
+          align-items: center;
           gap: 8px;
           padding: 10px 12px;
         }
 
         .el-topbar-title {
+          flex: 1 1 auto;
+          min-width: 0;
           gap: 10px;
+        }
+
+        .el-topbar-actions {
+          flex: 0 0 auto;
+          margin-left: auto;
+          gap: 6px;
         }
 
         .el-notification-bell {
@@ -1084,8 +1089,8 @@ function setupLumiCompanion() {
         }
 
         .el-notification-popover {
-          right: -48px;
           width: min(350px, calc(100vw - 20px));
+          max-width: calc(100vw - 20px);
         }
 
         .el-page-title {
@@ -1596,11 +1601,52 @@ function setupUserNameSync() {
       updatePermissionState();
     }
 
+    function positionPopover() {
+      if (popover.hidden) return;
+
+      const rect = bell.getBoundingClientRect();
+      const margin = 10;
+      const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+      const desiredWidth = Math.min(370, Math.max(240, viewportWidth - margin * 2));
+      const left = Math.max(
+        margin,
+        Math.min(rect.right - desiredWidth, viewportWidth - desiredWidth - margin)
+      );
+      const top = Math.min(rect.bottom + 8, Math.max(margin, viewportHeight - 220));
+      const availableHeight = Math.max(180, viewportHeight - top - margin);
+
+      popover.style.position = "fixed";
+      popover.style.left = `${left}px`;
+      popover.style.right = "auto";
+      popover.style.top = `${top}px`;
+      popover.style.width = `${desiredWidth}px`;
+      popover.style.maxWidth = `calc(100vw - ${margin * 2}px)`;
+      popover.style.maxHeight = `${Math.min(520, Math.floor(availableHeight))}px`;
+    }
+
     function setOpen(open) {
       popover.hidden = !open;
       bell.setAttribute("aria-expanded", String(open));
-      if (open) updatePermissionState();
+      if (open) {
+        updatePermissionState();
+        requestAnimationFrame(positionPopover);
+      } else {
+        popover.style.removeProperty("left");
+        popover.style.removeProperty("right");
+        popover.style.removeProperty("top");
+        popover.style.removeProperty("width");
+        popover.style.removeProperty("max-width");
+        popover.style.removeProperty("max-height");
+      }
     }
+
+    const repositionOpenPopover = () => {
+      if (!popover.hidden) positionPopover();
+    };
+    window.addEventListener("resize", repositionOpenPopover, { passive: true });
+    window.addEventListener("orientationchange", repositionOpenPopover, { passive: true });
+    window.addEventListener("scroll", repositionOpenPopover, { passive: true, capture: true });
 
     bell.addEventListener("click", async event => {
       event.stopPropagation();
@@ -1632,6 +1678,8 @@ function setupUserNameSync() {
       }
     });
 
+    // Always start closed. Opening is reserved for an explicit bell tap.
+    setOpen(false);
     updatePermissionState();
   }
 
