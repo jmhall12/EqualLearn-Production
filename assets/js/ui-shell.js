@@ -1257,6 +1257,18 @@ function setupLumiCompanion() {
           </div>
         ` : ""}
 
+        ${role === "teacher" && currentPage === "dashboard.html" ? `
+          <a
+            class="el-teacher-live-btn"
+            href="live.html"
+            aria-label="Open live classroom"
+            title="Start or join a live class"
+            style="display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:0 14px;border:1px solid rgba(167,139,250,.55);border-radius:14px;background:linear-gradient(135deg,#8b68ee,#6847d1);color:#fff;font-size:12px;font-weight:850;letter-spacing:.4px;text-decoration:none;white-space:nowrap;box-shadow:0 5px 16px rgba(104,71,209,.25);">
+            ${safeIcon("video", 17)}
+            <span>LIVE CALL</span>
+          </a>
+        ` : ""}
+
         <div class="el-user-pill">
           <span class="el-avatar">${config.title.charAt(0)}</span>
           <div>
