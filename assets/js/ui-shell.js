@@ -333,6 +333,15 @@ function keepLumiOnTop() {
   });
 
   frame.setAttribute("allowtransparency", "true");
+
+  // Force the Lumi iframe itself to stay fully transparent.
+  frame.style.setProperty("background", "transparent", "important");
+  frame.style.setProperty("background-color", "transparent", "important");
+  frame.style.setProperty("background-image", "none", "important");
+  frame.style.setProperty("border", "0", "important");
+  frame.style.setProperty("outline", "0", "important");
+  frame.style.setProperty("box-shadow", "none", "important");
+  frame.style.setProperty("border-radius", "0", "important");
 }
 
 function setupLumiCompanion() {

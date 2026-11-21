@@ -457,8 +457,10 @@ function listenToNotifications(uid) {
 
             notificationListenerStarted = true;
 
-            // Render every notification, not just the latest five.
-            renderNotifications(notifications);
+            // Keep the real-time unread count based on the full snapshot, but
+            // limit dropdown DOM nodes to the 30 most recent notifications.
+            // This prevents large historical feeds from slowing mobile rendering.
+            renderNotifications(notifications.slice(0, 30));
 
         },
 
