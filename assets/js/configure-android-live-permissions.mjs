@@ -10,6 +10,11 @@ if (!fs.existsSync(manifestPath)) {
 
 let xml = fs.readFileSync(manifestPath, "utf8");
 
+if (!/<manifest\b/i.test(xml) || !/<application\b/i.test(xml)) {
+  console.error("Generated AndroidManifest.xml is not a valid app manifest.");
+  process.exit(1);
+}
+
 const permissions = [
   "android.permission.CAMERA",
   "android.permission.RECORD_AUDIO",

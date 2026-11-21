@@ -52,8 +52,6 @@ jobs:
       - name: Create Android project
         run: npx cap add android
 
-      - name: Configure Android camera and microphone permissions for Live
-        run: node scripts/configure-android-live-permissions.mjs
 
       - name: Configure Firebase Cloud Messaging for Android
         env:
@@ -76,6 +74,18 @@ jobs:
 
       - name: Sync Capacitor
         run: npx cap sync android
+
+      - name: Configure Android camera and microphone permissions for Live
+        run: node scripts/configure-android-live-permissions.mjs
+
+      - name: Verify Android camera and microphone permissions
+        shell: bash
+        run: |
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          test -f "$MANIFEST" || { echo "::error::Android manifest is missing."; exit 1; }
+          grep -Fq 'android.permission.CAMERA' "$MANIFEST" || { echo "::error::CAMERA permission is missing from AndroidManifest.xml."; exit 1; }
+          grep -Fq 'android.permission.RECORD_AUDIO' "$MANIFEST" || { echo "::error::RECORD_AUDIO permission is missing from AndroidManifest.xml."; exit 1; }
+          echo "Verified CAMERA and RECORD_AUDIO declarations in the app manifest."
 
       - name: Prepare permanent signing key
         env:
@@ -143,6 +153,22 @@ jobs:
           EQUALLEARN_VERSION_CODE: ${{ steps.app_version.outputs.version_code }}
           EQUALLEARN_VERSION_NAME: ${{ steps.app_version.outputs.version_name }}
         run: ./gradlew --no-daemon clean assembleRelease
+
+      - name: Verify camera and microphone permissions inside final APK
+        shell: bash
+        run: |
+          APK_PATH="android/app/build/outputs/apk/release/app-release.apk"
+          test -f "$APK_PATH" || { echo "::error::Release APK was not generated."; exit 1; }
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          AAPT="$(find "$SDK_ROOT/build-tools" -type f -name aapt | sort -V | tail -n 1)"
+          if [ -z "$AAPT" ]; then
+            echo "::error::aapt was not found; cannot verify packaged permissions."
+            exit 1
+          fi
+          "$AAPT" dump permissions "$APK_PATH" | tee apk-permissions.txt
+          grep -Fq 'android.permission.CAMERA' apk-permissions.txt || { echo "::error::CAMERA permission is absent from the final APK."; exit 1; }
+          grep -Fq 'android.permission.RECORD_AUDIO' apk-permissions.txt || { echo "::error::RECORD_AUDIO permission is absent from the final APK."; exit 1; }
+          echo "Final APK contains CAMERA and RECORD_AUDIO permissions."
 
       - name: Verify APK signature
         shell: bash
@@ -242,6 +268,7 @@ jobs:
           path: |
             public/
             signing-verification.txt
+            apk-permissions.txt
           retention-days: 30
           if-no-files-found: error
 
