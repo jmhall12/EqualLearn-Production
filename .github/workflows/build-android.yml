@@ -52,6 +52,9 @@ jobs:
       - name: Create Android project
         run: npx cap add android
 
+      - name: Configure Android camera and microphone permissions for Live
+        run: node scripts/configure-android-live-permissions.mjs
+
       - name: Configure Firebase Cloud Messaging for Android
         env:
           GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
