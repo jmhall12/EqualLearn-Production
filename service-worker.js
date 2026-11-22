@@ -1,5 +1,5 @@
 
-const CACHE = "equallearn-shell-v12-auto-demo-login";
+const CACHE = "equallearn-shell-v13-single-lumi-evaluation";
 
 const CORE = [
     "./",
@@ -21,7 +21,8 @@ const CORE = [
     "./assets/js/firebase-config.js",
     "./assets/js/login.js",
     "./assets/js/evaluation-runtime.js",
-    "./assets/js/evaluation-readonly.js"
+    "./assets/js/evaluation-readonly.js",
+    "./assets/widgets/lumi.html"
 ];
 
 const OFFLINE_MESSAGE = `

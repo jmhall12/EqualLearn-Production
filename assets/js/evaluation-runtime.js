@@ -71,6 +71,34 @@ function isDemo(profile) {
   return value === true || (typeof value === "string" && value.trim().toLowerCase() === "true");
 }
 
+// The regular 3D Lumi companion and the Evaluation Guide are two separate
+// interfaces. During a demo session, keep only the guided evaluation toolbar
+// visible so the mascot/chat iframe cannot overlap the real application.
+function setRegularLumiCompanionHidden(hidden) {
+  const frame = document.getElementById("equallearn-lumi-frame");
+  const reopen = document.getElementById("lumi-reopen");
+  if (hidden) {
+    reopen?.remove();
+    if (frame) {
+      frame.dataset.equallearnEvaluationHidden = "true";
+      frame.setAttribute("aria-hidden", "true");
+      frame.style.setProperty("display", "none", "important");
+      frame.style.setProperty("visibility", "hidden", "important");
+      frame.style.setProperty("pointer-events", "none", "important");
+    }
+    document.documentElement.classList.add("equallearn-evaluation-active");
+    return;
+  }
+  document.documentElement.classList.remove("equallearn-evaluation-active");
+  if (frame) {
+    delete frame.dataset.equallearnEvaluationHidden;
+    frame.removeAttribute("aria-hidden");
+    frame.style.removeProperty("display");
+    frame.style.removeProperty("visibility");
+    frame.style.removeProperty("pointer-events");
+  }
+}
+
 // Remove the obsolete separate Evaluation Mode entry button wherever older
 // landing-page markup or cached content still renders it. Demo detection now
 // happens automatically after the ordinary login form authenticates users.
@@ -308,6 +336,7 @@ async function exitEvaluation() {
   try { await signOut(auth); } catch (error) { console.warn("[EqualLearn Evaluation] Sign out warning:", error); }
   sessionStorage.removeItem("equallearn.evaluationMode");
   demoProfile = null;
+  setRegularLumiCompanionHidden(false);
   lastPageKey = "";
   welcomePrimed = false;
   document.getElementById("equallearn-eval-toolbar")?.remove();
@@ -320,6 +349,7 @@ window.EqualLearnEvaluationVoice = {
   setDemoProfile(role, profile = {}) {
     if (ROLE_HOME[role]) {
       demoProfile = { role, name: profile.fullname || profile.fullName || "Evaluator" };
+      setRegularLumiCompanionHidden(true);
       lastPageKey = "";
       ensureToolbar();
       const info = getPageInfo();
@@ -328,6 +358,7 @@ window.EqualLearnEvaluationVoice = {
   },
   clearDemoProfile() {
     demoProfile = null;
+    setRegularLumiCompanionHidden(false);
     lastPageKey = "";
     welcomePrimed = false;
     document.getElementById("equallearn-eval-toolbar")?.remove();
@@ -401,6 +432,7 @@ setInterval(() => {
 onAuthStateChanged(auth, async user => {
   if (!user) {
     demoProfile = null;
+    setRegularLumiCompanionHidden(false);
     lastPageKey = "";
     welcomePrimed = false;
     document.getElementById("equallearn-eval-toolbar")?.remove();
@@ -415,6 +447,7 @@ onAuthStateChanged(auth, async user => {
     const role = String(profile.role || "").trim().toLowerCase();
     if (isDemo(profile) && String(profile.status || "").trim().toLowerCase() === "active" && ROLE_HOME[role]) {
       demoProfile = { role, name: profile.fullname || profile.fullName || "Evaluator" };
+      setRegularLumiCompanionHidden(true);
       sessionStorage.setItem("equallearn.evaluationMode", JSON.stringify({ role, startedAt: Date.now() }));
       ensureToolbar();
       const info = getPageInfo();
@@ -425,6 +458,7 @@ onAuthStateChanged(auth, async user => {
     }
     // A normal user session must never inherit a stale evaluation overlay.
     demoProfile = null;
+    setRegularLumiCompanionHidden(false);
     lastPageKey = "";
     welcomePrimed = false;
     sessionStorage.removeItem("equallearn.evaluationMode");

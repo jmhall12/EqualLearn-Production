@@ -1992,11 +1992,6 @@ body {
 }
 
 
-/* Evaluation Mode entry */
-.el-evaluation-link{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;margin-top:13px;padding:12px 15px;border:1px solid rgba(111,98,205,.24);border-radius:13px;background:rgba(118,104,223,.075);color:#6658c8;font-size:13px;font-weight:800;text-decoration:none;transition:background .18s,border-color .18s,transform .18s}
-.el-evaluation-link:hover{background:rgba(118,104,223,.13);border-color:rgba(111,98,205,.4);transform:translateY(-1px)}
-.el-evaluation-link span{font-size:16px}
-
 </style>
 
 </head>
@@ -2168,9 +2163,6 @@ body {
 
       </form>
 
-      <a class="el-evaluation-link" href="app.html?path=%2Fevaluation.html" id="evaluationModeLink">
-        <span aria-hidden="true">✦</span> Explore Evaluation Mode
-      </a>
 
       <!-- REGISTER FOOTER -->
       <div class="el-auth-footer">
@@ -2212,13 +2204,6 @@ body {
 
 
 <!-- EXISTING PROJECT JAVASCRIPT -->
-<script>
-  document.getElementById("evaluationModeLink")?.addEventListener("click", event => {
-    event.preventDefault();
-    const target = window.self !== window.top ? "/evaluation.html" : "/app.html?path=%2Fevaluation.html";
-    window.location.href = target;
-  });
-</script>
 <script type="module" src="assets/js/login.js"></script>
 <script type="module" src="assets/js/password-toggle.js"></script>
 <script type="module" src="assets/js/pwa.js"></script>

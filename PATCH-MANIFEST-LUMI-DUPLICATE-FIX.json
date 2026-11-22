@@ -1,0 +1,19 @@
+{
+  "name": "EqualLearn Single Lumi Evaluation Fix",
+  "version": "1.0.0",
+  "changed_files": [
+    "login.html",
+    "assets/js/evaluation-runtime.js",
+    "assets/widgets/lumi.html",
+    "service-worker.js",
+    "FIX-NOTES-LUMI-DUPLICATE.md"
+  ],
+  "behavior": [
+    "Remove Explore Evaluation Mode from normal login screen.",
+    "Automatically hide the regular 3D Lumi companion after a dedicated read-only demo account is verified.",
+    "Keep the Lumi Guided Evaluation toolbar as the only visible Lumi UI during demo sessions.",
+    "Restore the regular Lumi companion after sign-out or when a non-demo account is detected.",
+    "Prevent the Lumi widget from re-showing itself on resize while evaluation mode is active.",
+    "Bump service worker cache version."
+  ]
+}

@@ -339,6 +339,12 @@ function syncLumiFrameSize(){
  try{
   const frame=window.frameElement;
   if(!frame)return;
+  if(frame.dataset.equallearnEvaluationHidden==="true"){
+   frame.style.setProperty("display","none","important");
+   frame.style.setProperty("pointer-events","none","important");
+   frame.style.setProperty("visibility","hidden","important");
+   return;
+  }
   if(hidden){
    frame.style.setProperty("display","none","important");
    frame.style.setProperty("pointer-events","none","important");
@@ -418,7 +424,7 @@ try{
  const frame=window.frameElement;
  if(frame && window.parent && window.parent.document){
   const frameObserver=new MutationObserver(()=>{if(!hidden)syncLumiFrameSize();});
-  frameObserver.observe(frame,{attributes:true,attributeFilter:["class"]});
+  frameObserver.observe(frame,{attributes:true,attributeFilter:["class","data-equallearn-evaluation-hidden"]});
   window.addEventListener("pagehide",()=>frameObserver.disconnect(),{once:true});
  }
 }catch(_){/* Cross-origin parents cannot be observed; initial sizing still applies. */}
