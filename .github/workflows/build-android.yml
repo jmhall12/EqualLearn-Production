@@ -49,34 +49,34 @@ jobs:
       - name: Prepare web assets
         run: npm run mobile:build-web
 
-      - name: Enforce APK local login startup
+      - name: Verify APK web assets start at login
         shell: bash
         run: |
           node --input-type=module <<'NODE'
-          import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-
-          const configPath = 'capacitor.config.json';
-          const config = JSON.parse(readFileSync(configPath, 'utf8'));
-          config.server ??= {};
-
-          // A production APK must never load the hosted landing page as its WebView source.
-          delete config.server.url;
-          config.server.appStartPath = '/login.html';
-
-          if (config.webDir !== 'www') {
-            console.error(`::error::Expected Capacitor webDir "www", received "${config.webDir}".`);
+          import { readFileSync, existsSync } from 'node:fs';
+          const config = JSON.parse(readFileSync('capacitor.config.json', 'utf8'));
+          if (config.server?.url) {
+            console.error('::error::Capacitor server.url must be removed for the APK.');
             process.exit(1);
           }
-          for (const file of ['www/index.html', 'www/login.html']) {
+          if (config.server?.appStartPath !== '/login.html') {
+            console.error('::error::Capacitor appStartPath must be /login.html.');
+            process.exit(1);
+          }
+          for (const file of ['www/login.html', 'www/index.html']) {
             if (!existsSync(file)) {
-              console.error(`::error::Required bundled web entry is missing: ${file}`);
+              console.error(`::error::Missing generated APK asset: ${file}`);
               process.exit(1);
             }
           }
-
-          writeFileSync(configPath, JSON.stringify(config, null, 2) + '\\n');
-          console.log('Configured APK to use bundled www assets and open /login.html.');
-          console.log('Production server.url removed; website landing page remains unchanged.');
+          const entry = readFileSync('www/index.html', 'utf8');
+          if (!entry.includes("window.location.replace('login.html')") ||
+              !entry.includes('url=login.html')) {
+            console.error('::error::Generated www/index.html does not redirect to login.html.');
+            process.exit(1);
+          }
+          console.log('PASS: APK has local login.html and local index fallback redirects to login.');
+          console.log('PASS: remote server.url is not configured.');
           NODE
 
       - name: Create Android project
@@ -104,36 +104,35 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
-      - name: Verify generated Android project uses local login
+      - name: Verify synced Android app starts locally at login
         shell: bash
         run: |
           node --input-type=module <<'NODE'
           import { readFileSync, existsSync } from 'node:fs';
-
-          const nativeConfigPath = 'android/app/src/main/assets/capacitor.config.json';
-          const bundledLoginPath = 'android/app/src/main/assets/public/login.html';
-          const bundledIndexPath = 'android/app/src/main/assets/public/index.html';
-
-          for (const file of [nativeConfigPath, bundledLoginPath, bundledIndexPath]) {
+          const configPath = 'android/app/src/main/assets/capacitor.config.json';
+          const loginPath = 'android/app/src/main/assets/public/login.html';
+          const indexPath = 'android/app/src/main/assets/public/index.html';
+          for (const file of [configPath, loginPath, indexPath]) {
             if (!existsSync(file)) {
-              console.error(`::error::Expected generated Android asset is missing: ${file}`);
+              console.error(`::error::Missing generated Android asset: ${file}`);
               process.exit(1);
             }
           }
-
-          const nativeConfig = JSON.parse(readFileSync(nativeConfigPath, 'utf8'));
-          if (nativeConfig.server?.url) {
-            console.error(`::error::Generated Android config still contains server.url: ${nativeConfig.server.url}`);
+          const config = JSON.parse(readFileSync(configPath, 'utf8'));
+          if (config.server?.url) {
+            console.error(`::error::Generated Android config still points to remote URL: ${config.server.url}`);
             process.exit(1);
           }
-          if (nativeConfig.server?.appStartPath !== '/login.html') {
-            console.error(`::error::Generated Android appStartPath is not /login.html: ${nativeConfig.server?.appStartPath}`);
+          if (config.server?.appStartPath !== '/login.html') {
+            console.error('::error::Generated Android appStartPath is not /login.html.');
             process.exit(1);
           }
-
-          console.log('PASS: final Android project contains bundled login.html.');
-          console.log('PASS: final Android Capacitor config has no remote server.url.');
-          console.log('PASS: final Android startup path is /login.html.');
+          const index = readFileSync(indexPath, 'utf8');
+          if (!index.includes("window.location.replace('login.html')")) {
+            console.error('::error::Packaged Android index.html is not the login redirect fallback.');
+            process.exit(1);
+          }
+          console.log('PASS: generated Android assets use bundled login.html as startup.');
           NODE
 
       - name: Prepare permanent signing key
