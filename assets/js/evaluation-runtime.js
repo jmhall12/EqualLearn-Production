@@ -3,7 +3,6 @@ import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
 const pageFrame = document.getElementById("equallearn-page-frame");
-const lumiCompanionFrame = document.getElementById("equallearn-lumi-frame");
 const ROLE_NAMES = { admin: "Administrator", teacher: "Teacher", student: "Student" };
 const ROLE_HOME = { admin: "/admin/dashboard.html", teacher: "/teacher/dashboard.html", student: "/student/dashboard.html" };
 const GUIDE = {
@@ -65,13 +64,6 @@ let welcomePrimed = false;
 let voiceQueue = Promise.resolve();
 let nativeTtsPromise = null;
 let routeGuardBusy = false;
-let demoCompanionSuppressed = false;
-let browserSpeechQueue = [];
-let browserSpeechCurrent = "";
-let browserSpeechActive = false;
-let browserSpeechSession = 0;
-let browserSpeechStartedAt = 0;
-let browserSpeechRetryCount = 0;
 const TTS_URL = "https://esm.sh/@capacitor-community/text-to-speech@8.0.2?bundle";
 
 function isDemo(profile) {
@@ -134,190 +126,222 @@ function loadNativeTts() {
   }
   return nativeTtsPromise;
 }
-function splitSpeechText(value, maxLength = 175) {
+
+let speechGeneration = 0;
+let activeNativeTts = null;
+let pendingNativeStop = Promise.resolve();
+
+function splitSpeechIntoChunks(value, maxLength = 170) {
   const text = String(value || "").replace(/\s+/g, " ").trim();
   if (!text) return [];
-  const sentences = text.match(/[^.!?]+[.!?]?/g) || [text];
+  const sentences = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [text];
   const chunks = [];
-  let current = "";
-  for (const rawSentence of sentences) {
-    const sentence = rawSentence.trim();
-    if (!sentence) continue;
-    if ((current + " " + sentence).trim().length <= maxLength) {
-      current = (current + " " + sentence).trim();
-      continue;
+  for (const sentenceRaw of sentences) {
+    let sentence = sentenceRaw.trim();
+    while (sentence.length > maxLength) {
+      let cut = sentence.lastIndexOf(" ", maxLength);
+      if (cut < Math.floor(maxLength * 0.55)) cut = maxLength;
+      chunks.push(sentence.slice(0, cut).trim());
+      sentence = sentence.slice(cut).trim();
     }
-    if (current) chunks.push(current);
-    current = "";
-    if (sentence.length <= maxLength) {
-      current = sentence;
-      continue;
-    }
-    const words = sentence.split(/\s+/);
-    for (const word of words) {
-      if (!current) current = word;
-      else if ((current + " " + word).length <= maxLength) current += " " + word;
-      else { chunks.push(current); current = word; }
-    }
+    if (sentence) chunks.push(sentence);
   }
-  if (current) chunks.push(current);
   return chunks;
 }
-function pumpBrowserSpeech(session = browserSpeechSession) {
-  const synth = window.speechSynthesis;
-  if (!synth || !window.SpeechSynthesisUtterance || session !== browserSpeechSession || browserSpeechActive || !voiceEnabled) return;
-  const text = browserSpeechQueue.shift();
-  if (!text) { browserSpeechCurrent = ""; return; }
-  browserSpeechCurrent = text;
-  browserSpeechActive = true;
-  browserSpeechStartedAt = Date.now();
-  let settled = false;
-  const finish = (retry = false) => {
-    if (settled || session !== browserSpeechSession) return;
-    settled = true;
-    browserSpeechActive = false;
-    if (retry && browserSpeechRetryCount < 3) {
-      browserSpeechQueue.unshift(text);
-      browserSpeechRetryCount += 1;
-    } else {
-      browserSpeechCurrent = "";
-      browserSpeechRetryCount = 0;
-    }
-    window.setTimeout(() => pumpBrowserSpeech(session), retry ? 380 : 120);
-  };
+
+function cancelBrowserSpeech() {
   try {
+    const synth = window.speechSynthesis;
+    if (synth) {
+      synth.cancel();
+      // Android Chrome sometimes retains a stale paused state after cancel.
+      if (synth.paused) synth.resume();
+    }
+  } catch (error) {
+    console.debug("[EqualLearn Evaluation] Browser TTS cancel warning:", error);
+  }
+}
+
+async function stopNativeSpeech() {
+  try {
+    const tts = activeNativeTts || await loadNativeTts();
+    if (tts) await tts.stop();
+  } catch (error) {
+    console.debug("[EqualLearn Evaluation] Native TTS stop warning:", error);
+  }
+}
+
+function browserSpeakChunk(text, generation) {
+  return new Promise(resolve => {
+    const synth = window.speechSynthesis;
+    if (!synth || !window.SpeechSynthesisUtterance || generation !== speechGeneration) {
+      resolve(false);
+      return;
+    }
+
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-US";
     utterance.rate = 0.96;
     utterance.pitch = 1.02;
     utterance.volume = 1;
-    utterance.onend = () => finish(false);
-    utterance.onerror = event => {
-      const retryable = ["interrupted", "canceled", "audio-busy", "network"].includes(event?.error);
-      finish(retryable);
+
+    let settled = false;
+    const finish = result => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(watchdog);
+      resolve(result);
     };
-    synth.speak(utterance);
-  } catch (error) {
-    console.warn("[EqualLearn Evaluation] Browser TTS error:", error);
-    finish(false);
-  }
-}
-function browserSpeak(text, interrupt = false) {
-  const synth = window.speechSynthesis;
-  if (!synth || !window.SpeechSynthesisUtterance) return false;
-  try {
-    if (interrupt) {
-      browserSpeechSession += 1;
-      browserSpeechQueue = [];
-      browserSpeechCurrent = "";
-      browserSpeechActive = false;
-      browserSpeechRetryCount = 0;
-      synth.cancel();
-    }
-    const chunks = splitSpeechText(text);
-    if (!chunks.length) return false;
-    browserSpeechQueue.push(...chunks);
-    // Start the first segment synchronously when called from the Sign in tap.
-    pumpBrowserSpeech(browserSpeechSession);
-    return true;
-  } catch (error) {
-    console.warn("[EqualLearn Evaluation] Browser TTS error:", error);
-    return false;
-  }
-}
-function recoverBrowserSpeech() {
-  if (!voiceEnabled || !window.speechSynthesis) return;
-  const synth = window.speechSynthesis;
-  try {
-    if (synth.paused) {
-      synth.resume();
-      return;
-    }
-    // Some mobile browsers interrupt Web Speech when the on-screen keyboard
-    // opens. Re-queue only the active short segment if playback truly vanished.
-    if (browserSpeechActive && browserSpeechCurrent && !synth.speaking &&
-        Date.now() - browserSpeechStartedAt > 1400) {
-      const current = browserSpeechCurrent;
-      browserSpeechSession += 1; // invalidate a late onend/onerror from the lost utterance
-      browserSpeechActive = false;
-      browserSpeechCurrent = "";
-      browserSpeechQueue.unshift(current);
-      try { synth.cancel(); } catch (_) {}
-      pumpBrowserSpeech(browserSpeechSession);
-      return;
-    }
-    if (!browserSpeechActive && browserSpeechQueue.length) pumpBrowserSpeech(browserSpeechSession);
-  } catch (error) {
-    console.debug("[EqualLearn Evaluation] Mobile speech recovery deferred:", error);
-  }
-}
-function installSpeechRecovery(targetDocument) {
-  if (!targetDocument || targetDocument.__equalLearnSpeechRecovery) return;
-  targetDocument.__equalLearnSpeechRecovery = true;
-  targetDocument.addEventListener("focusin", () => window.setTimeout(recoverBrowserSpeech, 250), true);
-  targetDocument.addEventListener("pointerup", () => window.setTimeout(recoverBrowserSpeech, 180), { capture: true, passive: true });
-}
-function setDemoCompanionSuppressed(active) {
-  const frame = lumiCompanionFrame;
-  const next = Boolean(active);
-  const wasSuppressed = demoCompanionSuppressed || frame?.dataset.equallearnDemoSuppressed === "true";
-  demoCompanionSuppressed = next;
-  if (!frame) return;
-  if (next) {
-    frame.dataset.equallearnDemoSuppressed = "true";
-    frame.style.setProperty("display", "none", "important");
-    frame.style.setProperty("visibility", "hidden", "important");
-    frame.style.setProperty("pointer-events", "none", "important");
-    document.getElementById("lumi-reopen")?.remove();
-  } else if (wasSuppressed) {
-    delete frame.dataset.equallearnDemoSuppressed;
-    frame.style.removeProperty("display");
-    frame.style.removeProperty("visibility");
-    frame.style.removeProperty("pointer-events");
-    document.getElementById("lumi-reopen")?.remove();
-  }
-  if (next || wasSuppressed) {
+
+    utterance.onend = () => finish(generation === speechGeneration);
+    utterance.onerror = event => {
+      // "interrupted" and "canceled" are expected when a newer page narration
+      // replaces the old one. Other errors are surfaced for diagnostics.
+      if (generation === speechGeneration && !["interrupted", "canceled"].includes(event?.error)) {
+        console.warn("[EqualLearn Evaluation] Browser TTS chunk failed:", event?.error || event);
+      }
+      finish(false);
+    };
+
+    // Avoid a stuck utterance on Android Chrome/WebView. A short chunk should
+    // finish well before this watchdog; the next chunk continues independently.
+    const watchdog = setTimeout(() => {
+      if (generation !== speechGeneration) return finish(false);
+      console.warn("[EqualLearn Evaluation] Browser TTS watchdog recovered a stalled chunk.");
+      cancelBrowserSpeech();
+      finish(false);
+    }, 14000);
+
     try {
-      frame.contentWindow?.postMessage({ type: "EQUALLEARN_DEMO_MODE", active: next }, window.location.origin);
-    } catch (_) {}
-  }
-  if (pageFrame?.contentDocument?.documentElement) {
-    pageFrame.contentDocument.documentElement.dataset.equallearnDemoReadOnly = String(next);
-    if (next) pageFrame.contentDocument.getElementById("equallearn-lumi-frame")?.remove();
-  }
+      if (generation !== speechGeneration) return finish(false);
+      synth.speak(utterance);
+      // Android Chrome may leave speechSynthesis.paused set after a focus change.
+      if (synth.paused) synth.resume();
+    } catch (error) {
+      console.warn("[EqualLearn Evaluation] Browser TTS error:", error);
+      finish(false);
+    }
+  });
 }
+
+async function browserSpeak(text, generation) {
+  const chunks = splitSpeechIntoChunks(text);
+  if (!chunks.length) return false;
+  let spokenAny = false;
+
+  for (const chunk of chunks) {
+    if (generation !== speechGeneration) return spokenAny;
+    const spoken = await browserSpeakChunk(chunk, generation);
+    if (generation !== speechGeneration) return spokenAny;
+    if (!spoken) {
+      // Do not abandon the whole page guide because one Android speech chunk
+      // was interrupted by a transient Web Speech engine hiccup.
+      await new Promise(resolve => setTimeout(resolve, 180));
+      if (generation !== speechGeneration) return spokenAny;
+      const retried = await browserSpeakChunk(chunk, generation);
+      if (!retried) return spokenAny;
+      spokenAny = true;
+    } else {
+      spokenAny = true;
+    }
+    await new Promise(resolve => setTimeout(resolve, 90));
+  }
+  return spokenAny;
+}
+
 async function stopVoice() {
+  speechGeneration += 1;
   voiceQueue = Promise.resolve();
-  browserSpeechSession += 1;
-  browserSpeechQueue = [];
-  browserSpeechCurrent = "";
-  browserSpeechActive = false;
-  browserSpeechRetryCount = 0;
-  try { window.speechSynthesis?.cancel?.(); } catch (_) {}
-  try {
-    const tts = await loadNativeTts();
-    await tts?.stop?.();
-  } catch (error) { console.warn("[EqualLearn Evaluation] Native TTS stop failed:", error); }
+  cancelBrowserSpeech();
+  // Stop the native engine immediately; do not wait behind a previous speak()
+  // promise, because that promise resolves only when its utterance has ended.
+  pendingNativeStop = stopNativeSpeech();
 }
+
 function speak(text, { interrupt = false, fromGesture = false } = {}) {
   const clean = String(text || "").trim();
   if (!clean || !voiceEnabled) return Promise.resolve(false);
-  if (!isNative()) return Promise.resolve(browserSpeak(clean, interrupt));
-  const task = voiceQueue.then(async () => {
-    const tts = await loadNativeTts();
-    if (!tts) return browserSpeak(clean, interrupt);
-    if (interrupt) await tts.stop().catch(() => {});
-    try {
-      await tts.speak({ text: clean, lang: "en-US", rate: 0.96, pitch: 1.02, volume: 1, queueStrategy: interrupt ? 0 : 1 });
-      return true;
-    } catch (error) {
-      console.warn("[EqualLearn Evaluation] Native TTS failed:", error);
-      return browserSpeak(clean, interrupt);
+
+  if (interrupt) {
+    speechGeneration += 1;
+    cancelBrowserSpeech();
+    // Fire native stop immediately before queuing the replacement narration.
+    pendingNativeStop = stopNativeSpeech();
+    voiceQueue = Promise.resolve();
+  }
+  const generation = speechGeneration;
+
+  const run = async () => {
+    if (generation !== speechGeneration || !voiceEnabled) return false;
+    const chunks = splitSpeechIntoChunks(clean);
+    if (!chunks.length) return false;
+
+    if (!isNative()) {
+      return browserSpeak(clean, generation);
     }
+
+    if (interrupt) await pendingNativeStop.catch(() => {});
+    const tts = await loadNativeTts();
+    if (generation !== speechGeneration || !voiceEnabled) return false;
+    if (!tts) return browserSpeak(clean, generation);
+    activeNativeTts = tts;
+
+    let spokenAny = false;
+    for (const chunk of chunks) {
+      if (generation !== speechGeneration || !voiceEnabled) return spokenAny;
+      try {
+        await tts.speak({
+          text: chunk,
+          lang: "en-US",
+          rate: 0.96,
+          pitch: 1.02,
+          volume: 1,
+          queueStrategy: 0
+        });
+        spokenAny = true;
+      } catch (error) {
+        console.warn("[EqualLearn Evaluation] Native TTS chunk failed; switching to browser speech:", error);
+        if (generation !== speechGeneration) return spokenAny;
+        return browserSpeak(clean, generation);
+      }
+      // Small gap helps some Android TTS engines avoid clipping the next chunk.
+      await new Promise(resolve => setTimeout(resolve, 70));
+    }
+    return spokenAny;
+  };
+
+  const task = voiceQueue.then(run, run);
+  voiceQueue = task.catch(error => {
+    console.warn("[EqualLearn Evaluation] TTS queue error:", error);
+    return false;
   });
-  voiceQueue = task.catch(error => { console.warn("[EqualLearn Evaluation] TTS queue error:", error); return false; });
   return voiceQueue;
 }
+
+// Some Android browsers suspend Web Speech briefly while the soft keyboard is
+// opening. Do not cancel narration on focus/blur; only resume a paused engine
+// when the page returns to the foreground.
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && voiceEnabled) {
+    try {
+      if (window.speechSynthesis?.paused) window.speechSynthesis.resume();
+    } catch (_) {}
+  }
+});
+window.addEventListener("pageshow", () => {
+  if (voiceEnabled) {
+    try {
+      if (window.speechSynthesis?.paused) window.speechSynthesis.resume();
+    } catch (_) {}
+  }
+});
+window.addEventListener("focus", () => {
+  if (voiceEnabled) {
+    try {
+      if (window.speechSynthesis?.paused) window.speechSynthesis.resume();
+    } catch (_) {}
+  }
+});
 
 function ensureToolbar() {
   if (document.getElementById("equallearn-eval-toolbar")) return;
@@ -453,7 +477,6 @@ function enforceLiveRoleRoute() {
 }
 async function exitEvaluation() {
   await stopVoice();
-  setDemoCompanionSuppressed(false);
   try { await signOut(auth); } catch (error) { console.warn("[EqualLearn Evaluation] Sign out warning:", error); }
   sessionStorage.removeItem("equallearn.evaluationMode");
   demoProfile = null;
@@ -468,7 +491,6 @@ window.EqualLearnEvaluationVoice = {
   primeFromGesture,
   setDemoProfile(role, profile = {}) {
     if (ROLE_HOME[role]) {
-      setDemoCompanionSuppressed(true);
       demoProfile = { role, name: profile.fullname || profile.fullName || "Evaluator" };
       lastPageKey = "";
       ensureToolbar();
@@ -477,7 +499,6 @@ window.EqualLearnEvaluationVoice = {
     }
   },
   clearDemoProfile() {
-    setDemoCompanionSuppressed(false);
     demoProfile = null;
     lastPageKey = "";
     welcomePrimed = false;
@@ -531,11 +552,6 @@ function attachPageRouteObservers() {
 }
 
 pageFrame?.addEventListener("load", () => {
-  installSpeechRecovery(pageFrame.contentDocument);
-  if (demoProfile && pageFrame.contentDocument?.documentElement) {
-    pageFrame.contentDocument.documentElement.dataset.equallearnDemoReadOnly = "true";
-    pageFrame.contentDocument.getElementById("equallearn-lumi-frame")?.remove();
-  }
   // The obsolete CTA is removed on every app page, including the public/login
   // screens before a demo user authenticates.
   observeEvaluationEntryCTA();
@@ -547,15 +563,6 @@ pageFrame?.addEventListener("load", () => {
 // Also handle the case where the inner page finished loading before this
 // module was evaluated by the persistent app shell.
 observeEvaluationEntryCTA();
-installSpeechRecovery(document);
-window.addEventListener("focus", () => window.setTimeout(recoverBrowserSpeech, 220));
-window.addEventListener("pageshow", () => window.setTimeout(recoverBrowserSpeech, 220));
-document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible") window.setTimeout(recoverBrowserSpeech, 180);
-});
-if (window.visualViewport) {
-  window.visualViewport.addEventListener("resize", () => window.setTimeout(recoverBrowserSpeech, 280), { passive: true });
-}
 
 // Some EqualLearn screens switch content without a full document navigation.
 // This lightweight route check catches those transitions as well.
@@ -565,7 +572,6 @@ setInterval(() => {
 
 onAuthStateChanged(auth, async user => {
   if (!user) {
-    setDemoCompanionSuppressed(false);
     demoProfile = null;
     lastPageKey = "";
     welcomePrimed = false;
@@ -580,7 +586,6 @@ onAuthStateChanged(auth, async user => {
     const profile = snapshot.data();
     const role = String(profile.role || "").trim().toLowerCase();
     if (isDemo(profile) && String(profile.status || "").trim().toLowerCase() === "active" && ROLE_HOME[role]) {
-      setDemoCompanionSuppressed(true);
       demoProfile = { role, name: profile.fullname || profile.fullName || "Evaluator" };
       sessionStorage.setItem("equallearn.evaluationMode", JSON.stringify({ role, startedAt: Date.now() }));
       ensureToolbar();
@@ -591,7 +596,6 @@ onAuthStateChanged(auth, async user => {
       return;
     }
     // A normal user session must never inherit a stale evaluation overlay.
-    setDemoCompanionSuppressed(false);
     demoProfile = null;
     lastPageKey = "";
     welcomePrimed = false;

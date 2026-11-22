@@ -64,23 +64,36 @@ function isStudent() {
 
 
     // Legacy modules and lessons: active content assigned to this section.
-   function studentCanReadApprovedSectionContent() {
-  return isStudent()
-    && myProfile().sectionId is string
-    && resource.data.status == "active"
-    && resource.data.reviewStatus == "approved"
-    && resource.data.sectionIds is list
-    && myProfile().sectionId in resource.data.sectionIds;
-}
+   // Evaluators with demoReadOnly=true may READ the same content their role is
+   // assigned to, but all create/update/delete operations remain denied below.
+   // Support both the current sectionIds[] schema and older single sectionId docs.
+   function studentAssignedToResourceSection() {
+     return myProfile().sectionId is string
+       && (
+         (resource.data.keys().hasAny(["sectionIds"])
+           && resource.data.sectionIds is list
+           && myProfile().sectionId in resource.data.sectionIds)
+         ||
+         (resource.data.keys().hasAny(["sectionId"])
+           && resource.data.sectionId is string
+           && resource.data.sectionId == myProfile().sectionId)
+       );
+   }
 
-    // V2 modules and teacher activities: published content assigned to this section.
+   function studentCanReadApprovedSectionContent() {
+     return isStudent()
+       && resource.data.status == "active"
+       && resource.data.reviewStatus == "approved"
+       && studentAssignedToResourceSection();
+   }
+
+   // V2 modules and teacher activities: only published resources assigned to
+   // the signed-in student's own section are readable.
    function studentCanReadPublishedV2Content() {
-  return isStudent()
-    && myProfile().sectionId is string
-    && resource.data.status == "published"
-    && resource.data.sectionIds is list
-    && myProfile().sectionId in resource.data.sectionIds;
-}
+     return isStudent()
+       && resource.data.status == "published"
+       && studentAssignedToResourceSection();
+   }
 
 
     function isOwner(userId) {

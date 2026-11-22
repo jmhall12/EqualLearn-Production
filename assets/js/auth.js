@@ -243,16 +243,27 @@ export async function loginUser(email, password, rememberDevice = true) {
             };
         }
 
-        // Optional activity update: must not block login.
-        try {
-            await updateDoc(userRef, {
-                lastLogin: serverTimestamp()
-            });
-        } catch (error) {
-            console.warn(
-                "[LOGIN] Could not update lastLogin:",
-                error.code || error.message
-            );
+        // Read-only evaluator accounts must never attempt a profile write.
+        // Their Firestore rules intentionally deny writes, so skipping this
+        // optional activity timestamp avoids a misleading permission-denied log.
+        const demoFlag = userData.demoReadOnly;
+        const isReadOnlyDemo = demoFlag === true
+            || (typeof demoFlag === "string" && demoFlag.trim().toLowerCase() === "true");
+
+        if (isReadOnlyDemo) {
+            console.info("[LOGIN] Read-only demo account detected; lastLogin write skipped.");
+        } else {
+            // Optional activity update: must never block authentication.
+            try {
+                await updateDoc(userRef, {
+                    lastLogin: serverTimestamp()
+                });
+            } catch (error) {
+                console.warn(
+                    "[LOGIN] Could not update lastLogin:",
+                    error.code || error.message
+                );
+            }
         }
 
         console.log("[LOGIN] Successful:", userData.role);

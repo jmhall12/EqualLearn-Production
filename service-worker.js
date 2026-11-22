@@ -1,5 +1,5 @@
 
-const CACHE = "equallearn-shell-v13-lumi-mobile-voice-fix";
+const CACHE = "equallearn-shell-v12-auto-demo-login-mobile-tts-v2";
 
 const CORE = [
     "./",
@@ -21,8 +21,6 @@ const CORE = [
     "./assets/js/firebase-config.js",
     "./assets/js/login.js",
     "./assets/js/evaluation-runtime.js",
-    "./assets/js/ui-shell.js",
-    "./assets/widgets/lumi.html",
     "./assets/js/evaluation-readonly.js"
 ];
 

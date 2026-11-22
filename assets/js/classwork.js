@@ -153,6 +153,7 @@ async function loadStudentProfile() {
     uid: currentUser.uid,
     role,
     status,
+    demoReadOnly: studentProfile.demoReadOnly === true || String(studentProfile.demoReadOnly || "").toLowerCase() === "true",
     sectionId: studentSectionId,
     projectId: db.app.options.projectId
   });
@@ -237,10 +238,14 @@ async function loadAllClasswork() {
       failures.push(tasks[index].name);
 
       console.error(
-        `[CLASSWORK] ${tasks[index].name} failed:`,
+        `[CLASSWORK] ${tasks[index].name} failed: ${result.reason?.code || "unknown"} - ${result.reason?.message || String(result.reason)}`,
         {
-          code: result.reason?.code,
-          message: result.reason?.message,
+          code: result.reason?.code || "unknown",
+          message: result.reason?.message || String(result.reason),
+          uid: currentUser?.uid,
+          sectionId: studentSectionId,
+          projectId: db.app.options.projectId,
+          queryFailures: result.reason?.queryFailures || [],
           error: result.reason
         }
       );
@@ -273,64 +278,80 @@ async function loadAllClasswork() {
    Must match Firestore student read rules.
 ========================================================= */
 
-async function fetchPublishedSectionDocuments(collectionName) {
+async function fetchSectionDocumentsWithLegacyFallback(collectionName, statusFilters, label) {
   if (!studentSectionId) {
     throw new Error("Student section ID is missing.");
   }
 
-  const q = query(
-    collection(db, collectionName),
-    where("status", "==", "published"),
-    where("sectionIds", "array-contains", studentSectionId)
-  );
+  const base = collection(db, collectionName);
+  const filters = statusFilters.map(([field, value]) => where(field, "==", value));
+  const variants = [
+    { name: "sectionIds", sectionFilter: where("sectionIds", "array-contains", studentSectionId) },
+    { name: "sectionId", sectionFilter: where("sectionId", "==", studentSectionId) }
+  ];
 
-  const snapshot = await getDocs(q);
+  const settled = await Promise.allSettled(variants.map(variant =>
+    getDocs(query(base, ...filters, variant.sectionFilter))
+  ));
 
-  const documents = snapshot.docs.map(item => ({
-    id: item.id,
-    ...item.data()
-  }));
+  const merged = new Map();
+  const failures = [];
 
-  console.log("[CLASSWORK] Published section documents loaded:", {
+  settled.forEach((result, index) => {
+    const variant = variants[index];
+    if (result.status === "fulfilled") {
+      result.value.docs.forEach(item => {
+        merged.set(item.id, { id: item.id, ...item.data() });
+      });
+    } else {
+      const error = result.reason || {};
+      failures.push({
+        query: variant.name,
+        code: error.code || "unknown",
+        message: error.message || String(error)
+      });
+    }
+  });
+
+  // One schema variant succeeding is enough; keep the other failure visible
+  // because it may indicate that the deployed Firestore Rules are out of date.
+  if (merged.size === 0 && failures.length === variants.length) {
+    const details = failures.map(item => `${item.query}: ${item.code} - ${item.message}`).join(" | ");
+    const error = new Error(`${label} could not be read. ${details}`);
+    error.code = failures[0]?.code || "permission-denied";
+    error.queryFailures = failures;
+    throw error;
+  }
+
+  if (failures.length) {
+    console.warn(`[CLASSWORK] Some ${label} compatibility queries failed:`, failures);
+  }
+
+  const documents = [...merged.values()];
+  console.info(`[CLASSWORK] ${label} loaded:`, {
     collection: collectionName,
     sectionId: studentSectionId,
     count: documents.length,
-    ids: documents.map(item => item.id)
+    ids: documents.map(item => item.id),
+    queryFailures: failures
   });
-
   return documents;
 }
 
-async function fetchApprovedActiveSectionContent(collectionName) {
-  if (!studentSectionId) {
-    throw new Error("Student section ID is missing.");
-  }
-
-  // Must exactly match studentCanReadApprovedSectionContent() in firestore.rules:
-  // status == "active", reviewStatus == "approved", and sectionIds contains
-  // the signed-in student's sectionId. Firestore Security Rules are not filters.
-  const q = query(
-    collection(db, collectionName),
-    where("status", "==", "active"),
-    where("reviewStatus", "==", "approved"),
-    where("sectionIds", "array-contains", studentSectionId)
+async function fetchPublishedSectionDocuments(collectionName) {
+  return fetchSectionDocumentsWithLegacyFallback(
+    collectionName,
+    [["status", "published"]],
+    `Published ${collectionName}`
   );
+}
 
-  const snapshot = await getDocs(q);
-
-  const documents = snapshot.docs.map(item => ({
-    id: item.id,
-    ...item.data()
-  }));
-
-  console.log("[CLASSWORK] Approved active section content loaded:", {
-    collection: collectionName,
-    sectionId: studentSectionId,
-    count: documents.length,
-    ids: documents.map(item => item.id)
-  });
-
-  return documents;
+async function fetchApprovedActiveSectionContent(collectionName) {
+  return fetchSectionDocumentsWithLegacyFallback(
+    collectionName,
+    [["status", "active"], ["reviewStatus", "approved"]],
+    `Approved active ${collectionName}`
+  );
 }
 
 
@@ -401,35 +422,45 @@ async function loadAnnouncements() {
 ========================================================= */
 
 async function loadModules() {
-  // V2 is the active module collection used by the current teacher workflow.
-  // Student read rules require status == "published" and matching sectionIds.
-  const documents = await fetchPublishedSectionDocuments("modulesV2");
+  // Read both the current V2 workflow and legacy Admin modules. Both queries
+  // are restricted to approved/published content assigned to this section.
+  const results = await Promise.allSettled([
+    fetchPublishedSectionDocuments("modulesV2"),
+    fetchApprovedActiveSectionContent("modules")
+  ]);
 
-  documents.forEach(data => {
+  const combined = new Map();
+  const errors = [];
+  results.forEach((result, index) => {
+    if (result.status === "fulfilled") {
+      result.value.forEach(item => combined.set(`${index ? "modules" : "modulesV2"}/${item.id}`, item));
+    } else {
+      errors.push(result.reason);
+      console.error(`[CLASSWORK] ${index ? "Legacy modules" : "Modules V2"} read failed:`, {
+        code: result.reason?.code || "unknown",
+        message: result.reason?.message || String(result.reason),
+        uid: currentUser?.uid,
+        sectionId: studentSectionId,
+        projectId: db.app.options.projectId
+      });
+    }
+  });
+
+  if (!combined.size && errors.length === results.length) {
+    const error = new Error(errors.map(item => item.message || String(item)).join("; "));
+    error.code = errors[0]?.code || "permission-denied";
+    throw error;
+  }
+
+  combined.forEach((data, key) => {
     allActivities.push({
       id: data.id,
-      collectionName: "modulesV2",
+      collectionName: key.startsWith("modules/") ? "modules" : "modulesV2",
       category: "module",
-
-      title: data.title || "Untitled Learning Module",
-
-      description:
-        data.description ||
-        data.content ||
-        data.moduleDescription ||
-        "Open this learning module to view its resources.",
-
-      teacherName:
-        data.teacherName ||
-        data.assignedTeacherName ||
-        "Your Teacher",
-
-      date: toDate(
-        data.publishedAt ||
-        data.createdAt ||
-        data.updatedAt
-      ),
-
+      title: data.title || data.moduleName || "Untitled Learning Module",
+      description: data.description || data.content || data.moduleDescription || "Open this learning module to view its resources.",
+      teacherName: data.teacherName || data.assignedTeacherName || data.createdByName || "Your Teacher",
+      date: toDate(data.publishedAt || data.createdAt || data.updatedAt),
       status: "Published",
       original: data
     });
