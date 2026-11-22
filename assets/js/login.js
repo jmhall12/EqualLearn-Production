@@ -56,8 +56,13 @@ function redirectByRole(role) {
         "Opening your dashboard..."
     );
 
+    const isInsidePersistentHost = window.self !== window.top;
+    const nextLocation = isInsidePersistentHost
+        ? destination
+        : `app.html?path=${encodeURIComponent(`/${destination}`)}`;
+
     setTimeout(() => {
-        window.location.href = destination;
+        window.location.replace(nextLocation);
     }, 140);
 
 }

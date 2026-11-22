@@ -336,6 +336,13 @@ function keepLumiOnTop() {
 }
 
 function setupLumiCompanion() {
+  // The persistent app host (app.html) owns the single Lumi iframe.
+  // Child pages run inside its content frame and must not create a second one.
+  if (window.self !== window.top) {
+    document.getElementById("equallearn-lumi-frame")?.remove();
+    return;
+  }
+
   keepLumiOnTop();
 
   // Automatically resize Lumi when device orientation or viewport changes.
@@ -1114,208 +1121,6 @@ function setupLumiCompanion() {
         }
       }
 
-      /* -----------------------------------------------------
-         MOBILE TOPBAR — one compact, consistent row on every page.
-         EqualLearn sits beside the three-line menu button;
-         the current page title sits directly below the brand.
-      ----------------------------------------------------- */
-      .el-teacher-live-btn {
-        display: grid;
-        place-items: center;
-        flex: 0 0 42px;
-        width: 42px;
-        height: 42px;
-        padding: 0;
-        color: #fff;
-        background: linear-gradient(135deg, #8b68ee, #6847d1);
-        border: 1px solid rgba(167,139,250,.55);
-        border-radius: 13px;
-        text-decoration: none;
-        box-shadow: 0 5px 16px rgba(104,71,209,.22);
-        -webkit-tap-highlight-color: transparent;
-      }
-
-      .el-teacher-live-btn .el-live-camera-icon {
-        display: block;
-        width: 23px;
-        height: 23px;
-        flex: 0 0 23px;
-      }
-
-      .el-teacher-live-btn:focus-visible {
-        outline: 3px solid #c6b8ff;
-        outline-offset: 3px;
-      }
-
-      @media (max-width: 640px) {
-        .el-topbar {
-          display: flex !important;
-          flex-flow: row nowrap !important;
-          align-items: flex-start !important;
-          justify-content: space-between !important;
-          gap: 8px !important;
-          width: 100% !important;
-          min-width: 0 !important;
-          min-height: 66px !important;
-          height: auto !important;
-          padding: 10px 12px 9px !important;
-        }
-
-        .el-topbar-title {
-          display: grid !important;
-          grid-template-columns: 42px minmax(0, 1fr) !important;
-          grid-template-rows: 42px auto !important;
-          align-items: center !important;
-          align-content: start !important;
-          column-gap: 9px !important;
-          row-gap: 1px !important;
-          flex: 1 1 0 !important;
-          width: auto !important;
-          max-width: none !important;
-          min-width: 0 !important;
-          padding: 0 !important;
-          margin: 0 !important;
-        }
-
-        /* Make the nested title pieces addressable as grid items. */
-        .el-topbar-title > div {
-          display: contents !important;
-        }
-
-        .el-menu-toggle {
-          display: grid !important;
-          grid-column: 1 !important;
-          grid-row: 1 !important;
-          align-self: center !important;
-          justify-self: start !important;
-          flex: 0 0 42px !important;
-          width: 42px !important;
-          min-width: 42px !important;
-          height: 42px !important;
-          min-height: 42px !important;
-          margin: 0 !important;
-          padding: 0 !important;
-          place-items: center !important;
-        }
-
-        .el-page-kicker {
-          grid-column: 2 !important;
-          grid-row: 1 !important;
-          align-self: center !important;
-          min-width: 0 !important;
-          margin: 0 !important;
-          color: #b6a8ff !important;
-          font-size: 10px !important;
-          font-weight: 850 !important;
-          line-height: 1.1 !important;
-          letter-spacing: 1.55px !important;
-          white-space: nowrap !important;
-        }
-
-        .el-page-title {
-          grid-column: 2 !important;
-          grid-row: 2 !important;
-          align-self: start !important;
-          width: 100% !important;
-          max-width: 100% !important;
-          min-width: 0 !important;
-          margin: 0 !important;
-          font-size: 14px !important;
-          font-weight: 800 !important;
-          line-height: 1.2 !important;
-          letter-spacing: -.25px !important;
-          white-space: nowrap !important;
-          overflow: hidden !important;
-          text-overflow: ellipsis !important;
-        }
-
-        .el-topbar-actions {
-          display: flex !important;
-          flex: 0 0 auto !important;
-          align-self: start !important;
-          align-items: center !important;
-          justify-content: flex-end !important;
-          width: auto !important;
-          max-width: none !important;
-          min-width: 0 !important;
-          height: 42px !important;
-          gap: 6px !important;
-          margin: 0 0 0 auto !important;
-          padding: 0 !important;
-        }
-
-        .el-notification-wrap {
-          flex: 0 0 auto !important;
-        }
-
-        .el-notification-bell {
-          width: 38px !important;
-          height: 38px !important;
-          border-radius: 12px !important;
-        }
-
-        .el-teacher-live-btn {
-          flex-basis: 40px !important;
-          width: 40px !important;
-          height: 40px !important;
-          border-radius: 12px !important;
-        }
-
-        .el-user-pill {
-          display: flex !important;
-          flex: 0 0 auto !important;
-          align-items: center !important;
-          justify-content: center !important;
-          width: 40px !important;
-          min-width: 40px !important;
-          height: 40px !important;
-          padding: 3px !important;
-          margin: 0 !important;
-          border-radius: 12px !important;
-        }
-
-        .el-user-pill > div {
-          display: none !important;
-        }
-
-        .el-avatar {
-          display: grid !important;
-          width: 32px !important;
-          min-width: 32px !important;
-          height: 32px !important;
-        }
-      }
-
-      @media (max-width: 360px) {
-        .el-topbar {
-          gap: 5px !important;
-          padding-right: 9px !important;
-          padding-left: 9px !important;
-        }
-
-        .el-topbar-title {
-          grid-template-columns: 40px minmax(0, 1fr) !important;
-          column-gap: 7px !important;
-        }
-
-        .el-menu-toggle {
-          flex-basis: 40px !important;
-          width: 40px !important;
-          min-width: 40px !important;
-          height: 40px !important;
-          min-height: 40px !important;
-        }
-
-        .el-page-kicker {
-          font-size: 9px !important;
-          letter-spacing: 1.3px !important;
-        }
-
-        .el-page-title {
-          font-size: 13px !important;
-        }
-      }
-
       @media (prefers-reduced-motion: reduce) {
         .el-app-shell *,
         .el-sidebar *,
@@ -1459,26 +1264,15 @@ function setupLumiCompanion() {
           </div>
         ` : ""}
 
-        ${role === "teacher" ? `
+        ${role === "teacher" && currentPage === "dashboard.html" ? `
           <a
             class="el-teacher-live-btn"
             href="live.html"
             aria-label="Open live classroom"
-            title="Open live classroom">
-            <svg
-              class="el-live-camera-icon"
-              width="23"
-              height="23"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.9"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true">
-              <rect x="3" y="6" width="13" height="12" rx="2" />
-              <path d="m16 10 5-3v10l-5-3" />
-            </svg>
+            title="Start or join a live class"
+            style="display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:0 14px;border:1px solid rgba(167,139,250,.55);border-radius:14px;background:linear-gradient(135deg,#8b68ee,#6847d1);color:#fff;font-size:12px;font-weight:850;letter-spacing:.4px;text-decoration:none;white-space:nowrap;box-shadow:0 5px 16px rgba(104,71,209,.25);">
+            ${safeIcon("video", 17)}
+            <span>LIVE CALL</span>
           </a>
         ` : ""}
 
@@ -1968,7 +1762,29 @@ setupLumiCompanion();
      Existing page authentication remains responsible for access.
   ------------------------------------------------------- */
 
+  function ensurePersistentAppHost() {
+    // Direct visits to shell-managed pages are upgraded into the persistent
+    // host. Internal links then navigate only the child frame, not the host.
+    if (window.self !== window.top) return false;
+
+    const pathname = window.location.pathname
+      .replace(/\\/g, "/")
+      .toLowerCase();
+
+    if (pathname.endsWith("/app.html") || pathname === "/app.html") {
+      return false;
+    }
+
+    const currentRoute = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    const host = new URL("/app.html", window.location.origin);
+    host.searchParams.set("path", currentRoute);
+    window.location.replace(host.href);
+    return true;
+  }
+
   function initialize() {
+    if (ensurePersistentAppHost()) return;
+
     injectShellStyles();
     buildShell();
 
