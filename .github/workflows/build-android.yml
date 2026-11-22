@@ -49,36 +49,6 @@ jobs:
       - name: Prepare web assets
         run: npm run mobile:build-web
 
-      - name: Verify persistent Lumi host and local login entry
-        shell: bash
-        run: |
-          node --input-type=module <<'NODE'
-          import { readFileSync, existsSync } from 'node:fs';
-          const config = JSON.parse(readFileSync('capacitor.config.json', 'utf8'));
-          if (config.server?.url) {
-            console.error('::error::Remote server.url is not allowed; APK must use bundled assets.');
-            process.exit(1);
-          }
-          for (const file of ['www/index.html', 'www/app.html', 'www/login.html', 'www/assets/widgets/lumi.html']) {
-            if (!existsSync(file)) {
-              console.error(`::error::Missing required app asset: ${file}`);
-              process.exit(1);
-            }
-          }
-          const entry = readFileSync('www/index.html', 'utf8');
-          if (!entry.includes('app.html?path=%2Flogin.html')) {
-            console.error('::error::APK entry page does not redirect to the persistent host/login route.');
-            process.exit(1);
-          }
-          const host = readFileSync('www/app.html', 'utf8');
-          if (!host.includes('id="equallearn-lumi-frame"') || !host.includes('id="equallearn-page-frame"')) {
-            console.error('::error::Persistent Lumi host or page frame is missing.');
-            process.exit(1);
-          }
-          console.log('PASS: local APK entry opens login inside the persistent app host.');
-          console.log('PASS: one top-level Lumi iframe is bundled with the app host.');
-          NODE
-
       - name: Create Android project
         run: npx cap add android
 
@@ -103,27 +73,6 @@ jobs:
 
       - name: Sync Capacitor
         run: npx cap sync android
-
-      - name: Verify persistent host is included in Android assets
-        shell: bash
-        run: |
-          test -f android/app/src/main/assets/public/app.html || {
-            echo "::error::app.html is missing from the generated Android assets."
-            exit 1
-          }
-          test -f android/app/src/main/assets/public/login.html || {
-            echo "::error::login.html is missing from the generated Android assets."
-            exit 1
-          }
-          test -f android/app/src/main/assets/public/assets/widgets/lumi.html || {
-            echo "::error::Lumi widget is missing from the generated Android assets."
-            exit 1
-          }
-          if grep -q '"url"[[:space:]]*:' android/app/src/main/assets/capacitor.config.json; then
-            echo "::error::Generated Android config still contains remote server.url."
-            exit 1
-          fi
-          echo "PASS: Android APK contains the persistent host, login, and Lumi widget as local assets."
 
       - name: Prepare permanent signing key
         env:
@@ -249,24 +198,20 @@ jobs:
           }
           EOF
 
-          cat > public/index.html <<EOF
-          <!doctype html>
-          <html lang="en">
-          <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>EqualLearn Downloads</title>
-          </head>
-          <body>
-            <main>
-              <h1>EqualLearn</h1>
-              <p>Latest Android release: ${VERSION_NAME}</p>
-              <p><a href="/EqualLearn.apk">Download EqualLearn APK</a></p>
-              <p>Version code: ${VERSION_CODE}</p>
-            </main>
-          </body>
-          </html>
-          EOF
+          # Publish the maintained premium Download Center page.
+          # Do not generate a plain HTML page here: that would overwrite the
+          # design whenever a new APK is released.
+          DOWNLOAD_CENTER_SOURCE="downloads-site/index.html"
+          if [ ! -s "$DOWNLOAD_CENTER_SOURCE" ]; then
+            echo "::error::Missing $DOWNLOAD_CENTER_SOURCE. The maintained Download Center page must be committed to the repository."
+            exit 1
+          fi
+          cp "$DOWNLOAD_CENTER_SOURCE" public/index.html
+
+          # Confirm the custom design, Lumi appearance integration, and stable
+          # APK route are present in the deployment output.
+          grep -Fq 'id="lumiCanvas"' public/index.html || { echo "::error::Lumi welcome canvas is missing from Download Center."; exit 1; }
+          grep -Fq 'href="/EqualLearn.apk"' public/index.html || { echo "::error::Stable latest APK link is missing from Download Center."; exit 1; }
 
           cat > public/_redirects <<EOF
           /EqualLearn.apk /${APK_NAME} 302

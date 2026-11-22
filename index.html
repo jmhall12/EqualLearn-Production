@@ -2433,23 +2433,60 @@ body > .premium-footer {
 
 
   <script>
-    // Send visitors to the official EqualLearn Download Center.
-    // The Download Center serves the current APK through its stable release link.
-    const installAppButton = document.getElementById("installAppButton");
-    const installAppHint = document.getElementById("installAppHint");
-    const EQUALLEARN_DOWNLOAD_CENTER = "https://equallearn-downloads.pages.dev/";
+(() => {
+    "use strict";
 
-    if (installAppButton) {
-      installAppButton.addEventListener("click", () => {
+    const DOWNLOAD_CENTER = "https://equallearn-downloads.pages.dev/";
+
+    function initializeInstallButton() {
+        const installAppButton = document.getElementById("installAppButton");
+        const installAppHint = document.getElementById("installAppHint");
+
         if (installAppHint) {
-          installAppHint.textContent = "Opening the official EqualLearn Download Center...";
+            installAppHint.textContent =
+                "Download the latest official EqualLearn APK.";
         }
 
-        window.location.assign(EQUALLEARN_DOWNLOAD_CENTER);
-      });
+        if (!installAppButton) {
+            console.warn(
+                "[EqualLearn] Install button not found: #installAppButton"
+            );
+            return;
+        }
+
+        // Prevent accidental form submission.
+        if (installAppButton.tagName === "BUTTON") {
+            installAppButton.type = "button";
+        }
+
+        // Prevent duplicate event listeners.
+        if (installAppButton.dataset.installHandlerAttached === "true") {
+            return;
+        }
+
+        installAppButton.dataset.installHandlerAttached = "true";
+
+        installAppButton.addEventListener("click", (event) => {
+            event.preventDefault();
+
+            window.location.href = DOWNLOAD_CENTER;
+        });
+
+        console.info("[EqualLearn] APK Download Center initialized.");
     }
 
-  </script>
+    // Run only when the required HTML elements are available.
+    if (document.readyState === "loading") {
+        document.addEventListener(
+            "DOMContentLoaded",
+            initializeInstallButton,
+            { once: true }
+        );
+    } else {
+        initializeInstallButton();
+    }
+})();
+</script>
 
 <script type="module">
 import * as THREE from
