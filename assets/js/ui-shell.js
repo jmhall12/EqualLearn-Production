@@ -293,7 +293,13 @@ import {
 
 function keepLumiOnTop() {
   const frame = document.getElementById("equallearn-lumi-frame");
+  const pageIsDemo = document.documentElement?.dataset?.equallearnDemoReadOnly === "true";
 
+  if (pageIsDemo) {
+    frame?.remove();
+    document.getElementById("lumi-reopen")?.remove();
+    return;
+  }
   if (!frame) return;
 
   // Keep Lumi directly under BODY, outside dashboard containers.

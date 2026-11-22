@@ -275,6 +275,7 @@ const speech=document.getElementById("lumi-speech");
 const reduced=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 let hidden=false;
+let demoSuppressed=false;
 let dragState=null;
 let suppressNextCanvasClick=false;
 let autoMood="Idle";
@@ -335,14 +336,18 @@ function readSavedLumiFramePosition(parentWidth, parentHeight, frameWidth, frame
  }catch(_){return null;}
 }
 
+function isDemoSuppressed(){
+ try{return demoSuppressed || window.frameElement?.dataset?.equallearnDemoSuppressed === "true";}catch(_){return demoSuppressed;}
+}
 function syncLumiFrameSize(){
  try{
   const frame=window.frameElement;
   if(!frame)return;
-  if(frame.dataset.equallearnEvaluationHidden==="true"){
+  if(isDemoSuppressed()){
+   root.style.display="none";
    frame.style.setProperty("display","none","important");
-   frame.style.setProperty("pointer-events","none","important");
    frame.style.setProperty("visibility","hidden","important");
+   frame.style.setProperty("pointer-events","none","important");
    return;
   }
   if(hidden){
@@ -423,8 +428,8 @@ window.addEventListener("orientationchange",syncLumiFrameSize,{passive:true});
 try{
  const frame=window.frameElement;
  if(frame && window.parent && window.parent.document){
-  const frameObserver=new MutationObserver(()=>{if(!hidden)syncLumiFrameSize();});
-  frameObserver.observe(frame,{attributes:true,attributeFilter:["class","data-equallearn-evaluation-hidden"]});
+  const frameObserver=new MutationObserver(()=>{if(isDemoSuppressed())syncLumiFrameSize();else if(!hidden)syncLumiFrameSize();});
+  frameObserver.observe(frame,{attributes:true,attributeFilter:["class","data-equallearn-demo-suppressed"]});
   window.addEventListener("pagehide",()=>frameObserver.disconnect(),{once:true});
  }
 }catch(_){/* Cross-origin parents cannot be observed; initial sizing still applies. */}
@@ -1327,6 +1332,23 @@ let evaluationPage="overview";
  window.addEventListener("message",event=>{
   if(event.origin!==window.location.origin)return;
   const data=event.data||{};
+  if(data.type==="EQUALLEARN_DEMO_MODE"){
+   demoSuppressed=Boolean(data.active);
+   const frame=window.frameElement;
+   if(demoSuppressed){
+    hidden=true;
+    root.classList.add("lumi-hidden");
+    root.style.display="none";
+    frame?.style.setProperty("display","none","important");
+    frame?.style.setProperty("visibility","hidden","important");
+    frame?.style.setProperty("pointer-events","none","important");
+    try{window.parent.document.getElementById("lumi-reopen")?.remove();}catch(_){}
+   }else{
+    if(frame){frame.style.removeProperty("display");frame.style.removeProperty("visibility");frame.style.removeProperty("pointer-events");}
+    if(hidden){hidden=false;root.classList.remove("lumi-hidden");root.style.display="block";syncLumiFrameSize();resize();}
+   }
+   return;
+  }
   if(data.type==="EQUALLEARN_EVALUATION_CONTEXT")applyEvaluationContext(data);
   if(data.type==="EQUALLEARN_PAGE_CONTEXT")applyLumiPageContext(data.path,data.title);
   if(data.type==="EQUALLEARN_EVALUATION_NARRATION"&&typeof data.text==="string")say(data.text,9500);
@@ -1436,7 +1458,7 @@ function navigate(url){
 
  }
 
- function openAssistant(){root.classList.add("assistant-open");chatPanel.setAttribute("aria-hidden","false");syncLumiFrameSize();setSuggestions(suggestionsForRole());setTimeout(()=>chatInput.focus(),120)}
+ function openAssistant(){if(isDemoSuppressed())return;root.classList.add("assistant-open");chatPanel.setAttribute("aria-hidden","false");syncLumiFrameSize();setSuggestions(suggestionsForRole());setTimeout(()=>chatInput.focus(),120)}
 
  function closeAssistant(){if(root.classList.contains("game-open"))closeGames();root.classList.remove("assistant-open");chatPanel.setAttribute("aria-hidden","true");syncLumiFrameSize()}
 
@@ -1802,6 +1824,14 @@ dragHitbox.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key=
 
  document.getElementById("lumi-hide").addEventListener("click",()=>{
   if(hidden)return;
+  if(isDemoSuppressed()){
+   hidden=true;
+   root.classList.add("lumi-hidden");
+   root.style.display="none";
+   const frame=window.frameElement;
+   frame?.style.setProperty("display","none","important");
+   return;
+  }
   hidden=true;
   root.classList.add("lumi-hidden");
   root.style.display="none";
@@ -1834,7 +1864,7 @@ dragHitbox.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key=
  });
 
  function restoreLumi(message="Yay! You called me! I'm back! 💜"){
-  if(!hidden)return;
+  if(isDemoSuppressed() || !hidden)return;
   hidden=false;
   root.classList.remove("lumi-hidden");
   root.style.display="block";
@@ -2055,6 +2085,17 @@ dragHitbox.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key=
   // Start every page visit hidden; the host-page ✦ Lumi launcher is the opt-in.
   // This also removes the full-screen iframe from hit-testing until opened.
   requestAnimationFrame(()=>{
+   if(isDemoSuppressed()){
+    hidden=true;
+    root.classList.add("lumi-hidden");
+    root.style.display="none";
+    try{window.parent.document.getElementById("lumi-reopen")?.remove();}catch(_){}
+    const frame=window.frameElement;
+    frame?.style.setProperty("display","none","important");
+    frame?.style.setProperty("visibility","hidden","important");
+    frame?.style.setProperty("pointer-events","none","important");
+    return;
+   }
    const hideButton=document.getElementById("lumi-hide");
    if(hideButton && !hidden) hideButton.click();
   });

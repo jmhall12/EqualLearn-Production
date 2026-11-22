@@ -3,6 +3,7 @@ import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
 const pageFrame = document.getElementById("equallearn-page-frame");
+const lumiCompanionFrame = document.getElementById("equallearn-lumi-frame");
 const ROLE_NAMES = { admin: "Administrator", teacher: "Teacher", student: "Student" };
 const ROLE_HOME = { admin: "/admin/dashboard.html", teacher: "/teacher/dashboard.html", student: "/student/dashboard.html" };
 const GUIDE = {
@@ -64,39 +65,18 @@ let welcomePrimed = false;
 let voiceQueue = Promise.resolve();
 let nativeTtsPromise = null;
 let routeGuardBusy = false;
+let demoCompanionSuppressed = false;
+let browserSpeechQueue = [];
+let browserSpeechCurrent = "";
+let browserSpeechActive = false;
+let browserSpeechSession = 0;
+let browserSpeechStartedAt = 0;
+let browserSpeechRetryCount = 0;
 const TTS_URL = "https://esm.sh/@capacitor-community/text-to-speech@8.0.2?bundle";
 
 function isDemo(profile) {
   const value = profile?.demoReadOnly;
   return value === true || (typeof value === "string" && value.trim().toLowerCase() === "true");
-}
-
-// The regular 3D Lumi companion and the Evaluation Guide are two separate
-// interfaces. During a demo session, keep only the guided evaluation toolbar
-// visible so the mascot/chat iframe cannot overlap the real application.
-function setRegularLumiCompanionHidden(hidden) {
-  const frame = document.getElementById("equallearn-lumi-frame");
-  const reopen = document.getElementById("lumi-reopen");
-  if (hidden) {
-    reopen?.remove();
-    if (frame) {
-      frame.dataset.equallearnEvaluationHidden = "true";
-      frame.setAttribute("aria-hidden", "true");
-      frame.style.setProperty("display", "none", "important");
-      frame.style.setProperty("visibility", "hidden", "important");
-      frame.style.setProperty("pointer-events", "none", "important");
-    }
-    document.documentElement.classList.add("equallearn-evaluation-active");
-    return;
-  }
-  document.documentElement.classList.remove("equallearn-evaluation-active");
-  if (frame) {
-    delete frame.dataset.equallearnEvaluationHidden;
-    frame.removeAttribute("aria-hidden");
-    frame.style.removeProperty("display");
-    frame.style.removeProperty("visibility");
-    frame.style.removeProperty("pointer-events");
-  }
 }
 
 // Remove the obsolete separate Evaluation Mode entry button wherever older
@@ -154,25 +134,165 @@ function loadNativeTts() {
   }
   return nativeTtsPromise;
 }
-function browserSpeak(text, interrupt = false) {
+function splitSpeechText(value, maxLength = 175) {
+  const text = String(value || "").replace(/\s+/g, " ").trim();
+  if (!text) return [];
+  const sentences = text.match(/[^.!?]+[.!?]?/g) || [text];
+  const chunks = [];
+  let current = "";
+  for (const rawSentence of sentences) {
+    const sentence = rawSentence.trim();
+    if (!sentence) continue;
+    if ((current + " " + sentence).trim().length <= maxLength) {
+      current = (current + " " + sentence).trim();
+      continue;
+    }
+    if (current) chunks.push(current);
+    current = "";
+    if (sentence.length <= maxLength) {
+      current = sentence;
+      continue;
+    }
+    const words = sentence.split(/\s+/);
+    for (const word of words) {
+      if (!current) current = word;
+      else if ((current + " " + word).length <= maxLength) current += " " + word;
+      else { chunks.push(current); current = word; }
+    }
+  }
+  if (current) chunks.push(current);
+  return chunks;
+}
+function pumpBrowserSpeech(session = browserSpeechSession) {
   const synth = window.speechSynthesis;
-  if (!synth || !window.SpeechSynthesisUtterance) return false;
+  if (!synth || !window.SpeechSynthesisUtterance || session !== browserSpeechSession || browserSpeechActive || !voiceEnabled) return;
+  const text = browserSpeechQueue.shift();
+  if (!text) { browserSpeechCurrent = ""; return; }
+  browserSpeechCurrent = text;
+  browserSpeechActive = true;
+  browserSpeechStartedAt = Date.now();
+  let settled = false;
+  const finish = (retry = false) => {
+    if (settled || session !== browserSpeechSession) return;
+    settled = true;
+    browserSpeechActive = false;
+    if (retry && browserSpeechRetryCount < 3) {
+      browserSpeechQueue.unshift(text);
+      browserSpeechRetryCount += 1;
+    } else {
+      browserSpeechCurrent = "";
+      browserSpeechRetryCount = 0;
+    }
+    window.setTimeout(() => pumpBrowserSpeech(session), retry ? 380 : 120);
+  };
   try {
-    if (interrupt) synth.cancel();
-    const utterance = new SpeechSynthesisUtterance(String(text));
+    const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-US";
     utterance.rate = 0.96;
     utterance.pitch = 1.02;
     utterance.volume = 1;
+    utterance.onend = () => finish(false);
+    utterance.onerror = event => {
+      const retryable = ["interrupted", "canceled", "audio-busy", "network"].includes(event?.error);
+      finish(retryable);
+    };
     synth.speak(utterance);
+  } catch (error) {
+    console.warn("[EqualLearn Evaluation] Browser TTS error:", error);
+    finish(false);
+  }
+}
+function browserSpeak(text, interrupt = false) {
+  const synth = window.speechSynthesis;
+  if (!synth || !window.SpeechSynthesisUtterance) return false;
+  try {
+    if (interrupt) {
+      browserSpeechSession += 1;
+      browserSpeechQueue = [];
+      browserSpeechCurrent = "";
+      browserSpeechActive = false;
+      browserSpeechRetryCount = 0;
+      synth.cancel();
+    }
+    const chunks = splitSpeechText(text);
+    if (!chunks.length) return false;
+    browserSpeechQueue.push(...chunks);
+    // Start the first segment synchronously when called from the Sign in tap.
+    pumpBrowserSpeech(browserSpeechSession);
     return true;
   } catch (error) {
     console.warn("[EqualLearn Evaluation] Browser TTS error:", error);
     return false;
   }
 }
+function recoverBrowserSpeech() {
+  if (!voiceEnabled || !window.speechSynthesis) return;
+  const synth = window.speechSynthesis;
+  try {
+    if (synth.paused) {
+      synth.resume();
+      return;
+    }
+    // Some mobile browsers interrupt Web Speech when the on-screen keyboard
+    // opens. Re-queue only the active short segment if playback truly vanished.
+    if (browserSpeechActive && browserSpeechCurrent && !synth.speaking &&
+        Date.now() - browserSpeechStartedAt > 1400) {
+      const current = browserSpeechCurrent;
+      browserSpeechSession += 1; // invalidate a late onend/onerror from the lost utterance
+      browserSpeechActive = false;
+      browserSpeechCurrent = "";
+      browserSpeechQueue.unshift(current);
+      try { synth.cancel(); } catch (_) {}
+      pumpBrowserSpeech(browserSpeechSession);
+      return;
+    }
+    if (!browserSpeechActive && browserSpeechQueue.length) pumpBrowserSpeech(browserSpeechSession);
+  } catch (error) {
+    console.debug("[EqualLearn Evaluation] Mobile speech recovery deferred:", error);
+  }
+}
+function installSpeechRecovery(targetDocument) {
+  if (!targetDocument || targetDocument.__equalLearnSpeechRecovery) return;
+  targetDocument.__equalLearnSpeechRecovery = true;
+  targetDocument.addEventListener("focusin", () => window.setTimeout(recoverBrowserSpeech, 250), true);
+  targetDocument.addEventListener("pointerup", () => window.setTimeout(recoverBrowserSpeech, 180), { capture: true, passive: true });
+}
+function setDemoCompanionSuppressed(active) {
+  const frame = lumiCompanionFrame;
+  const next = Boolean(active);
+  const wasSuppressed = demoCompanionSuppressed || frame?.dataset.equallearnDemoSuppressed === "true";
+  demoCompanionSuppressed = next;
+  if (!frame) return;
+  if (next) {
+    frame.dataset.equallearnDemoSuppressed = "true";
+    frame.style.setProperty("display", "none", "important");
+    frame.style.setProperty("visibility", "hidden", "important");
+    frame.style.setProperty("pointer-events", "none", "important");
+    document.getElementById("lumi-reopen")?.remove();
+  } else if (wasSuppressed) {
+    delete frame.dataset.equallearnDemoSuppressed;
+    frame.style.removeProperty("display");
+    frame.style.removeProperty("visibility");
+    frame.style.removeProperty("pointer-events");
+    document.getElementById("lumi-reopen")?.remove();
+  }
+  if (next || wasSuppressed) {
+    try {
+      frame.contentWindow?.postMessage({ type: "EQUALLEARN_DEMO_MODE", active: next }, window.location.origin);
+    } catch (_) {}
+  }
+  if (pageFrame?.contentDocument?.documentElement) {
+    pageFrame.contentDocument.documentElement.dataset.equallearnDemoReadOnly = String(next);
+    if (next) pageFrame.contentDocument.getElementById("equallearn-lumi-frame")?.remove();
+  }
+}
 async function stopVoice() {
   voiceQueue = Promise.resolve();
+  browserSpeechSession += 1;
+  browserSpeechQueue = [];
+  browserSpeechCurrent = "";
+  browserSpeechActive = false;
+  browserSpeechRetryCount = 0;
   try { window.speechSynthesis?.cancel?.(); } catch (_) {}
   try {
     const tts = await loadNativeTts();
@@ -333,10 +453,10 @@ function enforceLiveRoleRoute() {
 }
 async function exitEvaluation() {
   await stopVoice();
+  setDemoCompanionSuppressed(false);
   try { await signOut(auth); } catch (error) { console.warn("[EqualLearn Evaluation] Sign out warning:", error); }
   sessionStorage.removeItem("equallearn.evaluationMode");
   demoProfile = null;
-  setRegularLumiCompanionHidden(false);
   lastPageKey = "";
   welcomePrimed = false;
   document.getElementById("equallearn-eval-toolbar")?.remove();
@@ -348,8 +468,8 @@ window.EqualLearnEvaluationVoice = {
   primeFromGesture,
   setDemoProfile(role, profile = {}) {
     if (ROLE_HOME[role]) {
+      setDemoCompanionSuppressed(true);
       demoProfile = { role, name: profile.fullname || profile.fullName || "Evaluator" };
-      setRegularLumiCompanionHidden(true);
       lastPageKey = "";
       ensureToolbar();
       const info = getPageInfo();
@@ -357,8 +477,8 @@ window.EqualLearnEvaluationVoice = {
     }
   },
   clearDemoProfile() {
+    setDemoCompanionSuppressed(false);
     demoProfile = null;
-    setRegularLumiCompanionHidden(false);
     lastPageKey = "";
     welcomePrimed = false;
     document.getElementById("equallearn-eval-toolbar")?.remove();
@@ -411,6 +531,11 @@ function attachPageRouteObservers() {
 }
 
 pageFrame?.addEventListener("load", () => {
+  installSpeechRecovery(pageFrame.contentDocument);
+  if (demoProfile && pageFrame.contentDocument?.documentElement) {
+    pageFrame.contentDocument.documentElement.dataset.equallearnDemoReadOnly = "true";
+    pageFrame.contentDocument.getElementById("equallearn-lumi-frame")?.remove();
+  }
   // The obsolete CTA is removed on every app page, including the public/login
   // screens before a demo user authenticates.
   observeEvaluationEntryCTA();
@@ -422,6 +547,15 @@ pageFrame?.addEventListener("load", () => {
 // Also handle the case where the inner page finished loading before this
 // module was evaluated by the persistent app shell.
 observeEvaluationEntryCTA();
+installSpeechRecovery(document);
+window.addEventListener("focus", () => window.setTimeout(recoverBrowserSpeech, 220));
+window.addEventListener("pageshow", () => window.setTimeout(recoverBrowserSpeech, 220));
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") window.setTimeout(recoverBrowserSpeech, 180);
+});
+if (window.visualViewport) {
+  window.visualViewport.addEventListener("resize", () => window.setTimeout(recoverBrowserSpeech, 280), { passive: true });
+}
 
 // Some EqualLearn screens switch content without a full document navigation.
 // This lightweight route check catches those transitions as well.
@@ -431,8 +565,8 @@ setInterval(() => {
 
 onAuthStateChanged(auth, async user => {
   if (!user) {
+    setDemoCompanionSuppressed(false);
     demoProfile = null;
-    setRegularLumiCompanionHidden(false);
     lastPageKey = "";
     welcomePrimed = false;
     document.getElementById("equallearn-eval-toolbar")?.remove();
@@ -446,8 +580,8 @@ onAuthStateChanged(auth, async user => {
     const profile = snapshot.data();
     const role = String(profile.role || "").trim().toLowerCase();
     if (isDemo(profile) && String(profile.status || "").trim().toLowerCase() === "active" && ROLE_HOME[role]) {
+      setDemoCompanionSuppressed(true);
       demoProfile = { role, name: profile.fullname || profile.fullName || "Evaluator" };
-      setRegularLumiCompanionHidden(true);
       sessionStorage.setItem("equallearn.evaluationMode", JSON.stringify({ role, startedAt: Date.now() }));
       ensureToolbar();
       const info = getPageInfo();
@@ -457,8 +591,8 @@ onAuthStateChanged(auth, async user => {
       return;
     }
     // A normal user session must never inherit a stale evaluation overlay.
+    setDemoCompanionSuppressed(false);
     demoProfile = null;
-    setRegularLumiCompanionHidden(false);
     lastPageKey = "";
     welcomePrimed = false;
     sessionStorage.removeItem("equallearn.evaluationMode");

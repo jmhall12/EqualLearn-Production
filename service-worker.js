@@ -1,5 +1,5 @@
 
-const CACHE = "equallearn-shell-v13-single-lumi-evaluation";
+const CACHE = "equallearn-shell-v13-lumi-mobile-voice-fix";
 
 const CORE = [
     "./",
@@ -21,8 +21,9 @@ const CORE = [
     "./assets/js/firebase-config.js",
     "./assets/js/login.js",
     "./assets/js/evaluation-runtime.js",
-    "./assets/js/evaluation-readonly.js",
-    "./assets/widgets/lumi.html"
+    "./assets/js/ui-shell.js",
+    "./assets/widgets/lumi.html",
+    "./assets/js/evaluation-readonly.js"
 ];
 
 const OFFLINE_MESSAGE = `
