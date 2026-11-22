@@ -1,5 +1,5 @@
 
-const CACHE = "equallearn-shell-v12-auto-demo-login-mobile-tts-v2";
+const CACHE = "equallearn-shell-v12-auto-demo-login-mobile-tts-v2-single-lumi-host-v3-direct-guide-v4-demo-narrator-recovery-v5";
 
 const CORE = [
     "./",
@@ -7,7 +7,6 @@ const CORE = [
     "./login.html",
     "./register.html",
     "./manifest.webmanifest",
-    "./app.html",
     "./evaluation.html",
 
     "./assets/css/equallearn.css",
@@ -20,7 +19,7 @@ const CORE = [
     "./assets/js/auth.js",
     "./assets/js/firebase-config.js",
     "./assets/js/login.js",
-    "./assets/js/evaluation-runtime.js",
+  "./assets/js/evaluation-direct-runtime.js",
     "./assets/js/evaluation-readonly.js"
 ];
 
