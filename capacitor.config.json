@@ -3,7 +3,7 @@
   "appName": "EqualLearn",
   "webDir": "www",
   "server": {
-    "url": "https://equallearn.pages.dev",
+    "url": "https://equallearn.pages.dev/login.html",
     "cleartext": false,
     "androidScheme": "https"
   },
