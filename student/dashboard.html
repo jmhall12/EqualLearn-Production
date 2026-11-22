@@ -61,40 +61,13 @@
     <link rel="stylesheet" href="../assets/css/responsive-auto-fit.css">
   <link rel="stylesheet" href="../assets/css/forced-dark-theme.css?v=1">
     <link rel="stylesheet" href="../assets/css/student-dashboard-overview.css">
+    <link rel="stylesheet" href="../assets/css/student-dashboard-performance.css">
 
-<style id="student-dashboard-performance">
-  .lumi-deferred-launcher {
-    position: fixed !important;
-    right: max(12px, env(safe-area-inset-right)) !important;
-    bottom: max(12px, env(safe-area-inset-bottom)) !important;
-    z-index: 2147483646 !important;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    min-height: 42px;
-    padding: 0 15px;
-    border: 1px solid rgba(255,255,255,.78);
-    border-radius: 24px;
-    color: #fff;
-    background: linear-gradient(135deg,#9c7cf4,#7051dc);
-    box-shadow: 0 8px 24px rgba(74,52,153,.3);
-    font: 800 12px "DM Sans",sans-serif;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .lumi-deferred-launcher svg { width: 17px; height: 17px; flex: 0 0 17px; }
-  .lumi-deferred-launcher:disabled { opacity: .72; cursor: wait; }
-  .lumi-deferred-launcher:focus-visible { outline: 3px solid #c6b8ff; outline-offset: 3px; }
-  @media (max-width: 600px) {
-    .lumi-deferred-launcher { right: 10px !important; bottom: max(10px, env(safe-area-inset-bottom)) !important; min-height: 40px; padding-inline: 13px; }
-  }
-  @media (prefers-reduced-motion: reduce) { .lumi-deferred-launcher { transition: none; } }
-</style>
+
 
 </head>
 
-<body>
+<body data-disable-lumi="true" data-el-performance="lite">
 
 <div class="el-dashboard">
     <!-- Keeps the student profile name available for UI Shell name sync without a duplicate greeting header. -->
@@ -157,8 +130,5 @@
 <script type="module" src="../assets/js/pwa.js"></script>
 <script type="module" src="../assets/js/theme.js"></script>
 
-<script defer src="../assets/js/lazy-lumi.js"></script>
-
 </body>
 </html>
-

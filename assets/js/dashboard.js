@@ -11,6 +11,9 @@ import {
     collection,
     query,
     where,
+    orderBy,
+    limit,
+    getCountFromServer,
     onSnapshot,
     updateDoc,
     serverTimestamp
@@ -35,6 +38,12 @@ let resolvedStudentDisplayName = "Student";
 
 let unsubscribeNotifications = null;
 let notificationListenerStarted = false;
+let unreadCountRequestId = 0;
+
+// Keep the live dropdown deliberately small on mobile devices. The unread
+// badge is counted separately with a Firestore aggregation query, so the app
+// does not need to download every historical notification document.
+const STUDENT_NOTIFICATION_FEED_LIMIT = 25;
 
 // ======================================================
 // DEVICE-LEVEL NOTIFICATIONS
@@ -141,6 +150,7 @@ onAuthStateChanged(auth, async user => {
     }
 
     notificationListenerStarted = false;
+    unreadCountRequestId += 1;
 
     if (!user) {
         window.location.href = "../login.html";
@@ -382,6 +392,45 @@ function getNotificationDate(data) {
 // REAL-TIME STUDENT NOTIFICATIONS
 // ======================================================
 
+function setUnreadNotificationBadge(count) {
+    if (!notificationCount) return;
+
+    const safeCount = Math.max(0, Number(count) || 0);
+    setText(notificationCount, safeCount > 99 ? "99+" : String(safeCount));
+    notificationCount.hidden = safeCount === 0;
+    notificationCount.title = `${safeCount} unread notification${safeCount === 1 ? "" : "s"}`;
+}
+
+async function refreshUnreadNotificationCount(uid, fallbackCount = 0) {
+    const requestId = ++unreadCountRequestId;
+
+    try {
+        // Firestore performs this count on the server. It returns one number
+        // instead of downloading every unread notification document.
+        const unreadQuery = query(
+            collection(db, "notifications"),
+            where("userId", "==", uid),
+            where("read", "==", false)
+        );
+
+        const aggregate = await getCountFromServer(unreadQuery);
+
+        // Ignore late responses if the account changed while the request ran.
+        if (requestId !== unreadCountRequestId || auth.currentUser?.uid !== uid) {
+            return;
+        }
+
+        setUnreadNotificationBadge(aggregate.data().count);
+    } catch (error) {
+        // Keep the dashboard usable if the aggregate index is not ready yet.
+        // The fallback count covers only the latest visible feed items.
+        console.warn("Unread notification aggregate unavailable; using recent-feed count:", error);
+        if (requestId === unreadCountRequestId && auth.currentUser?.uid === uid) {
+            setUnreadNotificationBadge(fallbackCount);
+        }
+    }
+}
+
 function listenToNotifications(uid) {
 
     if (!notificationList || !notificationCount) {
@@ -401,14 +450,14 @@ function listenToNotifications(uid) {
 
     notificationList.appendChild(loading);
 
-    // IMPORTANT:
-    // No limit(50) and no orderBy.
-    // All notification documents belonging to this student
-    // are loaded, then sorted locally.
-
+    // Fetch only the newest notifications for the dropdown. The previous
+    // unbounded listener downloaded the student's entire notification history
+    // and sorted it on the phone, which could stall lower-memory devices.
     const notificationQuery = query(
         collection(db, "notifications"),
-        where("userId", "==", uid)
+        where("userId", "==", uid),
+        orderBy("createdAt", "desc"),
+        limit(STUDENT_NOTIFICATION_FEED_LIMIT)
     );
 
     unsubscribeNotifications = onSnapshot(
@@ -428,12 +477,13 @@ function listenToNotifications(uid) {
                 );
             });
 
-            const unreadCount = notifications.filter(
-                item => item.read !== true
+            // Show an immediate local count while the server aggregate runs.
+            // The aggregate keeps the badge accurate without loading old docs.
+            const recentUnreadCount = notifications.filter(
+                item => item.read === false
             ).length;
-
-            setText(notificationCount, unreadCount > 99 ? "99+" : String(unreadCount));
-            notificationCount.hidden = unreadCount === 0;
+            setUnreadNotificationBadge(recentUnreadCount);
+            void refreshUnreadNotificationCount(uid, recentUnreadCount);
 
             // Toast only for newly arriving records after
             // the first snapshot has finished loading.
@@ -457,10 +507,9 @@ function listenToNotifications(uid) {
 
             notificationListenerStarted = true;
 
-            // Keep the real-time unread count based on the full snapshot, but
-            // limit dropdown DOM nodes to the 30 most recent notifications.
-            // This prevents large historical feeds from slowing mobile rendering.
-            renderNotifications(notifications.slice(0, 30));
+            // The live query is already limited to the newest 25 documents.
+            // This bounds Firestore downloads, sorting work, and dropdown DOM.
+            renderNotifications(notifications);
 
         },
 
