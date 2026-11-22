@@ -16,10 +16,6 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
 
 import {
-    collection,
-    query,
-    where,
-    getDocs,
     doc,
     setDoc,
     getDoc,
@@ -43,127 +39,37 @@ const functions = getFunctions(app, "asia-southeast1");
 export async function registerUser(userData) {
     try {
         const email = String(userData.email || "").trim().toLowerCase();
-        const studentNumber = String(userData.studentNumber || "")
-            .trim()
-            .toUpperCase();
-        const fullname = String(userData.fullname || "").trim();
-        const course = String(userData.course || "").trim().toUpperCase();
-        const yearLevel = String(userData.yearLevel || "").trim().toUpperCase();
         const password = String(userData.password || "");
 
-        if (!email || !studentNumber || !fullname || !course || !yearLevel || !password) {
-            return {
-                success: false,
-                message: "Please complete all required fields."
-            };
+        if (!email || !password) {
+            return { success: false, message: "Please provide your email address and password." };
         }
-
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            return {
-                success: false,
-                message: "Please enter a valid email address."
-            };
+            return { success: false, message: "Please enter a valid email address." };
         }
-
         if (password.length < 6) {
-            return {
-                success: false,
-                message: "Password must contain at least 6 characters."
-            };
+            return { success: false, message: "Password must contain at least 6 characters." };
         }
 
-        const cohort = studentNumber.substring(0, 2);
-
-        // Check duplicate student number
-        const usersRef = collection(db, "users");
-
-        const studentQuery = query(
-            usersRef,
-            where("studentNumber", "==", studentNumber)
-        );
-
-        const studentSnapshot = await getDocs(studentQuery);
-
-        if (!studentSnapshot.empty) {
-            return {
-                success: false,
-                message: "Student ID is already registered."
-            };
-        }
-
-        // Create Firebase Authentication account
-        const credential = await createUserWithEmailAndPassword(
-            auth,
-            email,
-            password
-        );
-
+        // Student self-registration creates an identity shell only.
+        // Student ID, course, year level, and section are assigned by an administrator.
+        const credential = await createUserWithEmailAndPassword(auth, email, password);
         const uid = credential.user.uid;
 
-        // Find or create class group
-        const classGroupsRef = collection(db, "classGroups");
-
-        const classGroupQuery = query(
-            classGroupsRef,
-            where("cohort", "==", cohort),
-            where("course", "==", course)
-        );
-
-        const classGroupSnapshot = await getDocs(classGroupQuery);
-
-        let classGroupId;
-
-        if (!classGroupSnapshot.empty) {
-            classGroupId = classGroupSnapshot.docs[0].id;
-        } else {
-            classGroupId = `${cohort}_${course}_A`;
-
-            await setDoc(
-                doc(db, "classGroups", classGroupId),
-                {
-                    cohort,
-                    course,
-                    section: "A",
-                    name: `${cohort}${course}-A`,
-                    status: "active",
-                    createdAt: serverTimestamp()
-                }
-            );
-        }
-
-        // Create student profile
-        await setDoc(
-            doc(db, "users", uid),
-            {
-                uid,
-                fullname,
-                studentNumber,
-                email,
-                yearLevel,
-                course,
-                cohort,
-                classGroupId,
-
-                role: "student",
-                status: "active",
-
-                profileImage: "",
-                department: "",
-
-                createdAt: serverTimestamp(),
-                lastLogin: serverTimestamp()
-            }
-        );
-
-        return {
-            success: true,
+        await setDoc(doc(db, "users", uid), {
             uid,
-            classGroupId
-        };
+            email,
+            fullname: "",
+            role: "student",
+            status: "active",
+            provider: "email",
+            createdAt: serverTimestamp(),
+            lastLogin: serverTimestamp()
+        });
 
+        return { success: true, uid };
     } catch (error) {
         console.error("REGISTER ERROR:", error);
-
         return {
             success: false,
             message: getFriendlyAuthError(error),
@@ -173,7 +79,6 @@ export async function registerUser(userData) {
 }
 
 
-// ======================================================
 // LOGIN
 // ======================================================
 
@@ -223,47 +128,48 @@ export async function loginUser(email, password, rememberDevice = true) {
         }
 
         const userData = snapshot.data();
-        const allowedRoles = ["admin", "teacher", "student"];
 
-        if (!allowedRoles.includes(userData.role)) {
+        // Keep authentication role handling consistent with login.js.
+        // Older teacher profiles may use "Teacher" or "instructor".
+        const storedRole = String(userData.role || "").trim().toLowerCase();
+        const normalizedRole = storedRole === "instructor" ? "teacher" : storedRole;
+        const normalizedStatus = String(userData.status || "").trim().toLowerCase();
+        const allowedRoles = new Set(["admin", "teacher", "student"]);
+
+        console.info("[LOGIN] Account profile resolved:", {
+            role: normalizedRole || "missing",
+            status: normalizedStatus || "missing",
+            demoReadOnly: userData.demoReadOnly === true || String(userData.demoReadOnly).toLowerCase() === "true"
+        });
+
+        if (!allowedRoles.has(normalizedRole)) {
             await signOut(auth);
-
             return {
                 success: false,
-                message: "Invalid account role. Please contact the administrator."
+                message: `Invalid account role (${userData.role || "not set"}). Please ask an administrator to set the account role to Admin, Teacher, or Student.`,
+                code: "profile/invalid-role"
             };
         }
 
-        if (userData.status !== "active") {
+        if (normalizedStatus !== "active") {
             await signOut(auth);
-
             return {
                 success: false,
-                message: "Your account is inactive. Please contact the administrator."
+                message: `This account is not active (status: ${userData.status || "not set"}). Please ask an administrator to activate it.`,
+                code: "profile/inactive"
             };
         }
 
-        // Read-only evaluator accounts must never attempt a profile write.
-        // Their Firestore rules intentionally deny writes, so skipping this
-        // optional activity timestamp avoids a misleading permission-denied log.
-        const demoFlag = userData.demoReadOnly;
-        const isReadOnlyDemo = demoFlag === true
-            || (typeof demoFlag === "string" && demoFlag.trim().toLowerCase() === "true");
-
-        if (isReadOnlyDemo) {
-            console.info("[LOGIN] Read-only demo account detected; lastLogin write skipped.");
-        } else {
-            // Optional activity update: must never block authentication.
-            try {
-                await updateDoc(userRef, {
-                    lastLogin: serverTimestamp()
-                });
-            } catch (error) {
-                console.warn(
-                    "[LOGIN] Could not update lastLogin:",
-                    error.code || error.message
-                );
-            }
+        // Optional activity update: must not block login.
+        try {
+            await updateDoc(userRef, {
+                lastLogin: serverTimestamp()
+            });
+        } catch (error) {
+            console.warn(
+                "[LOGIN] Could not update lastLogin:",
+                error.code || error.message
+            );
         }
 
         console.log("[LOGIN] Successful:", userData.role);
@@ -271,8 +177,8 @@ export async function loginUser(email, password, rememberDevice = true) {
         return {
             success: true,
             uid,
-            user: userData,
-            role: userData.role
+            user: { ...userData, role: normalizedRole, status: normalizedStatus },
+            role: normalizedRole
         };
 
     } catch (error) {
