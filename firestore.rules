@@ -12,19 +12,6 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // A demo account is marked in users/{uid}. Accept boolean true as the
-    // correct Firestore type and the legacy string "true" for existing demo
-    // profiles. Demo accounts are excluded from all production role helpers.
-    function isDemoUser() {
-      return signedIn()
-        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.keys().hasAny(["demoReadOnly"])
-        && (
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.demoReadOnly == true
-          || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.demoReadOnly == "true"
-        );
-    }
-
     function userExists() {
       return signedIn()
         && exists(
@@ -38,9 +25,14 @@ service cloud.firestore {
       ).data;
     }
 
+    function isDemoReadOnly() {
+      return userExists()
+        && myProfile().keys().hasAny(["demoReadOnly"])
+        && (myProfile().demoReadOnly == true || myProfile().demoReadOnly == "true");
+    }
+
     function isAdmin() {
       return userExists()
-        && !isDemoUser()
         && myProfile().role in ["admin", "Admin", "ADMIN"]
         && myProfile().status != "inactive";
     }
@@ -58,7 +50,6 @@ service cloud.firestore {
  
 function isTeacher() {
   return userExists()
-    && !isDemoUser()
     && myProfile().role in ["teacher", "Teacher", "TEACHER"]
     && myProfile().status in ["active", "Active", "ACTIVE"];
 }
@@ -67,7 +58,6 @@ function isTeacher() {
    
 function isStudent() {
   return userExists()
-    && !isDemoUser()
     && myProfile().role in ["student", "Student", "STUDENT"]
     && myProfile().status in ["active", "Active", "ACTIVE"];
 }
@@ -177,23 +167,23 @@ function isStudent() {
           && assignedTeacher(resource.data.sectionId)
         );
 
-      allow create: if (isAdmin()
+      allow create: if !isDemoReadOnly() && (isAdmin()
         || (
           isOwner(userId)
           && request.resource.data.role in ["student", "Student", "STUDENT"]
           && request.resource.data.status == "active"
-        )) && !isDemoUser();
+        ));
 
-      allow update: if (isOwner(userId)
+      allow update: if !isDemoReadOnly() && (isOwner(userId)
         && request.resource.data.diff(resource.data)
           .affectedKeys()
           .hasOnly([
             "lastLogin",
             "profileUpdatedAt",
             "updatedAt"
-          ])) && !isDemoUser();
+          ]));
 
-      allow update: if (isAdmin()
+      allow update: if !isDemoReadOnly() && (isAdmin()
         || (
           isOwner(userId)
           && resource.data.role in ["student", "Student", "STUDENT"]
@@ -215,9 +205,9 @@ function isStudent() {
               "lastLogin",
               "updatedAt"
             ])
-        )) && !isDemoUser();
+        ));
 
-      allow update: if (isOwner(userId)
+      allow update: if !isDemoReadOnly() && (isOwner(userId)
         && resource.data.role in ["student", "Student", "STUDENT"]
         && resource.data.status == "active"
         && request.resource.data.role == resource.data.role
@@ -252,9 +242,9 @@ function isStudent() {
             request.resource.data.academicProfileVerified == false
             && request.resource.data.verificationStatus == "pending"
           )
-        )) && !isDemoUser();
+        ));
 
-      allow update: if (isGadCoordinator()
+      allow update: if !isDemoReadOnly() && (isGadCoordinator()
         && resource.data.role in ["student", "Student", "STUDENT"]
         && request.resource.data.role == resource.data.role
         && request.resource.data.diff(resource.data).affectedKeys()
@@ -297,9 +287,9 @@ function isStudent() {
               "deletionScheduledAt"
             ])
           )
-        )) && !isDemoUser();
+        ));
 
-      allow delete: if (isAdmin()) && !isDemoUser();
+      allow delete: if !isDemoReadOnly() && (isAdmin());
     }
 
 
@@ -308,8 +298,8 @@ function isStudent() {
     // =========================================
 
     match /academicYears/{academicYearId} {
-      allow get, list: if signedIn() && !isDemoUser();
-      allow create, update, delete: if (isAdmin()) && !isDemoUser();
+      allow get, list: if signedIn();
+      allow create, update, delete: if !isDemoReadOnly() && (isAdmin());
     }
 
 
@@ -318,8 +308,8 @@ function isStudent() {
     // =========================================
 
     match /courses/{courseId} {
-      allow get, list: if signedIn() && !isDemoUser();
-      allow create, update, delete: if (isAdmin()) && !isDemoUser();
+      allow get, list: if signedIn();
+      allow create, update, delete: if !isDemoReadOnly() && (isAdmin());
     }
 
 
@@ -355,7 +345,7 @@ function isStudent() {
           && resource.data.section == myProfile().section
         );
 
-      allow create, update, delete: if (isAdmin()) && !isDemoUser();
+      allow create, update, delete: if !isDemoReadOnly() && (isAdmin());
     }
 
 
@@ -382,7 +372,7 @@ function isStudent() {
           && assignedTeacher(resource.data.sectionId)
         );
 
-      allow create, update, delete: if (isAdmin()) && !isDemoUser();
+      allow create, update, delete: if !isDemoReadOnly() && (isAdmin());
     }
 
 
@@ -418,7 +408,7 @@ function isStudent() {
           && resource.data.sectionId == myProfile().sectionId
         );
 
-      allow create, update, delete: if (isAdmin()) && !isDemoUser();
+      allow create, update, delete: if !isDemoReadOnly() && (isAdmin());
     }
 
 
@@ -442,7 +432,7 @@ function isStudent() {
 
       allow list: if isAdmin();
 
-      allow create, update, delete: if (isAdmin()) && !isDemoUser();
+      allow create, update, delete: if !isDemoReadOnly() && (isAdmin());
     }
 
 
@@ -458,7 +448,7 @@ function isStudent() {
           && resource.data.studentId == request.auth.uid
         );
 
-      allow create, update, delete: if (isAdmin()) && !isDemoUser();
+      allow create, update, delete: if !isDemoReadOnly() && (isAdmin());
     }
 
 
@@ -622,28 +612,28 @@ match /modules/{moduleId} {
     )
     || studentCanReadApprovedSectionContent();
 
-  allow create: if (isAdmin()
+  allow create: if !isDemoReadOnly() && (isAdmin()
     || (
       isTeacher()
       && request.resource.data.createdBy == request.auth.uid
       && request.resource.data.sectionIds is list
       && request.resource.data.sectionIds.size() > 0
-    )) && !isDemoUser();
+    ));
 
-  allow update: if (isAdmin()
+  allow update: if !isDemoReadOnly() && (isAdmin()
     || (
       isTeacher()
       && resource.data.createdBy == request.auth.uid
       && request.resource.data.createdBy == resource.data.createdBy
     )
     || validReviewUpdate()
-    || validModulePublishing()) && !isDemoUser();
+    || validModulePublishing());
 
-  allow delete: if (isAdmin()
+  allow delete: if !isDemoReadOnly() && (isAdmin()
     || (
       isTeacher()
       && resource.data.createdBy == request.auth.uid
-    )) && !isDemoUser();
+    ));
 }
 
     // =========================================
@@ -666,22 +656,22 @@ match /lessons/{lessonId} {
     )
     || studentCanReadApprovedSectionContent();
 
-  allow create: if (isAdmin() || isTeacher()) && !isDemoUser();
+  allow create: if !isDemoReadOnly() && (isAdmin() || isTeacher());
 
-  allow update: if (isAdmin()
+  allow update: if !isDemoReadOnly() && (isAdmin()
     || (
       isTeacher()
       && resource.data.createdBy == request.auth.uid
       && request.resource.data.createdBy == resource.data.createdBy
     )
     || validAdminLessonReviewUpdate()
-    || validAdminLessonPublishing()) && !isDemoUser();
+    || validAdminLessonPublishing());
 
-  allow delete: if (isAdmin()
+  allow delete: if !isDemoReadOnly() && (isAdmin()
     || (
       isTeacher()
       && resource.data.createdBy == request.auth.uid
-    )) && !isDemoUser();
+    ));
 }
 
 
@@ -694,24 +684,24 @@ match /lessons/{lessonId} {
 
       allow get, list: if isAdmin() || isTeacher();
 
-      allow create: if (isAdmin()
+      allow create: if !isDemoReadOnly() && (isAdmin()
         || (
           isTeacher()
           && request.resource.data.createdBy == request.auth.uid
-        )) && !isDemoUser();
+        ));
 
-      allow update: if (isAdmin()
+      allow update: if !isDemoReadOnly() && (isAdmin()
         || (
           isTeacher()
           && resource.data.createdBy == request.auth.uid
           && request.resource.data.createdBy == resource.data.createdBy
-        )) && !isDemoUser();
+        ));
 
-      allow delete: if (isAdmin()
+      allow delete: if !isDemoReadOnly() && (isAdmin()
         || (
           isTeacher()
           && resource.data.createdBy == request.auth.uid
-        )) && !isDemoUser();
+        ));
     }
 
 
@@ -731,26 +721,26 @@ match /quizzes/{quizId} {
     )
     || studentCanReadApprovedSectionContent();
 
-  allow create: if (isAdmin()
+  allow create: if !isDemoReadOnly() && (isAdmin()
     || (
       isTeacher()
       && request.resource.data.createdBy == request.auth.uid
       && request.resource.data.sectionIds is list
       && request.resource.data.sectionIds.size() > 0
-    )) && !isDemoUser();
+    ));
 
-  allow update: if (isAdmin()
+  allow update: if !isDemoReadOnly() && (isAdmin()
     || (
       isTeacher()
       && resource.data.createdBy == request.auth.uid
       && request.resource.data.createdBy == resource.data.createdBy
-    )) && !isDemoUser();
+    ));
 
-  allow delete: if (isAdmin()
+  allow delete: if !isDemoReadOnly() && (isAdmin()
     || (
       isTeacher()
       && resource.data.createdBy == request.auth.uid
-    )) && !isDemoUser();
+    ));
 }
 
     // =========================================
@@ -763,7 +753,6 @@ match /assignments/{assignmentId} {
   // STUDENT ASSIGNMENT ACCESS
   function studentCanReadAssignment() {
     return userExists()
-      && !isDemoUser()
       && myProfile().role in ["student", "Student", "STUDENT"]
 
       // Match the existing JavaScript behavior:
@@ -820,26 +809,26 @@ match /assignments/{assignmentId} {
     || studentCanReadAssignment();
 
   // CREATE
-  allow create: if (isAdmin()
+  allow create: if !isDemoReadOnly() && (isAdmin()
     || (
       isTeacher()
       && request.resource.data.createdBy == request.auth.uid
-    )) && !isDemoUser();
+    ));
 
   // UPDATE
-  allow update: if (isAdmin()
+  allow update: if !isDemoReadOnly() && (isAdmin()
     || (
       isTeacher()
       && resource.data.createdBy == request.auth.uid
       && request.resource.data.createdBy == resource.data.createdBy
-    )) && !isDemoUser();
+    ));
 
   // DELETE
-  allow delete: if (isAdmin()
+  allow delete: if !isDemoReadOnly() && (isAdmin()
     || (
       isTeacher()
       && resource.data.createdBy == request.auth.uid
-    )) && !isDemoUser();
+    ));
 }
 
 
@@ -851,7 +840,7 @@ match /assignments/{assignmentId} {
     match /progress/{progressId} {
 
       allow get, list: if isAdmin()
-        || (ownsRecord() && !isDemoUser())
+        || ownsRecord()
         || (
           isTeacher()
           && resource.data.userId is string
@@ -865,17 +854,17 @@ match /assignments/{assignmentId} {
           )
         );
 
-      allow create: if (isStudent()
-        && createsOwnRecord()) && !isDemoUser();
+      allow create: if !isDemoReadOnly() && (isStudent()
+        && createsOwnRecord());
 
-      allow update: if (isAdmin()
+      allow update: if !isDemoReadOnly() && (isAdmin()
         || (
           isStudent()
           && ownsRecord()
           && request.resource.data.userId == resource.data.userId
-        )) && !isDemoUser();
+        ));
 
-      allow delete: if (isAdmin()) && !isDemoUser();
+      allow delete: if !isDemoReadOnly() && (isAdmin());
     }
 
    // =========================================
@@ -888,12 +877,11 @@ match /notifications/{notificationId} {
   allow get, list: if isAdmin()
     || (
       signedIn()
-      && !isDemoUser()
       && resource.data.userId == request.auth.uid
     );
 
   // CREATE
-  allow create: if (isAdmin()
+  allow create: if !isDemoReadOnly() && (isAdmin()
     || (
       isTeacher()
       && request.resource.data.createdBy == request.auth.uid
@@ -939,10 +927,10 @@ match /notifications/{notificationId} {
         "createdAt",
         "createdBy"
       ])
-    )) && !isDemoUser();
+    ));
 
   // UPDATE: OWNER CAN MARK AS READ
-  allow update: if (isAdmin()
+  allow update: if !isDemoReadOnly() && (isAdmin()
     || (
       signedIn()
       && resource.data.userId == request.auth.uid
@@ -958,14 +946,14 @@ match /notifications/{notificationId} {
 
       && request.resource.data.read == true
       && request.resource.data.readAt is timestamp
-    )) && !isDemoUser();
+    ));
 
   // DELETE
-  allow delete: if (isAdmin()
+  allow delete: if !isDemoReadOnly() && (isAdmin()
     || (
       signedIn()
       && resource.data.userId == request.auth.uid
-    )) && !isDemoUser();
+    ));
 }
 
     // =========================================
@@ -977,26 +965,25 @@ match /notifications/{notificationId} {
       allow get, list: if isAdmin()
         || (
           signedIn()
-          && !isDemoUser()
           && (
             resource.data.senderId == request.auth.uid
             || resource.data.receiverId == request.auth.uid
           )
         );
 
-      allow create: if (signedIn()
+      allow create: if !isDemoReadOnly() && (signedIn()
         && request.resource.data.senderId == request.auth.uid
-        && request.resource.data.receiverId is string) && !isDemoUser();
+        && request.resource.data.receiverId is string);
 
-      allow update: if (isAdmin()
+      allow update: if !isDemoReadOnly() && (isAdmin()
         || (
           signedIn()
           && resource.data.receiverId == request.auth.uid
           && request.resource.data.senderId == resource.data.senderId
           && request.resource.data.receiverId == resource.data.receiverId
-        )) && !isDemoUser();
+        ));
 
-      allow delete: if (isAdmin()) && !isDemoUser();
+      allow delete: if !isDemoReadOnly() && (isAdmin());
     }
 
 
@@ -1006,26 +993,26 @@ match /notifications/{notificationId} {
 
     match /announcements/{announcementId} {
 
-      allow get, list: if signedIn() && !isDemoUser();
+      allow get, list: if signedIn();
 
-      allow create: if (isAdmin()
+      allow create: if !isDemoReadOnly() && (isAdmin()
         || (
           isTeacher()
           && request.resource.data.createdBy == request.auth.uid
-        )) && !isDemoUser();
+        ));
 
-      allow update: if (isAdmin()
+      allow update: if !isDemoReadOnly() && (isAdmin()
         || (
           isTeacher()
           && resource.data.createdBy == request.auth.uid
           && request.resource.data.createdBy == resource.data.createdBy
-        )) && !isDemoUser();
+        ));
 
-      allow delete: if (isAdmin()
+      allow delete: if !isDemoReadOnly() && (isAdmin()
         || (
           isTeacher()
           && resource.data.createdBy == request.auth.uid
-        )) && !isDemoUser();
+        ));
     }
 
 
@@ -1036,12 +1023,12 @@ match /notifications/{notificationId} {
     match /activityLogs/{logId} {
 
       allow get, list: if isAdmin()
-        || (ownsRecord() && !isDemoUser());
+        || ownsRecord();
 
-      allow create: if (signedIn()
-        && createsOwnRecord()) && !isDemoUser();
+      allow create: if !isDemoReadOnly() && (signedIn()
+        && createsOwnRecord());
 
-      allow update, delete: if (isAdmin()) && !isDemoUser();
+      allow update, delete: if !isDemoReadOnly() && (isAdmin());
     }
 
 
@@ -1061,7 +1048,7 @@ match /notifications/{notificationId} {
           && myProfile().sectionId in resource.data.sectionIds
         );
 
-      allow create, update, delete: if (isAdmin()) && !isDemoUser();
+      allow create, update, delete: if !isDemoReadOnly() && (isAdmin());
     }
 
 
@@ -1081,7 +1068,7 @@ match /notifications/{notificationId} {
           && request.auth.uid in resource.data.participantUids
         );
 
-      allow create: if (isTeacher()
+      allow create: if !isDemoReadOnly() && (isTeacher()
         && request.resource.data.roomId == roomId
         && request.resource.data.teacherUid == request.auth.uid
         && request.resource.data.sectionId is string
@@ -1152,9 +1139,9 @@ match /notifications/{notificationId} {
           "mode",
           "createdAt",
           "updatedAt"
-        ])) && !isDemoUser();
+        ]));
 
-      allow update: if (isTeacher()
+      allow update: if !isDemoReadOnly() && (isTeacher()
         && resource.data.teacherUid == request.auth.uid
         && assignedTeacher(resource.data.sectionId)
 
@@ -1196,16 +1183,16 @@ match /notifications/{notificationId} {
             && request.resource.data.status == "live"
             && resource.data.meetingType in ["batch", "livestream"]
           )
-        )) && !isDemoUser();
+        ));
 
-      allow delete: if (isAdmin()
+      allow delete: if !isDemoReadOnly() && (isAdmin()
         || (
           isTeacher()
           && resource.data.teacherUid == request.auth.uid
           && assignedTeacher(resource.data.sectionId)
           && resource.data.meetingType == "one_on_one"
           && resource.data.status == "ended"
-        )) && !isDemoUser();
+        ));
     }
 
 
@@ -1238,29 +1225,29 @@ match /notifications/{notificationId} {
           ).data.sectionIds
         );
 
-      allow create: if (isAdmin()
+      allow create: if !isDemoReadOnly() && (isAdmin()
         || (
           isTeacher()
           && getAfter(
             /databases/$(database)/documents/quizzes/$(request.resource.data.quizId)
           ).data.createdBy == request.auth.uid
-        )) && !isDemoUser();
+        ));
 
-      allow update: if (isAdmin()
+      allow update: if !isDemoReadOnly() && (isAdmin()
         || (
           isTeacher()
           && get(
             /databases/$(database)/documents/quizzes/$(resource.data.quizId)
           ).data.createdBy == request.auth.uid
-        )) && !isDemoUser();
+        ));
 
-      allow delete: if (isAdmin()
+      allow delete: if !isDemoReadOnly() && (isAdmin()
         || (
           isTeacher()
           && get(
             /databases/$(database)/documents/quizzes/$(resource.data.quizId)
           ).data.createdBy == request.auth.uid
-        )) && !isDemoUser();
+        ));
     }
 
 
@@ -1280,21 +1267,21 @@ match /notifications/{notificationId} {
           ).data.createdBy == request.auth.uid
         );
 
-      allow create: if (isAdmin()
+      allow create: if !isDemoReadOnly() && (isAdmin()
         || (
           isTeacher()
           && getAfter(
             /databases/$(database)/documents/quizzes/$(request.resource.data.quizId)
           ).data.createdBy == request.auth.uid
-        )) && !isDemoUser();
+        ));
 
-      allow update, delete: if (isAdmin()
+      allow update, delete: if !isDemoReadOnly() && (isAdmin()
         || (
           isTeacher()
           && get(
             /databases/$(database)/documents/quizzes/$(resource.data.quizId)
           ).data.createdBy == request.auth.uid
-        )) && !isDemoUser();
+        ));
     }
 
 
@@ -1312,16 +1299,16 @@ match /modulesV2/{moduleId} {
     )
     || studentCanReadPublishedV2Content();
 
-  allow create: if (isAdmin()
+  allow create: if !isDemoReadOnly() && (isAdmin()
     || (
       isTeacher()
       && request.resource.data.createdBy == request.auth.uid
       && request.resource.data.sectionIds is list
       && request.resource.data.sectionIds.size() > 0
       && request.resource.data.status in ["draft", "published"]
-    )) && !isDemoUser();
+    ));
 
-  allow update: if (isAdmin()
+  allow update: if !isDemoReadOnly() && (isAdmin()
     || (
       isTeacher()
       && resource.data.createdBy == request.auth.uid
@@ -1329,13 +1316,13 @@ match /modulesV2/{moduleId} {
       && request.resource.data.sectionIds is list
       && request.resource.data.sectionIds.size() > 0
       && request.resource.data.status in ["draft", "published", "archived"]
-    )) && !isDemoUser();
+    ));
 
-  allow delete: if (isAdmin()
+  allow delete: if !isDemoReadOnly() && (isAdmin()
     || (
       isTeacher()
       && resource.data.createdBy == request.auth.uid
-    )) && !isDemoUser();
+    ));
 }
 
 
@@ -1353,7 +1340,7 @@ match /teacherActivitiesV2/{activityId} {
     )
     || studentCanReadPublishedV2Content();
 
-  allow create: if (isAdmin()
+  allow create: if !isDemoReadOnly() && (isAdmin()
     || (
       isTeacher()
       && request.resource.data.createdBy == request.auth.uid
@@ -1361,9 +1348,9 @@ match /teacherActivitiesV2/{activityId} {
       && request.resource.data.sectionIds is list
       && request.resource.data.sectionIds.size() > 0
       && request.resource.data.status in ["draft", "published"]
-    )) && !isDemoUser();
+    ));
 
-  allow update: if (isAdmin()
+  allow update: if !isDemoReadOnly() && (isAdmin()
     || (
       isTeacher()
       && resource.data.createdBy == request.auth.uid
@@ -1372,13 +1359,13 @@ match /teacherActivitiesV2/{activityId} {
       && request.resource.data.sectionIds is list
       && request.resource.data.sectionIds.size() > 0
       && request.resource.data.status in ["draft", "published", "archived"]
-    )) && !isDemoUser();
+    ));
 
-  allow delete: if (isAdmin()
+  allow delete: if !isDemoReadOnly() && (isAdmin()
     || (
       isTeacher()
       && resource.data.createdBy == request.auth.uid
-    )) && !isDemoUser();
+    ));
 }
 
 
@@ -1394,16 +1381,16 @@ match /teacherActivitiesV2/{activityId} {
         )
         || studentCanReadPublishedV2Content();
 
-      allow create: if (isAdmin()
+      allow create: if !isDemoReadOnly() && (isAdmin()
         || (
           isTeacher()
           && request.resource.data.createdBy == request.auth.uid
           && request.resource.data.sectionIds is list
           && request.resource.data.sectionIds.size() > 0
           && request.resource.data.status in ["draft", "published"]
-        )) && !isDemoUser();
+        ));
 
-      allow update: if (isAdmin()
+      allow update: if !isDemoReadOnly() && (isAdmin()
         || (
           isTeacher()
           && resource.data.createdBy == request.auth.uid
@@ -1411,13 +1398,13 @@ match /teacherActivitiesV2/{activityId} {
           && request.resource.data.sectionIds is list
           && request.resource.data.sectionIds.size() > 0
           && request.resource.data.status in ["draft", "published", "archived"]
-        )) && !isDemoUser();
+        ));
 
-      allow delete: if (isAdmin()
+      allow delete: if !isDemoReadOnly() && (isAdmin()
         || (
           isTeacher()
           && resource.data.createdBy == request.auth.uid
-        )) && !isDemoUser();
+        ));
     }
 
 
@@ -1448,30 +1435,30 @@ match /teacherActivitiesV2/{activityId} {
           ).data.sectionIds
         );
 
-      allow create: if (isAdmin()
+      allow create: if !isDemoReadOnly() && (isAdmin()
         || (
           isTeacher()
           && request.resource.data.quizId is string
           && getAfter(
             /databases/$(database)/documents/quizzesV2/$(request.resource.data.quizId)
           ).data.createdBy == request.auth.uid
-        )) && !isDemoUser();
+        ));
 
-      allow update: if (isAdmin()
+      allow update: if !isDemoReadOnly() && (isAdmin()
         || (
           isTeacher()
           && get(
             /databases/$(database)/documents/quizzesV2/$(resource.data.quizId)
           ).data.createdBy == request.auth.uid
-        )) && !isDemoUser();
+        ));
 
-      allow delete: if (isAdmin()
+      allow delete: if !isDemoReadOnly() && (isAdmin()
         || (
           isTeacher()
           && get(
             /databases/$(database)/documents/quizzesV2/$(resource.data.quizId)
           ).data.createdBy == request.auth.uid
-        )) && !isDemoUser();
+        ));
     }
 
 
@@ -1490,22 +1477,22 @@ match /teacherActivitiesV2/{activityId} {
           ).data.createdBy == request.auth.uid
         );
 
-      allow create: if (isAdmin()
+      allow create: if !isDemoReadOnly() && (isAdmin()
         || (
           isTeacher()
           && request.resource.data.quizId is string
           && getAfter(
             /databases/$(database)/documents/quizzesV2/$(request.resource.data.quizId)
           ).data.createdBy == request.auth.uid
-        )) && !isDemoUser();
+        ));
 
-      allow update, delete: if (isAdmin()
+      allow update, delete: if !isDemoReadOnly() && (isAdmin()
         || (
           isTeacher()
           && get(
             /databases/$(database)/documents/quizzesV2/$(resource.data.quizId)
           ).data.createdBy == request.auth.uid
-        )) && !isDemoUser();
+        ));
     }
 
 
@@ -1534,7 +1521,7 @@ match /quizAttempts/{attemptId} {
 
   // Students can submit only their own attempt for a published quiz
   // assigned to their own section in teacherActivitiesV2.
-  allow create: if (isStudent()
+  allow create: if !isDemoReadOnly() && (isStudent()
     && request.resource.data.userId == request.auth.uid
     && request.resource.data.quizId is string
     && request.resource.data.sectionId is string
@@ -1556,10 +1543,10 @@ match /quizAttempts/{attemptId} {
     ).data.sectionIds is list
     && myProfile().sectionId in get(
       /databases/$(database)/documents/teacherActivitiesV2/$(request.resource.data.quizId)
-    ).data.sectionIds) && !isDemoUser();
+    ).data.sectionIds);
 
   // Assigned teacher can grade attempts without changing ownership.
-  allow update: if (isAdmin()
+  allow update: if !isDemoReadOnly() && (isAdmin()
     || (
       isTeacher()
       && resource.data.userId is string
@@ -1573,9 +1560,9 @@ match /quizAttempts/{attemptId} {
       )
       && request.resource.data.userId == resource.data.userId
       && request.resource.data.quizId == resource.data.quizId
-    )) && !isDemoUser();
+    ));
 
-  allow delete: if (isAdmin()) && !isDemoUser();
+  allow delete: if !isDemoReadOnly() && (isAdmin());
 }
 
 
@@ -1585,7 +1572,7 @@ match /quizAttempts/{attemptId} {
   // =========================================
 
   match /{document=**} {
-    allow read, write: if false;
+    allow read, write: if !isDemoReadOnly() && (false);
   }
   
   }

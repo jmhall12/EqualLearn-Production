@@ -17,7 +17,6 @@ const requiredItems = [
   'service-worker.js',
   'app.html',
   'evaluation.html',
-  'evaluation-workspace.html'
 ];
 
 for (const item of requiredItems) {
@@ -34,5 +33,5 @@ for (const item of requiredItems) {
   await cp(resolve(root, item), resolve(out, item), { recursive: true });
 }
 
-console.log('EqualLearn web files copied to www/ for Capacitor, including app.html and Evaluation Mode pages.');
+console.log('EqualLearn web files copied to www/ for Capacitor, including app.html and the real-system Evaluation Mode pages.');
 console.log('Next: npx cap sync android');

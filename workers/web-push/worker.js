@@ -157,7 +157,9 @@ async function authenticate(request) {
   if (!user || String(user.status || "").toLowerCase() !== "active") throw new Error("Your EqualLearn account is not active.");
   const role = String(user.role || "").toLowerCase();
   if (!["admin", "teacher", "student"].includes(role)) throw new Error("Your EqualLearn role is not authorized.");
-  return { uid: claims.sub, role, profile: user, idToken: firebaseToken, demoReadOnly: user.demoReadOnly === true };
+  const demoReadOnly = user.demoReadOnly === true || String(user.demoReadOnly || "").trim().toLowerCase() === "true";
+  if (demoReadOnly) throw new Error("Push registration changes are disabled for read-only evaluation accounts.");
+  return { uid: claims.sub, role, profile: user, idToken: firebaseToken };
 }
 async function kvListAll(kv, prefix) {
   let cursor;
@@ -386,9 +388,6 @@ export default {
 
     try {
       const actor = await authenticate(request);
-      if (actor.demoReadOnly) {
-        return json({ success: false, error: "Push subscription changes and notification dispatch are disabled for read-only evaluation accounts." }, 403, headers);
-      }
       const body = await request.json().catch(() => null);
       if (!body || typeof body !== "object") return json({ success: false, error: "Invalid JSON body." }, 400, headers);
 

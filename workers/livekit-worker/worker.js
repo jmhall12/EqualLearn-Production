@@ -550,17 +550,12 @@ export default {
         }, 403, headers);
       }
 
-      // Evaluation accounts are strictly view-only: deny LiveKit token issuance
-      // and room termination even if a caller bypasses the browser controls.
-      if (user.demoReadOnly === true) {
-        return json({
-          success: false,
-          error: "Live sessions are disabled for read-only evaluation accounts."
-        }, 403, headers);
-      }
-
       const role = normalize(user.role);
       const status = normalize(user.status);
+      const demoReadOnly = user.demoReadOnly === true || String(user.demoReadOnly || "").trim().toLowerCase() === "true";
+      if (demoReadOnly) {
+        return json({ success: false, error: "Live sessions are disabled for read-only evaluation accounts." }, 403, headers);
+      }
 
       if (
         (user.uid && user.uid !== uid) ||

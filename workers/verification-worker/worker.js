@@ -108,9 +108,8 @@ async function authorizeRequest(request, env) {
   if (!match) throw new Error("Authentication required.");
   const firebaseUser = await lookupFirebaseUser(env, match[1]);
   const profile = await getProfile(env, firebaseUser.localId);
-  if (profile?.demoReadOnly === true) {
-    throw new Error("Verification actions are disabled for read-only evaluation accounts.");
-  }
+  const demoReadOnly = profile?.demoReadOnly === true || String(profile?.demoReadOnly || "").trim().toLowerCase() === "true";
+  if (demoReadOnly) throw new Error("Account verification actions are disabled for read-only evaluation accounts.");
   if (!profile || profile.status === "inactive" || !["admin", "gad_coordinator"].includes(String(profile.role || "").toLowerCase())) {
     throw new Error("Only active Admins and authorized GAD Coordinators can perform verification.");
   }

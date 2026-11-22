@@ -1,3 +1,4 @@
+import "./evaluation-readonly.js";
 
 import { auth } from "./firebase-config.js";
 import { icon } from "./icons.js";
@@ -336,13 +337,6 @@ function keepLumiOnTop() {
 }
 
 function setupLumiCompanion() {
-  // The persistent app host (app.html) owns the single Lumi iframe.
-  // Child pages run inside its content frame and must not create a second one.
-  if (window.self !== window.top) {
-    document.getElementById("equallearn-lumi-frame")?.remove();
-    return;
-  }
-
   keepLumiOnTop();
 
   // Automatically resize Lumi when device orientation or viewport changes.
@@ -1762,29 +1756,7 @@ setupLumiCompanion();
      Existing page authentication remains responsible for access.
   ------------------------------------------------------- */
 
-  function ensurePersistentAppHost() {
-    // Direct visits to shell-managed pages are upgraded into the persistent
-    // host. Internal links then navigate only the child frame, not the host.
-    if (window.self !== window.top) return false;
-
-    const pathname = window.location.pathname
-      .replace(/\\/g, "/")
-      .toLowerCase();
-
-    if (pathname.endsWith("/app.html") || pathname === "/app.html") {
-      return false;
-    }
-
-    const currentRoute = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-    const host = new URL("/app.html", window.location.origin);
-    host.searchParams.set("path", currentRoute);
-    window.location.replace(host.href);
-    return true;
-  }
-
   function initialize() {
-    if (ensurePersistentAppHost()) return;
-
     injectShellStyles();
     buildShell();
 
