@@ -94,10 +94,12 @@ onAuthStateChanged(auth, async user => {
   try {
   await loadStudentProfile();
 
-  // Run Firestore permission diagnostics first.
-  await testClassworkPermissions();
+  // Diagnostics are opt-in because they repeat the same Firestore reads.
+  // Add ?debugPermissions=1 to the URL only when troubleshooting access.
+  if (new URLSearchParams(location.search).get("debugPermissions") === "1") {
+    await testClassworkPermissions();
+  }
 
-  // Load the actual classwork after the test.
   await loadAllClasswork();
 
 } catch (error) {
@@ -163,8 +165,8 @@ async function testClassworkPermissions() {
       run: () => fetchPublishedSectionDocuments("modulesV2")
     },
     {
-      name: "legacy lessons (optional)",
-      run: () => fetchActiveSectionContent("lessons")
+      name: "legacy lessons (active + approved for this section)",
+      run: () => fetchApprovedActiveSectionContent("lessons")
     },
     {
       name: "teacherActivitiesV2",
@@ -299,14 +301,18 @@ async function fetchPublishedSectionDocuments(collectionName) {
   return documents;
 }
 
-async function fetchActiveSectionContent(collectionName) {
+async function fetchApprovedActiveSectionContent(collectionName) {
   if (!studentSectionId) {
     throw new Error("Student section ID is missing.");
   }
 
+  // Must exactly match studentCanReadApprovedSectionContent() in firestore.rules:
+  // status == "active", reviewStatus == "approved", and sectionIds contains
+  // the signed-in student's sectionId. Firestore Security Rules are not filters.
   const q = query(
     collection(db, collectionName),
     where("status", "==", "active"),
+    where("reviewStatus", "==", "approved"),
     where("sectionIds", "array-contains", studentSectionId)
   );
 
@@ -317,10 +323,11 @@ async function fetchActiveSectionContent(collectionName) {
     ...item.data()
   }));
 
-  console.log("[CLASSWORK] Admin/Teacher content loaded:", {
+  console.log("[CLASSWORK] Approved active section content loaded:", {
     collection: collectionName,
     sectionId: studentSectionId,
-    count: documents.length
+    count: documents.length,
+    ids: documents.map(item => item.id)
   });
 
   return documents;
@@ -430,7 +437,7 @@ async function loadModules() {
 }
 
 async function loadLessons() {
-  const documents = await fetchActiveSectionContent("lessons");
+  const documents = await fetchApprovedActiveSectionContent("lessons");
 
   documents.forEach(data => {
     allActivities.push({

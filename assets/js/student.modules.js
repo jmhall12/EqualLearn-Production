@@ -34,7 +34,6 @@ let adminModules = [];
 let adminLessons = [];
 let authReady = false;
 let pendingDeepLinkHandled = false;
-let activePdfObjectUrls = [];
 
 /* =====================================================
    INITIALIZATION
@@ -54,7 +53,6 @@ function initializePage() {
 
   initializeSearch();
   initializeFilters();
-  initializeModal();
   initializeAuthentication();
 
   console.log("[EqualLearn Modules] Page initialized.");
@@ -277,8 +275,7 @@ function listenToModules(sectionId) {
         sourceCollection: "modules",
         isAdminContent: true,
         teacherName: item.assignedTeacherName || item.teacherName || item.createdByName || "Your Teacher",
-        category: item.category || item.subject || "ADMIN MODULE",
-        icon: item.icon || "📘"
+        category: item.category || item.subject || "ADMIN MODULE"
       });
     });
 
@@ -311,7 +308,6 @@ function listenToModules(sectionId) {
         title: first.moduleName || "Shared Lessons",
         description: "Your teacher has published lessons for your section in this learning module.",
         category: "LESSONS",
-        icon: "📖",
         teacherName: first.assignedTeacherName || first.teacherName || first.createdByName || "Your Teacher",
         createdAt: first.createdAt,
         publishedAt: first.publishedAt,
@@ -572,17 +568,14 @@ function validURL(value) {
 }
 
 /* =====================================================
-   RENDER MODULES
+   RENDER MODULES AS A COMPACT LIST
 ===================================================== */
 
 function renderModules() {
   const grid = $("moduleGrid");
-
   if (!grid) return;
 
-  const search = ($("searchInput")?.value || "")
-    .trim()
-    .toLowerCase();
+  const search = ($("searchInput")?.value || "").trim().toLowerCase();
 
   let filtered = modules.filter(module => {
     const searchableText = [
@@ -591,375 +584,160 @@ function renderModules() {
       module.category,
       module.subject,
       module.teacherName
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase();
+    ].filter(Boolean).join(" ").toLowerCase();
 
     return searchableText.includes(search);
   });
 
+  // Newest published content first.
+  filtered.sort((a, b) =>
+    getDate(b.publishedAt || b.createdAt) -
+    getDate(a.publishedAt || a.createdAt)
+  );
+
   if (activeFilter === "recent") {
-    filtered.sort((a, b) => {
-      return getDate(b.publishedAt || b.createdAt) -
-        getDate(a.publishedAt || a.createdAt);
-    });
+    filtered = filtered.slice(0, 8);
   }
 
   grid.replaceChildren();
 
+  const listHeading = document.querySelector(".modules-list-heading span");
+  if (listHeading) {
+    listHeading.textContent = filtered.length
+      ? `${filtered.length} item${filtered.length === 1 ? "" : "s"} · Open an item to view`
+      : "No items to display";
+  }
+
   if (filtered.length === 0) {
     showState(
-      search ? "🔎" : "📚",
-
-      search
-        ? "No matching modules"
-        : "No modules available yet",
-
+      search ? "search" : "book",
+      search ? "No matching modules" : "No modules available yet",
       search
         ? "Try another keyword to find your learning materials."
-        : "Your teacher has not published any modules for your section yet."
+        : "Your teacher has not published learning materials for your section yet."
     );
-
     return;
   }
 
+  const fragment = document.createDocumentFragment();
   filtered.forEach((module, index) => {
-    grid.appendChild(createModuleCard(module, index));
+    fragment.appendChild(createModuleCard(module, index));
   });
+  grid.appendChild(fragment);
 }
 
 /* =====================================================
-   CREATE MODULE CARD
+   CREATE CLICK-TO-OPEN MODULE ROW
 ===================================================== */
 
 function createModuleCard(module, index) {
-  const card = document.createElement("article");
+  const row = document.createElement("a");
+  row.className = "module-row";
+  row.href = getModuleDestination(module);
+  row.style.animationDelay = `${Math.min(index * 35, 210)}ms`;
 
-  card.className = "module-card";
-  card.style.animationDelay = `${Math.min(index * 60, 300)}ms`;
+  const icon = document.createElement("span");
+  icon.className = "module-row-icon";
+  icon.setAttribute("aria-hidden", "true");
+  icon.innerHTML = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M5 4.8A2.8 2.8 0 0 1 7.8 2H20v17H7.8A2.8 2.8 0 0 0 5 21z"/>
+      <path d="M5 4.8V21M9 7h7M9 11h7"/>
+    </svg>
+  `;
 
-  /* COVER */
+  const content = document.createElement("span");
+  content.className = "module-row-content";
 
-  const cover = document.createElement("div");
-  cover.className = "module-cover";
-
-  const circle = document.createElement("div");
-  circle.className = "cover-circle";
-
-  const label = document.createElement("div");
-  label.className = "cover-label";
-  label.textContent =
-    module.category ||
-    module.subject ||
-    "LEARNING MODULE";
-
-  const icon = document.createElement("div");
-  icon.className = "cover-icon";
-  icon.textContent = module.icon || "📘";
-
-  cover.append(label, icon, circle);
-
-  /* BODY */
-
-  const body = document.createElement("div");
-  body.className = "module-body";
-
-  /* META */
-
-  const meta = document.createElement("div");
-  meta.className = "module-meta";
-
-  const category = document.createElement("span");
-  category.className = "category";
-  category.textContent =
-    module.category ||
-    module.subject ||
-    "GENERAL";
-
-  const published = document.createElement("span");
-  published.className = "published";
-  published.textContent = module.lessonCount
-    ? `● Published · ${module.lessonCount} lesson${module.lessonCount === 1 ? "" : "s"}`
-    : "● Published";
-
-  meta.append(category, published);
-
-  /* TITLE */
+  const heading = document.createElement("span");
+  heading.className = "module-row-heading";
 
   const title = document.createElement("h3");
   title.textContent = module.title || "Untitled Module";
 
-  /* DESCRIPTION */
+  const category = document.createElement("span");
+  category.className = "module-category";
+  category.textContent = module.category || module.subject ||
+    (module.isLessonGroup ? "LESSONS" : "LEARNING MODULE");
 
-  const description = document.createElement("p");
-  description.className = "module-description";
-  description.textContent =
-    module.description ||
-    "Explore this learning module and its learning resources.";
+  heading.append(title, category);
 
-  /* RESOURCES */
+  const description = document.createElement("span");
+  description.className = "module-row-description";
+  description.textContent = module.description ||
+    "Open this learning material to view its content and resources.";
 
-  const resources = getResources(module);
-
-  const resourceList = document.createElement("div");
-  resourceList.className = "resource-list";
-
-  resources.slice(0, 3).forEach(resource => {
-    const tag = document.createElement("span");
-
-    tag.className = "resource-tag";
-    tag.textContent = resource.label;
-    tag.title = resource.label;
-
-    resourceList.appendChild(tag);
-  });
-
-  if (resources.length > 3) {
-    const more = document.createElement("span");
-
-    more.className = "resource-tag";
-    more.textContent = `+${resources.length - 3} more`;
-
-    resourceList.appendChild(more);
-  }
-
-  /* FOOTER */
-
-  const footer = document.createElement("div");
-  footer.className = "module-footer";
+  const meta = document.createElement("span");
+  meta.className = "module-row-meta";
 
   const teacher = document.createElement("span");
-  teacher.className = "teacher-name";
-  teacher.textContent =
-    `👤 ${module.teacherName || "Your Teacher"}`;
+  teacher.className = "module-row-meta-item";
+  teacher.innerHTML = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="8" r="3.2"></circle>
+      <path d="M5.5 20a6.5 6.5 0 0 1 13 0"></path>
+    </svg>
+  `;
+  const teacherText = document.createElement("span");
+  teacherText.textContent = module.teacherName || "Your Teacher";
+  teacher.appendChild(teacherText);
 
-  const openButton = document.createElement("button");
-  openButton.className = "open-btn";
-  openButton.type = "button";
-  openButton.textContent = "View Module →";
+  const resourceCount = getResources(module).length;
+  const resources = document.createElement("span");
+  resources.className = "module-row-meta-item";
+  resources.textContent = `${resourceCount} resource${resourceCount === 1 ? "" : "s"}`;
 
-  openButton.addEventListener("click", () => {
-    openModule(module);
-  });
+  const status = document.createElement("span");
+  status.className = "module-row-status";
+  status.textContent = "Published";
 
-  footer.append(teacher, openButton);
+  meta.append(teacher, resources, status);
+  content.append(heading, description, meta);
 
-  body.append(meta, title, description);
+  const arrow = document.createElement("span");
+  arrow.className = "module-row-arrow";
+  arrow.setAttribute("aria-hidden", "true");
+  arrow.innerHTML = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M5 12h13M13 6l6 6-6 6"></path>
+    </svg>
+  `;
 
-  if (resources.length > 0) {
-    body.appendChild(resourceList);
-  }
-
-  body.appendChild(footer);
-
-  card.append(cover, body);
-
-  return card;
+  row.setAttribute(
+    "aria-label",
+    `Open ${module.title || "learning module"}`
+  );
+  row.append(icon, content, arrow);
+  return row;
 }
 
 /* =====================================================
-   MODULE PREVIEW MODAL
+   PAGE DESTINATIONS
 ===================================================== */
 
-function initializeModal() {
-  const closeButton = $("closeModal");
-  const modal = $("moduleModal");
+function getModuleDestination(module) {
+  const moduleId = encodeURIComponent(module.id);
 
-  if (closeButton) {
-    closeButton.addEventListener("click", closeModal);
+  // Grouped legacy lessons already have a dedicated lesson page.
+  if (module.isLessonGroup || module.sourceCollection === "lessons") {
+    return `lesson.html?module=${moduleId}`;
   }
 
-  if (modal) {
-    modal.addEventListener("click", event => {
-      if (event.target === modal) {
-        closeModal();
-      }
-    });
-  }
+  const sourceCollection = module.sourceCollection === "modules"
+    ? "modules"
+    : "modulesV2";
 
-  document.addEventListener("keydown", event => {
-    if (event.key === "Escape") {
-      closeModal();
-    }
-  });
+  return `module-view.html?id=${moduleId}&source=${sourceCollection}`;
 }
 
+// Kept for existing deep-link handling. Opening a module now navigates to a page,
+// rather than displaying the old modal preview.
 function openModule(module) {
-  const modal = $("moduleModal");
-  if (!modal) return;
-
-  if ($("modalTitle")) {
-    $("modalTitle").textContent = module.title || "Module Details";
-  }
-
-  if ($("modalDescription")) {
-    $("modalDescription").textContent =
-      module.description || "No description available.";
-  }
-
-  const resourceContainer = $("modalResources");
-  if (resourceContainer) {
-    resourceContainer.replaceChildren();
-    revokePdfObjectUrls();
-
-    const resources = getResources(module);
-
-    resources.forEach(resource => {
-      const dataURL = resourceDataURL(resource);
-      const externalURL = validURL(resource.url);
-      const mime = String(resource.mimeType || "").toLowerCase();
-      const fileName = String(resource.fileName || resource.label || "").toLowerCase();
-      const isPdf = mime === "application/pdf" ||
-        fileName.endsWith(".pdf") ||
-        String(resource.type || "").toLowerCase() === "pdf";
-
-      const item = document.createElement("section");
-      item.className = "el-resource-viewer-item";
-      item.style.cssText = [
-        "width:100%", "margin:14px 0", "padding:12px",
-        "border:1px solid rgba(255,255,255,.14)",
-        "border-radius:14px", "background:rgba(255,255,255,.035)",
-        "box-sizing:border-box"
-      ].join(";");
-
-      const heading = document.createElement("div");
-      heading.style.cssText = "display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;";
-
-      const name = document.createElement("strong");
-      name.textContent = resource.label || resource.fileName || "Learning resource";
-      name.style.cssText = "font-size:14px;overflow-wrap:anywhere;";
-      heading.appendChild(name);
-
-      const detail = document.createElement("small");
-      detail.textContent = resource.fileName || (externalURL ? "External resource" : "Attachment");
-      detail.style.cssText = "display:block;opacity:.7;margin-top:3px;font-size:11px;";
-      const nameWrap = document.createElement("div");
-      nameWrap.append(name, detail);
-      heading.replaceChildren(nameWrap);
-
-      let viewerURL = null;
-      if (dataURL) {
-        viewerURL = createResourceObjectURL(resource);
-      } else if (externalURL) {
-        viewerURL = externalURL;
-      }
-
-      if (isPdf && viewerURL) {
-        const frame = document.createElement("iframe");
-        frame.title = `PDF viewer: ${resource.fileName || resource.label || "document"}`;
-        frame.src = viewerURL;
-        frame.setAttribute("loading", "lazy");
-        frame.setAttribute("allow", "fullscreen");
-        frame.style.cssText = [
-          "display:block", "width:100%", "height:min(70vh,760px)",
-          "min-height:420px", "border:0", "border-radius:10px",
-          "background:#fff"
-        ].join(";");
-        item.append(heading, frame);
-
-        const fallback = document.createElement("div");
-        fallback.style.cssText = "display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;";
-        const openLink = document.createElement("a");
-        openLink.href = viewerURL;
-        openLink.target = "_blank";
-        openLink.rel = "noopener noreferrer";
-        openLink.textContent = "Open PDF separately ↗";
-        openLink.style.cssText = "color:inherit;text-decoration:underline;font-size:13px;";
-        fallback.appendChild(openLink);
-
-        if (dataURL) {
-          const download = document.createElement("a");
-          download.href = viewerURL;
-          download.download = resource.fileName || "equallearn-document.pdf";
-          download.textContent = "Download PDF ↓";
-          download.style.cssText = openLink.style.cssText;
-          fallback.appendChild(download);
-        }
-        item.appendChild(fallback);
-      } else {
-        item.appendChild(heading);
-        if (viewerURL) {
-          const link = document.createElement("a");
-          link.href = viewerURL;
-          link.target = "_blank";
-          link.rel = "noopener noreferrer";
-          link.textContent = dataURL ? "Open / Download attachment ↓" : "Open resource ↗";
-          if (dataURL) link.download = resource.fileName || resource.label || "equallearn-attachment";
-          link.style.cssText = "display:inline-block;margin-top:8px;color:inherit;text-decoration:underline;font-size:13px;";
-          item.appendChild(link);
-        } else {
-          const unavailable = document.createElement("p");
-          unavailable.textContent = "This attachment could not be opened. Please contact your teacher.";
-          item.appendChild(unavailable);
-        }
-      }
-
-      resourceContainer.appendChild(item);
-    });
-
-    if (resources.length === 0) {
-      const note = document.createElement("p");
-      note.className = "no-resources";
-      note.textContent = "No additional resources attached.";
-      resourceContainer.appendChild(note);
-    }
-
-    if (Number(module.lessonCount || 0) > 0 || module.isLessonGroup) {
-      const lessonsLink = document.createElement("a");
-      lessonsLink.href = `lesson.html?module=${encodeURIComponent(module.id)}`;
-      lessonsLink.className = "open-btn";
-      lessonsLink.textContent = `View ${module.lessonCount || "Published"} Lesson${Number(module.lessonCount) === 1 ? "" : "s"} →`;
-      lessonsLink.style.cssText = "display:inline-flex;align-items:center;justify-content:center;margin:14px 0 6px;padding:12px 18px;border-radius:11px;text-decoration:none;font-weight:800;";
-      resourceContainer.appendChild(lessonsLink);
-    }
-  }
-
-  modal.classList.add("show");
-  document.body.style.overflow = "hidden";
-}
-
-function createResourceObjectURL(resource) {
-  if (!resource?.base64) return null;
-  try {
-    const binary = atob(resource.base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-      bytes[i] = binary.charCodeAt(i);
-    }
-    const blob = new Blob([bytes], {
-      type: resource.mimeType || "application/octet-stream"
-    });
-    const objectURL = URL.createObjectURL(blob);
-    activePdfObjectUrls.push(objectURL);
-    return objectURL;
-  } catch (error) {
-    console.error("[EqualLearn] Unable to prepare attachment preview:", error);
-    return null;
-  }
-}
-
-function revokePdfObjectUrls() {
-  activePdfObjectUrls.forEach(url => URL.revokeObjectURL(url));
-  activePdfObjectUrls = [];
-}
-
-function formatResourceSize(bytes) {
-  const value = Number(bytes) || 0;
-  if (value < 1024) return `${value} B`;
-  if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
-  return `${(value / (1024 * 1024)).toFixed(2)} MB`;
-}
-
-function closeModal() {
-  revokePdfObjectUrls();
-  const modal = $("moduleModal");
-
-  if (modal) {
-    modal.classList.remove("show");
-  }
-
-  document.body.style.overflow = "";
+  if (!module?.id) return;
+  window.location.assign(getModuleDestination(module));
 }
 
 /* =====================================================
@@ -1007,7 +785,14 @@ function showState(icon, title, message, showRetry = false) {
 
   const stateIcon = document.createElement("div");
   stateIcon.className = "state-icon";
-  stateIcon.textContent = icon;
+  stateIcon.setAttribute("aria-hidden", "true");
+
+  const stateIcons = {
+    search: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 4.3 4.3"></path></svg>`,
+    book: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.8A2.8 2.8 0 0 1 7.8 2H20v17H7.8A2.8 2.8 0 0 0 5 21z"></path><path d="M5 4.8V21M9 7h7M9 11h7"></path></svg>`,
+    error: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v6M12 16.5h.01"></path></svg>`
+  };
+  stateIcon.innerHTML = stateIcons[icon] || stateIcons.book;
 
   const heading = document.createElement("h3");
   heading.textContent = title;

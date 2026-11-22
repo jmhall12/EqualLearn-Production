@@ -1,4 +1,4 @@
-﻿
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -867,98 +867,555 @@
   <link rel="stylesheet" href="../assets/css/forced-dark-theme.css?v=1">
 </head>
 
-<body>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ml-bg: #0b1020;
+      --ml-panel: #141d32;
+      --ml-panel-soft: #18243b;
+      --ml-row: #17233a;
+      --ml-row-hover: #1d2a46;
+      --ml-border: rgba(178, 192, 232, .13);
+      --ml-border-active: rgba(164, 142, 255, .42);
+      --ml-text: #f1f4ff;
+      --ml-muted: #a4aec8;
+      --ml-muted-2: #7f8ba8;
+      --ml-purple: #9278f3;
+      --ml-purple-strong: #765fe0;
+      --ml-green: #74dfbc;
+      --ml-shadow: 0 12px 32px rgba(0,0,0,.18);
+    }
 
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+      overflow-x: clip;
+      color-scheme: dark;
+      background: var(--ml-bg) !important;
+    }
+
+    body {
+      color: var(--ml-text) !important;
+      font-family: "DM Sans", system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .modules-page {
+      width: 100%;
+      min-width: 0;
+      min-height: 100vh;
+      padding: 0;
+      color: var(--ml-text);
+      background:
+        radial-gradient(ellipse at 86% 0%, rgba(117, 93, 225, .09), transparent 34%),
+        var(--ml-bg);
+    }
+
+    .modules-content {
+      width: min(100% - 34px, 1240px);
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 18px 0 32px;
+    }
+
+    /* One compact container: the global UI shell already displays the page title. */
+    .module-browser-card {
+      min-width: 0;
+      padding: 19px;
+      border: 1px solid var(--ml-border);
+      border-radius: 20px;
+      background: linear-gradient(145deg, rgba(22,32,54,.98), rgba(16,25,44,.98));
+      box-shadow: var(--ml-shadow), inset 0 1px 0 rgba(255,255,255,.035);
+    }
+
+    .module-browser-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid rgba(178,192,232,.11);
+    }
+
+    .browser-context { min-width: 0; }
+
+    .browser-kicker {
+      display: block;
+      margin-bottom: 5px;
+      color: #a996ff;
+      font-size: 9px;
+      font-weight: 850;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .browser-description {
+      margin: 0;
+      color: var(--ml-muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .browser-stats {
+      display: flex;
+      flex: 0 0 auto;
+      align-items: stretch;
+      gap: 0;
+    }
+
+    .browser-stat {
+      min-width: 104px;
+      padding: 2px 15px;
+      border-left: 1px solid rgba(178,192,232,.13);
+    }
+
+    .browser-stat:first-child { border-left: 0; }
+
+    .browser-stat span {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--ml-muted);
+      font-size: 9px;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .browser-stat strong {
+      display: block;
+      color: #f5f5ff;
+      font-family: "Plus Jakarta Sans", sans-serif;
+      font-size: 17px;
+      font-weight: 800;
+      line-height: 1.15;
+      overflow-wrap: anywhere;
+    }
+
+    #sectionStat { font-size: 12px; color: #c6baff; }
+
+    .modules-toolbar {
+      display: grid;
+      grid-template-columns: minmax(200px, 1fr) auto auto;
+      gap: 9px;
+      align-items: center;
+      margin: 14px 0 13px;
+    }
+
+    .modules-search {
+      position: relative;
+      min-width: 0;
+    }
+
+    .modules-search svg {
+      position: absolute;
+      top: 50%;
+      left: 13px;
+      width: 16px;
+      height: 16px;
+      color: #929fbd;
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+
+    .modules-search input {
+      display: block;
+      width: 100%;
+      height: 42px;
+      padding: 0 13px 0 39px;
+      border: 1px solid rgba(178,192,232,.17);
+      border-radius: 11px;
+      outline: none;
+      background: #101a2e !important;
+      color: var(--ml-text) !important;
+      font: inherit;
+      font-size: 12px;
+      transition: border-color .16s ease, box-shadow .16s ease;
+    }
+
+    .modules-search input::placeholder { color: #8794b2; }
+
+    .modules-search input:focus {
+      border-color: rgba(164,142,255,.7);
+      box-shadow: 0 0 0 3px rgba(146,120,243,.10);
+    }
+
+    .modules-filter {
+      min-height: 42px;
+      padding: 0 14px;
+      border: 1px solid rgba(178,192,232,.13);
+      border-radius: 11px;
+      background: rgba(255,255,255,.045) !important;
+      color: #c8d0e5 !important;
+      font: inherit;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: background .16s ease, border-color .16s ease, color .16s ease;
+    }
+
+    .modules-filter:hover {
+      border-color: rgba(164,142,255,.36);
+      color: #fff !important;
+    }
+
+    .modules-filter.active {
+      border-color: rgba(164,142,255,.62);
+      background: linear-gradient(120deg, #9278f3, #7459dc) !important;
+      color: #fff !important;
+      box-shadow: 0 6px 16px rgba(112,89,219,.19);
+    }
+
+    .modules-list-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 2px 2px 8px;
+    }
+
+    .modules-list-heading strong {
+      color: #e9edff;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .modules-list-heading span {
+      color: var(--ml-muted-2);
+      font-size: 10px;
+      font-weight: 650;
+    }
+
+    .modules-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 7px;
+      min-width: 0;
+    }
+
+    .module-row {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr) 28px;
+      align-items: center;
+      gap: 13px;
+      min-width: 0;
+      padding: 12px 13px;
+      border: 1px solid rgba(178,192,232,.105);
+      border-radius: 13px;
+      background: linear-gradient(105deg, rgba(28,42,68,.84), rgba(22,34,56,.9));
+      color: inherit !important;
+      text-decoration: none !important;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.018);
+      transition: background .16s ease, border-color .16s ease, transform .16s ease;
+      animation: rowEnter .28s ease both;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .module-row:hover,
+    .module-row:focus-visible {
+      border-color: var(--ml-border-active);
+      background: linear-gradient(105deg, rgba(37,52,84,.98), rgba(27,42,69,.98));
+      transform: translateY(-1px);
+    }
+
+    .module-row-icon {
+      display: grid;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      border: 1px solid rgba(164,142,255,.20);
+      border-radius: 12px;
+      background: rgba(130,105,229,.13);
+      color: #c5b9ff;
+    }
+
+    .module-row-icon svg { width: 20px; height: 20px; }
+
+    .module-row-content { min-width: 0; }
+
+    .module-row-heading {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 7px 9px;
+      min-width: 0;
+    }
+
+    .module-row-heading h3 {
+      min-width: 0;
+      margin: 0;
+      color: #f2f4ff !important;
+      font-family: "Plus Jakarta Sans", sans-serif;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.4;
+      letter-spacing: -.015em;
+      overflow-wrap: anywhere;
+    }
+
+    .module-category {
+      display: inline-flex;
+      align-items: center;
+      max-width: 190px;
+      padding: 4px 7px;
+      overflow: hidden;
+      border: 1px solid rgba(164,142,255,.15);
+      border-radius: 7px;
+      background: rgba(130,105,229,.10);
+      color: #bfb3ff;
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-overflow: ellipsis;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .module-row-description {
+      display: -webkit-box;
+      margin: 4px 0 6px;
+      overflow: hidden;
+      color: #aab4cc !important;
+      font-size: 11px;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+    }
+
+    .module-row-meta {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 5px 13px;
+      min-width: 0;
+      color: #8f9bb8;
+      font-size: 9px;
+      font-weight: 600;
+    }
+
+    .module-row-meta-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .module-row-meta-item svg {
+      width: 12px;
+      height: 12px;
+      flex: 0 0 12px;
+      color: #a99aff;
+    }
+
+    .module-row-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--ml-green);
+      font-size: 9px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .module-row-status::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--ml-green);
+      box-shadow: 0 0 9px rgba(116,223,188,.45);
+    }
+
+    .module-row-arrow {
+      display: grid;
+      width: 28px;
+      height: 28px;
+      place-items: center;
+      border: 1px solid rgba(164,142,255,.15);
+      border-radius: 9px;
+      background: rgba(130,105,229,.08);
+      color: #b9adff;
+    }
+
+    .module-row-arrow svg { width: 15px; height: 15px; }
+
+    .skeleton {
+      height: 72px;
+      border: 1px solid rgba(178,192,232,.08);
+      border-radius: 13px;
+      background: linear-gradient(100deg, #17233a 25%, #202e4a 50%, #17233a 75%);
+      background-size: 200% 100%;
+      animation: skeletonSweep 1.45s ease infinite;
+    }
+
+    .state-box {
+      display: grid;
+      justify-items: center;
+      padding: 38px 18px;
+      border: 1px dashed rgba(178,192,232,.17);
+      border-radius: 13px;
+      background: rgba(255,255,255,.018);
+      text-align: center;
+    }
+
+    .state-icon {
+      display: grid;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      margin-bottom: 10px;
+      border: 1px solid rgba(164,142,255,.18);
+      border-radius: 13px;
+      background: rgba(130,105,229,.10);
+      color: #c3b8ff;
+    }
+
+    .state-icon svg { width: 20px; height: 20px; }
+
+    .state-box h3 {
+      margin: 0 0 5px;
+      color: #f1f3ff !important;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .state-box p {
+      max-width: 420px;
+      margin: 0;
+      color: var(--ml-muted) !important;
+      font-size: 10px;
+      line-height: 1.65;
+    }
+
+    .retry-btn {
+      min-height: 36px;
+      margin-top: 14px;
+      padding: 8px 13px;
+      border: 0;
+      border-radius: 9px;
+      background: var(--ml-purple-strong);
+      color: #fff;
+      font: inherit;
+      font-size: 10px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .modules-footer {
+      margin: 12px 2px 0;
+      color: #697692;
+      font-size: 9px;
+      text-align: right;
+    }
+
+    @keyframes rowEnter {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes skeletonSweep {
+      0% { background-position: 100% 0; }
+      100% { background-position: -100% 0; }
+    }
+
+    @media (max-width: 760px) {
+      .modules-content { width: calc(100% - 24px); padding: 12px 0 24px; }
+      .module-browser-card { padding: 14px; border-radius: 16px; }
+      .module-browser-top { align-items: flex-start; flex-direction: column; gap: 11px; }
+      .browser-stats { width: 100%; }
+      .browser-stat { flex: 1; min-width: 0; padding: 1px 9px; }
+      .browser-stat:first-child { padding-left: 0; }
+      .browser-stat span { font-size: 8px; }
+      .browser-stat strong { font-size: 14px; }
+      #sectionStat { font-size: 10px; }
+      .modules-toolbar { grid-template-columns: minmax(0,1fr) auto auto; gap: 6px; margin: 12px 0; }
+      .modules-search input { height: 40px; font-size: 11px; }
+      .modules-filter { min-height: 40px; padding: 0 9px; font-size: 9px; }
+      .module-row { grid-template-columns: 37px minmax(0,1fr) 25px; gap: 10px; padding: 10px; border-radius: 11px; }
+      .module-row-icon { width: 37px; height: 37px; border-radius: 10px; }
+      .module-row-icon svg { width: 18px; height: 18px; }
+      .module-row-heading h3 { font-size: 12px; }
+      .module-row-description { font-size: 10px; }
+      .module-row-meta { gap: 4px 9px; font-size: 8px; }
+      .module-row-arrow { width: 25px; height: 25px; }
+    }
+
+    @media (max-width: 430px) {
+      .modules-content { width: calc(100% - 18px); padding-top: 9px; }
+      .module-browser-card { padding: 11px; }
+      .browser-description { font-size: 10px; }
+      .browser-stat { padding-inline: 6px; }
+      .browser-stat span { white-space: normal; line-height: 1.35; min-height: 22px; }
+      .modules-toolbar { grid-template-columns: minmax(0,1fr) auto; }
+      .modules-search { grid-column: 1 / -1; }
+      .modules-filter { width: 100%; }
+      .modules-list-heading strong { font-size: 10px; }
+      .module-row-meta .module-row-status { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
   <div class="modules-page">
     <main class="modules-content">
-
-      <div class="premium-breadcrumb">
-        <span>Learning Space</span>
-        <span class="breadcrumb-dot"></span>
-        <span class="current">Learning Modules</span>
-      </div>
-
-      <section class="premium-hero">
-        <div class="hero-content">
-          <div class="hero-eyebrow"><span></span> YOUR LEARNING JOURNEY</div>
-
-          <h1>
-            Discover knowledge.<br>
-            <em>Unlock your potential.</em>
-          </h1>
-
-          <p>
-            Your learning resources, organized in one space.
-            Explore lessons, access materials, and keep moving
-            forward with EqualLearn.
-          </p>
-        </div>
-
-        <div class="hero-visual">
-          <div class="hero-visual-icon">📚</div>
-          <div class="hero-visual-badge">LEARN EVERY DAY ✦</div>
-        </div>
-      </section>
-
-      <section class="premium-stats">
-        <div class="premium-stat">
-          <div class="stat-icon">📚</div>
-          <div class="stat-info">
-            <span>Available Modules</span>
-            <strong id="moduleCount">—</strong>
+      <section class="module-browser-card" aria-label="Published learning materials">
+        <div class="module-browser-top">
+          <div class="browser-context">
+            <span class="browser-kicker">Your classroom</span>
+            <p class="browser-description">Browse the learning materials published for your class.</p>
           </div>
-        </div>
 
-        <div class="premium-stat">
-          <div class="stat-icon">🎓</div>
-          <div class="stat-info">
-            <span>Your Section</span>
-            <strong id="sectionStat">—</strong>
-          </div>
-        </div>
-
-        <div class="premium-stat">
-          <div class="stat-icon">📖</div>
-          <div class="stat-info">
-            <span>Learning Resources</span>
-            <strong id="resourceCount">—</strong>
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <div class="modules-section-heading">
-          <div class="section-title-wrap">
-            <div class="section-heading-icon">▤</div>
-            <div>
-              <h2>Learning Library</h2>
-              <p>Explore materials shared by your teachers.</p>
+          <div class="browser-stats" aria-label="Learning overview">
+            <div class="browser-stat">
+              <span>Available modules</span>
+              <strong id="moduleCount">—</strong>
+            </div>
+            <div class="browser-stat">
+              <span>Your section</span>
+              <strong id="sectionStat">—</strong>
+            </div>
+            <div class="browser-stat">
+              <span>Learning resources</span>
+              <strong id="resourceCount">—</strong>
             </div>
           </div>
-          <span class="section-label">YOUR CLASSROOM</span>
         </div>
 
         <div class="modules-toolbar">
-          <div class="modules-search">
-            <span>⌕</span>
+          <label class="modules-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <circle cx="10.8" cy="10.8" r="6.8"></circle>
+              <path d="m16 16 4.3 4.3"></path>
+            </svg>
             <input
               id="searchInput"
               type="search"
               placeholder="Search modules, topics, or teachers..."
               autocomplete="off"
+              aria-label="Search published modules"
             >
-          </div>
+          </label>
 
-          <button type="button" class="modules-filter active" data-filter="all">
-            All Modules
-          </button>
-
-          <button type="button" class="modules-filter" data-filter="recent">
-            Recently Added
-          </button>
+          <button type="button" class="modules-filter active" data-filter="all">All Modules</button>
+          <button type="button" class="modules-filter" data-filter="recent">Recently Added</button>
         </div>
 
-        <div class="modules-grid" id="moduleGrid">
+        <div class="modules-list-heading">
+          <strong>Published learning materials</strong>
+          <span>Open an item to view its content</span>
+        </div>
+
+        <div class="modules-grid" id="moduleGrid" aria-live="polite">
           <div class="skeleton"></div>
           <div class="skeleton"></div>
           <div class="skeleton"></div>
@@ -966,66 +1423,26 @@
       </section>
 
       <footer class="modules-footer">
-        <span>✦</span>
-        © <span id="year"></span> EqualLearn. Learn without limits.
+        © <span id="year"></span> EqualLearn
       </footer>
-
     </main>
   </div>
 
-  <!-- MODULE PREVIEW -->
-  <div
-    class="modules-modal"
-    id="moduleModal"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="modalTitle"
-  >
-    <div class="modules-modal-card">
-      <div class="modules-modal-head">
-        <h3 id="modalTitle">Module Details</h3>
-        <button
-          type="button"
-          class="modules-modal-close"
-          id="closeModal"
-          aria-label="Close module preview"
-        >×</button>
-      </div>
-
-      <div class="modules-modal-description" id="modalDescription"></div>
-      <div class="modules-modal-resources" id="modalResources"></div>
-    </div>
-  </div>
-
-  <!-- MODULE LOGIC -->
+  <!-- Module list behavior and navigation -->
   <script type="module" src="../assets/js/student.modules.js"></script>
 
-  <!-- EXISTING GLOBAL UI SHELL -->
+  <!-- Global application shell owns the page header and navigation -->
   <script type="module" src="../assets/js/ui-shell.js"></script>
   <script type="module" src="../assets/js/theme.js"></script>
   <script type="module" src="../assets/js/pwa.js"></script>
 
-<!-- EQUALLEARN LUMI COMPANION -->
-<iframe
-  src="../assets/widgets/lumi.html"
-  title="Lumi — EqualLearn Companion"
-  id="equallearn-lumi-frame"
-  allow="autoplay"
-  style="
-    position: fixed;
-    right: 8px;
-    bottom: 8px;
-    width: 210px;
-    height: 255px;
-    border: 0;
-    background: transparent;
-    z-index: 99999;
-    overflow: hidden;
-    pointer-events: auto;
-  ">
-</iframe>
-
-
+  <!-- Existing Lumi companion -->
+  <iframe
+    src="../assets/widgets/lumi.html"
+    title="Lumi — EqualLearn Companion"
+    id="equallearn-lumi-frame"
+    allow="autoplay"
+    style="position:fixed;right:8px;bottom:8px;width:210px;height:255px;border:0;background:transparent;z-index:99999;overflow:hidden;pointer-events:auto;">
+  </iframe>
 </body>
 </html>
-

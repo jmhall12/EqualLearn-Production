@@ -2433,64 +2433,22 @@ body > .premium-footer {
 
 
   <script>
-    // PWA installation: browser support varies, so provide a clear fallback.
-    let equalLearnInstallPrompt = null;
+    // Send visitors to the official EqualLearn Download Center.
+    // The Download Center serves the current APK through its stable release link.
     const installAppButton = document.getElementById("installAppButton");
     const installAppHint = document.getElementById("installAppHint");
-
-    window.addEventListener("beforeinstallprompt", event => {
-      event.preventDefault();
-      equalLearnInstallPrompt = event;
-      if (installAppHint) {
-        installAppHint.textContent = "Ready to install on this device";
-      }
-    });
+    const EQUALLEARN_DOWNLOAD_CENTER = "https://equallearn-downloads.pages.dev/";
 
     if (installAppButton) {
-      installAppButton.addEventListener("click", async () => {
-        if (!equalLearnInstallPrompt) {
-          const isStandalone = window.matchMedia("(display-mode: standalone)").matches
-            || window.navigator.standalone === true;
-
-          if (installAppHint) {
-            installAppHint.textContent = isStandalone
-              ? "EqualLearn is already installed on this device."
-              : "Open your browser menu and choose Install app or Add to Home Screen.";
-          }
-          return;
+      installAppButton.addEventListener("click", () => {
+        if (installAppHint) {
+          installAppHint.textContent = "Opening the official EqualLearn Download Center...";
         }
 
-        installAppButton.disabled = true;
-        equalLearnInstallPrompt.prompt();
-
-        try {
-          const choice = await equalLearnInstallPrompt.userChoice;
-          if (installAppHint) {
-            installAppHint.textContent = choice.outcome === "accepted"
-              ? "Thanks for installing EqualLearn!"
-              : "Installation was cancelled. You can try again anytime.";
-          }
-        } catch (error) {
-          console.error("EqualLearn installation prompt failed:", error);
-          if (installAppHint) {
-            installAppHint.textContent = "Open the browser menu to install EqualLearn.";
-          }
-        } finally {
-          equalLearnInstallPrompt = null;
-          installAppButton.disabled = false;
-        }
+        window.location.assign(EQUALLEARN_DOWNLOAD_CENTER);
       });
     }
 
-    window.addEventListener("appinstalled", () => {
-      if (installAppHint) {
-        installAppHint.textContent = "EqualLearn has been installed.";
-      }
-      if (installAppButton) {
-        installAppButton.textContent = "Installed ✓";
-        installAppButton.disabled = true;
-      }
-    });
   </script>
 
 <script type="module">
