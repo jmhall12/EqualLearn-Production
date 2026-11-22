@@ -49,6 +49,27 @@ jobs:
       - name: Prepare web assets
         run: npm run mobile:build-web
 
+      - name: Verify APK starts from bundled login page
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync, existsSync } from 'node:fs';
+          const config = JSON.parse(readFileSync('capacitor.config.json', 'utf8'));
+          if (config.server?.url) {
+            console.error('::error::Production APK must not use server.url; it forces remote WebView loading.');
+            process.exit(1);
+          }
+          if (config.server?.appStartPath !== '/login.html') {
+            console.error('::error::Capacitor appStartPath must be /login.html.');
+            process.exit(1);
+          }
+          if (!existsSync('www/login.html') || !existsSync('www/index.html')) {
+            console.error('::error::Expected bundled www/login.html and www/index.html are missing.');
+            process.exit(1);
+          }
+          console.log('Verified: APK uses bundled web assets and opens /login.html.');
+          NODE
+
       - name: Create Android project
         run: npx cap add android
 
@@ -73,19 +94,6 @@ jobs:
 
       - name: Sync Capacitor
         run: npx cap sync android
-
-      - name: Add Android camera and microphone permissions for Live
-        run: node scripts/configure-android-live-permissions.mjs
-
-      - name: Verify Android media permissions in manifest
-        shell: bash
-        run: |
-          MANIFEST="android/app/src/main/AndroidManifest.xml"
-          test -f "$MANIFEST" || { echo "::error::Android manifest was not generated."; exit 1; }
-          grep -Fq 'android.permission.CAMERA' "$MANIFEST" || { echo "::error::CAMERA permission is missing."; exit 1; }
-          grep -Fq 'android.permission.RECORD_AUDIO' "$MANIFEST" || { echo "::error::RECORD_AUDIO permission is missing."; exit 1; }
-          grep -Fq 'android.permission.MODIFY_AUDIO_SETTINGS' "$MANIFEST" || { echo "::error::MODIFY_AUDIO_SETTINGS permission is missing."; exit 1; }
-          echo "Manifest includes Camera, Microphone, and audio-settings permissions."
 
       - name: Prepare permanent signing key
         env:
@@ -153,23 +161,6 @@ jobs:
           EQUALLEARN_VERSION_CODE: ${{ steps.app_version.outputs.version_code }}
           EQUALLEARN_VERSION_NAME: ${{ steps.app_version.outputs.version_name }}
         run: ./gradlew --no-daemon clean assembleRelease
-
-      - name: Verify Camera and Microphone permissions inside final APK
-        shell: bash
-        run: |
-          APK_PATH="android/app/build/outputs/apk/release/app-release.apk"
-          test -f "$APK_PATH" || { echo "::error::Release APK was not generated."; exit 1; }
-          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
-          AAPT="$(find "$SDK_ROOT/build-tools" -type f -name aapt | sort -V | tail -n 1)"
-          if [ -z "$AAPT" ]; then
-            echo "::error::aapt was not found; cannot verify packaged permissions."
-            exit 1
-          fi
-          "$AAPT" dump permissions "$APK_PATH" | tee apk-permissions.txt
-          grep -Fq 'android.permission.CAMERA' apk-permissions.txt || { echo "::error::CAMERA is absent from the final APK."; exit 1; }
-          grep -Fq 'android.permission.RECORD_AUDIO' apk-permissions.txt || { echo "::error::RECORD_AUDIO is absent from the final APK."; exit 1; }
-          grep -Fq 'android.permission.MODIFY_AUDIO_SETTINGS' apk-permissions.txt || { echo "::error::MODIFY_AUDIO_SETTINGS is absent from the final APK."; exit 1; }
-          echo "Final APK includes Camera and Microphone permissions."
 
       - name: Verify APK signature
         shell: bash

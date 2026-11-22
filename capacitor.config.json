@@ -3,9 +3,9 @@
   "appName": "EqualLearn",
   "webDir": "www",
   "server": {
-    "url": "https://equallearn.pages.dev/login.html",
     "cleartext": false,
-    "androidScheme": "https"
+    "androidScheme": "https",
+    "appStartPath": "/login.html"
   },
   "android": {
     "allowMixedContent": false
