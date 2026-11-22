@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b1020">
+  <title>Evaluation Workspace | EqualLearn</title>
+  <link rel="stylesheet" href="assets/css/evaluation-workspace.css">
+</head>
+<body>
+  <div class="eval-app" id="evalApp" hidden>
+    <aside class="eval-sidebar">
+      <a class="brand" href="/evaluation-workspace.html?role=student&page=overview" id="evalBrand"><span class="brand-mark">E</span><span>EqualLearn<small>Evaluation Workspace</small></span></a>
+      <div class="side-kicker">DEMO ENVIRONMENT</div>
+      <div class="role-pill"><span class="live-dot"></span><span id="evalRoleLabel">Read-only demo</span></div>
+      <nav class="side-nav" id="evalNavigation" aria-label="Demo pages"></nav>
+      <div class="side-foot"><span class="lock-icon">⌑</span><span>View-only access<br><small>Sample records only</small></span></div>
+    </aside>
+
+    <main class="eval-main">
+      <header class="topbar">
+        <div><div class="crumb">EQUALLEARN <span>/</span> <b id="evalCrumb">Overview</b></div><h1 id="evalPageTitle">Loading demo workspace…</h1></div>
+        <div class="top-actions"><span class="demo-badge"><span class="live-dot"></span> READ-ONLY DEMO</span><div class="user-chip"><span class="avatar" id="evalAvatar">E</span><span><b id="evalUserName">Evaluator</b><small id="evalUserRole">Demo account</small></span></div></div>
+      </header>
+
+      <section class="notice"><span class="notice-icon">ⓘ</span><div><b>Isolated Evaluation Mode</b><p>This workspace uses demonstration content only. It does not open the live Admin, Teacher, or Student dashboards and does not load real school records.</p></div></section>
+      <section class="welcome-row"><div><p class="eyebrow">GUIDED SYSTEM TOUR</p><h2 id="evalWelcomeTitle">Welcome to EqualLearn</h2><p id="evalPageDescription">Explore the selected feature using the navigation on the left. Lumi will explain this page automatically.</p></div><div class="lumi-tip"><span class="lumi-spark">✦</span><div><b>Lumi is your guide</b><small>Listen to the narration or open Lumi to ask questions.</small></div></div></section>
+      <section class="stats-grid" id="evalStats" aria-label="Demo summary"></section>
+      <section class="content-card">
+        <div class="card-heading"><div><p class="eyebrow">DEMONSTRATION VIEW</p><h3 id="evalPanelTitle">Overview</h3></div><span class="sample-label">SAMPLE DATA</span></div>
+        <div id="evalHighlights" class="highlights"></div>
+        <div class="table-wrap"><table><thead id="evalTableHead"></thead><tbody id="evalTableBody"></tbody></table></div>
+        <p class="empty-note" id="evalEmptyNote" hidden>No sample records are configured for this view.</p>
+      </section>
+      <footer class="workspace-footer">EqualLearn · Gender Equality Education and Awareness <span>Evaluation Mode · No production data</span></footer>
+    </main>
+  </div>
+  <div id="evalBoot" class="boot-screen"><div class="boot-logo">E</div><b>Verifying demo access…</b><small>Opening the isolated Evaluation Workspace</small></div>
+  <script type="module" src="assets/js/evaluation-workspace.js"></script>
+</body>
+</html>

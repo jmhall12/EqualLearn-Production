@@ -247,6 +247,7 @@ body{font-family:Inter,"Segoe UI",Arial,sans-serif}
 
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js";
 import { auth, db } from "../js/firebase-config.js";
+import { evaluationAuth } from "../js/evaluation-config.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
@@ -1250,17 +1251,19 @@ if(renderer){
 
  const suggestionBox=document.getElementById("lumi-suggestions");
 
- const currentPath=(()=>{try{return window.parent.location.pathname.toLowerCase()}catch(_){return location.pathname.toLowerCase()}})();
-
- const currentTitle=(()=>{try{return window.parent.document.title||"EqualLearn"}catch(_){return "EqualLearn"}})();
-
+ const initialHostRoute=(()=>{try{const u=new URL(window.parent.location.href);return u.searchParams.get("path")||u.pathname}catch(_){return location.pathname}})();
+ let currentPath=String(initialHostRoute||"/").toLowerCase();
+ let currentTitle=(()=>{try{return window.parent.document.title||"EqualLearn"}catch(_){return "EqualLearn"}})();
  let role=currentPath.includes("/admin/")?"admin":currentPath.includes("/teacher/")?"teacher":currentPath.includes("/student/")?"student":"visitor";
 
  const conversation = [];
 let currentAccountName="friend";
 let accountProfile={};
+let evaluationMode=false;
+let evaluationRole="";
+let evaluationPage="overview";
 
- const pageName=currentPath.split("/").pop().replace(/\.html?$/i,"").replace(/[-_]/g," ")||"home";
+ let pageName=currentPath.split("/").pop().replace(/\.html?$/i,"").replace(/[-_]/g," ")||"home";
 
  const roleLinks={
 
@@ -1278,8 +1281,53 @@ let accountProfile={};
 
  const contextLabel=document.getElementById("lumi-context");
  contextLabel.textContent=`${roleLabel} · ${pageName}`;
- // Personalize Lumi from the authenticated EqualLearn account profile.
+
+ function evaluationLinksFor(roleName){
+  const pages={
+   admin:[["Overview","overview"],["Students","students"],["Teachers","teachers"],["Lessons","lessons"],["Content Review","content"],["Class Assignments","assignments"],["Live Sessions","live"],["Reports","reports"],["Settings","settings"]],
+   teacher:[["Overview","overview"],["My Classes","classes"],["Students","students"],["Learning Modules","modules"],["Admin Content Review","admin-content"],["Lessons","lessons"],["Quiz Builder","quizzes"],["Grading","grading"],["Live Class","live"]],
+   student:[["Overview","overview"],["Learning Modules","modules"],["Classwork","classwork"],["Quizzes","quizzes"],["My Progress","progress"],["Announcements","announcements"],["My Profile","profile"]]
+  };
+  return (pages[roleName]||[]).map(([label,page])=>({label,url:`/evaluation-workspace.html?role=${encodeURIComponent(roleName)}&page=${encodeURIComponent(page)}`}));
+ }
+ function applyEvaluationContext(data){
+  evaluationMode=true;
+  evaluationRole=String(data.role||"student").toLowerCase();
+  evaluationPage=String(data.page||"overview").toLowerCase();
+  role=evaluationRole;
+  currentAccountName="Evaluator";
+  currentPath=String(data.path||`/evaluation-workspace.html?role=${role}&page=${evaluationPage}`);
+  currentTitle=String(data.title||"EqualLearn Evaluation Workspace");
+  pageName=evaluationPage.replace(/[-_]/g," ");
+  links=evaluationLinksFor(role);
+  roleLabel=`${role[0].toUpperCase()+role.slice(1)} Demo Guide`;
+  contextLabel.textContent=`Evaluation · ${roleLabel} · ${pageName}`;
+  if(typeof setSuggestions==="function")setSuggestions(suggestionsForRole());
+ }
+ function applyLumiPageContext(path,title){
+  if(evaluationMode)return;
+  const nextPath=String(path||"/").toLowerCase();
+  currentPath=nextPath;
+  currentTitle=String(title||"EqualLearn");
+  const detected=nextPath.includes("/admin/")?"admin":nextPath.includes("/teacher/")?"teacher":nextPath.includes("/student/")?"student":"visitor";
+  if(detected!=="visitor")role=detected;
+  pageName=nextPath.split("/").pop().replace(/\.html?$/i,"").replace(/[-_]/g," ")||"home";
+  links=roleLinks[role]||[{label:"Login",url:"/login.html"},{label:"Register",url:"/register.html"}];
+  roleLabel=role==="visitor"?"Welcome to EqualLearn":`${role[0].toUpperCase()+role.slice(1)} guide`;
+  contextLabel.textContent=`${roleLabel} · ${pageName}`;
+  if(typeof setSuggestions==="function")setSuggestions(suggestionsForRole());
+ }
+
+ window.addEventListener("message",event=>{
+  if(event.origin!==window.location.origin)return;
+  const data=event.data||{};
+  if(data.type==="EQUALLEARN_EVALUATION_CONTEXT")applyEvaluationContext(data);
+  if(data.type==="EQUALLEARN_PAGE_CONTEXT")applyLumiPageContext(data.path,data.title);
+  if(data.type==="EQUALLEARN_EVALUATION_NARRATION"&&typeof data.text==="string")say(data.text,9500);
+ });
+ // In Evaluation Mode, use the dedicated named Firebase Auth session only.
  onAuthStateChanged(auth,async user=>{
+  if(evaluationMode)return;
   if(!user){currentAccountName="friend";return;}
   try{
    const snap=await getDoc(doc(db,"users",user.uid));
@@ -1329,7 +1377,8 @@ let accountProfile={};
  }
  async function askLumiWorkersAI(question){
   if(!lumiAIIsConfigured())throw new Error("Lumi's free AI Worker URL has not been configured yet.");
-  const user=auth.currentUser;
+  if(evaluationMode && typeof evaluationAuth.authStateReady === "function") await evaluationAuth.authStateReady();
+  const user=evaluationMode?evaluationAuth.currentUser:auth.currentUser;
   if(!user)throw new Error("Please sign in to use Lumi AI.");
   const idToken=await user.getIdToken();
   const response=await fetch(`${LUMI_AI_WORKER_URL.replace(/\/$/,"")}/chat`,{
@@ -1358,11 +1407,18 @@ let accountProfile={};
   return data;
  }
 
-function navigate(url){try{window.parent.location.href=url}catch(_){location.href=url}}
+function navigate(url){
+  if(evaluationMode){
+   try{const frame=window.parent.document.getElementById("equallearn-page-frame");if(frame){frame.src=url;return;}}catch(_){}
+  }
+  try{window.parent.location.href=url}catch(_){location.href=url}
+ }
 
  function setSuggestions(items){suggestionBox.replaceChildren();[...items,"🎮 Play 3D mini-games"].forEach(item=>{const b=document.createElement("button");b.type="button";b.textContent=item;b.addEventListener("click",()=>handleQuestion(item));suggestionBox.appendChild(b)})}
 
  function suggestionsForRole(){
+
+  if(evaluationMode)return ["Explain this page","What can I explore in this demo?","Explain the workflow","Which features are read-only?"];
 
   if(role==="student")return ["Paano maghanap ng lessons?","Paano mag-submit ng activity?","Hindi gumagana ang quiz","Paano makita ang grades?"];
 

@@ -98,6 +98,7 @@
       "use strict";
 
       const pageFrame = document.getElementById("equallearn-page-frame");
+      const lumiFrame = document.getElementById("equallearn-lumi-frame");
       const loading = document.getElementById("equallearn-app-loading");
       const params = new URLSearchParams(window.location.search);
 
@@ -127,6 +128,21 @@
         }
       }
 
+      function publishRouteContext() {
+        try {
+          const childLocation = pageFrame.contentWindow.location;
+          const route = `${childLocation.pathname}${childLocation.search}${childLocation.hash}`;
+          const childTitle = pageFrame.contentDocument?.title || "EqualLearn";
+          lumiFrame?.contentWindow?.postMessage({
+            type: "EQUALLEARN_PAGE_CONTEXT",
+            path: childLocation.pathname + childLocation.search + childLocation.hash,
+            title: childTitle
+          }, window.location.origin);
+        } catch (_) {
+          // The host and Lumi must remain stable if the page is temporarily unavailable.
+        }
+      }
+
       function syncCurrentRouteToAddressBar() {
         try {
           const childLocation = pageFrame.contentWindow.location;
@@ -140,6 +156,7 @@
 
           const childTitle = pageFrame.contentDocument?.title;
           if (childTitle) document.title = `${childTitle} | EqualLearn`;
+          publishRouteContext();
         } catch (_) {
           // Keep the host stable even if a child route briefly navigates externally.
         }
@@ -180,5 +197,6 @@
       }, { passive: true });
     })();
   </script>
+  <script type="module" src="assets/js/evaluation-runtime.js"></script>
 </body>
 </html>

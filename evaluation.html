@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#090d19">
+  <meta name="description" content="Explore EqualLearn in a guided, read-only evaluation environment with Lumi.">
+  <title>Evaluation Mode | EqualLearn</title>
+  <link rel="icon" href="assets/icons/equallearn-logo.png">
+  <link rel="stylesheet" href="assets/css/evaluation-mode.css">
+</head>
+<body>
+  <main class="eval-shell">
+    <header class="eval-top">
+      <a class="eval-brand" href="index.html"><img src="assets/icons/equallearn-logo.png" alt=""><span>EqualLearn</span></a>
+      <a class="eval-back" href="login.html" id="evalBackToLogin">Back to Login</a>
+    </header>
+
+    <section class="eval-hero">
+      <span class="eval-kicker">Guided system demonstration</span>
+      <h1>Explore EqualLearn<br><span>with Lumi by your side.</span></h1>
+      <p>Choose a demonstration role to explore an isolated, read-only version of the EqualLearn workspace. Lumi will introduce each sample page, explain its purpose through voice narration, and answer questions through chat. Live school records and production dashboards are not opened.</p>
+    </section>
+
+    <div class="eval-note"><span aria-hidden="true">🔒</span><div><strong>Read-only evaluation.</strong> These special accounts open only the isolated Evaluation Workspace. It uses fictional sample records and does not load live Admin, Teacher, or Student dashboards. Production Firestore access is denied for demo roles.</div></div>
+
+    <section class="eval-grid" aria-label="Choose a demo role">
+      <article class="eval-card" data-role="admin">
+        <div class="eval-card-icon" aria-hidden="true">▣</div>
+        <h2>Administrator</h2>
+        <p>Explore the administration dashboard, user overview, teacher management, content workflow, reports, and settings.</p>
+        <span class="eval-meta">Read-only Admin demo</span>
+        <button class="eval-select" type="button" data-select-role="admin">Continue as Admin</button>
+      </article>
+      <article class="eval-card" data-role="teacher">
+        <div class="eval-card-icon" aria-hidden="true">▤</div>
+        <h2>Teacher</h2>
+        <p>Explore classes, assigned modules, lessons, student lists, quiz tools, grading views, and classroom features.</p>
+        <span class="eval-meta">Read-only Teacher demo</span>
+        <button class="eval-select" type="button" data-select-role="teacher">Continue as Teacher</button>
+      </article>
+      <article class="eval-card" data-role="student">
+        <div class="eval-card-icon" aria-hidden="true">◇</div>
+        <h2>Student</h2>
+        <p>Explore the student dashboard, learning modules, classwork, quizzes, progress, announcements, and profile.</p>
+        <span class="eval-meta">Read-only Student demo</span>
+        <button class="eval-select" type="button" data-select-role="student">Continue as Student</button>
+      </article>
+    </section>
+
+    <section class="eval-panel" id="evalLoginPanel" hidden aria-labelledby="evalPanelTitle">
+      <div class="eval-panel-head">
+        <h2 id="evalPanelTitle">Sign in to demo</h2>
+        <button class="eval-close" id="evalClosePanel" type="button">Close</button>
+      </div>
+      <form id="evalLoginForm" autocomplete="on">
+        <div class="eval-field"><label for="evalEmail">Demo account email</label><input id="evalEmail" name="email" type="email" autocomplete="username" placeholder="evaluation@example.com" required></div>
+        <div class="eval-field"><label for="evalPassword">Demo account password</label><input id="evalPassword" name="password" type="password" autocomplete="current-password" placeholder="Enter the provided demo password" required></div>
+        <button class="eval-submit" id="evalSubmit" type="submit">Sign in to Evaluation Mode</button>
+        <div class="eval-loading" id="evalLoading"><span class="eval-spinner"></span> Verifying secure demo access…</div>
+        <p class="eval-message" id="evalMessage" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <footer class="eval-foot"><strong>EqualLearn · Gender Equality Education and Awareness</strong><br>Use only the demo credentials provided by the project team. Demo accounts must have <code>demoReadOnly</code> set to the Boolean value <code>true</code> in their Firestore user profile.</footer>
+  </main>
+  <script type="module" src="assets/js/evaluation-mode.js"></script>
+</body>
+</html>
