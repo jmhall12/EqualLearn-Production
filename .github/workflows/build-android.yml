@@ -49,25 +49,34 @@ jobs:
       - name: Prepare web assets
         run: npm run mobile:build-web
 
-      - name: Verify APK starts from bundled login page
+      - name: Enforce APK local login startup
         shell: bash
         run: |
           node --input-type=module <<'NODE'
-          import { readFileSync, existsSync } from 'node:fs';
-          const config = JSON.parse(readFileSync('capacitor.config.json', 'utf8'));
-          if (config.server?.url) {
-            console.error('::error::Production APK must not use server.url; it forces remote WebView loading.');
+          import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+
+          const configPath = 'capacitor.config.json';
+          const config = JSON.parse(readFileSync(configPath, 'utf8'));
+          config.server ??= {};
+
+          // A production APK must never load the hosted landing page as its WebView source.
+          delete config.server.url;
+          config.server.appStartPath = '/login.html';
+
+          if (config.webDir !== 'www') {
+            console.error(`::error::Expected Capacitor webDir "www", received "${config.webDir}".`);
             process.exit(1);
           }
-          if (config.server?.appStartPath !== '/login.html') {
-            console.error('::error::Capacitor appStartPath must be /login.html.');
-            process.exit(1);
+          for (const file of ['www/index.html', 'www/login.html']) {
+            if (!existsSync(file)) {
+              console.error(`::error::Required bundled web entry is missing: ${file}`);
+              process.exit(1);
+            }
           }
-          if (!existsSync('www/login.html') || !existsSync('www/index.html')) {
-            console.error('::error::Expected bundled www/login.html and www/index.html are missing.');
-            process.exit(1);
-          }
-          console.log('Verified: APK uses bundled web assets and opens /login.html.');
+
+          writeFileSync(configPath, JSON.stringify(config, null, 2) + '\\n');
+          console.log('Configured APK to use bundled www assets and open /login.html.');
+          console.log('Production server.url removed; website landing page remains unchanged.');
           NODE
 
       - name: Create Android project
@@ -94,6 +103,38 @@ jobs:
 
       - name: Sync Capacitor
         run: npx cap sync android
+
+      - name: Verify generated Android project uses local login
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync, existsSync } from 'node:fs';
+
+          const nativeConfigPath = 'android/app/src/main/assets/capacitor.config.json';
+          const bundledLoginPath = 'android/app/src/main/assets/public/login.html';
+          const bundledIndexPath = 'android/app/src/main/assets/public/index.html';
+
+          for (const file of [nativeConfigPath, bundledLoginPath, bundledIndexPath]) {
+            if (!existsSync(file)) {
+              console.error(`::error::Expected generated Android asset is missing: ${file}`);
+              process.exit(1);
+            }
+          }
+
+          const nativeConfig = JSON.parse(readFileSync(nativeConfigPath, 'utf8'));
+          if (nativeConfig.server?.url) {
+            console.error(`::error::Generated Android config still contains server.url: ${nativeConfig.server.url}`);
+            process.exit(1);
+          }
+          if (nativeConfig.server?.appStartPath !== '/login.html') {
+            console.error(`::error::Generated Android appStartPath is not /login.html: ${nativeConfig.server?.appStartPath}`);
+            process.exit(1);
+          }
+
+          console.log('PASS: final Android project contains bundled login.html.');
+          console.log('PASS: final Android Capacitor config has no remote server.url.');
+          console.log('PASS: final Android startup path is /login.html.');
+          NODE
 
       - name: Prepare permanent signing key
         env:
