@@ -1,20 +1,30 @@
 
-const CACHE = "equallearn-shell-v10";
+const CACHE = "equallearn-shell-v11-evaluation-lumi-voice";
 
 const CORE = [
     "./",
     "./index.html",
     "./login.html",
     "./register.html",
+    "./app.html",
+    "./evaluation.html",
+    "./evaluation-workspace.html",
     "./manifest.webmanifest",
 
     "./assets/css/equallearn.css",
+    "./assets/css/evaluation-mode.css",
+    "./assets/css/evaluation-workspace.css",
     "./assets/css/loading-screen.css",
 
     "./assets/js/icons.js",
     "./assets/js/theme.js",
     "./assets/js/password-toggle.js",
-    "./assets/js/loading-screen.js"
+    "./assets/js/loading-screen.js",
+    "./assets/js/evaluation-config.js",
+    "./assets/js/evaluation-mode.js",
+    "./assets/js/evaluation-runtime.js",
+    "./assets/js/evaluation-workspace.js",
+    "./assets/widgets/lumi.html"
 ];
 
 const OFFLINE_MESSAGE = `

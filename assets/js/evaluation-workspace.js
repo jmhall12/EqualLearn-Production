@@ -9,6 +9,7 @@ const requestedRole = String(params.get("role") || "").toLowerCase();
 const requestedPage = String(params.get("page") || "overview").toLowerCase();
 const ROLE_NAMES = { admin: "Administrator", teacher: "Teacher", student: "Student" };
 const ICONS = { overview: "◫", students: "♙", teachers: "♟", lessons: "▤", content: "◈", assignments: "▦", live: "◉", reports: "▥", settings: "⚙", classes: "▣", modules: "▤", "admin-content": "◇", quizzes: "☷", grading: "✓", classwork: "▧", progress: "▥", announcements: "◉", profile: "◉" };
+let activeRole = "";
 
 const MENUS = {
   admin: [ ["overview","Overview"],["students","Students"],["teachers","Teachers"],["lessons","Lessons"],["content","Content Review"],["assignments","Class Assignments"],["live","Live Sessions"],["reports","Reports"],["settings","Settings"] ],
@@ -92,7 +93,42 @@ function renderNavigation(role) {
   const nav = document.getElementById("evalNavigation");
   nav.innerHTML = MENUS[role].map(([page, label]) => `<a class="nav-link" data-page="${page}" href="?role=${encodeURIComponent(role)}&page=${encodeURIComponent(page)}"><span class="nav-icon">${ICONS[page] || "•"}</span><span>${escapeHtml(label)}</span></a>`).join("");
 }
+
+function navigateWorkspacePage(page, addHistory = true, fromUserClick = false) {
+  if (!activeRole || !MENUS[activeRole].some(item => item[0] === page)) return;
+  const nextUrl = `/evaluation-workspace.html?role=${encodeURIComponent(activeRole)}&page=${encodeURIComponent(page)}`;
+  if (addHistory) history.pushState({ role: activeRole, page }, "", nextUrl);
+  renderView(activeRole, page);
+  if (fromUserClick) {
+    // Call the host directly inside the user's navigation gesture. This is
+    // important for browsers that restrict autoplay after a long idle period.
+    try { window.parent.EqualLearnEvaluationVoice?.speakFromGestureForPage?.(activeRole, page); }
+    catch (error) { console.warn("[Evaluation Workspace] Lumi voice bridge is not ready:", error); }
+  }
+}
+
+// Keep evaluation navigation inside the current workspace document. This means
+// there is no page refresh between sections and the host Lumi can narrate every
+// page transition immediately through the message bridge.
+document.addEventListener("click", event => {
+  const link = event.target?.closest?.(".nav-link, #evalBrand");
+  if (!link) return;
+  const target = new URL(link.href, location.href);
+  if (target.origin !== location.origin || target.pathname !== "/evaluation-workspace.html") return;
+  const page = target.searchParams.get("page") || "overview";
+  if (!activeRole || !MENUS[activeRole].some(item => item[0] === page)) return;
+  event.preventDefault();
+  navigateWorkspacePage(page, true, true);
+});
+
+window.addEventListener("popstate", () => {
+  if (!activeRole) return;
+  const page = new URLSearchParams(location.search).get("page") || "overview";
+  navigateWorkspacePage(page, false);
+});
+
 function showWorkspace(role, profile, user) {
+  activeRole = role;
   const page = MENUS[role].some(item => item[0] === requestedPage) ? requestedPage : "overview";
   document.getElementById("evalRoleLabel").textContent = `${ROLE_NAMES[role]} · Demo account`;
   document.getElementById("evalUserRole").textContent = `${ROLE_NAMES[role]} · Read-only`;

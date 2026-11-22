@@ -43,7 +43,173 @@ let demoProfile = null;
 let voiceEnabled = true;
 let lastNarration = "";
 let lastViewKey = "";
+let gestureSpokenViewKey = "";
 let routeCheckBusy = false;
+let nativeTtsPromise = null;
+let voiceQueue = Promise.resolve();
+
+const NATIVE_TTS_MODULE = "https://esm.sh/@capacitor-community/text-to-speech@8.0.2?bundle";
+const isCapacitorNative = () => Boolean(
+  window.Capacitor?.isNativePlatform?.() ||
+  ["android", "ios"].includes(window.Capacitor?.getPlatform?.())
+);
+
+function loadNativeTts() {
+  if (!isCapacitorNative()) return Promise.resolve(null);
+  if (!nativeTtsPromise) {
+    // Same remote ESM plugin-loading pattern already used by EqualLearn's
+    // Capacitor Push Notifications integration. Native Android code is added
+    // by npm install + npx cap sync android.
+    nativeTtsPromise = import(NATIVE_TTS_MODULE)
+      .then(module => {
+        if (!module?.TextToSpeech) throw new Error("TextToSpeech plugin bridge is unavailable.");
+        return module.TextToSpeech;
+      })
+      .catch(error => {
+        console.error("[EqualLearn Evaluation] Native Text-to-Speech plugin failed to load:", error);
+        nativeTtsPromise = null;
+        return null;
+      });
+  }
+  return nativeTtsPromise;
+}
+
+function speakWithBrowser(text, interrupt = false) {
+  const synth = window.speechSynthesis;
+  const Utterance = window.SpeechSynthesisUtterance;
+  if (!synth || !Utterance) return false;
+  try {
+    if (interrupt) synth.cancel();
+    const utterance = new Utterance(String(text));
+    utterance.lang = "en-US";
+    utterance.rate = 0.96;
+    utterance.pitch = 1.03;
+    utterance.volume = 1;
+    synth.speak(utterance);
+    return true;
+  } catch (error) {
+    console.warn("[EqualLearn Evaluation] Browser voice narration unavailable:", error);
+    return false;
+  }
+}
+
+function speak(text, options = {}) {
+  const message = String(text || "").trim();
+  if (!voiceEnabled || !message) return Promise.resolve(false);
+
+  // On the web, call SpeechSynthesis synchronously so the login/navigation
+  // click gesture is preserved. Do not cancel queued speech on each page.
+  if (!isCapacitorNative()) {
+    return Promise.resolve(speakWithBrowser(message, Boolean(options.interrupt)));
+  }
+
+  // An explicit replay/navigation should interrupt the current native utterance
+  // immediately, not wait for the previous long page explanation to finish.
+  if (options.interrupt) {
+    const interruptTask = (async () => {
+      const tts = await loadNativeTts();
+      if (!tts) return speakWithBrowser(message, true);
+      await tts.stop().catch(() => {});
+      voiceQueue = Promise.resolve();
+      try {
+        await tts.speak({
+          text: message,
+          lang: "en-US",
+          rate: 0.96,
+          pitch: 1.03,
+          volume: 1,
+          queueStrategy: 0
+        });
+        return true;
+      } catch (error) {
+        console.warn("[EqualLearn Evaluation] Native TTS failed; trying browser speech:", error);
+        return speakWithBrowser(message, true);
+      }
+    })();
+    voiceQueue = interruptTask.catch(error => {
+      console.warn("[EqualLearn Evaluation] Interrupt narration failed:", error);
+      return speakWithBrowser(message, true);
+    });
+    return voiceQueue;
+  }
+
+  // Queue the next page description after the current welcome/page narration.
+  const task = voiceQueue.then(async () => {
+    const tts = await loadNativeTts();
+    if (!tts) return speakWithBrowser(message, false);
+    try {
+      await tts.speak({
+        text: message,
+        lang: "en-US",
+        rate: 0.96,
+        pitch: 1.03,
+        volume: 1,
+        queueStrategy: 1
+      });
+      return true;
+    } catch (error) {
+      console.warn("[EqualLearn Evaluation] Native TTS failed; trying browser speech:", error);
+      return speakWithBrowser(message, false);
+    }
+  });
+  voiceQueue = task.catch(error => {
+    console.warn("[EqualLearn Evaluation] Narration task failed:", error);
+    return speakWithBrowser(message, false);
+  });
+  return voiceQueue;
+}
+
+async function stopVoice() {
+  voiceQueue = Promise.resolve();
+  try {
+    if (isCapacitorNative()) {
+      const tts = await loadNativeTts();
+      await tts?.stop?.();
+    }
+  } catch (error) {
+    console.warn("[EqualLearn Evaluation] Could not stop native narration:", error);
+  }
+  try { window.speechSynthesis?.cancel?.(); } catch (_) {}
+}
+
+function primeVoiceFromGesture(role) {
+  window.__equalLearnEvaluationVoicePrimed = true;
+  const roleName = ROLE_NAMES[role] || "EqualLearn";
+  const greeting = `Hello! Welcome to the EqualLearn ${roleName} Evaluation Demo. I am Lumi, your virtual system guide. I will explain the pages and features as you explore. Let's begin.`;
+
+  // This function is invoked directly from the evaluator's login-button click.
+  // Web Speech therefore receives the required user activation before Firebase
+  // authentication starts; native TTS works through Android/iOS TextToSpeech.
+  return speak(greeting, { interrupt: true });
+}
+
+window.EqualLearnEvaluationVoice = {
+  primeFromGesture: primeVoiceFromGesture,
+  speak: (text, options) => speak(text, options || {}),
+  speakFromGestureForPage(role, page) {
+    if (!demoProfile || role !== demoProfile.role) return Promise.resolve(false);
+    const guide = GUIDES[role]?.[page] || GUIDES[role]?.overview || "Explore this EqualLearn demonstration page. It contains sample information only.";
+    const title = `${ROLE_NAMES[role]} · ${String(page || "overview").replace(/[-_]/g, " ").replace(/\b\w/g, letter => letter.toUpperCase())}`;
+    gestureSpokenViewKey = `${role}:${page}`;
+    lastNarration = `${title}. ${guide}`;
+    return speak(lastNarration, { interrupt: true });
+  },
+  stop: stopVoice,
+  setEnabled(enabled) {
+    voiceEnabled = Boolean(enabled);
+    if (!voiceEnabled) void stopVoice();
+    else if (lastNarration) void speak(lastNarration, { interrupt: true });
+    return voiceEnabled;
+  },
+  isEnabled: () => voiceEnabled,
+  isNative: isCapacitorNative
+};
+
+// If the login page ran before this module finished loading, it sets this
+// flag when it starts the welcome voice from the submit gesture.
+if (window.__equalLearnEvaluationVoicePrimed) {
+  voiceEnabled = true;
+}
 
 function currentFrameLocation() {
   try { return new URL(pageFrame.contentWindow.location.href); }
@@ -55,20 +221,6 @@ function isAllowedEvaluationPath(url) {
 function routeToWorkspace(role, page = "overview") {
   const destination = `/evaluation-workspace.html?role=${encodeURIComponent(role)}&page=${encodeURIComponent(page)}`;
   if (pageFrame) pageFrame.src = destination;
-}
-function speak(text) {
-  if (!voiceEnabled || !text || !("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) return;
-  try {
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-US";
-    utterance.rate = 0.96;
-    utterance.pitch = 1.02;
-    utterance.volume = 1;
-    window.speechSynthesis.speak(utterance);
-  } catch (error) {
-    console.warn("[EqualLearn Evaluation] Voice narration unavailable:", error);
-  }
 }
 function pageContext() {
   const url = currentFrameLocation();
@@ -103,13 +255,13 @@ function ensureToolbar() {
   panel.setAttribute("aria-label", "EqualLearn evaluation guide");
   panel.innerHTML = `<div class="evalr-top"><span class="evalr-brand">Lumi · Guided Evaluation</span><span class="evalr-status">ISOLATED DEMO</span></div><p class="evalr-title" id="equallearn-eval-title">Preparing page guide…</p><p class="evalr-text" id="equallearn-eval-text">Lumi is preparing the explanation for this page.</p><div class="evalr-actions"><button type="button" id="equallearn-eval-replay">▶ Replay voice</button><button type="button" id="equallearn-eval-voice">Voice: On</button><button type="button" id="equallearn-eval-stop">Stop audio</button><button type="button" id="equallearn-eval-exit">Exit evaluation</button></div>`;
   document.body.appendChild(panel);
-  panel.querySelector("#equallearn-eval-replay").addEventListener("click", () => speak(lastNarration));
+  panel.querySelector("#equallearn-eval-replay").addEventListener("click", () => speak(lastNarration, { interrupt: true }));
   panel.querySelector("#equallearn-eval-voice").addEventListener("click", event => {
     voiceEnabled = !voiceEnabled;
     event.currentTarget.textContent = `Voice: ${voiceEnabled ? "On" : "Off"}`;
-    if (!voiceEnabled) window.speechSynthesis?.cancel(); else speak(lastNarration);
+    if (!voiceEnabled) void stopVoice(); else if (lastNarration) void speak(lastNarration, { interrupt: true });
   });
-  panel.querySelector("#equallearn-eval-stop").addEventListener("click", () => window.speechSynthesis?.cancel());
+  panel.querySelector("#equallearn-eval-stop").addEventListener("click", () => { void stopVoice(); });
   panel.querySelector("#equallearn-eval-exit").addEventListener("click", exitEvaluation);
 }
 function applyGuide() {
@@ -128,7 +280,14 @@ function applyGuide() {
   } catch (_) {}
   if (key !== lastViewKey) {
     lastViewKey = key;
-    setTimeout(() => speak(lastNarration), 550);
+    if (gestureSpokenViewKey === key) {
+      // The child page already started this narration synchronously in the
+      // navigation click. Do not enqueue a duplicate copy from postMessage.
+      gestureSpokenViewKey = "";
+    } else {
+      const narration = lastNarration;
+      setTimeout(() => speak(narration), 220);
+    }
   }
 }
 async function enforceRouteIsolation() {
@@ -144,7 +303,7 @@ async function enforceRouteIsolation() {
   applyGuide();
 }
 async function exitEvaluation() {
-  window.speechSynthesis?.cancel();
+  await stopVoice();
   try { await signOut(evaluationAuth); }
   catch (error) { console.warn("[EqualLearn Evaluation] Sign-out warning:", error); }
   demoProfile = null;
@@ -156,6 +315,16 @@ async function exitEvaluation() {
 
 pageFrame?.addEventListener("load", () => {
   if (demoProfile) setTimeout(enforceRouteIsolation, 80);
+});
+
+window.addEventListener("message", event => {
+  if (event.origin !== window.location.origin || event.source !== pageFrame?.contentWindow) return;
+  const data = event.data || {};
+  if (data.type !== "EQUALLEARN_EVALUATION_CONTEXT" || !demoProfile) return;
+  if (String(data.role || "").toLowerCase() !== demoProfile.role) return;
+  // Evaluation workspace page changes use history.pushState, not a full reload.
+  // Re-read its same-origin URL and narrate the new page immediately.
+  applyGuide();
 });
 
 onAuthStateChanged(evaluationAuth, async user => {

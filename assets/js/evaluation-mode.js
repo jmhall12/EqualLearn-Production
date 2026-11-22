@@ -1,4 +1,3 @@
-import { auth as productionAuth } from "./firebase-config.js";
 import { evaluationAuth, evaluationDb, isReadOnlyDemoProfile } from "./evaluation-config.js";
 import {
   browserSessionPersistence,
@@ -62,6 +61,49 @@ document.getElementById("evalBackToLogin")?.addEventListener("click", event => {
   else window.location.replace(`/app.html?path=${encodeURIComponent(destination)}`);
 });
 
+function primeLumiVoice(role) {
+  const host = window.parent && window.parent !== window ? window.parent : window;
+  const greeting = `Hello! Welcome to the EqualLearn ${roleLabel(role)} Evaluation Demo. I am Lumi, your virtual system guide. I will explain the pages and features as you explore. Let's begin.`;
+  try {
+    if (host.EqualLearnEvaluationVoice?.primeFromGesture) {
+      host.EqualLearnEvaluationVoice.primeFromGesture(role);
+      return;
+    }
+    // Fallback if the persistent host module is still initializing.
+    host.__equalLearnEvaluationVoicePrimed = true;
+    const native = Boolean(
+      host.Capacitor?.isNativePlatform?.() ||
+      ["android", "ios"].includes(host.Capacitor?.getPlatform?.())
+    );
+    if (native) {
+      // Native TTS does not depend on browser autoplay permission. This fallback
+      // also covers the rare case where the shell voice module has not loaded yet.
+      import("https://esm.sh/@capacitor-community/text-to-speech@8.0.2?bundle")
+        .then(module => module.TextToSpeech?.speak({
+          text: greeting, lang: "en-US", rate: 0.96, pitch: 1.03, volume: 1, queueStrategy: 0
+        }))
+        .catch(error => console.warn("[EVALUATION MODE] Native welcome voice unavailable:", error));
+    } else if (host.speechSynthesis && host.SpeechSynthesisUtterance) {
+      const utterance = new host.SpeechSynthesisUtterance(greeting);
+      utterance.lang = "en-US";
+      utterance.rate = 0.96;
+      utterance.pitch = 1.03;
+      host.speechSynthesis.cancel();
+      host.speechSynthesis.speak(utterance);
+    }
+  } catch (error) {
+    console.warn("[EVALUATION MODE] Lumi voice could not start from the login gesture:", error);
+  }
+}
+
+function stopLumiVoice() {
+  const host = window.parent && window.parent !== window ? window.parent : window;
+  try {
+    if (host.EqualLearnEvaluationVoice?.stop) host.EqualLearnEvaluationVoice.stop();
+    else host.speechSynthesis?.cancel?.();
+  } catch (_) {}
+}
+
 form?.addEventListener("submit", async event => {
   event.preventDefault();
   if (busy || !selectedRole) return;
@@ -72,12 +114,17 @@ form?.addEventListener("submit", async event => {
     return;
   }
 
+  // Start Lumi's welcome narration immediately in the real submit gesture.
+  // Browsers commonly block speech that is first requested after async login.
+  // The persistent app shell owns playback so navigation inside the page frame
+  // does not stop the narration.
+  primeLumiVoice(selectedRole);
+
   setBusy(true);
   setMessage("");
   try {
-    // Keep the production app signed out while the evaluator is in demo mode.
-    // The named Evaluation Firebase app stores its session separately.
-    if (productionAuth.currentUser) await signOut(productionAuth);
+    // Evaluation Auth is a separate Firebase app. Do not sign out the evaluator's
+    // regular production account; demo credentials never become the real role session.
     if (evaluationAuth.currentUser) await signOut(evaluationAuth);
     await setPersistence(evaluationAuth, browserSessionPersistence);
 
@@ -100,6 +147,7 @@ form?.addEventListener("submit", async event => {
     }
   } catch (error) {
     console.error("[EVALUATION MODE] Sign-in failed:", error);
+    stopLumiVoice();
     if (evaluationAuth.currentUser) {
       try { await signOut(evaluationAuth); } catch (_) {}
     }

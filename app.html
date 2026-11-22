@@ -176,6 +176,15 @@
         syncCurrentRouteToAddressBar();
       });
 
+      // Evaluation workspace navigation is SPA-based. Keep the browser address
+      // bar synced without reloading app.html or the persistent Lumi frame.
+      window.addEventListener("message", event => {
+        if (event.origin !== window.location.origin || event.source !== pageFrame.contentWindow) return;
+        if (event.data?.type === "EQUALLEARN_EVALUATION_CONTEXT") {
+          syncCurrentRouteToAddressBar();
+        }
+      });
+
       pageFrame.src = resolveSafeAppPath(requestedPath);
 
       window.addEventListener("resize", () => {

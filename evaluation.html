@@ -1,6 +1,14 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <script>
+    // Keep Evaluation Mode inside the persistent app shell so Lumi's voice,
+    // current-page context, and authentication guard survive route changes.
+    if (window.self === window.top && !location.pathname.toLowerCase().endsWith('/app.html')) {
+      const targetPath = location.pathname + location.search + location.hash;
+      location.replace(`/app.html?path=${encodeURIComponent(targetPath)}`);
+    }
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#090d19">
