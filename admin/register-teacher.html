@@ -869,6 +869,155 @@
             }
         }
 
+    
+
+        /* TEACHER ACCOUNT SETUP GUIDANCE */
+        .intro-icon {
+            display: grid;
+            place-items: center;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 900;
+            letter-spacing: -.6px;
+        }
+
+        .requirements-title {
+            position: relative;
+            z-index: 1;
+            margin: 24px 0 12px;
+            color: rgba(255,255,255,.96);
+            font-size: 11px;
+            font-weight: 850;
+            letter-spacing: .9px;
+            text-transform: uppercase;
+        }
+
+        .requirement-list {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            gap: 12px;
+        }
+
+        .requirement-item {
+            display: grid;
+            grid-template-columns: 25px minmax(0, 1fr);
+            align-items: start;
+            gap: 10px;
+        }
+
+        .requirement-index {
+            display: grid;
+            place-items: center;
+            width: 25px;
+            height: 25px;
+            border: 1px solid rgba(255,255,255,.25);
+            border-radius: 8px;
+            color: #fff;
+            background: rgba(255,255,255,.15);
+            font-size: 9px;
+            font-weight: 850;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .requirement-item strong,
+        .after-create-card strong,
+        .verification-note strong {
+            display: block;
+            margin-bottom: 3px;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .requirement-item span:last-child,
+        .after-create-card span,
+        .verification-note span {
+            display: block;
+            color: rgba(255,255,255,.82);
+            font-size: 10px;
+            line-height: 1.5;
+        }
+
+        .after-create-card,
+        .verification-note {
+            position: relative;
+            z-index: 1;
+            margin-top: 17px;
+            padding: 12px 13px;
+            border: 1px solid rgba(255,255,255,.2);
+            border-radius: 12px;
+            background: rgba(24, 20, 92, .18);
+        }
+
+        .verification-note {
+            margin-top: 9px;
+            border-color: rgba(255,255,255,.14);
+            background: rgba(255,255,255,.08);
+        }
+
+        .form-heading h2 {
+            overflow-wrap: normal;
+        }
+
+        .form-intro-note {
+            margin: 0 0 16px;
+            padding: 10px 12px;
+            border: 1px solid rgba(99,91,219,.16);
+            border-radius: 10px;
+            color: #514b83;
+            background: rgba(99,91,219,.07);
+            font-size: 11px;
+            line-height: 1.55;
+        }
+
+        .section-description {
+            margin: -5px 0 11px;
+            color: var(--muted);
+            font-size: 10px;
+            line-height: 1.5;
+        }
+
+        .password-note {
+            display: block;
+        }
+
+        .password-note .note-title {
+            display: block;
+            margin-bottom: 3px;
+            color: #514b83;
+            font-size: 10px;
+            font-weight: 850;
+            letter-spacing: .55px;
+            text-transform: uppercase;
+        }
+
+        .password-note .note-copy {
+            display: block;
+        }
+
+        @media (max-width: 1050px) {
+            .requirement-list {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                column-gap: 16px;
+            }
+        }
+
+        @media (max-width: 650px) {
+            .requirement-list {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .requirements-title {
+                margin-top: 19px;
+            }
+
+            .after-create-card,
+            .verification-note {
+                margin-top: 12px;
+            }
+        }
+
     </style>
 </head>
 
@@ -880,43 +1029,61 @@
 
             <!-- INTRODUCTION PANEL -->
 
-            <aside class="intro-panel">
+            <aside class="intro-panel" aria-labelledby="teacher-setup-title">
 
-                <div class="intro-icon">👩‍🏫</div>
+                <div class="intro-icon" aria-hidden="true">EL</div>
 
-                <h1>Welcome teachers to EqualLearn.</h1>
+                <h1 id="teacher-setup-title">Create teacher access for EqualLearn.</h1>
 
                 <p>
-                    Set up a teacher profile and sign-in account in one place.
-                    Once created, the teacher can access their EqualLearn workspace.
+                    Use this page to create the teacher's sign-in account and EqualLearn profile.
+                    Confirm the details with official school records before submitting.
                 </p>
 
-                <div class="intro-points">
+                <div class="requirements-title">Teacher account requirements</div>
 
-                    <div class="intro-point">
-                        <div class="point-check">✓</div>
+                <div class="requirement-list">
+                    <div class="requirement-item">
+                        <span class="requirement-index">01</span>
                         <div>
-                            <strong>Direct account setup</strong>
-                            <span>Creates the teacher's secure sign-in account.</span>
+                            <strong>Teacher's name</strong>
+                            <span>First name and surname are required. Middle initial or middle name is optional.</span>
                         </div>
                     </div>
 
-                    <div class="intro-point">
-                        <div class="point-check">✓</div>
+                    <div class="requirement-item">
+                        <span class="requirement-index">02</span>
                         <div>
-                            <strong>Teacher profile</strong>
-                            <span>Saves the teacher role and department.</span>
+                            <strong>Department</strong>
+                            <span>Enter the teacher's official department or unit, using the school's designation.</span>
                         </div>
                     </div>
 
-                    <div class="intro-point">
-                        <div class="point-check">✓</div>
+                    <div class="requirement-item">
+                        <span class="requirement-index">03</span>
                         <div>
-                            <strong>Ready to get started</strong>
-                            <span>The account is ready after successful creation.</span>
+                            <strong>Email address</strong>
+                            <span>Use a valid email account the teacher can access. Gmail and institutional email addresses are accepted. The email must not already be registered.</span>
                         </div>
                     </div>
 
+                    <div class="requirement-item">
+                        <span class="requirement-index">04</span>
+                        <div>
+                            <strong>Temporary password</strong>
+                            <span>Enter 8 to 128 characters. Use a unique password and share it privately with the teacher.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="after-create-card">
+                    <strong>What happens after creation?</strong>
+                    <span>EqualLearn creates a Firebase sign-in account and an active profile with the Teacher role and department. The teacher can sign in using the registered email and temporary password, then use Forgot Password to request a password reset.</span>
+                </div>
+
+                <div class="verification-note">
+                    <strong>Administrator responsibility</strong>
+                    <span>Creating an account does not independently verify employment or teaching assignment. Only an authorized administrator should create accounts after confirming the teacher's details.</span>
                 </div>
 
             </aside>
@@ -931,9 +1098,9 @@
                         Admin · Account Management
                     </span>
 
-                    <h2>Teacher details</h2>
+                    <h2>Create a Teacher Account</h2>
 
-                    <p>Add the teacher's profile and sign-in credentials.</p>
+                    <p>Enter verified teacher information and the email and temporary password the teacher will use to sign in.</p>
 
                 </div>
 
@@ -942,6 +1109,10 @@
                     role="status"
                     aria-live="polite"
                 ></div>
+
+                <div class="form-intro-note">
+                    Only an authenticated administrator can submit this form. All fields marked with an asterisk are required. Check the teacher's name and department against school records before creating the account.
+                </div>
 
                 <form id="teacherForm">
 
@@ -963,6 +1134,7 @@
                                 maxlength="60"
                                 required
                             >
+                            <p class="hint">Use the surname recorded in the teacher's official school information.</p>
                         </div>
 
                         <div class="input-group">
@@ -975,6 +1147,7 @@
                                 maxlength="60"
                                 required
                             >
+                            <p class="hint">Use the teacher's official first or given name.</p>
                         </div>
 
                         <div class="input-group">
@@ -999,6 +1172,7 @@
                                 maxlength="100"
                                 required
                             >
+                            <p class="hint">Enter the official department or school unit (for example, GAD).</p>
                         </div>
 
                     </div>
@@ -1022,7 +1196,7 @@
                             required
                         >
                         <p class="hint">
-                            Gmail and institutional email addresses are accepted.
+                            Gmail and institutional addresses are accepted. Use an email the teacher controls; it must be new to EqualLearn.
                         </p>
                     </div>
 
@@ -1038,17 +1212,16 @@
                             required
                         >
                         <p class="hint">
-                            Minimum of 8 characters.
+                            Required length: 8 to 128 characters. Use a unique password.
                         </p>
                     </div>
 
                     </div>
 
                     <div class="password-note">
-                        <span>🔐</span>
-                        <span>
-                            Share the temporary password securely with the teacher.
-                            They can use the Forgot Password feature to reset it.
+                        <span class="note-title">Password handling</span>
+                        <span class="note-copy">
+                            Share the temporary password through a private channel. Do not post it in a group chat or public message. The teacher can use the Forgot Password option to request a password reset.
                         </span>
                     </div>
 
@@ -1058,7 +1231,6 @@
                         id="createButton"
                     >
                         <span>Create Teacher Account</span>
-                        <span aria-hidden="true">→</span>
                     </button>
 
                 </form>

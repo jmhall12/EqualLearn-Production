@@ -1,5 +1,5 @@
 
-const CACHE = "equallearn-shell-v12-auto-demo-login-mobile-tts-v2-single-lumi-host-v3-direct-guide-v4-teacher-role-fix-v1";
+const CACHE = "equallearn-teacher-account-page-v2";
 
 const CORE = [
     "./",
