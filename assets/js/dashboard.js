@@ -108,22 +108,54 @@ function bindNotificationShell() {
 }
 
 function waitForNotificationShell() {
-    if (bindNotificationShell()) return Promise.resolve();
+    if (bindNotificationShell()) {
+        return Promise.resolve();
+    }
 
     return new Promise(resolve => {
         let settled = false;
-        const finish = () => {
-            if (settled) return;
-            if (!bindNotificationShell()) return;
-            settled = true;
+        let observer = null;
+
+        const cleanup = () => {
             observer?.disconnect();
-            document.removeEventListener("equallearn:shell-ready", finish);
+            clearTimeout(timeout);
+            document.removeEventListener(
+                "equallearn:shell-ready",
+                finish
+            );
+        };
+
+        const finish = (force = false) => {
+            if (settled) return;
+
+            if (!bindNotificationShell() && !force) {
+                return;
+            }
+
+            settled = true;
+            cleanup();
             resolve();
         };
 
-        const observer = new MutationObserver(finish);
-        observer.observe(document.body, { childList: true, subtree: true });
-        document.addEventListener("equallearn:shell-ready", finish);
+        observer = new MutationObserver(() => finish());
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        document.addEventListener(
+            "equallearn:shell-ready",
+            finish
+        );
+
+        const timeout = setTimeout(() => {
+            console.warn(
+                "Notification shell initialization timed out."
+            );
+            finish(true);
+        }, 5000);
+
         finish();
     });
 }
@@ -482,9 +514,12 @@ function listenToNotifications(uid) {
             const recentUnreadCount = notifications.filter(
                 item => item.read === false
             ).length;
-            setUnreadNotificationBadge(recentUnreadCount);
-            void refreshUnreadNotificationCount(uid, recentUnreadCount);
+           setUnreadNotificationBadge(recentUnreadCount);
 
+// Run Firestore aggregation only on the initial snapshot.
+if (!notificationListenerStarted) {
+    void refreshUnreadNotificationCount(uid, recentUnreadCount);
+}
             // Toast only for newly arriving records after
             // the first snapshot has finished loading.
             if (notificationListenerStarted) {

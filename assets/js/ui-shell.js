@@ -1745,7 +1745,10 @@ setupRouteProgress();
 setupStudentNotificationBell();
 
 // Initialize Lumi outside the dashboard shell.
-setupLumiCompanion();
+// Initialize Lumi only when enabled on this page.
+if (document.body.dataset.disableLumi !== "true") {
+  setupLumiCompanion();
+}
 
     // Let page modules bind to shell-owned elements after the shell exists.
     window.dispatchEvent(new CustomEvent("equallearn:shell-ready", {
