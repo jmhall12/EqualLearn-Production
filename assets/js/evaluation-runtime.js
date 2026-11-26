@@ -210,7 +210,10 @@ function browserSpeakChunk(text, generation) {
       console.warn("[EqualLearn Evaluation] Browser TTS watchdog recovered a stalled chunk.");
       cancelBrowserSpeech();
       finish(false);
-    }, 14000);
+    }, Math.max(
+    45000,
+    Math.min(90000, text.length * 420)
+));
 
     try {
       if (generation !== speechGeneration) return finish(false);
@@ -225,28 +228,59 @@ function browserSpeakChunk(text, generation) {
 }
 
 async function browserSpeak(text, generation) {
-  const chunks = splitSpeechIntoChunks(text);
-  if (!chunks.length) return false;
-  let spokenAny = false;
+    const chunks = splitSpeechIntoChunks(text);
 
-  for (const chunk of chunks) {
-    if (generation !== speechGeneration) return spokenAny;
-    const spoken = await browserSpeakChunk(chunk, generation);
-    if (generation !== speechGeneration) return spokenAny;
-    if (!spoken) {
-      // Do not abandon the whole page guide because one Android speech chunk
-      // was interrupted by a transient Web Speech engine hiccup.
-      await new Promise(resolve => setTimeout(resolve, 180));
-      if (generation !== speechGeneration) return spokenAny;
-      const retried = await browserSpeakChunk(chunk, generation);
-      if (!retried) return spokenAny;
-      spokenAny = true;
-    } else {
-      spokenAny = true;
+    if (!chunks.length) return false;
+
+    let spokenAny = false;
+
+    for (const chunk of chunks) {
+        if (generation !== speechGeneration) {
+            return spokenAny;
+        }
+
+        let spoken = false;
+        const retryDelays = [300, 1000, 2000];
+
+        for (let attempt = 0; attempt < retryDelays.length; attempt++) {
+            if (generation !== speechGeneration) {
+                return spokenAny;
+            }
+
+            if (attempt > 0) {
+                await new Promise(resolve =>
+                    setTimeout(resolve, retryDelays[attempt - 1])
+                );
+
+                try {
+                    if (window.speechSynthesis?.paused) {
+                        window.speechSynthesis.resume();
+                    }
+                } catch (_) {}
+            }
+
+            spoken = await browserSpeakChunk(chunk, generation);
+
+            if (spoken) break;
+        }
+
+        if (generation !== speechGeneration) {
+            return spokenAny;
+        }
+
+        if (!spoken) {
+            console.warn(
+                "[EqualLearn Evaluation] Speech segment failed after retries."
+            );
+            return spokenAny;
+        }
+
+        spokenAny = true;
+
+        await new Promise(resolve => setTimeout(resolve, 120));
     }
-    await new Promise(resolve => setTimeout(resolve, 90));
-  }
-  return spokenAny;
+
+    return spokenAny;
 }
 
 async function stopVoice() {
