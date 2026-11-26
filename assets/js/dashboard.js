@@ -231,11 +231,15 @@ async function loadStudent(uid) {
 
     const student = userSnapshot.data();
 
-    if (student.role && student.role !== "student") {
-        throw new Error(
-            "This account is not registered as a student."
-        );
-    }
+const studentRole = String(student.role || "")
+    .trim()
+    .toLowerCase();
+
+if (studentRole !== "student") {
+    throw new Error(
+        `Invalid student account role: ${student.role || "missing"}`
+    );
+}
 
     resolvedStudentDisplayName =
         student.fullname ||
@@ -261,6 +265,23 @@ async function loadStudent(uid) {
 // FIND TEACHER ASSIGNMENT
 // ======================================================
 
+async function getDocWithTimeout(ref, timeoutMs = 8000) {
+    let timeoutId;
+
+    try {
+        return await Promise.race([
+            getDoc(ref),
+            new Promise((_, reject) => {
+                timeoutId = setTimeout(() => {
+                    reject(new Error("Firestore section lookup timed out."));
+                }, timeoutMs);
+            })
+        ]);
+    } finally {
+        clearTimeout(timeoutId);
+    }
+}
+
 async function findTeacherAssignment(student) {
     const sectionId = String(student?.sectionId || "").trim();
 
@@ -269,9 +290,10 @@ async function findTeacherAssignment(student) {
     // Students are allowed to read only their own section document.
     if (sectionId) {
         try {
-            const sectionSnapshot = await getDoc(
-                doc(db, "sections", sectionId)
-            );
+           const sectionSnapshot = await getDocWithTimeout(
+    doc(db, "sections", sectionId),
+    8000
+);
 
             if (!sectionSnapshot.exists()) {
                 setText(
