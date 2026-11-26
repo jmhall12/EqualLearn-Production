@@ -41,8 +41,9 @@ import {
         ["check-content.html", "lesson", "Check Lessons & Modules"],
         ["reports.html", "chart", "Reports"],
         ["live.html", "video", "Live"],
-        ["settings.html", "settings", "Settings"],
-        ["create-content.html", "modules", "Modules"]
+        ["create-content.html", "modules", "Modules"],
+        ["settings.html", "settings", "Settings"]
+        
       ]
     },
 
