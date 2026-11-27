@@ -475,20 +475,28 @@ function isStudent() {
         && resource.data.createdBy == request.auth.uid;
     }
 
-    function teacherCanReviewAdminModule() {
+    // Teachers may read Admin-created content while it is awaiting review
+    // or has been approved. Write permissions remain limited by the review
+    // and publishing validators below.
+    function teacherCanReadAdminContent() {
       return isTeacher()
         && resource.data.createdByRole == "admin"
-        && resource.data.reviewStatus == "pending";
+        && resource.data.reviewStatus in ["pending", "approved"];
     }
 
-    function validReviewUpdate() {
+    // A Teacher may approve/reject only pending Admin-created content.
+    // Existing creator identity and other content fields cannot be changed.
+    function validAdminContentReviewUpdate() {
       return isTeacher()
         && resource.data.createdByRole == "admin"
         && resource.data.reviewStatus == "pending"
+        && (
+          !resource.data.keys().hasAny(["assignedTeacherId"])
+          || resource.data.assignedTeacherId == null
+        )
         && request.resource.data.createdBy == resource.data.createdBy
         && request.resource.data.createdByRole == "admin"
-        && request.resource.data.diff(resource.data)
-          .affectedKeys()
+        && request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly([
             "reviewStatus",
             "reviewedBy",
@@ -499,130 +507,49 @@ function isStudent() {
           ])
         && request.resource.data.reviewedBy == request.auth.uid
         && request.resource.data.reviewedAt is timestamp
-        && request.resource.data.reviewStatus in [
-          "approved",
-          "rejected"
-        ]
-        && (
-          (
-            request.resource.data.reviewStatus == "approved"
-            && request.resource.data.status == "approved"
-          )
-          ||
-          (
-            request.resource.data.reviewStatus == "rejected"
-            && request.resource.data.status == "rejected"
-          )
-        );
+        && request.resource.data.reviewStatus in ["approved", "rejected"]
+        && request.resource.data.status == request.resource.data.reviewStatus;
     }
 
+    // A Teacher may publish approved Admin-created content only to a section
+    // assigned to that Teacher. The original Admin creator is preserved.
+    function validAdminContentPublishing(expectedStatus) {
+      return isTeacher()
+        && resource.data.createdByRole == "admin"
+        && resource.data.reviewStatus == "approved"
+        && (
+          !resource.data.keys().hasAny(["assignedTeacherId"])
+          || resource.data.assignedTeacherId == null
+          || resource.data.assignedTeacherId == request.auth.uid
+        )
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdByRole == "admin"
+        && request.resource.data.reviewStatus == "approved"
+        && request.resource.data.status == expectedStatus
+        && request.resource.data.assignedTeacherId == request.auth.uid
+        && request.resource.data.publishedBy == request.auth.uid
+        && request.resource.data.publishedAt is timestamp
+        && request.resource.data.sectionIds is list
+        && request.resource.data.sectionIds.size() == 1
+        && assignedTeacher(request.resource.data.sectionIds[0])
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly([
+            "status",
+            "sectionIds",
+            "assignedTeacherId",
+            "assignedTeacherName",
+            "publishedBy",
+            "publishedAt",
+            "updatedAt"
+          ]);
+    }
 
-
-function teacherCanReadApprovedAdminModule() {
-  // Teachers may view approved Admin content to distinguish items that
-  // are still available from items already published by another teacher.
-  // Publishing remains restricted by validModulePublishing(), which
-  // requires that the record has not already been assigned.
-  return isTeacher()
-    && resource.data.createdByRole == "admin"
-    && resource.data.reviewStatus == "approved";
-}
-
-function validAdminLessonReviewUpdate() {
-  return isTeacher()
-    && resource.data.createdByRole == "admin"
-    && resource.data.reviewStatus == "pending"
-    && request.resource.data.createdBy == resource.data.createdBy
-    && request.resource.data.createdByRole == "admin"
-    && request.resource.data.diff(resource.data)
-      .affectedKeys()
-      .hasOnly([
-        "reviewStatus",
-        "reviewedBy",
-        "reviewedAt",
-        "reviewFeedback",
-        "status",
-        "updatedAt"
-      ])
-    && request.resource.data.reviewedBy == request.auth.uid
-    && request.resource.data.reviewedAt is timestamp
-    && request.resource.data.reviewStatus in ["approved", "rejected"]
-    && request.resource.data.status == request.resource.data.reviewStatus;
-}
-
-function validAdminLessonPublishing() {
-  return isTeacher()
-    && resource.data.createdByRole == "admin"
-    && resource.data.reviewStatus == "approved"
-    && !resource.data.keys().hasAny(["assignedTeacherId"])
-    && request.resource.data.createdBy == resource.data.createdBy
-    && request.resource.data.createdByRole == "admin"
-    && request.resource.data.reviewStatus == "approved"
-    && request.resource.data.status == "active"
-    && request.resource.data.assignedTeacherId == request.auth.uid
-    && request.resource.data.publishedBy == request.auth.uid
-    && request.resource.data.publishedAt is timestamp
-    && request.resource.data.sectionIds is list
-    && request.resource.data.sectionIds.size() == 1
-    && assignedTeacher(request.resource.data.sectionIds[0])
-    && request.resource.data.diff(resource.data)
-      .affectedKeys()
-      .hasOnly([
-        "status",
-        "sectionIds",
-        "assignedTeacherId",
-        "assignedTeacherName",
-        "publishedBy",
-        "publishedAt",
-        "updatedAt"
-      ]);
-}
-
-
-   
-function validModulePublishing() {
-  return isTeacher()
-    && resource.data.createdByRole == "admin"
-    && resource.data.reviewStatus == "approved"
-    && !resource.data.keys().hasAny(["assignedTeacherId"])
-    && request.resource.data.createdBy == resource.data.createdBy
-    && request.resource.data.createdByRole == "admin"
-    && request.resource.data.reviewStatus == "approved"
-    && request.resource.data.status == "active"
-    && request.resource.data.assignedTeacherId == request.auth.uid
-    && request.resource.data.publishedBy == request.auth.uid
-    && request.resource.data.publishedAt is timestamp
-    && request.resource.data.sectionIds is list
-    && request.resource.data.sectionIds.size() == 1
-    && assignedTeacher(request.resource.data.sectionIds[0])
-    && request.resource.data.diff(resource.data)
-      .affectedKeys()
-      .hasOnly([
-        "status",
-        "sectionIds",
-        "assignedTeacherId",
-        "assignedTeacherName",
-        "publishedBy",
-        "publishedAt",
-        "updatedAt"
-      ]);
-}
-
-
-  
 
 match /modules/{moduleId} {
 
   allow get, list: if isAdmin()
-  || teacherCanReadApprovedAdminModule()
     || teacherOwnsModule()
-    || teacherCanReviewAdminModule()
-    || (
-      isTeacher()
-      && resource.data.createdByRole == "admin"
-      && resource.data.reviewStatus == "approved"
-      && resource.data.assignedTeacherId == request.auth.uid
-    )
+    || teacherCanReadAdminContent()
     || studentCanReadApprovedSectionContent();
 
   allow create: if !isDemoReadOnly() && (isAdmin()
@@ -633,14 +560,16 @@ match /modules/{moduleId} {
       && request.resource.data.sectionIds.size() > 0
     ));
 
-  allow update: if !isDemoReadOnly() && (isAdmin()
+  allow update: if !isDemoReadOnly() && (
+    isAdmin()
     || (
       isTeacher()
       && resource.data.createdBy == request.auth.uid
       && request.resource.data.createdBy == resource.data.createdBy
     )
-    || validReviewUpdate()
-    || validModulePublishing());
+    || validAdminContentReviewUpdate()
+    || validAdminContentPublishing("active")
+  );
 
   allow delete: if !isDemoReadOnly() && (isAdmin()
     || (
@@ -657,28 +586,22 @@ match /modules/{moduleId} {
 match /lessons/{lessonId} {
 
   allow get, list: if isAdmin()
-    || (
-      isTeacher()
-      && (
-        resource.data.createdBy == request.auth.uid
-        || (
-          resource.data.createdByRole == "admin"
-          && resource.data.reviewStatus in ["pending", "approved"]
-        )
-      )
-    )
+    || teacherOwnsModule()
+    || teacherCanReadAdminContent()
     || studentCanReadApprovedSectionContent();
 
   allow create: if !isDemoReadOnly() && (isAdmin() || isTeacher());
 
-  allow update: if !isDemoReadOnly() && (isAdmin()
+  allow update: if !isDemoReadOnly() && (
+    isAdmin()
     || (
       isTeacher()
       && resource.data.createdBy == request.auth.uid
       && request.resource.data.createdBy == resource.data.createdBy
     )
-    || validAdminLessonReviewUpdate()
-    || validAdminLessonPublishing());
+    || validAdminContentReviewUpdate()
+    || validAdminContentPublishing("active")
+  );
 
   allow delete: if !isDemoReadOnly() && (isAdmin()
     || (
@@ -1306,10 +1229,8 @@ match /notifications/{notificationId} {
 match /modulesV2/{moduleId} {
 
   allow get, list: if isAdmin()
-    || (
-      isTeacher()
-      && resource.data.createdBy == request.auth.uid
-    )
+    || teacherOwnsModule()
+    || teacherCanReadAdminContent()
     || studentCanReadPublishedV2Content();
 
   allow create: if !isDemoReadOnly() && (isAdmin()
@@ -1321,7 +1242,8 @@ match /modulesV2/{moduleId} {
       && request.resource.data.status in ["draft", "published"]
     ));
 
-  allow update: if !isDemoReadOnly() && (isAdmin()
+  allow update: if !isDemoReadOnly() && (
+    isAdmin()
     || (
       isTeacher()
       && resource.data.createdBy == request.auth.uid
@@ -1329,7 +1251,10 @@ match /modulesV2/{moduleId} {
       && request.resource.data.sectionIds is list
       && request.resource.data.sectionIds.size() > 0
       && request.resource.data.status in ["draft", "published", "archived"]
-    ));
+    )
+    || validAdminContentReviewUpdate()
+    || validAdminContentPublishing("published")
+  );
 
   allow delete: if !isDemoReadOnly() && (isAdmin()
     || (

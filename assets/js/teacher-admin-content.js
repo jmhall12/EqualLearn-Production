@@ -165,9 +165,9 @@ async function loadAdminContent() {
     const modulesV2 = collection(db, "modulesV2");
     const legacyModules = collection(db, "modules");
 
-    // Each query is constrained to documents the current Teacher is allowed
-    // to read. Do not query all approved modules: that would include content
-    // already assigned to other Teachers and Firestore would deny the query.
+    // Admin-created review content can be read by Teachers. Assigned content
+    // belonging to another Teacher is removed from the UI after retrieval;
+    // only the current Teacher may publish it to one of their own sections.
     const jobs = [
         {
             label: "V2 modules pending review",
@@ -213,14 +213,13 @@ async function loadAdminContent() {
             ))
         },
         {
-            label: "Legacy modules assigned to this Teacher",
+            label: "Legacy modules approved for assignment",
             collectionName: "modules",
             type: "module",
             request: getDocs(query(
                 legacyModules,
                 where("createdByRole", "==", "admin"),
-                where("reviewStatus", "==", "approved"),
-                where("assignedTeacherId", "==", currentTeacher.uid)
+                where("reviewStatus", "==", "approved")
             ))
         },
         {
@@ -259,6 +258,10 @@ async function loadAdminContent() {
                 collectionName: job.collectionName,
                 ...snapshot.data()
             };
+
+            if (item.assignedTeacherId && item.assignedTeacherId !== currentTeacher.uid) {
+                return;
+            }
 
             contentByKey.set(`${job.collectionName}/${snapshot.id}`, item);
         });
