@@ -43,7 +43,11 @@ let unreadCountRequestId = 0;
 // Keep the live dropdown deliberately small on mobile devices. The unread
 // badge is counted separately with a Firestore aggregation query, so the app
 // does not need to download every historical notification document.
-const STUDENT_NOTIFICATION_FEED_LIMIT = 25;
+const STUDENT_NOTIFICATION_FEED_LIMIT = window.matchMedia?.("(max-width: 768px)").matches ? 10 : 25;
+const STUDENT_PROFILE_TIMEOUT_MS = 10000;
+const STUDENT_SECTION_TIMEOUT_MS = 5000;
+let dashboardAuthGeneration = 0;
+let unreadCountTimer = null;
 
 // ======================================================
 // DEVICE-LEVEL NOTIFICATIONS
@@ -107,56 +111,30 @@ function bindNotificationShell() {
     return Boolean(notificationList && notificationCount);
 }
 
-function waitForNotificationShell() {
-    if (bindNotificationShell()) {
-        return Promise.resolve();
-    }
+function waitForNotificationShell(timeoutMs = 1500) {
+    // ui-shell dispatches this event after it creates the notification nodes.
+    // Check immediately first in case the shell finished before this module.
+    if (bindNotificationShell()) return Promise.resolve(true);
 
     return new Promise(resolve => {
         let settled = false;
-        let observer = null;
+        let timeoutId = null;
 
         const cleanup = () => {
-            observer?.disconnect();
-            clearTimeout(timeout);
-            document.removeEventListener(
-                "equallearn:shell-ready",
-                finish
-            );
+            if (timeoutId) clearTimeout(timeoutId);
+            document.removeEventListener("equallearn:shell-ready", onShellReady);
         };
 
-        const finish = (force = false) => {
+        const finish = () => {
             if (settled) return;
-
-            if (!bindNotificationShell() && !force) {
-                return;
-            }
-
             settled = true;
             cleanup();
-            resolve();
+            resolve(bindNotificationShell());
         };
 
-        observer = new MutationObserver(() => finish());
-
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
-
-        document.addEventListener(
-            "equallearn:shell-ready",
-            finish
-        );
-
-        const timeout = setTimeout(() => {
-            console.warn(
-                "Notification shell initialization timed out."
-            );
-            finish(true);
-        }, 5000);
-
-        finish();
+        const onShellReady = () => finish();
+        document.addEventListener("equallearn:shell-ready", onShellReady, { once: true });
+        timeoutId = setTimeout(finish, timeoutMs);
     });
 }
 
@@ -174,11 +152,16 @@ function setText(element, value) {
 // AUTHENTICATION
 // ======================================================
 
-onAuthStateChanged(auth, async user => {
+onAuthStateChanged(auth, user => {
+    const generation = ++dashboardAuthGeneration;
 
     if (typeof unsubscribeNotifications === "function") {
         unsubscribeNotifications();
         unsubscribeNotifications = null;
+    }
+    if (unreadCountTimer) {
+        clearTimeout(unreadCountTimer);
+        unreadCountTimer = null;
     }
 
     notificationListenerStarted = false;
@@ -189,57 +172,57 @@ onAuthStateChanged(auth, async user => {
         return;
     }
 
-    try {
-        await loadStudent(user.uid);
-        await waitForNotificationShell();
-        listenToNotifications(user.uid);
-
-    } catch (error) {
+    // Profile rendering is the critical path. The section lookup and shell
+    // notification setup run independently so a slow phone/network cannot
+    // hold the complete dashboard hostage.
+    void loadStudent(user.uid, generation).catch(error => {
+        if (generation !== dashboardAuthGeneration) return;
         console.error("STUDENT DASHBOARD ERROR:", error);
+        setText(studentName, "Unable to load student profile.");
+        setText(studentSection, "Unavailable");
+        setText(studentTeacher, "Unavailable");
+        setText(studentCohort, "Unavailable");
+    });
 
-        setText(
-            studentName,
-            "Unable to load student profile."
-        );
-    }
-
+    void waitForNotificationShell().then(ready => {
+        if (!ready || generation !== dashboardAuthGeneration || auth.currentUser?.uid !== user.uid) return;
+        listenToNotifications(user.uid);
+    }).catch(error => {
+        console.warn("Student notification shell unavailable:", error?.message || error);
+    });
 });
 
 // ======================================================
 // LOAD STUDENT PROFILE
 // ======================================================
 
-async function loadStudent(uid) {
-
+async function loadStudent(uid, generation) {
     setText(studentName, "Loading...");
     setText(studentSection, "Loading...");
     setText(studentTeacher, "Loading...");
     setText(studentCohort, "Loading...");
 
-    const userSnapshot = await getDoc(
-        doc(db, "users", uid)
+    const userSnapshot = await getDocWithTimeout(
+        doc(db, "users", uid),
+        STUDENT_PROFILE_TIMEOUT_MS
     );
+
+    if (generation !== dashboardAuthGeneration || auth.currentUser?.uid !== uid) return;
 
     if (!userSnapshot.exists()) {
         setText(studentName, "Student");
         setText(studentSection, "Not assigned");
         setText(studentTeacher, "Not yet assigned");
         setText(studentCohort, "Not assigned");
-
         throw new Error("Student profile not found.");
     }
 
     const student = userSnapshot.data();
+    const studentRole = String(student.role || "").trim().toLowerCase();
 
-const studentRole = String(student.role || "")
-    .trim()
-    .toLowerCase();
-
-if (studentRole !== "student") {
-    throw new Error(
-        `Invalid student account role: ${student.role || "missing"}`
-    );
-}
+    if (studentRole !== "student") {
+        throw new Error(`Invalid student account role: ${student.role || "missing"}`);
+    }
 
     resolvedStudentDisplayName =
         student.fullname ||
@@ -254,118 +237,83 @@ if (studentRole !== "student") {
     const cohort =
         student.cohort ||
         student.cohortId ||
+        student.academicYear ||
         getCohortFromStudentNumber(student.studentNumber);
-
     setText(studentCohort, cohort || "Not assigned");
 
-    await findTeacherAssignment(student);
+    // Display profile values immediately. A separate section lookup may add
+    // the teacher's display name, but it is never awaited by dashboard boot.
+    setText(studentSection, student.section || (student.sectionId ? "Assigned section" : "Not assigned"));
+    setText(studentTeacher, student.teacherName || (student.sectionId ? "Loading teacher..." : "Not yet assigned"));
+
+    void findTeacherAssignment(student, generation);
 }
 
 // ======================================================
 // FIND TEACHER ASSIGNMENT
 // ======================================================
 
-async function getDocWithTimeout(ref, timeoutMs = 8000) {
+async function getDocWithTimeout(ref, timeoutMs = STUDENT_SECTION_TIMEOUT_MS) {
     let timeoutId;
-
     try {
         return await Promise.race([
             getDoc(ref),
             new Promise((_, reject) => {
-                timeoutId = setTimeout(() => {
-                    reject(new Error("Firestore section lookup timed out."));
-                }, timeoutMs);
+                timeoutId = setTimeout(() => reject(new Error("Firestore lookup timed out.")), timeoutMs);
             })
         ]);
     } finally {
-        clearTimeout(timeoutId);
+        if (timeoutId) clearTimeout(timeoutId);
     }
 }
 
-async function findTeacherAssignment(student) {
+async function findTeacherAssignment(student, generation = dashboardAuthGeneration) {
     const sectionId = String(student?.sectionId || "").trim();
+    const isCurrent = () => generation === dashboardAuthGeneration && Boolean(auth.currentUser);
 
-    // Current Class Assignments flow stores the student's official placement
-    // in users/{uid}.sectionId and the teacher assignment in sections/{id}.
-    // Students are allowed to read only their own section document.
     if (sectionId) {
         try {
-           const sectionSnapshot = await getDocWithTimeout(
-    doc(db, "sections", sectionId),
-    8000
-);
+            const sectionSnapshot = await getDocWithTimeout(
+                doc(db, "sections", sectionId),
+                STUDENT_SECTION_TIMEOUT_MS
+            );
+            if (!isCurrent()) return;
 
             if (!sectionSnapshot.exists()) {
-                setText(
-                    studentSection,
-                    student.section || "Section not found"
-                );
-                setText(
-                    studentTeacher,
-                    student.teacherName || "Not yet assigned"
-                );
+                setText(studentSection, student.section || "Section not found");
+                setText(studentTeacher, student.teacherName || "Not yet assigned");
                 return;
             }
 
             const section = sectionSnapshot.data();
-            const sectionName =
-                section.sectionName ||
-                section.section ||
-                section.name ||
-                student.section ||
-                sectionId;
-
+            const sectionName = section.sectionName || section.section || section.name || student.section || sectionId;
             const hasAssignedTeacher = Boolean(
-                section.teacherId ||
-                (Array.isArray(section.teacherIds) && section.teacherIds.length)
+                section.teacherId || (Array.isArray(section.teacherIds) && section.teacherIds.length)
             );
-
-            const teacherName =
-                section.teacherName ||
-                section.assignedTeacherName ||
-                student.teacherName ||
+            const teacherName = section.teacherName || section.assignedTeacherName || student.teacherName ||
                 (hasAssignedTeacher ? "Teacher assigned" : "Not yet assigned");
 
             setText(studentSection, sectionName);
             setText(studentTeacher, teacherName);
-            setText(
-                studentCohort,
-                section.academicYear ||
-                student.academicYear ||
-                student.cohort ||
-                student.cohortId ||
-                getCohortFromStudentNumber(student.studentNumber) ||
-                "Not assigned"
+            setText(studentCohort,
+                section.academicYear || student.academicYear || student.cohort || student.cohortId ||
+                getCohortFromStudentNumber(student.studentNumber) || "Not assigned"
             );
             return;
         } catch (error) {
-            console.error(
-                "STUDENT SECTION LOOKUP ERROR:",
-                error.code || error.message
-            );
-
-            // Keep usable assignment details from the student's own profile.
-            setText(studentSection, student.section || "Not assigned");
-            setText(
-                studentTeacher,
-                student.teacherName || "Unable to load teacher details"
-            );
+            if (!isCurrent()) return;
+            console.warn("STUDENT SECTION LOOKUP ERROR:", error.code || error.message);
+            // Keep the profile's already-rendered section values. Do not turn
+            // a secondary teacher lookup failure into a dashboard failure.
+            setText(studentSection, student.section || "Assigned section");
+            setText(studentTeacher, student.teacherName || "Teacher details unavailable");
             return;
         }
     }
 
-    // Older accounts without sectionId may still carry a verified legacy
-    // section/teacher label on their own user profile. Do not probe arbitrary
-    // teacherAssignments document IDs: current rules intentionally restrict
-    // those records and the new section workflow no longer creates them.
-    if (student.section || student.teacherName) {
-        setText(studentSection, student.section || "Not assigned");
-        setText(studentTeacher, student.teacherName || "Not yet assigned");
-        return;
-    }
-
-    setText(studentSection, "Not assigned");
-    setText(studentTeacher, "Not yet assigned");
+    if (!isCurrent()) return;
+    setText(studentSection, student.section || "Not assigned");
+    setText(studentTeacher, student.teacherName || "Not yet assigned");
 }
 
 // ======================================================
@@ -538,9 +486,14 @@ function listenToNotifications(uid) {
             ).length;
            setUnreadNotificationBadge(recentUnreadCount);
 
-// Run Firestore aggregation only on the initial snapshot.
-if (!notificationListenerStarted) {
-    void refreshUnreadNotificationCount(uid, recentUnreadCount);
+// Defer the optional server aggregate until after the first paint.
+if (!notificationListenerStarted && !unreadCountTimer) {
+    unreadCountTimer = setTimeout(() => {
+        unreadCountTimer = null;
+        if (auth.currentUser?.uid === uid) {
+            void refreshUnreadNotificationCount(uid, recentUnreadCount);
+        }
+    }, 1200);
 }
             // Toast only for newly arriving records after
             // the first snapshot has finished loading.

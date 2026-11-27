@@ -20,7 +20,9 @@ const isCapacitorNative = () => Boolean(
   ["android", "ios"].includes(window.Capacitor?.getPlatform?.())
 );
 const isProductionDomain = () => location.origin === ALLOWED_ORIGIN;
-const isLocalDevelopment = () => ["localhost", "127.0.0.1"].includes(location.hostname);
+// Capacitor Android/iOS commonly serves the bundled app from localhost.
+// Do not unregister service workers or clear app caches inside the native WebView.
+const isLocalDevelopment = () => !isCapacitorNative() && ["localhost", "127.0.0.1"].includes(location.hostname);
 
 function urlBase64ToUint8Array(value) {
   const padded = value + "=".repeat((4 - value.length % 4) % 4);

@@ -1451,9 +1451,21 @@ function setupUserNameSync() {
 
   updateName();
 
-  profileObserver = new MutationObserver(() => {
-    updateName();
-  });
+  // The student dashboard changes only #studentName. Observe that one node
+  // instead of the whole document tree to reduce mutation work on phones.
+  const studentDashboardSource = role === "student" && currentPage === "dashboard.html"
+    ? document.getElementById("studentName")
+    : null;
+
+  profileObserver = new MutationObserver(updateName);
+  if (studentDashboardSource) {
+    profileObserver.observe(studentDashboardSource, {
+      childList: true,
+      characterData: true,
+      subtree: true
+    });
+    return;
+  }
 
   profileObserver.observe(document.body, {
     childList: true,

@@ -56,7 +56,7 @@ export const getUsers = async role => {
   const filtered = role ? rows.filter(row => lower(row.role) === lower(role)) : rows;
   return filtered.sort((a,b)=>clean(a.fullname || a.email).localeCompare(clean(b.fullname || b.email)));
 };
-export const getModules = async (sectionId = '') => {
+export const getModules = async (sectionId = '', suppliedLessons = null) => {
   const section = clean(sectionId);
   if (!section) {
     return (await list(COLLECTIONS.modules)).sort((a,b)=>Number(a.order || 999)-Number(b.order || 999));
@@ -64,7 +64,19 @@ export const getModules = async (sectionId = '') => {
 
   // Student reads are restricted by Firestore rules to approved content
   // published to the student's own section.
-  const [legacySnap, v2Snap, lessonSnap] = await Promise.all([
+  const lessonSource = suppliedLessons == null
+    ? getDocs(query(
+        collection(db, COLLECTIONS.lessons),
+        where('status', '==', 'active'),
+        where('reviewStatus', '==', 'approved'),
+        where('sectionIds', 'array-contains', section),
+      ))
+    : Promise.resolve(suppliedLessons);
+
+  // The dashboard can pass its already-loaded lesson promise here. This keeps
+  // the module, lesson, progress, and assignment reads parallel without
+  // downloading the same lessons collection twice.
+  const [legacySnap, v2Snap, lessonSourceResult] = await Promise.all([
     getDocs(query(
       collection(db, COLLECTIONS.modules),
       where('status', '==', 'active'),
@@ -76,13 +88,11 @@ export const getModules = async (sectionId = '') => {
       where('status', '==', 'published'),
       where('sectionIds', 'array-contains', section),
     )),
-    getDocs(query(
-      collection(db, COLLECTIONS.lessons),
-      where('status', '==', 'active'),
-      where('reviewStatus', '==', 'approved'),
-      where('sectionIds', 'array-contains', section),
-    )),
+    lessonSource,
   ]);
+  const lessonRows = Array.isArray(lessonSourceResult)
+    ? lessonSourceResult
+    : lessonSourceResult.docs.map(row => ({ id: row.id, ...row.data() }));
 
   const byId = new Map();
   legacySnap.docs.forEach(row => byId.set(row.id, { id: row.id, ...row.data(), sourceCollection: COLLECTIONS.modules }));
@@ -93,8 +103,7 @@ export const getModules = async (sectionId = '') => {
   // A published lesson remains discoverable even if its parent module was not
   // separately assigned to this section. Create a lightweight module card for it.
   const lessonsByModule = new Map();
-  lessonSnap.docs.forEach(row => {
-    const lesson = { id: row.id, ...row.data() };
+  lessonRows.forEach(lesson => {
     const moduleId = clean(lesson.moduleId);
     if (!moduleId) return;
     if (!lessonsByModule.has(moduleId)) lessonsByModule.set(moduleId, []);
@@ -167,6 +176,20 @@ export const getProgress = async userId => {
   const snap = await getDocs(query(
     collection(db, COLLECTIONS.progress),
     where('userId', '==', userId),
+  ));
+  return snap.docs.map(row => ({ id: row.id, ...row.data() }))
+    .sort((a,b)=>timestampMs(b.completedAt)-timestampMs(a.completedAt));
+};
+
+// Dashboard-only progress snapshot. Keep the home screen responsive on phones
+// by bounding the initial history read; the full Progress page still uses
+// getProgress() and retains the complete history.
+export const getStudentDashboardProgress = async (userId, maxItems = 50) => {
+  if (!userId) return [];
+  const snap = await getDocs(query(
+    collection(db, COLLECTIONS.progress),
+    where('userId', '==', userId),
+    limit(Math.max(1, Math.min(100, Number(maxItems) || 50)))
   ));
   return snap.docs.map(row => ({ id: row.id, ...row.data() }))
     .sort((a,b)=>timestampMs(b.completedAt)-timestampMs(a.completedAt));

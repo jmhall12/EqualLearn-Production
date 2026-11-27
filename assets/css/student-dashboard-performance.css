@@ -36,3 +36,38 @@
     scroll-behavior: auto !important;
   }
 }
+
+
+/* Mobile shell optimizations: the global topbar uses a large backdrop blur.
+   Disable GPU-expensive effects on this lightweight student dashboard. */
+@media (max-width: 768px) {
+  body[data-el-performance="lite"] .el-topbar,
+  body[data-el-performance="lite"] .el-sidebar {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+  }
+
+  body[data-el-performance="lite"] .el-topbar {
+    background: #1d1e2a !important;
+  }
+
+  body[data-el-performance="lite"] .el-app-shell,
+  body[data-el-performance="lite"] .el-sidebar,
+  body[data-el-performance="lite"] .el-nav a,
+  body[data-el-performance="lite"] .el-notification-bell {
+    transition: none !important;
+  }
+
+  body[data-el-performance="lite"] .el-page-content,
+  body[data-el-performance="lite"] .el-sidebar,
+  body[data-el-performance="lite"] .el-dashboard {
+    scroll-behavior: auto !important;
+    overscroll-behavior-y: contain;
+  }
+
+  body[data-el-performance="lite"] .el-nav-open::before {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}

@@ -8,7 +8,7 @@ import { ProfilePhotoUploader } from '../components/AppwriteUploaders';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLoad } from '../hooks/useLoad';
-import { formatWhen, getLessons, getModules, getProgress, getQuestions, getStudentAssignment, lessonQuizIsPublished, lower, normalizeSection, normalizeYearLevel, progressSummary, saveProfile, saveQuizProgress, studentCourse, studentSection, YEAR_LEVELS } from '../lib/data';
+import { formatWhen, getLessons, getModules, getProgress, getStudentDashboardProgress, getQuestions, getStudentAssignment, lessonQuizIsPublished, lower, normalizeSection, normalizeYearLevel, progressSummary, saveProfile, saveQuizProgress, studentCourse, studentSection, YEAR_LEVELS } from '../lib/data';
 import { hasExternalUrl, openExternalUrl } from '../lib/links';
 
 function requireStudentSectionId(profile) {
@@ -19,41 +19,103 @@ function requireStudentSectionId(profile) {
   return sectionId;
 }
 
+const DASHBOARD_QUERY_TIMEOUT_MS = 9000;
+
+function dashboardQuery(label, task, fallback) {
+  let timeoutId;
+  const request = Promise.resolve().then(task);
+  const timeout = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(`${label} request timed out. Check your connection and retry.`)), DASHBOARD_QUERY_TIMEOUT_MS);
+  });
+  return Promise.race([request, timeout])
+    .then(value => ({ value, warning: '' }))
+    .catch(error => {
+      console.warn(`[EqualLearn Student Dashboard] ${label} unavailable:`, error?.code || error?.message || error);
+      return { value: fallback, warning: `${label}: ${error?.message || 'temporarily unavailable'}` };
+    })
+    .finally(() => clearTimeout(timeoutId));
+}
+
 async function studentBundle(uid, profile) {
   const sectionId = requireStudentSectionId(profile);
-  const [modules, lessons, questions, progress, assignment] = await Promise.all([
-    getModules(sectionId),
-    getLessons(sectionId),
-    getQuestions(sectionId),
-    getProgress(uid),
-    getStudentAssignment(profile)
+
+  // Fetch lessons once and share the same in-flight request with getModules().
+  // The other independent dashboard reads run concurrently with those queries.
+  const lessonsRequest = getLessons(sectionId);
+  const [lessons, modules, progress, assignment] = await Promise.all([
+    dashboardQuery('Lessons', () => lessonsRequest, []),
+    dashboardQuery('Modules', () => getModules(sectionId, lessonsRequest.catch(() => [])), []),
+    dashboardQuery('Progress', () => getStudentDashboardProgress(uid, 50), []),
+    dashboardQuery('Teacher assignment', () => getStudentAssignment(profile), null)
   ]);
-  return { modules, lessons, questions, progress, assignment };
+
+  return {
+    modules: modules.value || [],
+    lessons: lessons.value || [],
+    progress: progress.value || [],
+    assignment: assignment.value || null,
+    warnings: [lessons.warning, modules.warning, progress.warning, assignment.warning].filter(Boolean)
+  };
 }
 
 export function StudentHome() {
   const { firebaseUser, profile } = useAuth();
   const load = useLoad(() => studentBundle(firebaseUser.uid, profile), [firebaseUser.uid, profile?.sectionId, profile?.course, profile?.yearLevel, profile?.section, profile?.cohort]);
-  if (load.loading) return <LoadingState/>;
+
+  if (load.loading && !load.data) {
+    const first = (profile?.fullname || 'Student').trim().split(/\s+/)[0];
+    return <Screen>
+      <RoleTopBar profilePath="/student/profile"/>
+      <Header eyebrow="Student home" title={`Hello, ${first}.`} text="Your learning overview is loading."/>
+      <Panel><MutedText>Loading your modules and progress. You can stay on this screen while the data connects.</MutedText></Panel>
+    </Screen>;
+  }
   if (load.error) return <ErrorState message={load.error} onRetry={load.refresh}/>;
-  const { modules, lessons, questions, progress, assignment } = load.data;
-  const summary = progressSummary(progress, questions);
+
+  const { modules = [], lessons = [], progress = [], assignment = null, warnings = [] } = load.data || {};
+  const quizLessonIds = new Set(lessons.filter(lessonQuizIsPublished).map(lesson => lesson.id).filter(Boolean));
+  const relevantProgress = quizLessonIds.size
+    ? progress.filter(row => quizLessonIds.has(row.lessonId))
+    : progress;
+  const completedIds = new Set(relevantProgress.filter(row => row.completed).map(row => row.lessonId).filter(Boolean));
+  const summary = {
+    completed: completedIds.size,
+    total: quizLessonIds.size,
+    percent: quizLessonIds.size ? Math.round(completedIds.size / quizLessonIds.size * 100) : 0,
+    average: relevantProgress.length ? Math.round(relevantProgress.reduce((sum, row) => sum + Number(row.percentage || 0), 0) / relevantProgress.length) : 0,
+    attempts: relevantProgress.length
+  };
+
   const done = new Set(progress.filter(x => x.completed).map(x => x.lessonId));
-  const rows = modules.filter(m => !['inactive','draft'].includes(lower(m.status || 'active'))).map(m => {
-    const moduleLessons = lessons.filter(x => x.moduleId === m.id);
-    const completed = moduleLessons.filter(x => done.has(x.id)).length;
-    return { ...m, lessons: moduleLessons, completed, percent: moduleLessons.length ? Math.round(completed / moduleLessons.length * 100) : 0 };
-  });
+  const lessonsByModule = new Map();
+  for (const lesson of lessons) {
+    const key = String(lesson.moduleId || '').trim();
+    if (!key) continue;
+    if (!lessonsByModule.has(key)) lessonsByModule.set(key, []);
+    lessonsByModule.get(key).push(lesson);
+  }
+  const rows = modules
+    .filter(m => !['inactive', 'draft'].includes(lower(m.status || 'active')))
+    .map(m => {
+      const moduleLessons = lessonsByModule.get(m.id) || [];
+      const completed = moduleLessons.filter(x => done.has(x.id)).length;
+      return { ...m, lessons: moduleLessons, completed, percent: moduleLessons.length ? Math.round(completed / moduleLessons.length * 100) : 0 };
+    });
   const next = rows.find(x => x.percent < 100) || rows[0];
   const first = (profile?.fullname || 'Student').trim().split(/\s+/)[0];
-  return <Screen><RoleTopBar profilePath="/student/profile"/><Header eyebrow="Student home" title={`Hello, ${first}.`} text="Continue learning and review your real EqualLearn progress."/>
-    <StatCard label="Quiz completion" value={pct(summary.percent)} detail={`${summary.completed}/${summary.total} quiz lessons`} Icon={ClipboardCheck}/>
+
+  return <Screen>
+    <RoleTopBar profilePath="/student/profile"/>
+    <Header eyebrow="Student home" title={`Hello, ${first}.`} text="Continue learning and review your EqualLearn progress."/>
+    {warnings.length ? <Notice type="info">Some dashboard details are temporarily unavailable. Available learning data is still shown below.</Notice> : null}
+    <StatCard label="Quiz completion" value={pct(summary.percent)} detail={`${summary.completed}/${summary.total} published quiz lessons`} Icon={ClipboardCheck}/>
     <StatCard label="Average score" value={pct(summary.average)} detail={`${summary.attempts} saved results`} Icon={BarChart3}/>
-    <StatCard label="Section" value={studentSection(profile) || '—'} detail={assignment?.teacherName ? `Teacher: ${assignment.teacherName}` : 'No teacher assigned'} Icon={Users}/>
+    <StatCard label="Section" value={studentSection(profile) || '—'} detail={assignment?.teacherName ? `Teacher: ${assignment.teacherName}` : 'Teacher information unavailable'} Icon={Users}/>
     <SectionTitle label="Continue learning" title={next?.title || 'No module yet'}/>
-    <Panel>{next ? <><BodyText>{next.description || 'Continue your next lesson.'}</BodyText><View style={{marginTop:14}}><ProgressLine value={next.percent} label={`${next.completed}/${next.lessons.length} lessons`}/></View><ActionButton style={{marginTop:14}} onPress={() => router.push(`/student/module/${next.id}`)}>Continue module</ActionButton></> : <EmptyState title="No published modules"/>}</Panel>
+    <Panel>{next ? <><BodyText>{next.description || 'Continue your next lesson.'}</BodyText><View style={{marginTop:14}}><ProgressLine value={next.percent} label={`${next.completed}/${next.lessons.length} lessons`}/></View><ActionButton style={{marginTop:14}} onPress={() => router.push(`/student/module/${next.id}`)}>Continue module</ActionButton></> : <EmptyState title="No published modules" text="Your teacher's published materials will appear here."/>}</Panel>
     <SectionTitle label="Academic profile" title="Student details"/>
     <Panel><Fact label="Course" value={studentCourse(profile)}/><Fact label="Year Level" value={normalizeYearLevel(profile?.yearLevel) || '—'}/><Fact label="Section" value={studentSection(profile) || '—'}/><Fact label="Teacher" value={assignment?.teacherName || '—'}/></Panel>
+    {warnings.length ? <ActionButton variant="secondary" style={{marginTop:12}} onPress={load.refresh}>Retry unavailable dashboard data</ActionButton> : null}
   </Screen>;
 }
 
