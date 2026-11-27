@@ -47,7 +47,7 @@ service cloud.firestore {
         && myProfile().status == "active";
     }
 
- 
+
 function isTeacher() {
   return userExists()
     && myProfile().role in ["teacher", "Teacher", "TEACHER"]
@@ -55,45 +55,47 @@ function isTeacher() {
 }
 
 
-   
+
 function isStudent() {
-  return userExists()
-    && myProfile().role in ["student", "Student", "STUDENT"]
-    && myProfile().status in ["active", "Active", "ACTIVE"];
-}
+      return userExists()
+        && myProfile().role in ["student", "Student", "STUDENT"]
+        && myProfile().status in ["active", "Active", "ACTIVE"];
+    }
 
+    // Student module and lesson records support both the current sectionIds[]
+    // schema and legacy single sectionId records. The student queries must
+    // use filters that correspond to the schema branch they are querying.
+    function studentAssignedToResourceSection() {
+      return myProfile().sectionId is string
+        && (
+          (
+            resource.data.keys().hasAny(["sectionIds"])
+            && resource.data.sectionIds is list
+            && myProfile().sectionId in resource.data.sectionIds
+          )
+          ||
+          (
+            resource.data.keys().hasAny(["sectionId"])
+            && resource.data.sectionId is string
+            && resource.data.sectionId == myProfile().sectionId
+          )
+        );
+    }
 
-    // Legacy modules and lessons: active content assigned to this section.
-   // Evaluators with demoReadOnly=true may READ the same content their role is
-   // assigned to, but all create/update/delete operations remain denied below.
-   // Support both the current sectionIds[] schema and older single sectionId docs.
-   function studentAssignedToResourceSection() {
-     return myProfile().sectionId is string
-       && (
-         (resource.data.keys().hasAny(["sectionIds"])
-           && resource.data.sectionIds is list
-           && myProfile().sectionId in resource.data.sectionIds)
-         ||
-         (resource.data.keys().hasAny(["sectionId"])
-           && resource.data.sectionId is string
-           && resource.data.sectionId == myProfile().sectionId)
-       );
-   }
+    function studentCanReadApprovedSectionContent() {
+      return isStudent()
+        && resource.data.status == "active"
+        && resource.data.reviewStatus == "approved"
+        && studentAssignedToResourceSection();
+    }
 
-   function studentCanReadApprovedSectionContent() {
-     return isStudent()
-       && resource.data.status == "active"
-       && resource.data.reviewStatus == "approved"
-       && studentAssignedToResourceSection();
-   }
-
-   // V2 modules and teacher activities: only published resources assigned to
-   // the signed-in student's own section are readable.
-   function studentCanReadPublishedV2Content() {
-     return isStudent()
-       && resource.data.status == "published"
-       && studentAssignedToResourceSection();
-   }
+    // V2 modules and teacher activities are readable only when published
+    // and assigned to the signed-in student's own section.
+    function studentCanReadPublishedV2Content() {
+      return isStudent()
+        && resource.data.status == "published"
+        && studentAssignedToResourceSection();
+    }
 
 
     function isOwner(userId) {
@@ -582,7 +584,7 @@ match /modules/{moduleId} {
     // 11. LESSONS
     // =========================================
 
-   
+
 match /lessons/{lessonId} {
 
   allow get, list: if isAdmin()
@@ -645,7 +647,7 @@ match /lessons/{lessonId} {
     // 13. QUIZZES
     // =========================================
 
-   
+
 
 
 match /quizzes/{quizId} {
@@ -683,7 +685,7 @@ match /quizzes/{quizId} {
     // 14. ASSIGNMENTS
     // =========================================
 
-   
+
 match /assignments/{assignmentId} {
 
   // STUDENT ASSIGNMENT ACCESS
@@ -1512,6 +1514,6 @@ match /quizAttempts/{attemptId} {
   match /{document=**} {
     allow read, write: if !isDemoReadOnly() && (false);
   }
-  
+
   }
 }

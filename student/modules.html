@@ -425,11 +425,231 @@
 
     /* MODULE GRID */
 
+    /* The student.modules.js renderer uses compact clickable rows. Keep its
+       layout and all nested SVG icons explicitly sized on every viewport. */
     .modules-grid {
       display: grid;
-      grid-template-columns: repeat(3,minmax(0,1fr));
-      gap: 18px;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 11px;
       min-width: 0;
+    }
+
+    .module-row {
+      display: grid;
+      grid-template-columns: 50px minmax(0, 1fr) 34px;
+      align-items: center;
+      gap: 13px;
+      width: 100%;
+      min-width: 0;
+      padding: 14px 16px;
+      color: var(--ml-text) !important;
+      text-decoration: none !important;
+      background: linear-gradient(145deg, #25283d, #202236);
+      border: 1px solid var(--ml-border);
+      border-radius: 16px;
+      box-shadow: 0 7px 20px rgba(0,0,0,.12);
+      transition: transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
+      animation: mlRise .35s ease both;
+    }
+
+    .module-row:hover,
+    .module-row:focus-visible {
+      color: #fff !important;
+      text-decoration: none !important;
+      border-color: rgba(153,135,255,.48);
+      background: linear-gradient(145deg, #2a2d47, #24263b);
+      box-shadow: 0 12px 26px rgba(0,0,0,.19);
+      transform: translateY(-2px);
+      outline: none;
+    }
+
+    .module-row:focus-visible {
+      outline: 2px solid var(--ml-purple-light);
+      outline-offset: 3px;
+    }
+
+    .module-row-icon {
+      display: grid;
+      place-items: center;
+      flex: 0 0 50px;
+      width: 50px;
+      height: 50px;
+      color: #b9adff;
+      background: rgba(128,104,255,.15);
+      border: 1px solid rgba(169,154,240,.13);
+      border-radius: 14px;
+    }
+
+    .modules-page .module-row-icon svg {
+      display: block;
+      width: 24px !important;
+      height: 24px !important;
+      min-width: 24px;
+      max-width: 24px;
+      min-height: 24px;
+      max-height: 24px;
+      flex: 0 0 24px;
+    }
+
+    .module-row-content {
+      display: grid;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .module-row-heading {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 7px 9px;
+      min-width: 0;
+    }
+
+    .module-row-heading h3 {
+      min-width: 0;
+      margin: 0;
+      color: #f5f5ff !important;
+      font-family: "Plus Jakarta Sans", sans-serif;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+
+    .module-category {
+      display: inline-flex;
+      align-items: center;
+      max-width: 100%;
+      padding: 4px 7px;
+      color: #c7bcff;
+      background: rgba(128,104,255,.14);
+      border: 1px solid rgba(128,104,255,.15);
+      border-radius: 20px;
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: .45px;
+      line-height: 1.3;
+      text-transform: uppercase;
+      overflow-wrap: anywhere;
+    }
+
+    .module-row-description {
+      display: -webkit-box;
+      min-width: 0;
+      margin: 0;
+      overflow: hidden;
+      color: #a6abc2 !important;
+      font-size: 10px;
+      line-height: 1.55;
+      overflow-wrap: anywhere;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+
+    .module-row-meta {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 5px 12px;
+      min-width: 0;
+      margin-top: 2px;
+      color: #9298b3;
+      font-size: 9px;
+      line-height: 1.4;
+    }
+
+    .module-row-meta-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      min-width: 0;
+      color: inherit;
+      overflow-wrap: anywhere;
+    }
+
+    .modules-page .module-row-meta-item svg {
+      display: block;
+      width: 14px !important;
+      height: 14px !important;
+      min-width: 14px;
+      max-width: 14px;
+      min-height: 14px;
+      max-height: 14px;
+      flex: 0 0 14px;
+      color: #b9adff;
+    }
+
+    .module-row-status {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 7px;
+      color: #78e2bd;
+      background: rgba(91,214,173,.10);
+      border: 1px solid rgba(91,214,173,.12);
+      border-radius: 20px;
+      font-size: 8px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .module-row-arrow {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      color: #b9adff;
+      background: rgba(128,104,255,.12);
+      border: 1px solid rgba(169,154,240,.12);
+      border-radius: 50%;
+    }
+
+    .modules-page .module-row-arrow svg {
+      display: block;
+      width: 17px !important;
+      height: 17px !important;
+      min-width: 17px;
+      max-width: 17px;
+      min-height: 17px;
+      max-height: 17px;
+      flex: 0 0 17px;
+    }
+
+    .state-icon {
+      display: grid;
+      place-items: center;
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 13px;
+      color: #b9adff;
+      background: rgba(128,104,255,.13);
+      border: 1px solid rgba(169,154,240,.13);
+      border-radius: 14px;
+      font-size: 26px;
+    }
+
+    .modules-page .state-icon svg {
+      display: block;
+      width: 30px !important;
+      height: 30px !important;
+      min-width: 30px;
+      max-width: 30px;
+      min-height: 30px;
+      max-height: 30px;
+    }
+
+    @media (max-width: 560px) {
+      .module-row {
+        grid-template-columns: 43px minmax(0, 1fr) 29px;
+        gap: 10px;
+        padding: 12px 11px;
+        border-radius: 14px;
+      }
+      .module-row-icon { width: 43px; height: 43px; flex-basis: 43px; border-radius: 12px; }
+      .modules-page .module-row-icon svg { width: 21px !important; height: 21px !important; min-width: 21px; max-width: 21px; min-height: 21px; max-height: 21px; flex-basis: 21px; }
+      .module-row-arrow { width: 29px; height: 29px; }
+      .modules-page .module-row-arrow svg { width: 15px !important; height: 15px !important; min-width: 15px; max-width: 15px; min-height: 15px; max-height: 15px; flex-basis: 15px; }
+      .module-row-heading h3 { font-size: 12px; }
+      .module-row-meta { gap: 5px 8px; }
     }
 
     .module-card {

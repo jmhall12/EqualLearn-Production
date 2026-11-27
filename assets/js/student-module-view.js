@@ -263,14 +263,39 @@ async function loadModule(user) {
   const resources = getModuleResources(module);
   renderResources(resources);
 
-  const lessonCount = await countPublishedLessons(sectionId);
-  if (lessonCount > 0) {
-    $("publishedLessonsSection").hidden = false;
-    $("lessonCountLabel").textContent =
-      `${lessonCount} published lesson${lessonCount === 1 ? "" : "s"}`;
+  // Related lesson count is optional. A permission error in the secondary
+  // lessons query must never invalidate a module that has already loaded.
+  // Declare it outside the try block because it is also used by the success log.
+  let lessonCount = null;
+  try {
+    lessonCount = await countPublishedLessons(sectionId);
 
-    const link = $("openLessonsLink");
-    link.href = `lesson.html?module=${encodeURIComponent(moduleId)}`;
+    if (lessonCount > 0) {
+      $("publishedLessonsSection").hidden = false;
+      $("lessonCountLabel").textContent =
+        `${lessonCount} published lesson${lessonCount === 1 ? "" : "s"}`;
+
+      const link = $("openLessonsLink");
+      link.href = `lesson.html?module=${encodeURIComponent(moduleId)}`;
+    } else {
+      $("publishedLessonsSection").hidden = true;
+    }
+  } catch (lessonError) {
+    // Keep the successfully loaded module and its resources visible.
+    // The lesson query has its own security requirements and can be fixed
+    // independently without blocking access to the parent module.
+    $("publishedLessonsSection").hidden = true;
+    console.warn(
+      "[EqualLearn Module View] Module loaded, but related lesson count is unavailable:",
+      {
+        code: lessonError?.code || "unknown",
+        message: lessonError?.message || String(lessonError),
+        moduleId,
+        lessonsCollection: "lessons",
+        sectionId,
+        projectId: db.app?.options?.projectId || "unknown"
+      }
+    );
   }
 
   console.info("[EqualLearn Module View] Module opened:", {
@@ -278,7 +303,8 @@ async function loadModule(user) {
     sourceCollection,
     sectionId,
     resourceCount: resources.length,
-    lessonCount
+    lessonCount,
+    lessonCountAvailable: lessonCount !== null
   });
 }
 
@@ -291,11 +317,13 @@ onAuthStateChanged(auth, async user => {
   try {
     await loadModule(user);
   } catch (error) {
-    console.error("[EqualLearn Module View] Unable to load module:", {
-      code: error.code,
-      message: error.message,
+    console.error("[EqualLearn Module View] Unable to load module details:", {
+      code: error?.code || "unknown",
+      message: error?.message || String(error),
       moduleId,
-      sourceCollection
+      sourceCollection,
+      uid: user.uid,
+      projectId: db.app?.options?.projectId || "unknown"
     });
     setError(error.message || "Unable to open this learning module.");
   }
