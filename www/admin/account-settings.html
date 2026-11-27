@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>document.documentElement.dataset.theme="dark";document.documentElement.style.colorScheme="dark";</script>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#0b1020">
+  <title>Account Information | EqualLearn</title>
+  <link rel="manifest" href="../manifest.webmanifest"><link rel="icon" href="../assets/icons/equallearn-logo.png">
+  <link rel="stylesheet" href="../assets/css/glass-dashboard.css"><link rel="stylesheet" href="../assets/css/sidebar-skeuomorphism.css"><link rel="stylesheet" href="../assets/css/forced-dark-theme.css?v=1"><link rel="stylesheet" href="../assets/css/admin-settings.css?v=1">
+</head>
+<body>
+  <main class="admin-settings-subpage">
+    <div class="admin-settings-subpage__top"><a class="admin-settings-back" href="settings.html">← Settings</a></div>
+    <header style="margin-bottom:16px"><p class="admin-settings-subpage__eyebrow">Account</p><h1 class="admin-settings-subpage__title">Account information</h1><p class="admin-settings-subpage__desc">Maintain the name shown in your administrator workspace.</p></header>
+    <section class="admin-settings-panel">
+      <h2>Administrator profile</h2>
+      <div class="admin-settings-field"><label for="fullname">Full name</label><input id="fullname" type="text" maxlength="100" autocomplete="name" placeholder="Enter your full name"></div>
+      <div class="admin-settings-field"><label for="email">Registered email</label><input id="email" type="email" disabled></div>
+      <div class="admin-settings-field"><label for="role">Account role</label><input id="role" type="text" disabled></div>
+      <button id="saveBtn" class="admin-settings-button" type="button">Save changes</button>
+      <div id="accountMessage" class="admin-settings-message" role="status" aria-live="polite"></div>
+    </section>
+  </main>
+  <script type="module" src="../assets/js/admin-account-settings.js"></script><script type="module" src="../assets/js/ui-shell.js"></script><script type="module" src="../assets/js/pwa.js"></script><script type="module" src="../assets/js/theme.js"></script>
+  
+</body>
+</html>

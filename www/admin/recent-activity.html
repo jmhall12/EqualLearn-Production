@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>document.documentElement.dataset.theme="dark";document.documentElement.style.colorScheme="dark";</script>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#0b1020">
+  <title>Recent Activity | EqualLearn</title>
+  <link rel="manifest" href="../manifest.webmanifest"><link rel="icon" href="../assets/icons/equallearn-logo.png">
+  <link rel="stylesheet" href="../assets/css/glass-dashboard.css"><link rel="stylesheet" href="../assets/css/sidebar-skeuomorphism.css"><link rel="stylesheet" href="../assets/css/forced-dark-theme.css?v=1"><link rel="stylesheet" href="../assets/css/admin-settings.css?v=1">
+</head>
+<body>
+  <main class="admin-settings-subpage">
+    <div class="admin-settings-subpage__top"><a class="admin-settings-back" href="settings.html">← Settings</a></div>
+    <header style="margin-bottom:16px"><p class="admin-settings-subpage__eyebrow">Administration</p><h1 class="admin-settings-subpage__title">Recent activity</h1><p class="admin-settings-subpage__desc">Review the latest audit events recorded by EqualLearn.</p></header>
+    <section class="admin-settings-panel">
+      <div class="admin-activity-toolbar">
+        <input id="activitySearch" type="search" placeholder="Search activity…" aria-label="Search recent activity">
+        <select id="activityTypeFilter" aria-label="Filter activity type"><option value="all">All activity</option><option value="student">Student account actions</option><option value="content">Content review actions</option></select>
+      </div>
+      <div id="activityStatus" class="admin-settings-message" role="status" aria-live="polite">Connecting to activity history…</div>
+      <div id="activityList" class="admin-activity-list"><div class="admin-activity-empty">Loading audit history…</div></div>
+      <div class="admin-settings-callout">This page reads the <code>activityLogs</code> audit collection. It only shows actions that an EqualLearn feature has written to that collection; it does not reconstruct unlogged actions.</div>
+    </section>
+  </main>
+  <script type="module" src="../assets/js/admin-recent-activity.js"></script><script type="module" src="../assets/js/ui-shell.js"></script><script type="module" src="../assets/js/pwa.js"></script><script type="module" src="../assets/js/theme.js"></script>
+  
+</body>
+</html>

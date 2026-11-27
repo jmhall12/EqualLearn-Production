@@ -1,18 +1,25 @@
 {
-  "name": "EqualLearn Mobile Header Alignment and Video Camera Icon Patch",
-  "type": "patch-only",
+  "name": "EqualLearn Student Mobile Hang Fix",
+  "version": "1.0.0",
+  "scope": "Existing EqualLearn Production project",
   "files": [
+    "mobile/src/context/AuthContext.jsx",
+    "mobile/src/components/AuthRecovery.jsx",
+    "mobile/src/components/RoleGate.jsx",
+    "mobile/app/index.jsx",
+    "mobile/src/hooks/useLoad.js",
+    "mobile/src/screens/StudentScreens.jsx",
+    "mobile/src/lib/data.js",
+    "student/dashboard.html",
+    "assets/css/student-dashboard-performance.css",
+    "assets/js/dashboard.js",
+    "assets/js/pwa.js",
     "assets/js/ui-shell.js",
-    "assets/js/icons.js"
+    "scripts/build-mobile.mjs",
+    "capacitor.config.json",
+    ".gitignore"
   ],
-  "scope": [
-    "Global mobile topbar alignment across Admin, Teacher, and Student pages",
-    "Teacher live-class shortcut changed from labeled LIVE CALL button to camera icon",
-    "Use a dedicated inline video-camera SVG for teacher live shortcut; avoid check-mark fallback"
-  ],
-  "validation": {
-    "nodeSyntaxCheck": "pending execution",
-    "iconMarkupAssertion": "pending execution",
-    "fullBrowserVisualTest": "not-run"
-  }
+  "firestoreRulesChanged": false,
+  "firebaseConfigChanged": false,
+  "androidNativeProjectReplaced": false
 }

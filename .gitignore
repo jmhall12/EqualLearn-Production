@@ -16,3 +16,6 @@ mobile/dist/
 
 # Firebase Android service configuration
 **/google-services.json
+/mobile-web-build*/
+/.mobile-web-build-staging-*/
+/.mobile-web-build-previous-*/

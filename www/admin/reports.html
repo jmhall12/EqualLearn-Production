@@ -1,0 +1,223 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#635bff">
+
+    <title>Student Reports | EqualLearn</title>
+
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/reports.css">
+    <link rel="stylesheet" href="../assets/css/glass-dashboard.css">
+    <link rel="stylesheet" href="../assets/css/sidebar-skeuomorphism.css">
+
+    <link rel="manifest" href="../manifest.webmanifest">
+    <link rel="icon" href="../assets/icons/equallearn-logo.png">
+
+    <style>
+      :root {
+        --report-primary:#9b86ff;
+        --report-text:#f1f3fb;
+        --report-muted:#a5aec2;
+        --report-page:#0c1221;
+        --report-panel:#1c2434;
+        --report-panel-soft:#202a3d;
+        --report-border:#354158;
+        --report-track:#39445b;
+      }
+      *{box-sizing:border-box}
+      body{min-height:100vh;margin:0;background:#0b1020;color:var(--report-text);font-family:Inter,"Segoe UI",Arial,sans-serif}
+      .reports-container{width:min(1500px,calc(100% - 32px));margin:14px auto 24px;padding:16px;border:1px solid rgba(105,121,153,.24);border-radius:22px;background:rgba(26,33,48,.96);box-shadow:0 12px 32px rgba(0,0,0,.16);animation:reportFadeIn .35s ease both}
+      .summary-panel{margin-bottom:12px;padding:13px;border:1px solid var(--report-border);border-radius:17px;background:var(--report-panel)}
+      .summary-panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 2px 10px}
+      .summary-panel-head strong{font-size:12px;font-weight:850;letter-spacing:.2px}
+      .summary-live{display:flex;align-items:center;gap:9px;color:var(--report-muted);font-size:10px;white-space:nowrap}
+      .live-indicator{display:inline-flex;align-items:center;gap:6px;color:#74d5ae;font-weight:800}
+      .live-dot{width:6px;height:6px;border-radius:50%;background:#43c994;box-shadow:0 0 0 3px rgba(67,201,148,.12)}
+      .summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(76px,auto));gap:9px}
+      .metric-item{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0;min-height:78px;padding:10px 13px;border:1px solid rgba(75,91,120,.45);border-radius:13px;background:linear-gradient(145deg,#202a3d,#192235)}
+      .metric-copy{min-width:0;display:flex;flex-direction:column;gap:5px}
+      .metric-label{color:#c4cbd9;font-size:11px;font-weight:750;line-height:1.3}
+      .metric-hint{color:#8793aa;font-size:9px;line-height:1.35}
+      .metric-donut{display:block;flex:0 0 54px;width:54px;height:54px;overflow:visible;color:#f4f5fc}
+      .metric-donut .donut-track{fill:none;stroke:var(--report-track);stroke-width:4.6}
+      .metric-donut .donut-progress{fill:none;stroke:var(--donut-color,#9b86ff);stroke-width:4.6;stroke-linecap:round;stroke-dasharray:100.53;stroke-dashoffset:100.53;transform:rotate(-90deg);transform-origin:22px 22px;transition:stroke-dashoffset .75s cubic-bezier(.22,.8,.25,1)}
+      .metric-donut text{fill:#f4f5fc;font-size:9px;font-weight:850;text-anchor:middle;dominant-baseline:middle;letter-spacing:-.2px}
+      .table-card{min-width:0;overflow:hidden;border:1px solid var(--report-border);border-radius:17px;background:var(--report-panel);box-shadow:0 8px 18px rgba(0,0,0,.12)}
+      .table-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px 7px}
+      .table-heading strong{font-size:13px;font-weight:850}
+      .table-heading span{color:var(--report-muted);font-size:10px}
+      .filter-card{display:grid;grid-template-columns:1.45fr repeat(4,minmax(110px,1fr));gap:8px;margin:0;padding:9px 12px 12px;border:0;border-radius:0;background:transparent;box-shadow:none}
+      .filter-card input,.filter-card select{width:100%;min-width:0;min-height:36px;padding:8px 10px;border:1px solid #3b4861;border-radius:9px;outline:none;background:#121b2c;color:var(--report-text);font:inherit;font-size:11px;transition:border-color .18s,box-shadow .18s}
+      .filter-card input::placeholder{color:#8793aa}
+      .filter-card input:focus,.filter-card select:focus{border-color:#8e7af1;box-shadow:0 0 0 2px rgba(142,122,241,.13)}
+      .table-wrapper{width:100%;max-height:520px;overflow-y:auto;overflow-x:hidden;border-top:1px solid rgba(75,91,120,.42);scrollbar-width:thin;scrollbar-color:rgba(155,134,255,.5) transparent}
+      .table-wrapper table{width:100%;min-width:0;table-layout:fixed;border-collapse:separate;border-spacing:0;color:var(--report-text);font-size:10px}
+      .table-wrapper thead th{position:sticky;top:0;z-index:2;padding:10px 7px;border-bottom:1px solid #3b4861;background:#222d42;color:#bfc8db;font-size:9px;font-weight:850;text-align:left;text-transform:uppercase;letter-spacing:.25px;white-space:normal}
+      .table-wrapper tbody td{height:47px;padding:8px 7px;border-bottom:1px solid rgba(75,91,120,.28);background:rgba(255,255,255,.012);vertical-align:middle;white-space:normal;overflow-wrap:anywhere;line-height:1.35}
+      .table-wrapper tbody tr:hover td{background:rgba(155,134,255,.055)}
+      .table-wrapper tbody tr:last-child td{border-bottom:0}
+      .table-wrapper th:nth-child(1){width:17%}.table-wrapper th:nth-child(2){width:11%}.table-wrapper th:nth-child(3){width:8%}.table-wrapper th:nth-child(4){width:8%}.table-wrapper th:nth-child(5){width:7%}.table-wrapper th:nth-child(6){width:10%}.table-wrapper th:nth-child(7){width:15%}.table-wrapper th:nth-child(8){width:10%}.table-wrapper th:nth-child(9){width:10%}
+      .student-name{color:#f1f3fb;font-weight:800;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .student-email{margin-top:3px;color:#8793aa;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .grade{font-weight:850;color:#e8e9f5}.badge{display:inline-flex;align-items:center;justify-content:center;padding:5px 7px;border-radius:20px;font-size:8px;font-weight:850;letter-spacing:.15px;white-space:nowrap}
+      .badge-passing{color:#75d9ad;background:rgba(35,151,105,.16)}.badge-failing{color:#ff9aa8;background:rgba(201,66,87,.16)}.badge-active{color:#75d9ad;background:rgba(35,151,105,.16)}.badge-inactive{color:#aab2c2;background:rgba(133,144,164,.14)}
+      .lesson-count{display:inline-flex;min-width:24px;justify-content:center;padding:4px 6px;border-radius:7px;background:rgba(155,134,255,.14);color:#c0b4ff;font-weight:800}
+      .last-activity{color:#a5aec2;font-size:9px}
+      .empty,.loading{padding:30px 12px!important;color:var(--report-muted);text-align:center;font-size:12px}
+      button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid rgba(155,134,255,.55);outline-offset:2px}
+      @keyframes reportFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+      @media(max-width:1100px){.filter-card{grid-template-columns:repeat(4,minmax(0,1fr))}.filter-card input{grid-column:span 2}.table-wrapper{overflow-x:auto}.table-wrapper table{min-width:900px}}
+      @media(max-width:700px){.reports-container{width:calc(100% - 16px);margin:8px auto 18px;padding:9px;border-radius:16px}.summary-panel{padding:9px}.summary-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto;gap:7px}.metric-item{min-height:68px;padding:8px;gap:7px}.metric-label{font-size:10px}.metric-hint{font-size:8px}.metric-donut{flex-basis:46px;width:46px;height:46px}.metric-donut text{font-size:8px}.summary-panel-head{padding:0 2px}.summary-live{font-size:9px}.filter-card{grid-template-columns:1fr 1fr;gap:7px;padding:8px 9px 10px}.filter-card input{grid-column:1/-1}.filter-card input,.filter-card select{min-height:35px;font-size:10px}.table-heading{padding:10px 10px 5px}.table-wrapper{max-height:520px}.table-wrapper table{min-width:860px}.table-card{border-radius:13px}}
+      @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+    </style>
+
+</head>
+
+<body>
+
+<div class="reports-container">
+
+    <!-- COMBINED STUDENT OVERVIEW -->
+    <section class="summary-panel" aria-label="Student report overview">
+      <div class="summary-panel-head">
+        <strong>Student Overview</strong>
+        <div class="summary-live">
+          <span class="live-indicator"><span class="live-dot"></span> LIVE DATA</span>
+          <span id="reportsUpdated">Connecting to Firebase…</span>
+        </div>
+      </div>
+
+      <div class="summary-grid">
+        <article class="metric-item">
+          <div class="metric-copy"><span class="metric-label">Total Students</span><span class="metric-hint">Registered student accounts</span></div>
+          <svg class="metric-donut" viewBox="0 0 44 44" role="img" aria-label="Total students">
+            <circle class="donut-track" cx="22" cy="22" r="16"></circle>
+            <circle class="donut-progress" id="totalStudentsRing" cx="22" cy="22" r="16" style="--donut-color:#9b86ff"></circle>
+            <text id="totalStudents" x="22" y="22">0</text>
+          </svg>
+        </article>
+        <article class="metric-item">
+          <div class="metric-copy"><span class="metric-label">Passing</span><span class="metric-hint">75% average and above</span></div>
+          <svg class="metric-donut" viewBox="0 0 44 44" role="img" aria-label="Passing students">
+            <circle class="donut-track" cx="22" cy="22" r="16"></circle>
+            <circle class="donut-progress" id="passingStudentsRing" cx="22" cy="22" r="16" style="--donut-color:#55c99b"></circle>
+            <text id="passingStudents" x="22" y="22">0</text>
+          </svg>
+        </article>
+        <article class="metric-item">
+          <div class="metric-copy"><span class="metric-label">Failing</span><span class="metric-hint">Below 75% average</span></div>
+          <svg class="metric-donut" viewBox="0 0 44 44" role="img" aria-label="Failing students">
+            <circle class="donut-track" cx="22" cy="22" r="16"></circle>
+            <circle class="donut-progress" id="failingStudentsRing" cx="22" cy="22" r="16" style="--donut-color:#ef788b"></circle>
+            <text id="failingStudents" x="22" y="22">0</text>
+          </svg>
+        </article>
+        <article class="metric-item">
+          <div class="metric-copy"><span class="metric-label">Active Students</span><span class="metric-hint">Active school status</span></div>
+          <svg class="metric-donut" viewBox="0 0 44 44" role="img" aria-label="Active students">
+            <circle class="donut-track" cx="22" cy="22" r="16"></circle>
+            <circle class="donut-progress" id="activeStudentsRing" cx="22" cy="22" r="16" style="--donut-color:#65b9ee"></circle>
+            <text id="activeStudents" x="22" y="22">0</text>
+          </svg>
+        </article>
+        <article class="metric-item">
+          <div class="metric-copy"><span class="metric-label">Students with Quiz Activity</span><span class="metric-hint">Students with progress records</span></div>
+          <svg class="metric-donut" viewBox="0 0 44 44" role="img" aria-label="Students with quiz activity">
+            <circle class="donut-track" cx="22" cy="22" r="16"></circle>
+            <circle class="donut-progress" id="studentsWithProgressRing" cx="22" cy="22" r="16" style="--donut-color:#c09aff"></circle>
+            <text id="studentsWithProgress" x="22" y="22">0</text>
+          </svg>
+        </article>
+        <article class="metric-item">
+          <div class="metric-copy"><span class="metric-label">Completed Lesson Quizzes</span><span class="metric-hint">Completed progress records</span></div>
+          <svg class="metric-donut" viewBox="0 0 44 44" role="img" aria-label="Completed lesson quizzes">
+            <circle class="donut-track" cx="22" cy="22" r="16"></circle>
+            <circle class="donut-progress" id="completedLessonsRing" cx="22" cy="22" r="16" style="--donut-color:#e4b96b"></circle>
+            <text id="completedLessons" x="22" y="22">0</text>
+          </svg>
+        </article>
+      </div>
+    </section>
+
+    <!-- STUDENT REPORT TABLE AND FILTERS -->
+    <div class="table-card">
+        <div class="table-heading">
+            <strong>Individual Student Progress</strong>
+            <span id="reportCount">Waiting for student records…</span>
+        </div>
+        <div class="filter-card" aria-label="Filter student reports">
+          <input type="text" id="searchStudent" placeholder="Search student name or ID..." aria-label="Search student name or ID">
+          <select id="courseFilter" aria-label="Filter by course"><option value="">All Courses</option></select>
+          <select id="yearFilter" aria-label="Filter by year level"><option value="">All Year Levels</option></select>
+          <select id="resultFilter" aria-label="Filter by result"><option value="">All Results</option><option value="passing">Passing</option><option value="failing">Failing</option></select>
+          <select id="statusFilter" aria-label="Filter by school status"><option value="">All School Status</option><option value="active">Active</option><option value="inactive">Inactive</option></select>
+        </div>
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Student ID</th>
+                        <th>Course</th>
+                        <th>Year Level</th>
+                        <th>Grade</th>
+                        <th>Lessons Completed</th>
+                        <th>Last Activity</th>
+                        <th>Result</th>
+                        <th>School Status</th>
+                    </tr>
+                </thead>
+
+                <tbody id="reportsTable">
+
+                    <tr>
+                        <td colspan="9" class="loading">
+                            Loading reports...
+                        </td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script type="module" src="../assets/js/admin-reports.js"></script>
+<script type="module" src="../assets/js/ui-shell.js"></script>
+<script type="module" src="../assets/js/pwa.js"></script>
+<script type="module" src="../assets/js/theme.js"></script>
+
+<!-- EQUALLEARN LUMI COMPANION -->
+<iframe
+id="equallearn-lumi-frame"
+src="/assets/widgets/lumi.html"
+title="Lumi-equallearn Companion"
+allow="autoplay"
+allowtransparency="true"
+frameborder="0"
+scrolling="no"
+loading="lazy"
+style="
+position:fixed;
+bottom:16px;
+right:16px;
+width:6176x;
+height:224px;
+border:none;
+border-radius:transparent;
+z-index:999999;
+overflow:visible;"
+></iframe>
+
+</body>
+</html>

@@ -1,0 +1,376 @@
+/*
+ * EqualLearn Forced Dark Theme
+ * Applied after each page's existing CSS so all device/browser color schemes
+ * use the same low-glare dark palette. Semantic colors and primary action
+ * gradients are intentionally preserved.
+ */
+:root {
+  color-scheme: dark !important;
+  --page: #0b1020;
+  --page-bg: #0b1020;
+  --page-light: #111a2d;
+  --bg: #0b1020;
+  --el-bg: #0b1020;
+  --surface: #141d30;
+  --surface-soft: #172238;
+  --surface-raised: #1a2740;
+  --surface-2: #19243a;
+  --surface-hover: #202d47;
+  --el-surface: #141d30;
+  --el-surface-2: #19243a;
+  --text: #edf1fb;
+  --el-text: #edf1fb;
+  --muted: #a6b3c9;
+  --el-muted: #a6b3c9;
+  --muted-light: #8796b2;
+  --border: #2a3852;
+  --line: #2a3852;
+  --el-border: #2a3852;
+  --input-bg: #101a2d;
+  --primary: #9584ff;
+  --primary-2: #6e9cff;
+  --primary-soft: #2b2a50;
+  --el-primary: #9584ff;
+  --el-primary-2: #7c75ee;
+  --el-primary-soft: #2b2a50;
+  --glass-bg: rgba(20, 29, 48, .92);
+  --glass-surface: #141d30;
+  --glass-text: #edf1fb;
+  --glass-muted: #a6b3c9;
+  --glass-border: #2a3852;
+  --shadow: 0 18px 50px rgba(0, 0, 0, .28);
+  --el-shadow: 0 18px 50px rgba(0, 0, 0, .28);
+  --shadow-dark: #080d18;
+  --shadow-light: #1c2941;
+}
+
+html,
+html[data-theme],
+body,
+body[data-theme] {
+  color-scheme: dark !important;
+  background-color: #0b1020 !important;
+  color: #edf1fb;
+}
+
+html[data-theme="dark"],
+html.dark,
+body.dark,
+body[data-theme="dark"],
+body[data-theme="light"] {
+  color-scheme: dark !important;
+  background-color: #0b1020 !important;
+  color: #edf1fb !important;
+}
+
+body {
+  min-height: 100vh;
+  color: #edf1fb !important;
+  background: #0b1020 !important;
+}
+
+/* Main app canvases and page wrappers */
+body,
+#app,
+#root,
+main,
+.main,
+.main-content,
+.main-container,
+.page,
+.page-wrap,
+.page-container,
+.content,
+.content-wrap,
+.container,
+.dashboard,
+.dashboard-container,
+.dashboard-content,
+.el-app-shell,
+.el-app-main,
+.el-page-content,
+.el-dashboard,
+.workspace,
+.workspace-main,
+.content-page,
+.reports-container,
+.settings-container,
+.modules-container,
+.lessons-container,
+.profile-container,
+.progress-container,
+.quiz-container {
+  color: #edf1fb;
+}
+
+.el-app-shell,
+.el-app-main,
+.el-page-content,
+.el-dashboard,
+.dashboard-container,
+.dashboard-content,
+.main-content,
+.main-container,
+.content-wrap,
+.page-wrap,
+.page-container,
+.container,
+.workspace,
+.workspace-main,
+.content-page,
+.reports-container,
+.settings-container,
+.modules-container,
+.lessons-container,
+.profile-container,
+.progress-container,
+.quiz-container {
+  background-color: #0b1020 !important;
+}
+
+/* Cards, panels, surfaces, and expandable content */
+:is(
+  .card, .el-card, .panel, .section-card, .feature, .feature-card,
+  .stat, .stat-card, .stat-box, .summary-card, .table-card, .form-card,
+  .settings-card, .filter-card, .class-card, .module-card, .lesson-card,
+  .assignment-card, .quiz-card, .student-card, .content-card,
+  .activity-card, .resource-card, .teacher-card, .loading, .empty, .empty-state, .empty-state-card,
+  .modal-content, .modal-box, .modal-card, .drawer-content, .dropdown-menu,
+  .dropdown-content, .popover-content, .el-quick, .el-user-pill,
+  .el-auth-card, .el-profile-item, .student-live-card, .student-live-room,
+  .student-session-join, .live-session-item, .admin-session-card,
+  .admin-live-panel, .admin-stat, .live-admin-stat, .el-page-header,
+  .el-card, .el-card-title, .notification-list, .question-card,
+  .engagement-panel, .engagement-metric, .profile-summary,
+  .profile-details, .settings-panel, .settings-section, .announcement-card,
+  .module-row, .activity-row, .question-row, .resource-banner,
+  .lesson-item, .assignment-item, .quiz-item, .student-item,
+  .student-directory-card, .student-progress-card, .table-wrap,
+  .content-panel, .management-card, .overview-card
+) {
+  color: #edf1fb !important;
+  background-color: #141d30 !important;
+  border-color: #2a3852 !important;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, .20);
+}
+
+/* Keep intentionally colored primary buttons and status badges vivid. */
+:is(.el-btn-primary, .btn-primary, .btn.primary, .primary, .primary-btn,
+    .save-btn, .assign-btn, .auth-btn, .el-login-btn, .download-button,
+    #openModal, #saveTeacher, #createButton, #saveModule, #saveLesson,
+    #saveQuestion, [data-theme-preserve="accent"]) {
+  color: #fff !important;
+}
+
+:is(.secondary, .btn-secondary, .btn.secondary, .ghost, .btn.ghost,
+    .back-btn, .reset-btn, .cancel-btn, .el-btn-secondary, .icon-btn,
+    .el-menu-toggle, .el-sidebar-collapse) {
+  color: #dce4f5 !important;
+  background: #202d47 !important;
+  border-color: #34445f !important;
+}
+
+/* Text hierarchy */
+h1, h2, h3, h4, h5, h6,
+.page-title, .page-header h1, .header h1, .section-title,
+.el-page-title, .el-card-title h3, .el-stat-value, .stat-value,
+.summary-card strong, .stat-card strong, .student-name,
+.modal-title, .card-title {
+  color: #f1f4fc !important;
+}
+
+:is(.muted, .sub, .description, .subtitle, .helper-text, .hint,
+    .page-header p, .el-page-header p, .el-page-kicker, .el-stat-label,
+    .el-stat-meta, .stat-label, .stat-note, .meta, .small-text,
+    .form-help, .field-help, .empty-description, .panel-intro,
+    .el-card-title > span, .el-stat-meta, .text-muted) {
+  color: #a6b3c9 !important;
+}
+
+label,
+.form-label,
+.field label,
+.form-group label,
+.input-group label,
+.el-field label {
+  color: #d4dced !important;
+}
+
+a:not(.el-btn):not(.btn):not(.download-button) {
+  color: #a99bff;
+}
+a:not(.el-btn):not(.btn):not(.download-button):hover {
+  color: #c1b8ff;
+}
+
+/* Status pills remain semantic, but use dark tinted surfaces to avoid glare. */
+:is(.badge-active, .status.active, .badge-passing, .status.verified, .status.success) {
+  color: #8be3ba !important;
+  background: rgba(39, 160, 111, .16) !important;
+  border-color: rgba(78, 199, 145, .28) !important;
+}
+:is(.badge-inactive, .status.inactive, .badge-failing, .status.pending) {
+  color: #f0c17f !important;
+  background: rgba(196, 135, 48, .16) !important;
+  border-color: rgba(218, 162, 83, .28) !important;
+}
+:is(.error, .message-box.error, .form-message.error) {
+  color: #ffb1b7 !important;
+  background: rgba(178, 54, 69, .16) !important;
+  border-color: rgba(225, 99, 113, .30) !important;
+}
+:is(.success, .message-box.success, .form-message.success) {
+  color: #8be3ba !important;
+  background: rgba(39, 160, 111, .16) !important;
+  border-color: rgba(78, 199, 145, .28) !important;
+}
+.message.info { color: #bfd2ff !important; background: rgba(76, 119, 205, .16) !important; }
+.el-mini-line, .el-progress, .progress-track, .progress-bar-track { background: #26354f !important; }
+.el-mini-stat, .el-stat-icon, .feature-icon { background-color: #242d49 !important; }
+
+/* Form fields and native controls */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+select,
+textarea,
+[contenteditable="true"],
+.el-page-content input:not([type="checkbox"]):not([type="radio"]),
+.el-page-content select,
+.el-page-content textarea,
+.container input:not([type="checkbox"]):not([type="radio"]),
+.container select,
+.container textarea {
+  color: #edf1fb !important;
+  background: #101a2d !important;
+  border-color: #34445f !important;
+  caret-color: #a99bff;
+  color-scheme: dark !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #8291ad !important;
+  opacity: 1;
+}
+
+select option,
+optgroup {
+  color: #edf1fb !important;
+  background: #141d30 !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+[contenteditable="true"]:focus {
+  border-color: #9282ff !important;
+  box-shadow: 0 0 0 3px rgba(146, 130, 255, .18) !important;
+  outline-color: #9282ff;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: #edf1fb !important;
+  -webkit-box-shadow: 0 0 0 1000px #101a2d inset !important;
+  caret-color: #edf1fb;
+}
+
+/* Tables, lists, separators */
+table {
+  color: #e7edf8 !important;
+  border-color: #2a3852 !important;
+  background: #141d30 !important;
+}
+thead, thead th, th {
+  color: #dce5f6 !important;
+  background: #1b2941 !important;
+  border-color: #34445f !important;
+}
+tbody td, td {
+  color: #d3dced;
+  border-color: #2a3852 !important;
+}
+tbody tr:nth-child(even) {
+  background-color: rgba(255,255,255,.025) !important;
+}
+tbody tr:hover {
+  background-color: #202d47 !important;
+}
+hr, .divider, .card-divider {
+  border-color: #2a3852 !important;
+  background-color: #2a3852;
+}
+
+/* Dialogs, popovers, menus, and notifications */
+.modal,
+.modal-backdrop,
+.dialog-backdrop {
+  background: rgba(3, 7, 17, .76) !important;
+}
+:is(.modal-content, .modal-box, .modal-card, .dialog, .dialog-content,
+    .dropdown-menu, .dropdown-content, .popover, .popover-content,
+    .context-menu, .notification-panel, .notification-dropdown) {
+  color: #edf1fb !important;
+  background: #141d30 !important;
+  border-color: #35445e !important;
+}
+
+pre, code, kbd, samp {
+  color: #dce6fa;
+  background: #101a2d;
+  border-color: #2a3852;
+}
+
+/* Root landing page and shared shell surfaces that previously forced light */
+.premium-footer,
+.premium-section,
+.dashboard-preview,
+.preview-course,
+.preview-stat,
+.preview-card,
+.premium-card,
+.premium-panel,
+.premium-feature,
+.premium-testimonial,
+.premium-faq-item {
+  color: #edf1fb !important;
+  background-color: #141d30 !important;
+  border-color: #2a3852 !important;
+}
+.premium-footer,
+.premium-footer .footer-description,
+.premium-footer .footer-links a,
+.premium-footer .footer-bottom {
+  color: #a6b3c9 !important;
+}
+.premium-btn-ghost {
+  color: #e5eaff !important;
+  background: #202d47 !important;
+  border-color: #3b4a66 !important;
+}
+
+/* Keep embedded teaching/video canvases dark rather than applying a white frame. */
+video, canvas {
+  color-scheme: dark;
+}
+
+::selection {
+  color: #fff;
+  background: rgba(149, 132, 255, .38);
+}
+
+* {
+  scrollbar-color: #3a4965 #0b1020;
+}
+
+@media (prefers-color-scheme: light), (prefers-color-scheme: dark) {
+  :root, html, body {
+    color-scheme: dark !important;
+  }
+}
+
+@media (max-width: 720px) {
+  :root { color-scheme: dark !important; }
+}

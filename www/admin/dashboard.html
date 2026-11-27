@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script id="EQUALLEARN_FORCE_DARK_BOOTSTRAP">document.documentElement.dataset.theme="dark";document.documentElement.style.colorScheme="dark";</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1020">
+  <title>Admin Dashboard | EqualLearn</title>
+  <meta name="description" content="Live analytics overview for the EqualLearn platform.">
+
+  <link rel="manifest" href="../manifest.webmanifest">
+  <link rel="icon" href="../assets/icons/equallearn-logo.png">
+
+  <link rel="stylesheet" href="../assets/css/sidebar-skeuomorphism.css">
+  <link rel="stylesheet" href="../assets/css/glass-dashboard.css">
+  <link rel="stylesheet" href="../assets/css/admin-dashboard.css?v=2">
+  <link rel="stylesheet" href="../assets/css/responsive-layout.css">
+  <link rel="stylesheet" href="../assets/css/responsive-auto-fit.css">
+  <link rel="stylesheet" href="../assets/css/forced-dark-theme.css?v=1">
+  <link rel="stylesheet" href="../assets/css/admin-dashboard-analytics.css?v=20261120">
+</head>
+<body>
+  <div class="el-dashboard admin-analytics-dashboard">
+
+    <!-- Simple page heading: no large header card -->
+    <header class="admin-dashboard-header">
+      <div class="admin-heading-copy">
+        <div class="admin-heading-kicker">ADMINISTRATION WORKSPACE</div>
+        <h1>Platform overview</h1>
+        <p id="adminName">Loading administrator...</p>
+      </div>
+      <div class="admin-heading-actions">
+        <span class="admin-live-pill"><i aria-hidden="true"></i> Live overview</span>
+        <a class="admin-add-teacher" href="register-teacher.html">
+          <span aria-hidden="true">＋</span> Add teacher
+        </a>
+      </div>
+    </header>
+
+    <div class="admin-data-status" id="dashboardDataStatus" role="status" aria-live="polite">
+      <span class="status-dot" aria-hidden="true"></span>
+      Connecting to live platform data...
+    </div>
+
+    <main class="admin-analytics-main">
+      <div class="admin-chart-grid">
+
+        <!-- STUDENTS: LINE CHART -->
+        <section class="admin-chart-section" aria-labelledby="studentGrowthTitle">
+          <div class="admin-chart-heading">
+            <div>
+              <span class="admin-chart-kicker">LEARNER REGISTRATIONS</span>
+              <h2 id="studentGrowthTitle">Student growth</h2>
+              <p>New student accounts created over the last 7 days.</p>
+            </div>
+            <div class="admin-chart-total">
+              <strong id="studentTotal">—</strong>
+              <span>registered students</span>
+            </div>
+          </div>
+          <div class="admin-chart-canvas">
+            <svg id="studentGrowthChart" class="admin-analytics-svg" viewBox="0 0 760 290" role="img" aria-label="Line chart showing student registrations over the last seven days">
+              <text x="380" y="145" text-anchor="middle" class="chart-empty-label">Loading student registrations...</text>
+            </svg>
+          </div>
+          <div class="admin-chart-caption" id="studentGrowthCaption">Based on student profile creation dates.</div>
+        </section>
+
+        <!-- TEACHERS / MODULES / LESSONS: BAR CHART -->
+        <section class="admin-chart-section" aria-labelledby="resourceBreakdownTitle">
+          <div class="admin-chart-heading">
+            <div>
+              <span class="admin-chart-kicker">PLATFORM CONTENT</span>
+              <h2 id="resourceBreakdownTitle">Platform resources</h2>
+              <p>Current teachers, modules, and lessons.</p>
+            </div>
+            <div class="admin-chart-total">
+              <strong id="resourceTotal">—</strong>
+              <span>total records</span>
+            </div>
+          </div>
+          <div class="admin-chart-canvas">
+            <svg id="resourceBarChart" class="admin-analytics-svg" viewBox="0 0 760 290" role="img" aria-label="Bar chart comparing teacher, module, and lesson totals">
+              <text x="380" y="145" text-anchor="middle" class="chart-empty-label">Loading platform resources...</text>
+            </svg>
+          </div>
+          <div class="admin-chart-caption">Modules include both legacy modules and modulesV2 records.</div>
+        </section>
+      </div>
+
+      <!-- LIVE PLATFORM ACTIVITY: LINE CHART -->
+      <section class="admin-chart-section admin-platform-activity" aria-labelledby="platformActivityTitle">
+        <div class="admin-chart-heading admin-activity-heading">
+          <div>
+            <span class="admin-chart-kicker">REAL-TIME OVERVIEW</span>
+            <h2 id="platformActivityTitle">Platform activity</h2>
+            <p>Recent record activity across people, learning resources, and class activities.</p>
+          </div>
+          <span class="admin-live-status" id="activityLiveStatus"><i aria-hidden="true"></i> CONNECTING</span>
+        </div>
+        <div class="admin-chart-canvas admin-activity-canvas">
+          <svg id="platformActivityChart" class="admin-analytics-svg" viewBox="0 0 1100 320" role="img" aria-label="Live line chart showing recent platform record activity by category">
+            <text x="550" y="160" text-anchor="middle" class="chart-empty-label">Waiting for platform data...</text>
+          </svg>
+        </div>
+        <div class="admin-chart-legend" id="platformActivityLegend" aria-label="Platform activity chart legend"></div>
+        <div class="admin-chart-caption" id="platformActivityCaption">Live updates are received from Firestore while this dashboard remains open. Each record is counted by its latest available timestamp.</div>
+      </section>
+    </main>
+
+    <!-- Existing logout hook retained for the application shell -->
+    <a href="../login.html" id="logout" class="admin-hidden-logout" aria-hidden="true" tabindex="-1">Logout</a>
+  </div>
+
+  <script type="module" src="../assets/js/admin-dashboard.js"></script>
+  <script type="module" src="../assets/js/ui-shell.js"></script>
+  <script type="module" src="../assets/js/pwa.js"></script>
+  <script type="module" src="../assets/js/theme.js"></script>
+
+  
+</body>
+</html>

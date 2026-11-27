@@ -19,7 +19,7 @@ function requireStudentSectionId(profile) {
   return sectionId;
 }
 
-const DASHBOARD_QUERY_TIMEOUT_MS = 9000;
+const DASHBOARD_QUERY_TIMEOUT_MS = 7000;
 
 function dashboardQuery(label, task, fallback) {
   let timeoutId;

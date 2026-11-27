@@ -62,9 +62,19 @@ export const getModules = async (sectionId = '', suppliedLessons = null) => {
     return (await list(COLLECTIONS.modules)).sort((a,b)=>Number(a.order || 999)-Number(b.order || 999));
   }
 
-  // Student reads are restricted by Firestore rules to approved content
-  // published to the student's own section.
-  const lessonSource = suppliedLessons == null
+  // Do not make a student lose every module because one legacy collection is
+  // denied or unavailable. Read the legacy and V2 module collections
+  // independently, then merge whichever sources the student's rules allow.
+  const safeSnapshot = async (label, promise) => {
+    try {
+      return { snapshot: await promise, error: null };
+    } catch (error) {
+      console.warn(`[EqualLearn Mobile] ${label} query unavailable:`, error?.code || error?.message || error);
+      return { snapshot: null, error };
+    }
+  };
+
+  const lessonPromise = suppliedLessons == null
     ? getDocs(query(
         collection(db, COLLECTIONS.lessons),
         where('status', '==', 'active'),
@@ -73,30 +83,50 @@ export const getModules = async (sectionId = '', suppliedLessons = null) => {
       ))
     : Promise.resolve(suppliedLessons);
 
-  // The dashboard can pass its already-loaded lesson promise here. This keeps
-  // the module, lesson, progress, and assignment reads parallel without
-  // downloading the same lessons collection twice.
-  const [legacySnap, v2Snap, lessonSourceResult] = await Promise.all([
-    getDocs(query(
+  const [legacyResult, v2Result, lessonResult] = await Promise.all([
+    safeSnapshot('Legacy modules', getDocs(query(
       collection(db, COLLECTIONS.modules),
       where('status', '==', 'active'),
       where('reviewStatus', '==', 'approved'),
       where('sectionIds', 'array-contains', section),
-    )),
-    getDocs(query(
+    ))),
+    safeSnapshot('Published modules', getDocs(query(
       collection(db, 'modulesV2'),
       where('status', '==', 'published'),
       where('sectionIds', 'array-contains', section),
-    )),
-    lessonSource,
+    ))),
+    (async () => {
+      try {
+        const result = await lessonPromise;
+        return {
+          rows: Array.isArray(result)
+            ? result
+            : (result?.docs || []).map(row => ({ id: row.id, ...row.data() })),
+          error: null,
+        };
+      } catch (error) {
+        console.warn('[EqualLearn Mobile] Published lessons query unavailable:', error?.code || error?.message || error);
+        return { rows: [], error };
+      }
+    })(),
   ]);
-  const lessonRows = Array.isArray(lessonSourceResult)
-    ? lessonSourceResult
-    : lessonSourceResult.docs.map(row => ({ id: row.id, ...row.data() }));
+
+  const legacySnap = legacyResult.snapshot;
+  const v2Snap = v2Result.snapshot;
+  const lessonRows = lessonResult.rows;
+
+  // If every source failed, let the dashboard show its retry/partial-data
+  // message rather than displaying a misleading empty module list.
+  if (!legacySnap && !v2Snap && lessonResult.error) {
+    throw legacyResult.error || v2Result.error || lessonResult.error;
+  }
+  if (!legacySnap && !v2Snap && !lessonRows.length && (legacyResult.error || v2Result.error)) {
+    throw legacyResult.error || v2Result.error;
+  }
 
   const byId = new Map();
-  legacySnap.docs.forEach(row => byId.set(row.id, { id: row.id, ...row.data(), sourceCollection: COLLECTIONS.modules }));
-  v2Snap.docs.forEach(row => {
+  legacySnap?.docs.forEach(row => byId.set(row.id, { id: row.id, ...row.data(), sourceCollection: COLLECTIONS.modules }));
+  v2Snap?.docs.forEach(row => {
     if (!byId.has(row.id)) byId.set(row.id, { id: row.id, ...row.data(), sourceCollection: 'modulesV2' });
   });
 
@@ -215,9 +245,13 @@ export const getClassGroups = async () => {
 export const getAssignments = async () => (await list(COLLECTIONS.assignments)).sort((a,b)=>clean(a.className).localeCompare(clean(b.className)) || clean(a.yearLevel).localeCompare(clean(b.yearLevel)));
 export const getNotifications = async uid => {
   if (!uid) return [];
+  // The mobile top bar only displays a short recent feed. Apply the limit in
+  // Firestore so a student with years of notifications does not download the
+  // whole collection every time the Home tab mounts.
   const snap = await getDocs(query(
     collection(db, COLLECTIONS.notifications),
     where('userId', '==', uid),
+    limit(30),
   ));
   return snap.docs.map(row => ({ id: row.id, ...row.data() }))
     .sort((a,b)=>timestampMs(b.createdAt)-timestampMs(a.createdAt)).slice(0,20);
@@ -225,8 +259,15 @@ export const getNotifications = async uid => {
 
 export const markNotificationRead = id => updateDoc(doc(db, COLLECTIONS.notifications, id), { read: true, readAt: serverTimestamp() });
 export const markAllNotificationsRead = async uid => {
-  const rows = await getNotifications(uid);
-  await Promise.all(rows.filter(row => row.read === false).map(row => markNotificationRead(row.id)));
+  if (!uid) return;
+  // This full read happens only after the user taps "Mark all read"; keep the
+  // initial dashboard feed bounded while preserving the action's full meaning.
+  const snap = await getDocs(query(
+    collection(db, COLLECTIONS.notifications),
+    where('userId', '==', uid),
+  ));
+  const unreadIds = snap.docs.filter(row => row.data().read === false).map(row => row.id);
+  await Promise.all(unreadIds.map(id => markNotificationRead(id)));
 };
 
 export const getStudentAssignment = async student => {

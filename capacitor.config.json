@@ -1,7 +1,7 @@
 {
   "appId": "com.equallearn.app",
   "appName": "EqualLearn",
-  "webDir": "www",
+  "webDir": "mobile-web-build",
   "server": {
     "cleartext": false,
     "androidScheme": "https"

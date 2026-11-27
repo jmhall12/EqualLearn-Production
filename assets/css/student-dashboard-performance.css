@@ -71,3 +71,17 @@
     backdrop-filter: none !important;
   }
 }
+
+
+/* The dashboard shows a real saved-result count, not a fabricated percentage. */
+.student-progress-circle {
+  border: 5px solid rgba(146, 121, 244, .78);
+  background: rgba(146, 121, 244, .10) !important;
+}
+.student-progress-circle-inner {
+  font-size: clamp(13px, 2vw, 17px) !important;
+  font-variant-numeric: tabular-nums;
+}
+.student-progress-copy .student-continue-link {
+  margin-top: 2px;
+}

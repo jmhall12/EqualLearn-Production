@@ -27,6 +27,9 @@ const studentName = document.getElementById("studentName");
 const studentSection = document.getElementById("studentSection");
 const studentTeacher = document.getElementById("studentTeacher");
 const studentCohort = document.getElementById("studentCohort");
+const studentProgressCircle = document.getElementById("studentProgressCircle");
+const studentProgressValue = document.getElementById("studentProgressValue");
+const studentProgressDescription = document.getElementById("studentProgressDescription");
 
 let notificationList = null;
 let notificationCount = null;
@@ -46,6 +49,7 @@ let unreadCountRequestId = 0;
 const STUDENT_NOTIFICATION_FEED_LIMIT = window.matchMedia?.("(max-width: 768px)").matches ? 10 : 25;
 const STUDENT_PROFILE_TIMEOUT_MS = 10000;
 const STUDENT_SECTION_TIMEOUT_MS = 5000;
+const STUDENT_PROGRESS_SUMMARY_TIMEOUT_MS = 7000;
 let dashboardAuthGeneration = 0;
 let unreadCountTimer = null;
 
@@ -112,8 +116,8 @@ function bindNotificationShell() {
 }
 
 function waitForNotificationShell(timeoutMs = 1500) {
-    // ui-shell dispatches this event after it creates the notification nodes.
-    // Check immediately first in case the shell finished before this module.
+    // ui-shell dispatches equallearn:shell-ready on window after it creates
+    // the notification elements. Bind immediately in case it is already ready.
     if (bindNotificationShell()) return Promise.resolve(true);
 
     return new Promise(resolve => {
@@ -121,20 +125,26 @@ function waitForNotificationShell(timeoutMs = 1500) {
         let timeoutId = null;
 
         const cleanup = () => {
-            if (timeoutId) clearTimeout(timeoutId);
-            document.removeEventListener("equallearn:shell-ready", onShellReady);
+            if (timeoutId !== null) clearTimeout(timeoutId);
+            window.removeEventListener("equallearn:shell-ready", onShellReady);
         };
 
-        const finish = () => {
+        const finish = (ready = true) => {
             if (settled) return;
+            const found = bindNotificationShell();
+            if (ready && !found) return;
             settled = true;
             cleanup();
-            resolve(bindNotificationShell());
+            resolve(found);
         };
 
-        const onShellReady = () => finish();
-        document.addEventListener("equallearn:shell-ready", onShellReady, { once: true });
-        timeoutId = setTimeout(finish, timeoutMs);
+        const onShellReady = () => finish(true);
+        window.addEventListener("equallearn:shell-ready", onShellReady, { once: true });
+        timeoutId = setTimeout(() => finish(false), timeoutMs);
+
+        // Close the small race where the shell is inserted between the first
+        // check and listener registration.
+        finish(true);
     });
 }
 
@@ -145,6 +155,60 @@ function waitForNotificationShell(timeoutMs = 1500) {
 function setText(element, value) {
     if (element) {
         element.textContent = value;
+    }
+}
+
+// Show a real count of this student's saved quiz results instead of the
+// previous hard-coded 72% progress value. This is optional dashboard data: a
+// timeout or permission issue must never block profile or notification loading.
+async function loadStudentProgressSummary(uid, generation) {
+    if (!studentProgressValue || !studentProgressDescription) return;
+
+    setText(studentProgressValue, "…");
+    setText(studentProgressDescription, "Loading your saved assessment results.");
+
+    const progressQuery = query(
+        collection(db, "progress"),
+        where("userId", "==", uid)
+    );
+
+    let timeoutId = null;
+    try {
+        const aggregate = await Promise.race([
+            getCountFromServer(progressQuery),
+            new Promise((_, reject) => {
+                timeoutId = setTimeout(() => {
+                    reject(new Error("Progress summary timed out."));
+                }, STUDENT_PROGRESS_SUMMARY_TIMEOUT_MS);
+            })
+        ]);
+
+        if (generation !== dashboardAuthGeneration || auth.currentUser?.uid !== uid) return;
+
+        const count = Math.max(0, Number(aggregate.data()?.count) || 0);
+        setText(studentProgressValue, count > 999 ? "999+" : String(count));
+        setText(
+            studentProgressDescription,
+            count === 0
+                ? "No quiz results have been saved yet. Completed quizzes will appear here."
+                : `${count} saved quiz result${count === 1 ? "" : "s"}. Open Progress to review your scores.`
+        );
+        if (studentProgressCircle) {
+            studentProgressCircle.setAttribute(
+                "aria-label",
+                `${count} saved quiz result${count === 1 ? "" : "s"}`
+            );
+        }
+    } catch (error) {
+        if (generation !== dashboardAuthGeneration || auth.currentUser?.uid !== uid) return;
+        console.warn("STUDENT PROGRESS SUMMARY UNAVAILABLE:", error.code || error.message);
+        setText(studentProgressValue, "—");
+        setText(studentProgressDescription, "Your progress summary is temporarily unavailable.");
+        if (studentProgressCircle) {
+            studentProgressCircle.setAttribute("aria-label", "Saved quiz results unavailable");
+        }
+    } finally {
+        if (timeoutId !== null) clearTimeout(timeoutId);
     }
 }
 
@@ -172,9 +236,10 @@ onAuthStateChanged(auth, user => {
         return;
     }
 
-    // Profile rendering is the critical path. The section lookup and shell
-    // notification setup run independently so a slow phone/network cannot
-    // hold the complete dashboard hostage.
+    // Profile rendering is the critical path. Section lookup, notification
+    // setup, and the optional progress count run independently.
+    void loadStudentProgressSummary(user.uid, generation);
+
     void loadStudent(user.uid, generation).catch(error => {
         if (generation !== dashboardAuthGeneration) return;
         console.error("STUDENT DASHBOARD ERROR:", error);

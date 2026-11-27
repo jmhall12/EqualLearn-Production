@@ -1,0 +1,25 @@
+/* EqualLearn Student Dashboard - compact combined overview */
+.student-overview-card {
+  color: var(--el-text, #f2f0fa) !important;
+  border: 1px solid rgba(161,139,255,.14) !important;
+  background: linear-gradient(135deg, #1b2030 0%, #20263a 58%, #1c2132 100%) !important;
+  box-shadow: 0 12px 32px rgba(0,0,0,.16), inset 0 1px 0 rgba(255,255,255,.035) !important;
+}
+.student-overview-card:hover {
+  border-color: rgba(161,139,255,.24) !important;
+  box-shadow: 0 14px 34px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.045) !important;
+}
+.student-overview-head h1,
+.student-overview-card h1,
+.student-overview-card h2,
+.student-overview-card h3,
+.student-overview-card strong { color:#f3f2fb; }
+.student-continue-link:hover { color:#fff; background:rgba(126,101,231,.22); border-color:rgba(161,139,255,.4); }
+.student-profile-item { background:rgba(255,255,255,.035); border-color:rgba(255,255,255,.075); }
+.student-profile-item span { color:#99a4bd; }
+.student-profile-item strong { color:#eef0fa; }
+.student-progress-panel { background:rgba(126,101,231,.075); border-color:rgba(161,139,255,.16); }
+.student-progress-copy strong { color:#f2f1fb; }
+.student-progress-copy p { color:#aab3c9; }
+.student-progress-circle-inner { background:#20243a; border-color:rgba(255,255,255,.08); color:#f4f2ff; }
+.student-overview-note { color:#8792aa; }

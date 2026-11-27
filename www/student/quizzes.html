@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>document.documentElement.dataset.theme="dark";document.documentElement.style.colorScheme="dark";</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1020">
+  <title>Quizzes | EqualLearn</title>
+
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/equallearn.css">
+  <link rel="stylesheet" href="../assets/css/student-quizzes-compact.css">
+  <link rel="manifest" href="../manifest.webmanifest">
+  <link rel="icon" href="../assets/icons/icon-192.png">
+</head>
+<body>
+  <main class="quiz-page">
+    <div class="quiz-wrapper">
+      <section class="quiz-main-card" aria-label="Assigned quizzes">
+        <div class="quiz-card-content">
+          <div class="quiz-toolbar">
+            <label class="quiz-search" for="quizSearch">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 4.2 4.2"></path></svg>
+              <input id="quizSearch" type="search" placeholder="Search quizzes..." autocomplete="off" aria-label="Search quizzes">
+            </label>
+            <span class="quiz-total" id="quizCount" aria-live="polite">Loading...</span>
+          </div>
+
+          <nav class="quiz-filters" aria-label="Filter quizzes">
+            <button class="quiz-filter-btn is-active" type="button" data-quiz-filter="all" aria-pressed="true">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.4"></rect><rect x="13.5" y="3.5" width="7" height="7" rx="1.4"></rect><rect x="3.5" y="13.5" width="7" height="7" rx="1.4"></rect><rect x="13.5" y="13.5" width="7" height="7" rx="1.4"></rect></svg>
+              <span>All</span>
+            </button>
+            <button class="quiz-filter-btn" type="button" data-quiz-filter="open" aria-pressed="false">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="m8 12.2 2.5 2.5 5.5-5.5"></path></svg>
+              <span>Available</span>
+            </button>
+            <button class="quiz-filter-btn" type="button" data-quiz-filter="upcoming" aria-pressed="false">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3.2 2"></path></svg>
+              <span>Upcoming</span>
+            </button>
+            <button class="quiz-filter-btn" type="button" data-quiz-filter="closed" aria-pressed="false">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="10" width="15" height="10" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg>
+              <span>Closed</span>
+            </button>
+          </nav>
+
+          <div id="quizList" class="quiz-list" aria-live="polite">
+            <div class="quiz-loading" role="status">Retrieving the assessments assigned to your section...</div>
+          </div>
+
+          <div class="quiz-message" id="quizEmpty" style="display:none">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21z"></path><path d="M4 5.5V21M8 7h8M8 11h7"></path></svg>
+            <strong>No quizzes available yet.</strong>
+            <p>Published assessments for your section will appear here.</p>
+          </div>
+
+          <div class="quiz-message" id="quizFilterEmpty" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 4.2 4.2"></path></svg>
+            <strong>No matching quizzes.</strong>
+            <p>Try another keyword or choose a different filter.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" src="../assets/js/student-quizzes.js"></script>
+  <script type="module" src="../assets/js/student-quizzes-ui.js"></script>
+  <script type="module" src="../assets/js/ui-shell.js"></script>
+  <script type="module" src="../assets/js/pwa.js"></script>
+  <script type="module" src="../assets/js/theme.js"></script>
+
+  <!-- EQUALLEARN LUMI COMPANION -->
+<iframe
+id="equallearn-lumi-frame"
+src="/assets/widgets/lumi.html"
+title="Lumi-equallearn Companion"
+allow="autoplay"
+allowtransparency="true"
+frameborder="0"
+scrolling="no"
+loading="lazy"
+style="
+position:fixed;
+bottom:16px;
+right:16px;
+width:6176x;
+height:224px;
+border:none;
+border-radius:transparent;
+z-index:999999;
+overflow:visible;"
+></iframe>
+  
+</body>
+</html>

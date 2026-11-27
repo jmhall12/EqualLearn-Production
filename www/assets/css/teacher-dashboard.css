@@ -1,0 +1,439 @@
+/* EqualLearn Teacher Dashboard — compact dark analytics workspace */
+
+.teacher-dashboard-page {
+  --td-panel: #151f33;
+  --td-panel-soft: #1c2940;
+  --td-border: rgba(160, 177, 211, .18);
+  --td-text: #f3f5fb;
+  --td-muted: #9eabc2;
+  --td-purple: #a995ff;
+  width: 100%;
+  max-width: 1500px;
+  min-width: 0;
+  margin: 0 auto;
+  padding: 20px clamp(16px, 2.3vw, 30px) 38px;
+  color: var(--td-text);
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+}
+
+.teacher-dashboard-page *,
+.teacher-dashboard-page *::before,
+.teacher-dashboard-page *::after {
+  box-sizing: border-box;
+}
+
+.teacher-visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.teacher-overview-card {
+  width: 100%;
+  min-width: 0;
+  padding: clamp(17px, 2.1vw, 25px);
+  overflow: hidden;
+  border: 1px solid var(--td-border);
+  border-radius: 20px;
+  background: linear-gradient(145deg, #1a263b 0%, #141e31 100%);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, .18);
+}
+
+.teacher-overview-heading,
+.teacher-chart-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.teacher-eyebrow {
+  display: inline-block;
+  margin-bottom: 7px;
+  color: #a995ff;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 1.7px;
+}
+
+.teacher-overview-heading h1 {
+  margin: 0;
+  color: #f4f5fb;
+  font-size: clamp(19px, 2.1vw, 25px);
+  font-weight: 850;
+  line-height: 1.25;
+  letter-spacing: -.55px;
+}
+
+.teacher-overview-heading p,
+.teacher-chart-heading p {
+  margin: 5px 0 0;
+  color: var(--td-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.teacher-live-status {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 7px;
+  padding: 7px 10px;
+  color: #8de2c2;
+  background: rgba(57, 174, 137, .10);
+  border: 1px solid rgba(57, 174, 137, .22);
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: .8px;
+}
+
+.teacher-live-dot,
+.teacher-note-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 50%;
+  background: #55d6a6;
+  box-shadow: 0 0 9px rgba(85, 214, 166, .48);
+}
+
+.teacher-metrics-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.teacher-metric {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid rgba(157, 174, 209, .11);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .025);
+}
+
+.teacher-metric-ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: 0 0 56px;
+  width: 56px;
+  height: 56px;
+  color: #f7f6ff;
+  font-size: 12px;
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+}
+
+.teacher-metric-ring svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  overflow: visible;
+}
+
+.teacher-ring-track,
+.teacher-ring-value {
+  fill: none;
+  stroke-width: 5;
+}
+
+.teacher-ring-track {
+  stroke: rgba(255, 255, 255, .09);
+}
+
+.teacher-ring-value {
+  stroke: var(--metric-color, #a995ff);
+  stroke-linecap: round;
+  transition: stroke-dashoffset .65s cubic-bezier(.22, .8, .25, 1), opacity .2s ease;
+}
+
+.teacher-metric-ring span {
+  position: relative;
+  z-index: 1;
+  max-width: 43px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.teacher-metric-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.teacher-metric-copy strong {
+  color: #e9ecf7;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.teacher-metric-copy small {
+  color: #91a0b9;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.teacher-overview-note {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 11px;
+  color: #7f8ea8;
+  font-size: 10px;
+}
+
+.teacher-note-dot {
+  width: 5px;
+  height: 5px;
+  flex-basis: 5px;
+  opacity: .7;
+  box-shadow: none;
+}
+
+.teacher-section-divider {
+  height: 1px;
+  margin: 21px 0 18px;
+  background: rgba(167, 181, 211, .13);
+}
+
+.teacher-chart-heading h2 {
+  margin: 0;
+  color: #f2f3fa;
+  font-size: 16px;
+  font-weight: 850;
+  letter-spacing: -.2px;
+}
+
+.teacher-chart-updated {
+  flex: 0 0 auto;
+  color: #8292ad;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.teacher-chart-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin: 15px 0 4px;
+  color: #9eabc2;
+  font-size: 10px;
+}
+
+.teacher-chart-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.teacher-chart-legend i {
+  display: inline-block;
+  width: 17px;
+  height: 3px;
+  border-radius: 99px;
+}
+
+.legend-progress {
+  background: #aa95ff;
+}
+
+.legend-quiz {
+  background: #61c9e9;
+}
+
+.teacher-chart-wrap {
+  width: 100%;
+  min-width: 0;
+  min-height: 180px;
+  margin-top: 5px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(7, 14, 28, .13), rgba(7, 14, 28, .02));
+}
+
+.teacher-engagement-chart {
+  width: 100%;
+  min-height: 180px;
+}
+
+.teacher-chart-svg {
+  display: block;
+  width: 100%;
+  height: clamp(175px, 22vw, 220px);
+  overflow: visible;
+}
+
+.teacher-chart-gridline {
+  stroke: rgba(171, 187, 216, .13);
+  stroke-width: 1;
+  stroke-dasharray: 4 6;
+}
+
+.teacher-chart-y-label,
+.teacher-chart-x-label {
+  fill: #7888a3;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-size: 10px;
+}
+
+.teacher-chart-area {
+  fill: url(#teacherProgressFill);
+  stroke: none;
+}
+
+.teacher-chart-line {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  transition: d .5s ease;
+}
+
+.teacher-chart-line-progress {
+  stroke: #aa95ff;
+  filter: drop-shadow(0 2px 5px rgba(169, 149, 255, .22));
+}
+
+.teacher-chart-line-quiz {
+  stroke: #61c9e9;
+  filter: drop-shadow(0 2px 5px rgba(97, 201, 233, .18));
+}
+
+.teacher-chart-point {
+  stroke: #17233a;
+  stroke-width: 2;
+}
+
+.teacher-chart-point-progress {
+  fill: #aa95ff;
+}
+
+.teacher-chart-point-quiz {
+  fill: #61c9e9;
+}
+
+.teacher-chart-loading {
+  display: grid;
+  min-height: 180px;
+  place-items: center;
+  color: #8392ac;
+  font-size: 12px;
+}
+
+.teacher-chart-footnote {
+  margin: 5px 0 0;
+  color: #8291aa;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+@media (max-width: 1050px) {
+  .teacher-metrics-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .teacher-dashboard-page {
+    padding: 13px 12px 24px;
+  }
+
+  .teacher-overview-card {
+    padding: 15px;
+    border-radius: 16px;
+  }
+
+  .teacher-overview-heading,
+  .teacher-chart-heading {
+    align-items: flex-start;
+  }
+
+  .teacher-overview-heading p {
+    max-width: 34ch;
+  }
+
+  .teacher-live-status {
+    padding: 6px 8px;
+    font-size: 8px;
+  }
+
+  .teacher-metrics-row {
+    gap: 8px;
+    margin-top: 17px;
+  }
+
+  .teacher-metric {
+    gap: 8px;
+    padding: 9px;
+  }
+
+  .teacher-metric-ring {
+    flex-basis: 49px;
+    width: 49px;
+    height: 49px;
+    font-size: 11px;
+  }
+
+  .teacher-metric-ring svg {
+    width: 49px;
+    height: 49px;
+  }
+
+  .teacher-metric-copy strong {
+    font-size: 11px;
+  }
+
+  .teacher-metric-copy small {
+    font-size: 9px;
+  }
+
+  .teacher-chart-updated {
+    font-size: 9px;
+  }
+
+  .teacher-chart-svg {
+    height: 178px;
+  }
+}
+
+@media (max-width: 390px) {
+  .teacher-metrics-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .teacher-metric-ring {
+    flex-basis: 45px;
+    width: 45px;
+    height: 45px;
+  }
+
+  .teacher-metric-ring svg {
+    width: 45px;
+    height: 45px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .teacher-dashboard-page *,
+  .teacher-dashboard-page *::before,
+  .teacher-dashboard-page *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}

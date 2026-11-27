@@ -1,0 +1,300 @@
+/* ==========================================================
+   EQUALLEARN â€” RESPONSIVE AUTO-FIT PATCH
+   Fluid sizing for desktop, tablet, and mobile.
+   Loaded after each page's existing styles; preserves themes.
+========================================================== */
+
+:root {
+  --el-fit-gutter: clamp(12px, 2.2vw, 34px);
+  --el-fit-gap: clamp(10px, 1.35vw, 20px);
+  --el-fit-card-padding: clamp(14px, 1.45vw, 24px);
+}
+
+html {
+  width: 100%;
+  max-width: 100%;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-padding-top: 1rem;
+}
+
+body {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  font-size: clamp(15px, calc(14px + .2vw), 17px);
+  line-height: 1.5;
+  overflow-x: clip;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+img, video, canvas, iframe { max-width: 100%; }
+img, video { height: auto; }
+svg { max-width: 100%; }
+
+/* Prevent wide content from forcing the whole page wider than the screen. */
+:is(.el-app-shell, .el-app-main, .el-page-content, .el-dashboard,
+    .page, .phone, .container, .reports-container, .settings-container,
+    .admin-live-page, .content-page, .grading-page, .live-page,
+    .cw-page, .modules-page, .quiz-page, .quiz-shell, .assignment-page,
+    .result-shell, .announcement-page, .premium-container) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.el-app-shell {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  grid-template-columns: var(--side-width, var(--el-sidebar, 258px)) minmax(0, 1fr) !important;
+}
+
+.el-app-main {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  padding-left: var(--el-fit-gutter) !important;
+  padding-right: var(--el-fit-gutter) !important;
+}
+
+.el-page-content {
+  width: 100% !important;
+  max-width: 1680px !important;
+  min-width: 0 !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.el-dashboard {
+  width: 100% !important;
+  max-width: 1680px !important;
+  min-width: 0 !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding: clamp(16px, 2vw, 32px) var(--el-fit-gutter) clamp(22px, 2.5vw, 40px) !important;
+}
+
+:is(.page, .phone, .container, .reports-container, .settings-container,
+    .admin-live-page, .content-page, .grading-page, .live-page,
+    .cw-page, .modules-page, .quiz-page, .quiz-shell, .assignment-page,
+    .result-shell, .announcement-page, .premium-container) {
+  width: min(100%, 1600px) !important;
+  max-width: 1600px !important;
+  min-width: 0 !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: var(--el-fit-gutter) !important;
+  padding-right: var(--el-fit-gutter) !important;
+}
+
+/* Fluid, readable text without making tiny labels excessively large. */
+:where(.el-dashboard, .el-page-content, .page, .phone, .container,
+       .reports-container, .settings-container, .content-page,
+       .grading-page, .live-page, .cw-page, .modules-page,
+       .quiz-page, .quiz-shell, .assignment-page, .result-shell,
+       .announcement-page) :where(p, li, td, th, label) {
+  font-size: clamp(14px, 1em, 17px) !important;
+  line-height: 1.5;
+}
+
+button, input, select, textarea,
+.el-btn, .btn, .primary-btn, .save-btn, .assign-btn {
+  font-size: clamp(14px, .94rem, 16px) !important;
+  line-height: 1.35;
+}
+
+:is(.el-page-header h1, .page-header h1, .reports-header h1,
+    .settings-header h1, .dashboard-title, .page-title) {
+  font-size: clamp(24px, calc(20px + 1.25vw), 38px) !important;
+  line-height: 1.18;
+  overflow-wrap: anywhere;
+}
+
+:is(.el-card-title h3, .el-card h3, .card h3, .section-title) {
+  font-size: clamp(17px, calc(15px + .35vw), 21px) !important;
+  line-height: 1.3;
+}
+
+:is(.el-page-kicker, .el-stat-label, .el-stat-meta, .el-nav a,
+    .el-card-title span, .el-quick span, .el-quick strong, .el-user-pill small,
+    .el-user-pill strong, .form-hint, .helper-text, .field-hint, .badge, .status) {
+  font-size: clamp(12px, .82rem, 14px) !important;
+  line-height: 1.45;
+}
+
+.el-page-title {
+  font-size: clamp(18px, calc(16px + .5vw), 24px) !important;
+  line-height: 1.25;
+}
+
+.el-stat-value {
+  font-size: clamp(24px, calc(21px + 1.15vw), 36px) !important;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+/* Cards expand to the available grid space instead of leaving narrow columns. */
+:is(.el-card, .card, .form-card, .table-card, .settings-card,
+    .summary-card, .filter-card, .class-card, .teacher-card,
+    .module-card, .lesson-card, .progress-card, .el-quick) {
+  min-width: 0;
+  max-width: 100%;
+  height: auto !important;
+  padding: var(--el-fit-card-padding);
+}
+
+:is(.el-grid, .grid, .stats, .summary-grid, .el-quick-grid,
+    .menu, .actions, .form-grid, .filter-card) {
+  min-width: 0;
+  gap: var(--el-fit-gap) !important;
+  align-items: stretch;
+}
+
+:is(.el-grid-4, .el-dashboard .el-grid-4, .grid, .stats, .summary-grid) {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)) !important;
+}
+
+:is(.el-quick-grid, .menu, .actions) {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)) !important;
+}
+
+:is(.el-grid-3, .el-dashboard .el-grid-3) {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+:is(.el-grid-2, .el-dashboard .el-grid-2) {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.el-stat {
+  min-height: clamp(128px, 14vw, 170px) !important;
+  padding: var(--el-fit-card-padding) !important;
+}
+
+.el-quick {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-height: 120px;
+}
+
+.el-page-header, .page-header, .section-header,
+.el-card-title, .el-topbar, .el-topbar-actions,
+.el-auth-actions, .header-buttons, .modal-actions {
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: var(--el-fit-gap);
+}
+
+/* Tables remain usable on narrow screens without stretching the page. */
+:is(.table-wrapper, .table-wrap, .table-responsive, .table-container) {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+table { max-width: 100%; }
+th, td { overflow-wrap: anywhere; }
+
+pre, code { max-width: 100%; overflow-wrap: anywhere; }
+
+/* Dialogs stay within the visible screen. */
+.modal-content, .modal-dialog, .dialog-content {
+  max-width: min(720px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
+}
+
+/* Comfortable touch targets. */
+button, .el-btn, .btn, .primary-btn, .save-btn, .assign-btn,
+input, select {
+  min-height: 42px;
+}
+
+@media (max-width: 1100px) {
+  :is(.el-grid-4, .el-dashboard .el-grid-4,
+      .el-grid-3, .el-dashboard .el-grid-3) {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+}
+
+@media (max-width: 900px) {
+  .el-app-shell { display: block !important; }
+  .el-app-main { width: 100% !important; padding: 14px var(--el-fit-gutter) !important; }
+  .el-page-content { width: 100% !important; }
+  .el-dashboard { width: 100% !important; }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --el-fit-gutter: 12px;
+    --el-fit-gap: 11px;
+    --el-fit-card-padding: 14px;
+  }
+
+  body { font-size: 15px; }
+
+  .el-app-main { padding: 12px !important; }
+  .el-dashboard { padding: 16px 12px 24px !important; }
+
+  .el-topbar {
+    height: auto !important;
+    min-height: 58px;
+    padding: 8px 0 !important;
+    flex-wrap: wrap;
+  }
+
+  .el-page-header, .page-header, .section-header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 11px;
+  }
+
+  :is(.el-grid-4, .el-dashboard .el-grid-4,
+      .el-grid-3, .el-dashboard .el-grid-3,
+      .grid, .stats, .summary-grid) {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 165px), 1fr)) !important;
+  }
+
+  :is(.el-grid-2, .el-dashboard .el-grid-2) {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  :is(.el-quick-grid, .menu, .actions) {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)) !important;
+  }
+
+  .el-card, .card, .form-card, .table-card,
+  .settings-card, .summary-card, .filter-card,
+  .class-card, .teacher-card, .module-card, .lesson-card {
+    padding: 14px !important;
+    border-radius: 16px;
+  }
+
+  .el-page-header > :is(.el-btn, a, button) { width: 100%; }
+
+  .modal-content, .modal-dialog, .dialog-content {
+    width: calc(100vw - 20px) !important;
+    max-width: 720px !important;
+    max-height: calc(100dvh - 20px) !important;
+    margin: 10px auto;
+  }
+}
+
+@media (max-width: 380px) {
+  :root { --el-fit-gutter: 10px; --el-fit-gap: 9px; }
+  .el-dashboard { padding-left: 10px !important; padding-right: 10px !important; }
+  .el-stat { padding: 12px !important; }
+  .el-page-title { max-width: 58vw; }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .el-topbar { min-height: 48px; }
+  .modal-content, .modal-dialog, .dialog-content {
+    max-height: calc(100dvh - 16px) !important;
+  }
+}

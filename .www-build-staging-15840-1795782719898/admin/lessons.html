@@ -1,0 +1,64 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script id="EQUALLEARN_FORCE_DARK_BOOTSTRAP">document.documentElement.dataset.theme="dark";document.documentElement.style.colorScheme="dark";</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b1020">
+  <title>Lesson Management | EqualLearn</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/sidebar-skeuomorphism.css">
+  <link rel="stylesheet" href="../assets/css/glass-dashboard.css">
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#f0eff8;color:#29263b;font-family:inherit}
+    .el-dashboard{max-width:1500px;margin:auto;padding:30px clamp(16px,3vw,38px) 60px}
+    .page-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap;margin-bottom:22px}
+    h1{margin:0;color:#5146a5;font-size:clamp(25px,3vw,34px)}.sub{color:#77738a;margin:7px 0 0}
+    .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:20px 0}
+    .stat,.panel,.lesson-card{background:#fff;border:1px solid #e8e5f3;border-radius:16px;padding:18px;box-shadow:0 4px 15px #30265b0b}
+    .stat small{display:block;color:#77738a}.stat strong{display:block;font-size:27px;margin-top:5px;color:#5146a5}
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}.toolbar input,.toolbar select{min-height:43px;border:1px solid #dedbea;border-radius:10px;padding:10px 12px;background:white;color:#29263b}.toolbar input{flex:1;min-width:210px}
+    .lesson-list{display:grid;gap:13px}.lesson-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center}.lesson-card h2{font-size:18px;margin:0 0 7px}.meta{font-size:13px;color:#77738a;display:flex;gap:12px;flex-wrap:wrap}.desc{color:#5e5a70;margin:10px 0 0;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}.pill{display:inline-block;padding:5px 9px;border-radius:30px;background:#eeeaff;color:#5b50a9;font-size:12px;font-weight:700}.pill.removed{background:#ffe8e8;color:#a52d38}.actions{display:flex;gap:8px;flex-wrap:wrap}.btn{border:0;border-radius:9px;padding:10px 13px;font-weight:650;cursor:pointer}.view{background:#eeecff;color:#5146a5}.remove{background:#b83245;color:white}.restore{background:#e6f6ed;color:#207345}.empty,.error{padding:35px;text-align:center;color:#77738a;background:white;border-radius:15px}.muted{color:#77738a;font-size:13px}
+    .modal{display:none;position:fixed;inset:0;background:#17132699;z-index:10000;padding:18px;overflow:auto;align-items:center;justify-content:center}.modal.open{display:flex}.modal-box{width:min(650px,100%);background:white;border-radius:16px;padding:22px;max-height:90vh;overflow:auto}.modal-box h2{margin-top:0}.modal-box label{display:block;font-weight:650;margin:14px 0 6px}.modal-box textarea{width:100%;min-height:105px;padding:11px;border:1px solid #ddd8ea;border-radius:9px;font:inherit}.modal-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:17px}.close{background:#eeeaf6;color:#49435e}.confirm{background:#b83245;color:white}.preview-body{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;color:#48445a}.file-link{display:inline-block;margin:8px 8px 0 0;color:#5146a5}
+    @media(max-width:800px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.lesson-card{grid-template-columns:1fr}.actions .btn{flex:1}}
+    @media(prefers-color-scheme:dark){body{background:#211f2a;color:#eeeaf7}.stat,.panel,.lesson-card,.empty,.error,.modal-box{background:#2c2938;border-color:#403b50;color:#eeeaf7}.sub,.muted,.meta,.desc{color:#bcb6cc}.toolbar input,.toolbar select,.modal-box textarea{background:#252231;color:#eeeaf7;border-color:#484258}.pill{background:#40395e;color:#d9d1ff}.pill.removed{background:#59313a;color:#ffd5da}.view,.close{background:#40395e;color:#e0d9ff}}
+  </style>
+    <link rel="stylesheet" href="../assets/css/responsive-layout.css">
+    <link rel="stylesheet" href="../assets/css/responsive-auto-fit.css">
+  <link rel="stylesheet" href="../assets/css/forced-dark-theme.css?v=1">
+</head>
+<body>
+  <main class="el-dashboard">
+    <header class="page-head">
+      <div><h1>Lesson Management</h1><p class="sub">Monitor lessons published by all teachers. Published lessons remain visible to students unless removed by an administrator.</p></div>
+      <div class="muted" id="lastUpdated" aria-live="polite">Connecting…</div>
+    </header>
+    <section class="stats" aria-label="Lesson summary">
+      <div class="stat"><small>All lessons</small><strong id="totalCount">—</strong></div>
+      <div class="stat"><small>Published / active</small><strong id="activeCount">—</strong></div>
+      <div class="stat"><small>Removed by admin</small><strong id="removedCount">—</strong></div>
+      <div class="stat"><small>Teachers represented</small><strong id="teacherCount">—</strong></div>
+    </section>
+    <section class="panel">
+      <div class="toolbar">
+        <input id="searchInput" type="search" placeholder="Search lesson title, teacher, module…" aria-label="Search lessons">
+        <select id="statusFilter" aria-label="Filter by status"><option value="all">All statuses</option><option value="active">Published</option><option value="removed">Removed by admin</option></select>
+        <button class="btn view" id="refreshBtn" type="button">Refresh</button>
+      </div>
+      <div id="lessonList" class="lesson-list" aria-live="polite"><div class="empty">Loading lessons…</div></div>
+    </section>
+  </main>
+  <div class="modal" id="previewModal" role="dialog" aria-modal="true" aria-labelledby="previewTitle">
+    <div class="modal-box"><h2 id="previewTitle">Lesson preview</h2><div id="previewContent" class="preview-body"></div><div class="modal-actions"><button class="btn close" data-close="previewModal" type="button">Close</button></div></div>
+  </div>
+  <div class="modal" id="removeModal" role="dialog" aria-modal="true" aria-labelledby="removeTitle">
+    <div class="modal-box"><h2 id="removeTitle">Remove lesson from students?</h2><p class="muted">The lesson record will be retained for moderation history. Students will no longer see it.</p><label for="removeReason">Reason (required)</label><textarea id="removeReason" maxlength="1000" placeholder="Explain why this lesson is being removed…"></textarea><div class="modal-actions"><button class="btn close" data-close="removeModal" type="button">Cancel</button><button class="btn confirm" id="confirmRemove" type="button">Remove lesson</button></div></div>
+  </div>
+  <script type="module" src="../assets/js/admin-lesson-management.js"></script>
+  <script type="module" src="../assets/js/ui-shell.js"></script>
+  <script type="module" src="../assets/js/theme.js"></script>
+
+  
+</body>
+</html>
+

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>document.documentElement.dataset.theme="dark";document.documentElement.style.colorScheme="dark";</script>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#0b1020">
+  <title>Privacy & Security | EqualLearn</title>
+  <link rel="manifest" href="../manifest.webmanifest"><link rel="icon" href="../assets/icons/equallearn-logo.png">
+  <link rel="stylesheet" href="../assets/css/glass-dashboard.css"><link rel="stylesheet" href="../assets/css/sidebar-skeuomorphism.css"><link rel="stylesheet" href="../assets/css/forced-dark-theme.css?v=1"><link rel="stylesheet" href="../assets/css/admin-settings.css?v=1">
+</head>
+<body>
+  <main class="admin-settings-subpage">
+    <div class="admin-settings-subpage__top"><a class="admin-settings-back" href="settings.html">← Settings</a></div>
+    <header style="margin-bottom:16px"><p class="admin-settings-subpage__eyebrow">Security & privacy</p><h1 class="admin-settings-subpage__title">Privacy & security overview</h1><p class="admin-settings-subpage__desc">Review the security details available for your current EqualLearn account.</p></header>
+    <section class="admin-settings-panel">
+      <h2>Account security</h2>
+      <div class="admin-settings-info-grid">
+        <div class="admin-settings-info"><span>Signed-in account</span><strong id="privacyEmail">Loading…</strong></div>
+        <div class="admin-settings-info"><span>Email verification</span><strong id="privacyEmailVerified">Checking…</strong></div>
+        <div class="admin-settings-info"><span>Account status</span><strong id="privacyAccountStatus">Checking…</strong></div>
+        <div class="admin-settings-info"><span>Sign-in provider</span><strong id="privacyProvider">Checking…</strong></div>
+        <div class="admin-settings-info"><span>Account created</span><strong id="privacyCreated">—</strong></div>
+        <div class="admin-settings-info"><span>Last sign-in</span><strong id="privacyLastSignIn">—</strong></div>
+      </div>
+      <div id="privacyMessage" class="admin-settings-message" role="status" aria-live="polite"></div>
+    </section>
+    <section class="admin-settings-panel">
+      <h2>Privacy information</h2>
+      <div class="admin-settings-callout" style="margin-top:0">Administrator access is checked against your authenticated account profile. Access to student records and audit records is also controlled by your deployed Firestore Security Rules.</div>
+      <div class="admin-settings-callout">The Recent Activity page displays audit events that are actually written to the <code>activityLogs</code> collection. Teacher content Keep, Flag, and Remove actions are recorded when the updated Check Lessons & Modules script is installed.</div>
+      <div class="admin-settings-actions"><a class="admin-settings-button admin-settings-button--secondary" href="recent-activity.html" style="display:inline-flex;align-items:center;text-decoration:none">View recent activity</a><a class="admin-settings-button" href="change-password.html" style="display:inline-flex;align-items:center;text-decoration:none">Change password</a></div>
+    </section>
+    <section class="admin-settings-panel">
+      <h2>Current device session</h2>
+      <div class="admin-settings-info-grid">
+        <div class="admin-settings-info"><span>Session</span><strong>Signed in on this device</strong></div>
+        <div class="admin-settings-info"><span>Browser</span><strong id="privacyBrowser">Current browser</strong></div>
+      </div>
+      <div class="admin-settings-actions"><button id="signOutDevice" class="admin-settings-button admin-settings-button--danger" type="button">Sign out this device</button></div>
+      <div id="sessionMessage" class="admin-settings-message" role="status" aria-live="polite"></div>
+    </section>
+  </main>
+  <script type="module" src="../assets/js/admin-privacy-security.js"></script><script type="module" src="../assets/js/ui-shell.js"></script><script type="module" src="../assets/js/pwa.js"></script><script type="module" src="../assets/js/theme.js"></script>
+  
+</body>
+</html>

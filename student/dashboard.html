@@ -99,16 +99,14 @@
                 </div>
             </div>
 
-            <div class="student-progress-panel" aria-label="Learning progress">
-                <div class="student-progress-circle" role="img" aria-label="Learning progress 72 percent">
-                    <div class="student-progress-circle-inner">72%</div>
+            <div class="student-progress-panel" aria-label="Saved quiz activity">
+                <div class="student-progress-circle" id="studentProgressCircle" role="img" aria-label="Saved quiz results are loading">
+                    <div class="student-progress-circle-inner" id="studentProgressValue">—</div>
                 </div>
                 <div class="student-progress-copy">
-                    <strong>Weekly learning goal</strong>
-                    <p>Complete your modules and quizzes to keep building your progress.</p>
-                    <div class="student-progress-track" aria-hidden="true">
-                        <span></span>
-                    </div>
+                    <strong>Saved quiz results</strong>
+                    <p id="studentProgressDescription" aria-live="polite">Your saved assessment results will appear here.</p>
+                    <a class="student-continue-link" href="progress.html" aria-label="View your progress">View progress</a>
                 </div>
             </div>
         </div>

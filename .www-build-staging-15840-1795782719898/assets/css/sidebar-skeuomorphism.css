@@ -1,0 +1,1854 @@
+
+
+/* =========================================================
+
+   EQUALLEARN — PREMIUM GLOBAL APP SHELL
+
+   Compatible with ui-shell.js replacement
+
+   Theme: Deep Charcoal / Lavender / Purple
+
+\========================================================= */
+
+
+
+:root {
+
+  --side-width: 258px;
+
+  --side-collapsed-width: 88px;
+
+
+
+  --el-bg: #171821;
+
+  --el-sidebar: #1d1e29;
+
+  --el-sidebar-deep: #191a24;
+
+  --el-surface: #222330;
+
+  --el-surface-hover: #2a2b3b;
+
+
+
+  --el-text: #f2f0fa;
+
+  --el-muted: #a5a3b8;
+
+  --el-purple: #a99af0;
+
+  --el-purple-strong: #8068f4;
+
+  --el-purple-soft: rgba(128,104,244,.16);
+
+
+
+  --el-border: rgba(255,255,255,.075);
+
+  --el-shadow: 0 12px 35px rgba(0,0,0,.16);
+
+
+
+  --el-radius: 16px;
+
+}
+
+
+
+/* =========================================================
+
+   1. GLOBAL RESET
+
+\========================================================= */
+
+
+
+html {
+
+  min-height: 100%;
+
+  margin: 0;
+
+  scroll-behavior: smooth;
+
+}
+
+
+
+body {
+
+  min-height: 100vh;
+
+  margin: 0 !important;
+
+  padding: 0 !important;
+
+  overflow-x: hidden;
+
+  color: var(--el-text);
+
+  background: var(--el-bg) !important;
+
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+
+}
+
+
+
+body,
+
+body * {
+
+  box-sizing: border-box;
+
+}
+
+
+
+button,
+
+input,
+
+select,
+
+textarea {
+
+  font: inherit;
+
+}
+
+
+
+/* =========================================================
+
+   2. APPLICATION SHELL
+
+\========================================================= */
+
+
+
+.el-app-shell {
+
+  display: grid !important;
+
+  grid-template-columns: var(--side-width) minmax(0, 1fr);
+
+  align-items: stretch;
+
+  width: 100%;
+
+  min-width: 0;
+
+  min-height: 100vh;
+
+  margin: 0;
+
+  padding: 0;
+
+  gap: 0;
+
+  background: var(--el-bg);
+
+  transition: grid-template-columns .25s ease;
+
+}
+
+
+
+.el-app-main {
+
+  display: flex !important;
+
+  flex-direction: column;
+
+  width: 100%;
+
+  min-width: 0;
+
+  min-height: 100vh;
+
+  margin: 0;
+
+  padding: 0;
+
+  overflow-x: clip;
+
+  background: var(--el-bg);
+
+}
+
+
+
+.el-page-content {
+
+  display: block;
+
+  flex: 1 1 auto;
+
+  width: 100%;
+
+  max-width: 100%;
+
+  min-width: 0;
+
+  min-height: 0;
+
+  margin: 0;
+
+  padding: 0;
+
+  overflow-x: clip;
+
+  background: var(--el-bg);
+
+}
+
+
+
+.el-page-content > * {
+
+  min-width: 0;
+
+  max-width: 100%;
+
+}
+
+
+
+/* =========================================================
+
+   3. SIDEBAR
+
+\========================================================= */
+
+
+
+.el-sidebar {
+
+  position: sticky !important;
+
+  top: 0;
+
+  left: 0;
+
+  z-index: 1000;
+
+
+
+  display: flex !important;
+
+  flex-direction: column;
+
+  align-items: stretch;
+
+
+
+  width: 100%;
+
+  height: 100vh;
+
+  min-height: 100vh;
+
+  min-width: 0;
+
+
+
+  padding: 22px 15px 17px;
+
+  margin: 0;
+
+
+
+  overflow-x: hidden;
+
+  overflow-y: auto;
+
+
+
+  color: var(--el-text);
+
+
+
+  background:
+
+    linear-gradient(
+
+      180deg,
+
+      #222330 0%,
+
+      #1d1e29 52%,
+
+      #191a24 100%
+
+    ) !important;
+
+
+
+  border-right: 1px solid var(--el-border);
+
+
+
+  box-shadow:
+
+    8px 0 30px rgba(0,0,0,.12),
+
+    inset -1px 0 0 rgba(255,255,255,.015);
+
+
+
+  scrollbar-width: thin;
+
+  scrollbar-color: rgba(169,154,240,.25) transparent;
+
+}
+
+
+
+.el-sidebar::-webkit-scrollbar {
+
+  width: 5px;
+
+}
+
+
+
+.el-sidebar::-webkit-scrollbar-thumb {
+
+  background: rgba(169,154,240,.25);
+
+  border-radius: 20px;
+
+}
+
+
+
+/* =========================================================
+
+   4. BRAND
+
+\========================================================= */
+
+
+
+.el-sidebar-brand {
+
+  display: flex !important;
+
+  align-items: center;
+
+  justify-content: flex-start;
+
+  gap: 13px;
+
+
+
+  width: 100%;
+
+  min-height: 68px;
+
+
+
+  padding: 3px 7px 20px;
+
+  margin: 0 0 24px;
+
+
+
+  border-bottom: 1px solid var(--el-border);
+
+  overflow: hidden;
+
+}
+
+
+
+.el-wordmark-mark {
+
+  display: grid !important;
+
+  place-items: center;
+
+
+
+  flex: 0 0 49px;
+
+  width: 49px !important;
+
+  height: 49px !important;
+
+  min-width: 49px !important;
+
+
+
+  overflow: hidden;
+
+  border-radius: 15px;
+
+
+
+  background: linear-gradient(
+
+    140deg,
+
+    #907aff 0%,
+
+    #7256ed 55%,
+
+    #5943d8 100%
+
+  );
+
+
+
+  box-shadow:
+
+    0 8px 22px rgba(117,92,240,.25),
+
+    inset 0 1px 0 rgba(255,255,255,.22);
+
+}
+
+
+
+.el-wordmark-mark img {
+
+  display: block;
+
+  width: 100% !important;
+
+  height: 100% !important;
+
+  max-width: 100%;
+
+  max-height: 100%;
+
+  object-fit: contain;
+
+  border-radius: 14px;
+
+}
+
+
+
+.el-wordmark-fallback {
+
+  color: #fff;
+
+  font-size: 25px;
+
+  font-weight: 850;
+
+}
+
+
+
+.el-wordmark-text {
+
+  display: block;
+
+  min-width: 0;
+
+  overflow: hidden;
+
+
+
+  color: #fff;
+
+  font-size: 20px;
+
+  font-weight: 850;
+
+  letter-spacing: -.8px;
+
+  white-space: nowrap;
+
+}
+
+
+
+.el-wordmark-text span {
+
+  color: var(--el-purple);
+
+}
+
+
+
+/* =========================================================
+
+   5. COLLAPSE BUTTON
+
+\========================================================= */
+
+
+
+.el-sidebar-collapse {
+
+  position: absolute;
+
+  top: 29px;
+
+  right: 10px;
+
+
+
+  display: grid;
+
+  place-items: center;
+
+
+
+  width: 27px;
+
+  height: 27px;
+
+  padding: 0;
+
+
+
+  color: #c7bcff;
+
+  background: #292a3a;
+
+
+
+  border: 1px solid var(--el-border);
+
+  border-radius: 9px;
+
+
+
+  cursor: pointer;
+
+  transition: background .2s ease, transform .2s ease;
+
+}
+
+
+
+.el-sidebar-collapse:hover {
+
+  background: #353449;
+
+  transform: translateY(-1px);
+
+}
+
+
+
+.el-sidebar-collapse:active {
+
+  transform: scale(.94);
+
+}
+
+
+
+.el-collapse-symbol {
+
+  font-size: 21px;
+
+  line-height: 1;
+
+}
+
+
+
+/* =========================================================
+
+   6. ROLE LABEL
+
+\========================================================= */
+
+
+
+.el-role-chip {
+
+  padding: 8px 11px;
+
+  margin: 0 3px 17px;
+
+
+
+  color: #a99af0;
+
+
+
+  font-size: 10px;
+
+  font-weight: 850;
+
+  letter-spacing: 1.5px;
+
+  text-transform: uppercase;
+
+
+
+  white-space: nowrap;
+
+  overflow: hidden;
+
+}
+
+
+
+/* =========================================================
+
+   7. NAVIGATION
+
+\========================================================= */
+
+
+
+.el-nav {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 8px;
+
+
+
+  width: 100%;
+
+  min-width: 0;
+
+}
+
+
+
+.el-sidebar > .el-nav {
+
+  flex: 1 1 auto;
+
+}
+
+
+
+.el-sidebar .el-nav a {
+
+  position: relative;
+
+
+
+  display: flex !important;
+
+  align-items: center;
+
+  justify-content: flex-start;
+
+  gap: 14px;
+
+
+
+  width: 100%;
+
+  min-width: 0;
+
+  min-height: 52px;
+
+
+
+  padding: 11px 14px !important;
+
+  margin: 0 !important;
+
+
+
+  overflow: hidden;
+
+
+
+  color: #b8b7ca !important;
+
+  background: transparent !important;
+
+
+
+  border: 1px solid transparent !important;
+
+  border-radius: 14px !important;
+
+
+
+  font-size: 13px;
+
+  font-weight: 700;
+
+  line-height: 1.4;
+
+
+
+  text-decoration: none !important;
+
+  white-space: nowrap;
+
+
+
+  transition:
+
+    background .18s ease,
+
+    color .18s ease,
+
+    border-color .18s ease,
+
+    transform .18s ease;
+
+}
+
+
+
+.el-sidebar .el-nav a:hover {
+
+  color: #fff !important;
+
+  background: rgba(255,255,255,.055) !important;
+
+  border-color: rgba(255,255,255,.035) !important;
+
+  transform: translateX(2px);
+
+}
+
+
+
+.el-sidebar .el-nav a:active {
+
+  transform: scale(.985);
+
+}
+
+
+
+.el-sidebar .el-nav a.active {
+
+  color: #fff !important;
+
+
+
+  background:
+
+    linear-gradient(
+
+      110deg,
+
+      rgba(117,92,240,.24),
+
+      rgba(117,92,240,.11)
+
+    ) !important;
+
+
+
+  border-color: rgba(161,139,255,.13) !important;
+
+
+
+  box-shadow:
+
+    inset 3px 0 0 #9b84ff,
+
+    0 5px 16px rgba(0,0,0,.08);
+
+}
+
+
+
+.el-nav-icon {
+
+  display: grid;
+
+  place-items: center;
+
+
+
+  flex: 0 0 23px;
+
+  width: 23px;
+
+  height: 23px;
+
+
+
+  color: #a99af0;
+
+}
+
+
+
+.el-nav-icon svg {
+
+  display: block;
+
+  width: 20px;
+
+  height: 20px;
+
+}
+
+
+
+.el-sidebar .el-nav a.active .el-nav-icon {
+
+  color: #c1b4ff;
+
+}
+
+
+
+.el-nav-label {
+
+  display: block;
+
+  min-width: 0;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+
+}
+
+
+
+/* =========================================================
+
+   8. LOGOUT
+
+\========================================================= */
+
+
+
+.el-sidebar-bottom {
+
+  flex-shrink: 0;
+
+
+
+  padding-top: 16px;
+
+  margin-top: 18px;
+
+
+
+  border-top: 1px solid var(--el-border);
+
+}
+
+
+
+.el-sidebar-bottom a {
+
+  color: #d3c9ff !important;
+
+}
+
+
+
+.el-sidebar-bottom a .el-nav-icon {
+
+  color: #b6a5ff;
+
+}
+
+
+
+.el-sidebar-bottom a:hover {
+
+  color: #fff !important;
+
+  background: rgba(117,92,240,.14) !important;
+
+}
+
+
+
+/* =========================================================
+
+   9. TOPBAR
+
+\========================================================= */
+
+
+
+.el-topbar {
+
+  position: sticky;
+
+  top: 0;
+
+  z-index: 500;
+
+
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 18px;
+
+
+
+  width: 100%;
+
+  min-width: 0;
+
+  min-height: 82px;
+
+
+
+  padding: 14px 30px;
+
+
+
+  color: var(--el-text);
+
+  background: rgba(29,30,42,.94);
+
+
+
+  border-bottom: 1px solid var(--el-border);
+
+
+
+  backdrop-filter: blur(18px);
+
+  -webkit-backdrop-filter: blur(18px);
+
+}
+
+
+
+.el-topbar-title {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 15px;
+
+  min-width: 0;
+
+}
+
+
+
+.el-page-kicker {
+
+  margin-bottom: 5px;
+
+
+
+  color: #a99af0;
+
+
+
+  font-size: 10px;
+
+  font-weight: 850;
+
+  letter-spacing: 1.7px;
+
+  text-transform: uppercase;
+
+}
+
+
+
+.el-page-title {
+
+  overflow: hidden;
+
+
+
+  color: #fff;
+
+
+
+  font-size: 21px;
+
+  font-weight: 850;
+
+  line-height: 1.25;
+
+  letter-spacing: -.55px;
+
+
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+
+}
+
+
+
+.el-topbar-actions {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+
+}
+
+
+
+/* =========================================================
+
+   10. USER PROFILE PILL
+
+\========================================================= */
+
+
+
+.el-user-pill {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 11px;
+
+
+
+  padding: 8px 13px;
+
+
+
+  background: #252635;
+
+  border: 1px solid var(--el-border);
+
+  border-radius: 15px;
+
+}
+
+
+
+.el-user-pill small {
+
+  display: block;
+
+  margin-bottom: 2px;
+
+
+
+  color: var(--el-muted);
+
+  font-size: 10px;
+
+  line-height: 1.4;
+
+}
+
+
+
+.el-user-pill strong {
+
+  display: block;
+
+
+
+  max-width: 190px;
+
+  overflow: hidden;
+
+
+
+  color: #fff;
+
+
+
+  font-size: 12px;
+
+  font-weight: 800;
+
+  line-height: 1.4;
+
+
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+
+}
+
+
+
+.el-avatar {
+
+  display: grid;
+
+  place-items: center;
+
+
+
+  flex: 0 0 37px;
+
+  width: 37px;
+
+  height: 37px;
+
+
+
+  color: #fff;
+
+
+
+  background: linear-gradient(
+
+    140deg,
+
+    #907aff,
+
+    #5943d8
+
+  );
+
+
+
+  border: 1px solid rgba(255,255,255,.08);
+
+  border-radius: 12px;
+
+
+
+  font-size: 15px;
+
+  font-weight: 850;
+
+
+
+  box-shadow: 0 5px 14px rgba(117,92,240,.2);
+
+}
+
+
+
+/* =========================================================
+
+   11. MOBILE MENU BUTTON
+
+\========================================================= */
+
+
+
+.el-menu-toggle {
+
+  display: none;
+
+  place-items: center;
+
+
+
+  width: 41px;
+
+  height: 41px;
+
+  padding: 0;
+
+
+
+  color: #d3c9ff;
+
+  background: #292a3a;
+
+
+
+  border: 1px solid var(--el-border);
+
+  border-radius: 12px;
+
+
+
+  cursor: pointer;
+
+  transition: background .2s ease, transform .2s ease;
+
+}
+
+
+
+.el-menu-toggle:hover {
+
+  background: #353449;
+
+}
+
+
+
+.el-menu-toggle:active {
+
+  transform: scale(.95);
+
+}
+
+
+
+/* =========================================================
+
+   12. COLLAPSED SIDEBAR
+
+\========================================================= */
+
+
+
+body.el-sidebar-collapsed .el-app-shell {
+
+  grid-template-columns:
+
+    var(--side-collapsed-width)
+
+    minmax(0,1fr);
+
+}
+
+
+
+body.el-sidebar-collapsed .el-sidebar {
+
+  padding-right: 10px;
+
+  padding-left: 10px;
+
+}
+
+
+
+body.el-sidebar-collapsed .el-sidebar-brand {
+
+  justify-content: center;
+
+  padding-right: 0;
+
+  padding-left: 0;
+
+}
+
+
+
+body.el-sidebar-collapsed .el-wordmark-text,
+
+body.el-sidebar-collapsed .el-role-chip,
+
+body.el-sidebar-collapsed .el-nav-label {
+
+  display: none !important;
+
+}
+
+
+
+body.el-sidebar-collapsed .el-sidebar .el-nav a {
+
+  justify-content: center;
+
+  padding-right: 5px !important;
+
+  padding-left: 5px !important;
+
+}
+
+
+
+body.el-sidebar-collapsed .el-sidebar-collapse {
+
+  right: 3px;
+
+}
+
+
+
+/* =========================================================
+
+   13. ROUTE LOADING INDICATOR
+
+\========================================================= */
+
+
+
+.el-route-progress {
+
+  position: fixed;
+
+  top: 0;
+
+  left: 0;
+
+  z-index: 99999;
+
+
+
+  width: 0;
+
+  height: 3px;
+
+
+
+  opacity: 0;
+
+
+
+  background: linear-gradient(
+
+    90deg,
+
+    #705cf0,
+
+    #b49aff,
+
+    #67d8ff
+
+  );
+
+
+
+  box-shadow: 0 0 12px rgba(161,139,255,.6);
+
+
+
+  transition:
+
+    width .25s ease,
+
+    opacity .2s ease;
+
+}
+
+
+
+body.el-route-loading .el-route-progress {
+
+  width: 78%;
+
+  opacity: 1;
+
+}
+
+
+
+/* =========================================================
+
+   14. PAGE CONTENT SAFETY
+
+\========================================================= */
+
+
+
+.el-page-content img {
+
+  max-width: 100%;
+
+}
+
+
+
+.el-page-content iframe,
+
+.el-page-content video {
+
+  max-width: 100%;
+
+}
+
+
+
+.el-page-content input,
+
+.el-page-content select,
+
+.el-page-content textarea {
+
+  max-width: 100%;
+
+}
+
+
+
+.el-page-content table {
+
+  max-width: 100%;
+
+}
+
+
+
+/* =========================================================
+
+   15. MOBILE DRAWER
+
+\========================================================= */
+
+
+
+@media (max-width: 900px) {
+
+  .el-app-shell,
+
+  body.el-sidebar-collapsed .el-app-shell {
+
+    display: block !important;
+
+    min-height: 100vh;
+
+  }
+
+
+
+  .el-sidebar,
+
+  body.el-sidebar-collapsed .el-sidebar {
+
+    position: fixed !important;
+
+    top: 0;
+
+    left: 0;
+
+    z-index: 1200;
+
+
+
+    width: min(290px,84vw) !important;
+
+    height: 100dvh;
+
+    min-height: 100dvh;
+
+
+
+    padding: 22px 15px 17px;
+
+
+
+    transform: translateX(-110%);
+
+    transition: transform .25s ease;
+
+
+
+    box-shadow: 18px 0 45px rgba(0,0,0,.32);
+
+  }
+
+
+
+  body.el-nav-open .el-sidebar {
+
+    transform: translateX(0);
+
+  }
+
+
+
+  body.el-sidebar-collapsed .el-wordmark-text,
+
+  body.el-sidebar-collapsed .el-role-chip,
+
+  body.el-sidebar-collapsed .el-nav-label {
+
+    display: block !important;
+
+  }
+
+
+
+  body.el-sidebar-collapsed .el-sidebar .el-nav a {
+
+    justify-content: flex-start;
+
+    padding: 11px 14px !important;
+
+  }
+
+
+
+  .el-app-main {
+
+    width: 100%;
+
+    min-width: 0;
+
+  }
+
+
+
+  .el-menu-toggle {
+
+    display: grid;
+
+  }
+
+
+
+  .el-topbar {
+
+    min-height: 70px;
+
+    padding: 11px 17px;
+
+  }
+
+
+
+  body.el-nav-open::before {
+
+    content: "";
+
+
+
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 1100;
+
+
+
+    background: rgba(5,6,15,.58);
+
+
+
+    backdrop-filter: blur(3px);
+
+    -webkit-backdrop-filter: blur(3px);
+
+  }
+
+
+
+  body.el-nav-open .el-sidebar {
+
+    z-index: 1200;
+
+  }
+
+}
+
+
+
+/* =========================================================
+
+   16. SMALL MOBILE SCREENS
+
+\========================================================= */
+
+
+
+@media (max-width: 520px) {
+
+  .el-topbar {
+
+    gap: 8px;
+
+    padding: 10px 12px;
+
+  }
+
+
+
+  .el-topbar-title {
+
+    gap: 10px;
+
+  }
+
+
+
+  .el-page-title {
+
+    max-width: 52vw;
+
+    font-size: 15px;
+
+  }
+
+
+
+  .el-user-pill {
+
+    gap: 0;
+
+    padding: 5px;
+
+  }
+
+
+
+  .el-user-pill > div {
+
+    display: none;
+
+  }
+
+
+
+  .el-avatar {
+
+    width: 34px;
+
+    height: 34px;
+
+    min-width: 34px;
+
+  }
+
+
+
+  .el-menu-toggle {
+
+    width: 37px;
+
+    height: 37px;
+
+  }
+
+}
+
+
+
+/* =========================================================
+
+   17. LIGHT THEME SUPPORT
+
+\========================================================= */
+
+
+
+body[data-theme="light"] {
+
+  --el-bg: #e8e8f0;
+
+  --el-sidebar: #dedfe8;
+
+  --el-surface: #e2e2eb;
+
+  --el-surface-hover: #d9d9e5;
+
+  --el-text: #303247;
+
+  --el-muted: #77788e;
+
+  --el-border: rgba(60,62,90,.10);
+
+
+
+  color: var(--el-text);
+
+  background: var(--el-bg) !important;
+
+}
+
+
+
+body[data-theme="light"] .el-app-shell,
+
+body[data-theme="light"] .el-app-main,
+
+body[data-theme="light"] .el-page-content {
+
+  background: #e8e8f0 !important;
+
+}
+
+
+
+body[data-theme="light"] .el-sidebar {
+
+  color: #303247;
+
+  background: linear-gradient(
+
+    180deg,
+
+    #e7e8f0,
+
+    #dedfe8
+
+  ) !important;
+
+
+
+  border-color: rgba(60,62,90,.10);
+
+  box-shadow: 5px 0 20px rgba(40,42,70,.06);
+
+}
+
+
+
+body[data-theme="light"] .el-wordmark-text {
+
+  color: #303247;
+
+}
+
+
+
+body[data-theme="light"] .el-sidebar .el-nav a {
+
+  color: #4b4c63 !important;
+
+}
+
+
+
+body[data-theme="light"] .el-sidebar .el-nav a:hover {
+
+  color: #5e4bc2 !important;
+
+  background: rgba(255,255,255,.58) !important;
+
+}
+
+
+
+body[data-theme="light"] .el-sidebar .el-nav a.active {
+
+  color: #5e4bc2 !important;
+
+  background: #e8e4fb !important;
+
+  border-color: rgba(120,101,220,.12) !important;
+
+}
+
+
+
+body[data-theme="light"] .el-topbar {
+
+  color: #303247;
+
+  background: rgba(232,232,240,.96);
+
+  border-color: rgba(60,62,90,.10);
+
+}
+
+
+
+body[data-theme="light"] .el-page-title {
+
+  color: #303247;
+
+}
+
+
+
+body[data-theme="light"] .el-user-pill {
+
+  background: #dedfe8;
+
+  border-color: rgba(60,62,90,.10);
+
+}
+
+
+
+body[data-theme="light"] .el-user-pill strong {
+
+  color: #303247;
+
+}
+
+
+
+body[data-theme="light"] .el-user-pill small {
+
+  color: #77788e;
+
+}
+
+
+
+body[data-theme="light"] .el-sidebar-collapse,
+
+body[data-theme="light"] .el-menu-toggle {
+
+  color: #6654b7;
+
+  background: #e5e5ef;
+
+  border-color: rgba(60,62,90,.10);
+
+}
+
+
+
+/* =========================================================
+
+   18. ACCESSIBILITY
+
+\========================================================= */
+
+
+
+.el-sidebar a:focus-visible,
+
+.el-sidebar button:focus-visible,
+
+.el-menu-toggle:focus-visible {
+
+  outline: 3px solid rgba(161,139,255,.65);
+
+  outline-offset: 3px;
+
+}
+
+
+
+@media (prefers-reduced-motion: reduce) {
+
+  html {
+
+    scroll-behavior: auto;
+
+  }
+
+
+
+  .el-app-shell *,
+
+  .el-sidebar *,
+
+  .el-app-main * {
+
+    animation-duration: .01ms !important;
+
+    transition-duration: .01ms !important;
+
+  }
+
+}
+
+
+/* ==========================================================
+   EQUALLEARN SHELL — SAFE GRID SIZING PATCH
+========================================================== */
+.el-app-shell {
+    grid-template-columns: var(--side-width, 258px) minmax(0, 1fr);
+    width: 100%;
+    max-width: 100%;
+}
+.el-app-main {
+    width: auto;
+    min-width: 0;
+    max-width: 100%;
+}
+.el-page-content {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+}
+body.el-sidebar-collapsed .el-app-shell {
+    grid-template-columns: var(--side-collapsed-width, 88px) minmax(0, 1fr);
+}

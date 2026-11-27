@@ -1,0 +1,247 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script id="EQUALLEARN_FORCE_DARK_BOOTSTRAP">document.documentElement.dataset.theme="dark";document.documentElement.style.colorScheme="dark";</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b1020">
+
+  <title>Announcements | EqualLearn</title>
+
+  <link rel="stylesheet" href="../assets/css/glass-dashboard.css">
+  <link rel="stylesheet" href="../assets/css/sidebar-skeuomorphism.css">
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #171821;
+      color: #f4f1ff;
+      font-family: Arial, sans-serif;
+    }
+
+    .announcement-page {
+      width: 100%;
+      max-width: 1100px;
+      margin: auto;
+      padding: 30px;
+    }
+
+    .announcement-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .announcement-heading h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+
+    .announcement-heading p {
+      color: #aaa7bd;
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .announcement-count {
+      background: #29243f;
+      border: 1px solid #51427d;
+      color: #c7b8ff;
+      border-radius: 12px;
+      padding: 11px 16px;
+      font-size: 13px;
+    }
+
+    .announcement-toolbar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .announcement-toolbar input,
+    .announcement-toolbar select {
+      min-height: 44px;
+      padding: 0 14px;
+      border-radius: 11px;
+      border: 1px solid #38394a;
+      background: #222330;
+      color: #fff;
+      outline: none;
+    }
+
+    .announcement-toolbar input {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .announcement-list {
+      display: grid;
+      gap: 16px;
+    }
+
+    .announcement-card {
+      background: #20212e;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 17px;
+      padding: 22px;
+      transition: .2s ease;
+    }
+
+    .announcement-card:hover {
+      border-color: #8068ed;
+      transform: translateY(-2px);
+    }
+
+    .announcement-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 13px;
+    }
+
+    .announcement-category {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 8px;
+      background: rgba(132,105,245,.15);
+      color: #b7a7ff;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    .announcement-date {
+      color: #9694aa;
+      font-size: 12px;
+    }
+
+    .announcement-card h2 {
+      font-size: 19px;
+      margin: 0 0 12px;
+      color: #fff;
+    }
+
+    .announcement-message {
+      color: #c2c0d0;
+      font-size: 14px;
+      line-height: 1.8;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .announcement-author {
+      border-top: 1px solid rgba(255,255,255,.07);
+      margin-top: 18px;
+      padding-top: 14px;
+      color: #aaa7bd;
+      font-size: 12px;
+    }
+
+    .announcement-state {
+      text-align: center;
+      background: #20212e;
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 15px;
+      padding: 45px 20px;
+      color: #aaa7bd;
+      line-height: 1.7;
+    }
+
+    .announcement-state strong {
+      display: block;
+      color: white;
+      font-size: 17px;
+      margin-bottom: 8px;
+    }
+
+    .announcement-error {
+      color: #ff9b9b;
+    }
+
+    @media(max-width:600px) {
+      .announcement-page {
+        padding: 20px 14px;
+      }
+
+      .announcement-heading h1 {
+        font-size: 23px;
+      }
+
+      .announcement-card {
+        padding: 17px;
+      }
+
+      .announcement-top {
+        flex-direction: column;
+      }
+    }
+  </style>
+    <link rel="stylesheet" href="../assets/css/responsive-layout.css">
+    <link rel="stylesheet" href="../assets/css/responsive-auto-fit.css">
+  <link rel="stylesheet" href="../assets/css/forced-dark-theme.css?v=1">
+</head>
+
+<body>
+
+  <main class="announcement-page">
+
+    <header class="announcement-heading">
+      <div>
+        <h1>Announcements</h1>
+        <p>Stay updated with important news from your teachers.</p>
+      </div>
+
+      <div class="announcement-count">
+        <span id="announcementCount">0</span> Announcements
+      </div>
+    </header>
+
+    <div class="announcement-toolbar">
+      <input
+        type="search"
+        id="searchAnnouncement"
+        placeholder="Search announcements..."
+        aria-label="Search announcements"
+      >
+
+      <select id="sortAnnouncement" aria-label="Sort announcements">
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
+      </select>
+    </div>
+
+    <section
+      class="announcement-list"
+      id="announcementList"
+      aria-live="polite"
+    >
+      <div class="announcement-state">
+        <strong>Loading announcements...</strong>
+        Please wait.
+      </div>
+    </section>
+
+  </main>
+
+  
+  <script type="module" src="../assets/js/announcement.js"></script>
+<script type="module" src="../assets/js/ui-shell.js"></script>
+<script type="module" src="../assets/js/pwa.js"></script>
+<script type="module" src="../assets/js/theme.js"></script>
+
+<!-- EQUALLEARN LUMI COMPANION -->
+
+
+
+</body>
+</html>
+
