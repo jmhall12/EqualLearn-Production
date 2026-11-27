@@ -19,3 +19,7 @@ mobile/dist/
 /mobile-web-build*/
 /.mobile-web-build-staging-*/
 /.mobile-web-build-previous-*/
+
+# Temporary mobile build output
+/.www-build-*/
+/mobile-web-build/
