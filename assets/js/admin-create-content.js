@@ -933,6 +933,9 @@ if (lessonForm) {
 
           reviewStatus: "pending",
 
+          // Explicit null keeps the Admin -> Teacher assignment schema consistent.
+          assignedTeacherId: null,
+
           createdBy: currentUser.uid,
 
           createdByRole: "admin",

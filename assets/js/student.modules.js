@@ -27,11 +27,17 @@ let studentProfile = null;
 let modules = [];
 let activeFilter = "all";
 let unsubscribeModules = null;
+let unsubscribeModulesLegacySection = null;
 let unsubscribeAdminModules = null;
+let unsubscribeAdminModulesLegacySection = null;
 let unsubscribeAdminLessons = null;
+let unsubscribeAdminLessonsLegacySection = null;
 let v2Modules = [];
+let v2ModulesLegacySection = [];
 let adminModules = [];
+let adminModulesLegacySection = [];
 let adminLessons = [];
+let adminLessonsLegacySection = [];
 let authReady = false;
 let pendingDeepLinkHandled = false;
 
@@ -94,21 +100,34 @@ function initializeFilters() {
 
 
 function stopModuleListeners() {
-  [unsubscribeModules, unsubscribeAdminModules, unsubscribeAdminLessons]
-    .forEach(unsubscribe => {
-      if (typeof unsubscribe === "function") unsubscribe();
-    });
+  [
+    unsubscribeModules,
+    unsubscribeModulesLegacySection,
+    unsubscribeAdminModules,
+    unsubscribeAdminModulesLegacySection,
+    unsubscribeAdminLessons,
+    unsubscribeAdminLessonsLegacySection
+  ].forEach(unsubscribe => {
+    if (typeof unsubscribe === "function") unsubscribe();
+  });
+
   unsubscribeModules = null;
+  unsubscribeModulesLegacySection = null;
   unsubscribeAdminModules = null;
+  unsubscribeAdminModulesLegacySection = null;
   unsubscribeAdminLessons = null;
+  unsubscribeAdminLessonsLegacySection = null;
 }
 
 function initializeAuthentication() {
   onAuthStateChanged(auth, async user => {
     stopModuleListeners();
     v2Modules = [];
+    v2ModulesLegacySection = [];
     adminModules = [];
+    adminModulesLegacySection = [];
     adminLessons = [];
+    adminLessonsLegacySection = [];
     modules = [];
     pendingDeepLinkHandled = false;
     updateStatistics();
@@ -230,14 +249,13 @@ function listenToModules(sectionId) {
   stopModuleListeners();
   showLoading();
 
+  // Current schema: sectionIds is an array of Firestore section document IDs.
   const v2Query = query(
     collection(db, "modulesV2"),
     where("status", "==", "published"),
     where("sectionIds", "array-contains", sectionId)
   );
 
-  // Admin-created modules are stored in the legacy `modules` collection.
-  // Only approved, active content assigned to this student's section is read.
   const adminModulesQuery = query(
     collection(db, "modules"),
     where("status", "==", "active"),
@@ -245,12 +263,32 @@ function listenToModules(sectionId) {
     where("sectionIds", "array-contains", sectionId)
   );
 
-  // Admin-created lessons may be published independently of their parent module.
   const adminLessonsQuery = query(
     collection(db, "lessons"),
     where("status", "==", "active"),
     where("reviewStatus", "==", "approved"),
     where("sectionIds", "array-contains", sectionId)
+  );
+
+  // Backward compatibility: read older records that stored one sectionId.
+  const v2LegacySectionQuery = query(
+    collection(db, "modulesV2"),
+    where("status", "==", "published"),
+    where("sectionId", "==", sectionId)
+  );
+
+  const adminModulesLegacySectionQuery = query(
+    collection(db, "modules"),
+    where("status", "==", "active"),
+    where("reviewStatus", "==", "approved"),
+    where("sectionId", "==", sectionId)
+  );
+
+  const adminLessonsLegacySectionQuery = query(
+    collection(db, "lessons"),
+    where("status", "==", "active"),
+    where("reviewStatus", "==", "approved"),
+    where("sectionId", "==", sectionId)
   );
 
   console.log("[EqualLearn Modules] Listening to section content:", {
@@ -262,11 +300,11 @@ function listenToModules(sectionId) {
   const refresh = () => {
     const combined = new Map();
 
-    v2Modules.forEach(item => {
+    [...v2Modules, ...v2ModulesLegacySection].forEach(item => {
       combined.set(item.id, { ...item, sourceCollection: "modulesV2" });
     });
 
-    adminModules.forEach(item => {
+    [...adminModules, ...adminModulesLegacySection].forEach(item => {
       const existing = combined.get(item.id) || {};
       combined.set(item.id, {
         ...existing,
@@ -280,7 +318,7 @@ function listenToModules(sectionId) {
     });
 
     const lessonGroups = new Map();
-    adminLessons.forEach(lesson => {
+    [...adminLessons, ...adminLessonsLegacySection].forEach(lesson => {
       const moduleId = String(lesson.moduleId || "").trim();
       if (!moduleId) return;
       if (!lessonGroups.has(moduleId)) lessonGroups.set(moduleId, []);
@@ -335,8 +373,15 @@ function listenToModules(sectionId) {
     v2Modules = snapshot.docs.map(document => ({ id: document.id, ...document.data() }));
     refresh();
   }, error => {
-    console.error("[EqualLearn Modules V2] Listener error:", error.code, error.message);
-    // Keep the other approved sources alive; this page can still display legacy Admin content.
+    console.error("[EqualLearn Modules V2 / sectionIds] Listener error:", error.code, error.message);
+    refresh();
+  });
+
+  unsubscribeModulesLegacySection = onSnapshot(v2LegacySectionQuery, snapshot => {
+    v2ModulesLegacySection = snapshot.docs.map(document => ({ id: document.id, ...document.data() }));
+    refresh();
+  }, error => {
+    console.error("[EqualLearn Modules V2 / sectionId] Listener error:", error.code, error.message);
     refresh();
   });
 
@@ -344,7 +389,15 @@ function listenToModules(sectionId) {
     adminModules = snapshot.docs.map(document => ({ id: document.id, ...document.data() }));
     refresh();
   }, error => {
-    console.error("[EqualLearn Admin Modules] Listener error:", error.code, error.message);
+    console.error("[EqualLearn Admin Modules / sectionIds] Listener error:", error.code, error.message);
+    refresh();
+  });
+
+  unsubscribeAdminModulesLegacySection = onSnapshot(adminModulesLegacySectionQuery, snapshot => {
+    adminModulesLegacySection = snapshot.docs.map(document => ({ id: document.id, ...document.data() }));
+    refresh();
+  }, error => {
+    console.error("[EqualLearn Admin Modules / sectionId] Listener error:", error.code, error.message);
     refresh();
   });
 
@@ -352,7 +405,15 @@ function listenToModules(sectionId) {
     adminLessons = snapshot.docs.map(document => ({ id: document.id, ...document.data() }));
     refresh();
   }, error => {
-    console.error("[EqualLearn Admin Lessons] Listener error:", error.code, error.message);
+    console.error("[EqualLearn Admin Lessons / sectionIds] Listener error:", error.code, error.message);
+    refresh();
+  });
+
+  unsubscribeAdminLessonsLegacySection = onSnapshot(adminLessonsLegacySectionQuery, snapshot => {
+    adminLessonsLegacySection = snapshot.docs.map(document => ({ id: document.id, ...document.data() }));
+    refresh();
+  }, error => {
+    console.error("[EqualLearn Admin Lessons / sectionId] Listener error:", error.code, error.message);
     refresh();
   });
 }
